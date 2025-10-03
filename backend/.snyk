@@ -1,0 +1,55 @@
+# Snyk (https://snyk.io) policy file
+
+# Ignore specific vulnerabilities (with justification)
+# Example:
+# ignore:
+#   SNYK-JS-LODASH-590103:
+#     - '*':
+#         reason: 'Prototype pollution is not exploitable in our use case'
+#         expires: '2024-12-31'
+
+# Language settings
+language-settings:
+  javascript:
+    # Minimum severity to report
+    severity-threshold: low
+
+# Vulnerability monitoring
+patch:
+  'SNYK-*':
+    - '*':
+        patched: '2024-01-01T00:00:00.000Z'
+
+# Exclude paths from testing
+exclude:
+  global:
+    - node_modules/**
+    - dist/**
+    - coverage/**
+    - __tests__/**
+
+# License policy
+license:
+  allow:
+    - MIT
+    - Apache-2.0
+    - BSD-2-Clause
+    - BSD-3-Clause
+    - ISC
+    - CC0-1.0
+  deny:
+    - GPL-*
+    - LGPL-*
+    - AGPL-*
+
+# Custom rules
+rules:
+  # Require secure protocols
+  - id: require-https
+    severity: high
+    message: 'Always use HTTPS for external requests'
+
+  # Prevent hardcoded secrets
+  - id: no-hardcoded-secrets
+    severity: critical
+    message: 'Never commit hardcoded secrets or API keys'

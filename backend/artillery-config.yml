@@ -1,0 +1,214 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    # Warm-up phase
+    - duration: 60
+      arrivalRate: 10
+      name: "Warm up"
+    # Ramp up phase
+    - duration: 120
+      arrivalRate: 50
+      rampTo: 200
+      name: "Ramp up load"
+    # Sustained load phase
+    - duration: 300
+      arrivalRate: 200
+      name: "Sustained load"
+    # Peak load phase
+    - duration: 120
+      arrivalRate: 500
+      name: "Peak load"
+    # Cool down phase
+    - duration: 60
+      arrivalRate: 100
+      rampTo: 10
+      name: "Cool down"
+
+  # Performance thresholds
+  ensure:
+    maxErrorRate: 1
+    p95: 500  # 95th percentile response time < 500ms
+    p99: 1000 # 99th percentile response time < 1000ms
+
+  # HTTP settings
+  http:
+    timeout: 10
+    pool: 50
+
+  # Payload data
+  payload:
+    path: "./test-data.csv"
+    fields:
+      - email
+      - password
+
+  # Variables
+  variables:
+    test_email: "sarah.verified@test.com"
+    test_password: "TestPassword123!"
+
+scenarios:
+  # Scenario 1: User Registration Flow
+  - name: "User Registration"
+    weight: 10
+    flow:
+      - post:
+          url: "/api/auth/register"
+          json:
+            email: "{{ $randomString() }}@loadtest.com"
+            password: "LoadTest123!"
+            phone: "+1555{{ $randomNumber(1000000, 9999999) }}"
+          capture:
+            - json: "$.accessToken"
+              as: "accessToken"
+          expect:
+            - statusCode: 201
+            - contentType: json
+
+  # Scenario 2: User Login Flow
+  - name: "User Login"
+    weight: 30
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ test_email }}"
+            password: "{{ test_password }}"
+          capture:
+            - json: "$.accessToken"
+              as: "accessToken"
+          expect:
+            - statusCode: 200
+            - contentType: json
+      - think: 2
+
+      # Get profile after login
+      - get:
+          url: "/api/profiles"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+
+  # Scenario 3: Search and Matching Flow
+  - name: "Search and Match"
+    weight: 25
+    flow:
+      # Login first
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ test_email }}"
+            password: "{{ test_password }}"
+          capture:
+            - json: "$.accessToken"
+              as: "accessToken"
+
+      - think: 1
+
+      # Get potential matches
+      - get:
+          url: "/api/matches/potential?min_score=0.6"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+
+      - think: 3
+
+      # Search profiles
+      - get:
+          url: "/api/profiles/search?city=Austin&state=TX"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          expect:
+            - statusCode: 200
+
+  # Scenario 4: Messaging Flow
+  - name: "Messaging"
+    weight: 20
+    flow:
+      # Login
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ test_email }}"
+            password: "{{ test_password }}"
+          capture:
+            - json: "$.accessToken"
+              as: "accessToken"
+            - json: "$.user.id"
+              as: "userId"
+
+      - think: 1
+
+      # Get conversations
+      - get:
+          url: "/api/conversations"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          capture:
+            - json: "$[0].id"
+              as: "conversationId"
+          expect:
+            - statusCode: 200
+
+      - think: 2
+
+      # Get messages (if conversation exists)
+      - get:
+          url: "/api/conversations/{{ conversationId }}/messages"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          ifTrue: "conversationId"
+          expect:
+            - statusCode: 200
+
+  # Scenario 5: Profile Management
+  - name: "Profile Management"
+    weight: 15
+    flow:
+      # Login
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ test_email }}"
+            password: "{{ test_password }}"
+          capture:
+            - json: "$.accessToken"
+              as: "accessToken"
+
+      - think: 1
+
+      # Get current profile
+      - get:
+          url: "/api/profiles"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          capture:
+            - json: "$.id"
+              as: "profileId"
+
+      - think: 2
+
+      # Update profile (if exists)
+      - put:
+          url: "/api/profiles/{{ profileId }}"
+          headers:
+            Authorization: "Bearer {{ accessToken }}"
+          json:
+            bio: "Updated bio during load test"
+          ifTrue: "profileId"
+          expect:
+            - statusCode: 200
+
+# After scenarios
+after:
+  flow:
+    - log: "Load test completed"
+
+# Plugins
+plugins:
+  expect: {}
+  metrics-by-endpoint:
+    stripQueryString: true

@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3-alpine
+    container_name: safenest-postgres
+    environment:
+      POSTGRES_USER: safenest
+      POSTGRES_PASSWORD: 
+      POSTGRES_DB: safenest_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./DATABASE.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - safenest-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U safenest -d safenest_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: safenest-redis
+    ports:
+      - "6380:6379"
+    networks:
+      - safenest-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: safenest-backend
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://safenest:@postgres:5432/safenest_db
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: dev-secret-change-in-production-2024
+      JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production-2024
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_placeholder}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-safenest-dev}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-mock}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-mock}
+      CHECKR_API_KEY: ${CHECKR_API_KEY:-mock}
+      JUMIO_API_TOKEN: ${JUMIO_API_TOKEN:-mock}
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - safenest-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+
+networks:
+  safenest-network:
+    driver: bridge
