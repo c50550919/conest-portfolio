@@ -44,11 +44,13 @@ const AppNavigator: React.FC = () => {
           headerShown: false,
         }}
       >
-        {!isAuthenticated || !isOnboardingComplete ? (
+        {/* TEMPORARY: Skip auth for UI testing */}
+        <Stack.Screen name="Main" component={MainNavigator} />
+        {/* {!isAuthenticated || !isOnboardingComplete ? (
           <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
         ) : (
           <Stack.Screen name="Main" component={MainNavigator} />
-        )}
+        )} */}
       </Stack.Navigator>
     </NavigationContainer>
   );

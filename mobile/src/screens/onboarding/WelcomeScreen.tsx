@@ -65,6 +65,7 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => navigation.navigate('PhoneVerification')}
           style={styles.button}
           contentStyle={styles.buttonContent}
+          testID="get-started-button"
         >
           Get Started
         </Button>
@@ -72,6 +73,7 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
           mode="text"
           onPress={() => {}}
           style={styles.loginButton}
+          testID="login-button"
         >
           Already have an account? Log in
         </Button>

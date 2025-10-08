@@ -8,7 +8,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import HomeScreen from '../screens/main/HomeScreen';
-import DiscoverScreen from '../screens/main/DiscoverScreen';
+import { BrowseDiscoveryScreen } from '../screens/main/BrowseDiscoveryScreen';
 import MessagesScreen from '../screens/main/MessagesScreen';
 import HouseholdScreen from '../screens/main/HouseholdScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
@@ -17,7 +17,7 @@ import { theme } from '../theme';
 
 export type MainTabParamList = {
   Home: undefined;
-  Discover: undefined;
+  Browse: undefined;
   Messages: undefined;
   Household: undefined;
   Profile: undefined;
@@ -56,11 +56,11 @@ const MainNavigator: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name="Discover"
-        component={DiscoverScreen}
+        name="Browse"
+        component={BrowseDiscoveryScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <Icon name="account-search" size={size} color={color} />
+            <Icon name="home-search" size={size} color={color} />
           ),
         }}
       />
