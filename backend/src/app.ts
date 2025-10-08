@@ -10,8 +10,9 @@ import profileRoutes from './routes/profile';
 import verificationRoutes from './routes/verification';
 import matchRoutes from './routes/matches';
 import messageRoutes from './routes/messages';
-import paymentRoutes from './routes/payments';
+import paymentRoutes, { stripeWebhookRouter } from './routes/payments';
 import discoveryRoutes from './routes/discovery';
+import householdRoutes from './routes/household';
 
 // Load environment variables
 dotenv.config();
@@ -20,6 +21,10 @@ const app: Express = express();
 
 // Security middleware
 setupSecurity(app);
+
+// Stripe webhook endpoint (requires raw body for signature verification)
+// MUST be before body parsing middleware
+app.use('/api/stripe', express.raw({ type: 'application/json' }), stripeWebhookRouter);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -45,6 +50,7 @@ app.use('/api/matches', matchRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/discovery', discoveryRoutes);
+app.use('/api/household', householdRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
@@ -53,3 +59,4 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 export default app;
+export { app };

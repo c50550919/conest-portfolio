@@ -1,6 +1,7 @@
 import express from 'express';
 import DiscoveryController from '../controllers/DiscoveryController';
 import { authenticateToken } from '../middleware/auth';
+import { swipeRateLimit } from '../middleware/rateLimit';
 
 /**
  * Discovery Routes
@@ -9,6 +10,7 @@ import { authenticateToken } from '../middleware/auth';
  * Constitution: Principle I (Child Safety), Principle IV (Performance)
  *
  * All routes require authentication
+ * Swipe endpoint has additional rate limiting (100 req/hour)
  */
 
 const router = express.Router();
@@ -43,9 +45,10 @@ router.get('/profiles', DiscoveryController.getProfiles.bind(DiscoveryController
  * - matchCreated: boolean
  * - match (optional): Match object if mutual match created
  *
+ * Rate Limit: 100 swipes per hour per user
  * Note: Swipes are FINAL (no undo in MVP - clarification 2025-10-06)
  */
-router.post('/swipe', DiscoveryController.swipe.bind(DiscoveryController));
+router.post('/swipe', swipeRateLimit, DiscoveryController.swipe.bind(DiscoveryController));
 
 /**
  * POST /api/discovery/screenshot

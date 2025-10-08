@@ -58,7 +58,37 @@ export const initializeWebSocket = (server: HTTPServer): Server => {
       }
     });
 
-    // Handle typing indicator
+    // T067: Handle typing:start indicator
+    socket.on('typing:start', (data) => {
+      const { matchId, recipientId } = data;
+
+      // Validate data (basic validation, full validation in controller if needed)
+      if (!matchId || !recipientId) {
+        socket.emit('error', { message: 'matchId and recipientId are required for typing events' });
+        return;
+      }
+
+      // Emit to recipient via SocketService
+      const SocketService = require('../services/SocketService').default;
+      SocketService.emitTypingStart(userId, matchId, recipientId);
+    });
+
+    // T067: Handle typing:stop indicator
+    socket.on('typing:stop', (data) => {
+      const { matchId, recipientId } = data;
+
+      // Validate data
+      if (!matchId || !recipientId) {
+        socket.emit('error', { message: 'matchId and recipientId are required for typing events' });
+        return;
+      }
+
+      // Emit to recipient via SocketService
+      const SocketService = require('../services/SocketService').default;
+      SocketService.emitTypingStop(userId, matchId, recipientId);
+    });
+
+    // Legacy typing indicator (backward compatibility)
     socket.on('typing', (data) => {
       const { recipientId, isTyping } = data;
       io.to(`user:${recipientId}`).emit('user_typing', {

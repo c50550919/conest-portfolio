@@ -1,19 +1,50 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+/**
+ * Authentication Service - T040
+ *
+ * Constitution Principle I: Child Safety First
+ * - REJECTS any child PII (childrenNames, childrenPhotos, childrenAges, childrenSchools)
+ * - Only accepts parent information during registration
+ *
+ * Constitution Principle III: Security
+ * - Bcrypt cost factor: 12
+ * - JWT access token: 15min expiry
+ * - JWT refresh token: 7 day expiry with rotation
+ * - Redis-backed refresh token storage
+ */
+
+import * as bcrypt from 'bcrypt';
 import { UserModel } from '../models/User';
 import { VerificationModel } from '../models/Verification';
-import redisClient from '../config/redis';
+import { generateAccessToken, generateRefreshToken, verifyRefreshToken, JWTPayload } from '../utils/jwt';
+import { hashPassword, comparePassword } from '../utils/password';
+import redis, { REDIS_TTL } from '../config/redis';
 
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS) || 12;
-const JWT_SECRET: string = process.env.JWT_SECRET || 'your-secret-key';
-const JWT_REFRESH_SECRET: string = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key';
-const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || '15m';
-const JWT_REFRESH_EXPIRES_IN: string = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+
+// CRITICAL: Prohibited child PII fields - Constitution Principle I
+const PROHIBITED_CHILD_FIELDS = [
+  'childrenNames',
+  'childrenPhotos',
+  'childrenAges',
+  'childrenSchools',
+  'childName',
+  'childPhoto',
+  'childAge',
+  'childSchool',
+  'child_name',
+  'child_photo',
+  'child_age',
+  'child_school',
+] as const;
 
 export interface RegisterData {
   email: string;
   password: string;
-  phone?: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  // Allow additional fields but will validate against child PII
+  [key: string]: any;
 }
 
 export interface LoginData {
@@ -27,211 +58,220 @@ export interface TokenPair {
   expiresIn: string;
 }
 
+export interface AuthResponse {
+  user: any;
+  tokens: TokenPair;
+}
+
 export const AuthService = {
-  async register(data: RegisterData): Promise<{ user: any; tokens: TokenPair }> {
+  /**
+   * Register a new user
+   * CRITICAL: Validates that no child PII is provided
+   */
+  async register(data: RegisterData): Promise<AuthResponse> {
+    // CRITICAL: Child PII validation - Constitution Principle I
+    this.validateNoChildPII(data);
+
+    // Validate required fields
+    if (!data.email || !data.password || !data.firstName || !data.lastName) {
+      throw new Error('Email, password, firstName, and lastName are required');
+    }
+
     // Check if user already exists
     const existingUser = await UserModel.findByEmail(data.email);
     if (existingUser) {
       throw new Error('User with this email already exists');
     }
 
-    if (data.phone) {
-      const existingPhone = await UserModel.findByPhone(data.phone);
+    if (data.phoneNumber) {
+      const existingPhone = await UserModel.findByPhone(data.phoneNumber);
       if (existingPhone) {
         throw new Error('User with this phone number already exists');
       }
     }
 
-    // Hash password
-    const password_hash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
+    // Hash password using utility (T039)
+    const password_hash = await hashPassword(data.password);
 
     // Create user
     const user = await UserModel.create({
       email: data.email,
       password_hash,
-      phone: data.phone,
+      phone_number: data.phoneNumber,
     });
 
     // Create verification record
     await VerificationModel.create({ user_id: user.id });
 
-    // Generate tokens
-    const tokens = await this.generateTokenPair(user.id);
+    // Generate tokens with refresh token rotation (T038)
+    const tokens = await this.generateTokenPair(user.id, data.email);
 
-    // Remove password hash from response
+    // Remove password hash from response (security best practice)
     const { password_hash: _, ...userWithoutPassword } = user;
 
     return { user: userWithoutPassword, tokens };
   },
 
-  async login(data: LoginData): Promise<{ user: any; tokens: TokenPair }> {
+  /**
+   * Authenticate user login
+   */
+  async login(data: LoginData): Promise<AuthResponse> {
     // Find user
     const user = await UserModel.findByEmail(data.email);
     if (!user) {
       throw new Error('Invalid credentials');
     }
 
-    // Check password
-    const isValidPassword = await bcrypt.compare(data.password, user.password_hash);
+    // Verify password using utility (T039)
+    const isValidPassword = await comparePassword(data.password, user.password_hash);
     if (!isValidPassword) {
       throw new Error('Invalid credentials');
     }
 
     // Check if account is active
     if (user.status !== 'active') {
-      throw new Error('Account is not active');
+      throw new Error(`Account is ${user.status}`);
     }
 
     // Update last login
     await UserModel.updateLastLogin(user.id);
 
-    // Generate tokens
-    const tokens = await this.generateTokenPair(user.id);
+    // Generate tokens with refresh token rotation (T038)
+    const tokens = await this.generateTokenPair(user.id, user.email);
 
-    // Remove password hash from response
+    // Remove password hash from response (security best practice)
     const { password_hash: _, ...userWithoutPassword } = user;
 
     return { user: userWithoutPassword, tokens };
   },
 
-  async generateTokenPair(userId: string): Promise<TokenPair> {
-    const accessToken = jwt.sign(
-      { userId },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions
-    );
-
-    const refreshToken = jwt.sign(
-      { userId },
-      JWT_REFRESH_SECRET,
-      { expiresIn: JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions
-    );
-
-    // Store refresh token in Redis with expiration
-    const expiresInSeconds = this.parseExpiration(JWT_REFRESH_EXPIRES_IN);
-    await redisClient.setex(`refresh_token:${userId}`, expiresInSeconds, refreshToken);
-
-    return {
-      accessToken,
-      refreshToken,
-      expiresIn: JWT_EXPIRES_IN,
-    };
-  },
-
-  async refreshAccessToken(refreshToken: string): Promise<TokenPair> {
+  /**
+   * Refresh access token using refresh token
+   * Implements refresh token rotation for security
+   */
+  async refreshTokens(refreshToken: string): Promise<TokenPair> {
     try {
-      const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as { userId: string };
+      // Verify refresh token using JWT utility (T038)
+      const payload = verifyRefreshToken(refreshToken);
 
       // Verify refresh token exists in Redis
-      const storedToken = await redisClient.get(`refresh_token:${decoded.userId}`);
+      const storedToken = await redis.get(`refresh_token:${payload.userId}`);
       if (!storedToken || storedToken !== refreshToken) {
         throw new Error('Invalid refresh token');
       }
 
-      // Generate new token pair
-      return await this.generateTokenPair(decoded.userId);
+      // Verify user still exists and is active
+      const user = await UserModel.findById(payload.userId);
+      if (!user || user.status !== 'active') {
+        throw new Error('User not found or inactive');
+      }
+
+      // Generate new token pair (refresh token rotation)
+      const newTokens = await this.generateTokenPair(user.id, user.email);
+
+      return newTokens;
     } catch (error) {
       throw new Error('Invalid or expired refresh token');
     }
   },
 
-  async logout(userId: string): Promise<void> {
-    // Remove refresh token from Redis
-    await redisClient.del(`refresh_token:${userId}`);
-  },
-
-  async requestPasswordReset(email: string): Promise<void> {
-    const user = await UserModel.findByEmail(email);
+  /**
+   * Verify phone number with code
+   * TODO: Integrate with Twilio for actual SMS verification
+   */
+  async verifyPhone(userId: string, code: string): Promise<boolean> {
+    // Verify user exists
+    const user = await UserModel.findById(userId);
     if (!user) {
-      // Don't reveal if user exists
-      return;
+      throw new Error('User not found');
     }
 
-    // Generate reset token
-    const resetToken = jwt.sign(
-      { userId: user.id, type: 'password_reset' },
-      JWT_SECRET,
-      { expiresIn: '1h' } as jwt.SignOptions
-    );
-
-    // Store in Redis with 1 hour expiration
-    await redisClient.setex(`password_reset:${user.id}`, 3600, resetToken);
-
-    // TODO: Send email with reset link
-    console.log(`Password reset token for ${email}: ${resetToken}`);
-  },
-
-  async resetPassword(token: string, newPassword: string): Promise<void> {
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; type: string };
-
-      if (decoded.type !== 'password_reset') {
-        throw new Error('Invalid token type');
-      }
-
-      // Verify token in Redis
-      const storedToken = await redisClient.get(`password_reset:${decoded.userId}`);
-      if (!storedToken || storedToken !== token) {
-        throw new Error('Invalid or expired reset token');
-      }
-
-      // Hash new password
-      const password_hash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
-
-      // Update password
-      await UserModel.update(decoded.userId, { password_hash });
-
-      // Remove reset token
-      await redisClient.del(`password_reset:${decoded.userId}`);
-
-      // Invalidate all refresh tokens
-      await redisClient.del(`refresh_token:${decoded.userId}`);
-    } catch (error) {
-      throw new Error('Invalid or expired reset token');
+    // Verify code from Redis
+    const storedCode = await redis.get(`phone_verification:${userId}`);
+    if (!storedCode || storedCode !== code) {
+      return false;
     }
-  },
 
-  // Mock 2FA functions (placeholder for future implementation)
-  async enable2FA(userId: string): Promise<{ secret: string; qrCode: string }> {
-    // MOCK: In production, use speakeasy or similar library
-    const mockSecret = 'MOCK2FASECRET';
-    const mockQRCode = 'data:image/png;base64,mock-qr-code';
+    // Update user phone verification status
+    await UserModel.update(userId, { phone_verified: true });
 
-    await UserModel.update(userId, {
-      two_factor_enabled: true,
-      two_factor_secret: mockSecret,
-    });
+    // Update verification record
+    const verification = await VerificationModel.findByUserId(userId);
+    if (verification) {
+      await VerificationModel.update(userId, {
+        phone_verified: true,
+        phone_verification_date: new Date(),
+      });
+      // Recalculate verification score
+      await VerificationModel.updateVerificationScore(userId);
+    }
 
-    return { secret: mockSecret, qrCode: mockQRCode };
-  },
+    // Remove verification code from Redis
+    await redis.del(`phone_verification:${userId}`);
 
-  async verify2FA(userId: string, code: string): Promise<boolean> {
-    // MOCK: Always return true for development
-    console.log(`2FA verification for user ${userId} with code: ${code}`);
     return true;
   },
 
-  async disable2FA(userId: string): Promise<void> {
-    await UserModel.update(userId, {
-      two_factor_enabled: false,
-      two_factor_secret: undefined,
-    });
+  /**
+   * Send phone verification code
+   * TODO: Integrate with Twilio
+   */
+  async sendPhoneVerification(userId: string, phoneNumber: string): Promise<void> {
+    // Generate 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store in Redis with 10 minute expiration
+    await redis.setex(`phone_verification:${userId}`, 600, code);
+
+    // TODO: Send SMS via Twilio
+    console.log(`Phone verification code for ${phoneNumber}: ${code}`);
   },
 
-  // Helper function to parse expiration strings
-  parseExpiration(expiration: string): number {
-    const match = expiration.match(/^(\d+)([smhd])$/);
-    if (!match) return 900; // Default 15 minutes
+  /**
+   * Logout user (invalidate refresh token)
+   */
+  async logout(userId: string): Promise<void> {
+    await redis.del(`refresh_token:${userId}`);
+  },
 
-    const value = parseInt(match[1]);
-    const unit = match[2];
+  /**
+   * Generate access and refresh token pair
+   * Stores refresh token in Redis with 7-day expiration
+   */
+  async generateTokenPair(userId: string, email: string): Promise<TokenPair> {
+    const payload: JWTPayload = { userId, email };
 
-    switch (unit) {
-      case 's': return value;
-      case 'm': return value * 60;
-      case 'h': return value * 60 * 60;
-      case 'd': return value * 24 * 60 * 60;
-      default: return 900;
+    // Generate tokens using JWT utility (T038)
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
+
+    // Store refresh token in Redis with 7-day expiration
+    await redis.setex(`refresh_token:${userId}`, REDIS_TTL.VERIFICATION, refreshToken);
+
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn: '15m',
+    };
+  },
+
+  /**
+   * CRITICAL: Validate that no child PII is provided
+   * Constitution Principle I: Child Safety First
+   */
+  validateNoChildPII(data: Record<string, any>): void {
+    const providedFields = Object.keys(data);
+    const foundProhibitedFields = providedFields.filter(field =>
+      PROHIBITED_CHILD_FIELDS.some(prohibited =>
+        field.toLowerCase().includes(prohibited.toLowerCase())
+      )
+    );
+
+    if (foundProhibitedFields.length > 0) {
+      throw new Error(
+        `Child PII is prohibited: ${foundProhibitedFields.join(', ')}. ` +
+        'This platform stores NO child data for safety reasons.'
+      );
     }
   },
 };

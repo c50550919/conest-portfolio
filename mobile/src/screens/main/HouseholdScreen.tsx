@@ -1,9 +1,12 @@
 /**
  * CoNest Household Screen
  * Roommate management, expenses, schedule coordination
+ *
+ * Constitution: Principle I (Child Safety - NO child PII displayed)
+ * Constitution: Principle IV (Performance - <500ms load time)
  */
 
-import React from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -12,25 +15,167 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Image,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import { RootState, AppDispatch } from '../../store';
+import {
+  fetchMyHousehold,
+  fetchExpenses,
+  fetchRecentTransactions,
+  fetchUpcomingPayments,
+  splitRent,
+} from '../../store/slices/householdSlice';
+import { Member, Expense } from '../../types/household';
 
 const HouseholdScreen: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const {
+    household,
+    members,
+    expenses,
+    recentTransactions,
+    loading,
+    error,
+  } = useSelector((state: RootState) => state.household);
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch household data on mount
+  useEffect(() => {
+    loadHouseholdData();
+  }, []);
+
+  const loadHouseholdData = async () => {
+    try {
+      const result = await dispatch(fetchMyHousehold()).unwrap();
+      if (result.household) {
+        // Fetch expenses and transactions in parallel
+        await Promise.all([
+          dispatch(fetchExpenses({ householdId: result.household.id, refresh: true })),
+          dispatch(fetchRecentTransactions(result.household.id)),
+          dispatch(fetchUpcomingPayments(result.household.id)),
+        ]);
+      }
+    } catch (err) {
+      console.error('Failed to load household data:', err);
+    }
+  };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadHouseholdData();
+    setRefreshing(false);
+  }, []);
+
+  const handleSplitRent = async () => {
+    if (!household) return;
+
+    Alert.alert(
+      'Split Rent',
+      `Split ${formatCurrency(household.monthlyRent)} among ${household.totalMembers} members?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Split',
+          onPress: async () => {
+            try {
+              const today = new Date();
+              const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+
+              await dispatch(
+                splitRent({
+                  householdId: household.id,
+                  amount: household.monthlyRent,
+                  dueDate: nextMonth.toISOString().split('T')[0],
+                  splitMethod: 'equal',
+                })
+              ).unwrap();
+
+              Alert.alert('Success', 'Rent split created successfully');
+              await dispatch(fetchExpenses({ householdId: household.id, refresh: true }));
+            } catch (err: any) {
+              Alert.alert('Error', err || 'Failed to split rent');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const formatCurrency = (amount: number): string => {
+    return `$${amount.toLocaleString()}`;
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  };
+
+  const getInitials = (firstName: string, lastName?: string): string => {
+    if (lastName) {
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
+    }
+    return firstName.substring(0, 2).toUpperCase();
+  };
+
+  // Show loading state on initial load
+  if (loading && !household) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading household...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show error state if no household found
+  if (!household && !loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.centerContainer}>
+          <Icon name="home-alert" size={64} color={colors.text.secondary} />
+          <Text style={styles.emptyTitle}>No Household Found</Text>
+          <Text style={styles.emptySubtitle}>
+            You're not currently part of a household.
+          </Text>
+          <TouchableOpacity style={styles.primaryButton}>
+            <Text style={styles.primaryButtonText}>Find Roommates</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.householdName}>Mountain View House</Text>
-            <Text style={styles.householdSubtitle}>3 Members • Established Dec 2024</Text>
+            <Text style={styles.householdName}>{household?.name || 'My Household'}</Text>
+            <Text style={styles.householdSubtitle}>
+              {members.length} Members • Established {formatDate(household?.establishedAt || '')}
+            </Text>
           </View>
           <TouchableOpacity style={styles.settingsButton}>
             <Icon name="cog-outline" size={24} color={colors.text.primary} />
@@ -51,11 +196,11 @@ const HouseholdScreen: React.FC = () => {
             </View>
             <Text style={styles.actionText}>Documents</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleSplitRent}>
             <View style={[styles.actionIcon, { backgroundColor: colors.tertiary + '20' }]}>
               <Icon name="cash-multiple" size={20} color={colors.tertiary} />
             </View>
-            <Text style={styles.actionText}>Payments</Text>
+            <Text style={styles.actionText}>Split Rent</Text>
           </TouchableOpacity>
         </View>
 
@@ -68,97 +213,79 @@ const HouseholdScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Member Card 1 - Current User */}
-          <View style={styles.memberCard}>
-            <View style={styles.memberAvatar}>
-              <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary + '30' }]}>
-                <Text style={styles.avatarText}>SM</Text>
-              </View>
-              <View style={styles.verifiedBadge}>
-                <Icon name="check-decagram" size={16} color={colors.primary} />
-              </View>
-            </View>
-            <View style={styles.memberInfo}>
-              <View style={styles.memberHeader}>
-                <Text style={styles.memberName}>Sarah Martinez</Text>
-                <View style={styles.youBadge}>
-                  <Text style={styles.youBadgeText}>You</Text>
-                </View>
-              </View>
-              <Text style={styles.memberDetails}>2 children (5, 8) • Lease holder</Text>
-              <View style={styles.memberStats}>
-                <View style={styles.statBadge}>
-                  <Icon name="shield-check" size={14} color={colors.primary} />
-                  <Text style={styles.statBadgeText}>Verified</Text>
-                </View>
-                <View style={styles.statBadge}>
-                  <Icon name="check-circle" size={14} color={colors.primary} />
-                  <Text style={styles.statBadgeText}>Rent Paid</Text>
-                </View>
-              </View>
-            </View>
-            <TouchableOpacity style={styles.memberActions}>
-              <Icon name="dots-vertical" size={20} color={colors.text.secondary} />
-            </TouchableOpacity>
-          </View>
+          {members.map((member: Member, index: number) => {
+            const avatarColors = [
+              colors.primary + '30',
+              colors.secondary + '30',
+              colors.tertiary + '30',
+            ];
+            const avatarColor = avatarColors[index % avatarColors.length];
 
-          {/* Member Card 2 */}
-          <View style={styles.memberCard}>
-            <View style={styles.memberAvatar}>
-              <View style={[styles.avatarPlaceholder, { backgroundColor: colors.secondary + '30' }]}>
-                <Text style={styles.avatarText}>JK</Text>
-              </View>
-              <View style={styles.verifiedBadge}>
-                <Icon name="check-decagram" size={16} color={colors.primary} />
-              </View>
-            </View>
-            <View style={styles.memberInfo}>
-              <Text style={styles.memberName}>Jennifer Kim</Text>
-              <Text style={styles.memberDetails}>1 child (3) • Joined Jan 2025</Text>
-              <View style={styles.memberStats}>
-                <View style={styles.statBadge}>
-                  <Icon name="shield-check" size={14} color={colors.primary} />
-                  <Text style={styles.statBadgeText}>Verified</Text>
-                </View>
-                <View style={styles.statBadge}>
-                  <Icon name="check-circle" size={14} color={colors.primary} />
-                  <Text style={styles.statBadgeText}>Rent Paid</Text>
-                </View>
-              </View>
-            </View>
-            <TouchableOpacity style={styles.memberActions}>
-              <Icon name="dots-vertical" size={20} color={colors.text.secondary} />
-            </TouchableOpacity>
-          </View>
+            // Child safety: Show only count and age groups, NO names or ages
+            const childrenInfo = member.childrenCount > 0
+              ? `${member.childrenCount} ${member.childrenCount === 1 ? 'child' : 'children'}${
+                  member.childrenAgeGroups
+                    ? ` (${member.childrenAgeGroups.join(', ')})`
+                    : ''
+                }`
+              : 'No children';
 
-          {/* Member Card 3 */}
-          <View style={styles.memberCard}>
-            <View style={styles.memberAvatar}>
-              <View style={[styles.avatarPlaceholder, { backgroundColor: colors.tertiary + '30' }]}>
-                <Text style={styles.avatarText}>ML</Text>
-              </View>
-              <View style={styles.verifiedBadge}>
-                <Icon name="check-decagram" size={16} color={colors.primary} />
-              </View>
-            </View>
-            <View style={styles.memberInfo}>
-              <Text style={styles.memberName}>Maria Lopez</Text>
-              <Text style={styles.memberDetails}>1 child (6) • Joined Dec 2024</Text>
-              <View style={styles.memberStats}>
-                <View style={styles.statBadge}>
-                  <Icon name="shield-check" size={14} color={colors.primary} />
-                  <Text style={styles.statBadgeText}>Verified</Text>
+            const roleText = member.role === 'lease-holder' ? 'Lease holder' : 'Co-tenant';
+            const joinDate = formatDate(member.joinedAt);
+
+            return (
+              <View key={member.userId} style={styles.memberCard}>
+                <View style={styles.memberAvatar}>
+                  <View style={[styles.avatarPlaceholder, { backgroundColor: avatarColor }]}>
+                    <Text style={styles.avatarText}>
+                      {getInitials(member.firstName, member.lastName)}
+                    </Text>
+                  </View>
+                  {member.verificationBadges.backgroundCheckComplete && (
+                    <View style={styles.verifiedBadge}>
+                      <Icon name="check-decagram" size={16} color={colors.primary} />
+                    </View>
+                  )}
                 </View>
-                <View style={styles.statBadge}>
-                  <Icon name="check-circle" size={14} color={colors.primary} />
-                  <Text style={styles.statBadgeText}>Rent Paid</Text>
+                <View style={styles.memberInfo}>
+                  <View style={styles.memberHeader}>
+                    <Text style={styles.memberName}>{member.firstName}</Text>
+                    {member.isCurrentUser && (
+                      <View style={styles.youBadge}>
+                        <Text style={styles.youBadgeText}>You</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Text style={styles.memberDetails}>
+                    {childrenInfo} • {roleText}
+                  </Text>
+                  <View style={styles.memberStats}>
+                    {member.verificationBadges.backgroundCheckComplete && (
+                      <View style={styles.statBadge}>
+                        <Icon name="shield-check" size={14} color={colors.primary} />
+                        <Text style={styles.statBadgeText}>Verified</Text>
+                      </View>
+                    )}
+                    {member.paymentStatus.currentMonth === 'paid' && (
+                      <View style={styles.statBadge}>
+                        <Icon name="check-circle" size={14} color={colors.primary} />
+                        <Text style={styles.statBadgeText}>Rent Paid</Text>
+                      </View>
+                    )}
+                    {member.paymentStatus.currentMonth === 'overdue' && (
+                      <View style={[styles.statBadge, { backgroundColor: colors.errorLight }]}>
+                        <Icon name="alert-circle" size={14} color={colors.error} />
+                        <Text style={[styles.statBadgeText, { color: colors.error }]}>Overdue</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
+                <TouchableOpacity style={styles.memberActions}>
+                  <Icon name="dots-vertical" size={20} color={colors.text.secondary} />
+                </TouchableOpacity>
               </View>
-            </View>
-            <TouchableOpacity style={styles.memberActions}>
-              <Icon name="dots-vertical" size={20} color={colors.text.secondary} />
-            </TouchableOpacity>
-          </View>
+            );
+          })}
         </View>
 
         {/* Expenses Overview */}
@@ -170,77 +297,127 @@ const HouseholdScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          <LinearGradient
-            colors={[colors.primary, colors.primaryDark]}
-            style={styles.expenseCard}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <View style={styles.expenseHeader}>
-              <Text style={styles.expenseTitle}>January 2025</Text>
-              <View style={styles.expenseStatusBadge}>
-                <Icon name="check" size={14} color="#FFFFFF" />
-                <Text style={styles.expenseStatusText}>All Paid</Text>
-              </View>
+          {expenses.length > 0 ? (
+            expenses.slice(0, 3).map((expense: Expense) => {
+              const statusColor =
+                expense.status === 'paid'
+                  ? colors.primary
+                  : expense.status === 'overdue'
+                  ? colors.error
+                  : colors.tertiary;
+
+              const statusText =
+                expense.status === 'paid'
+                  ? 'All Paid'
+                  : expense.status === 'partial'
+                  ? 'Partial'
+                  : expense.status === 'overdue'
+                  ? 'Overdue'
+                  : 'Pending';
+
+              const currentUserSplit = expense.splits.find(
+                (s) => members.find((m) => m.isCurrentUser)?.userId === s.userId
+              );
+
+              return (
+                <LinearGradient
+                  key={expense.id}
+                  colors={[statusColor, statusColor + 'CC']}
+                  style={styles.expenseCard}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <View style={styles.expenseHeader}>
+                    <Text style={styles.expenseTitle}>
+                      {expense.category.charAt(0).toUpperCase() + expense.category.slice(1)}
+                    </Text>
+                    <View style={styles.expenseStatusBadge}>
+                      <Icon
+                        name={
+                          expense.status === 'paid'
+                            ? 'check'
+                            : expense.status === 'overdue'
+                            ? 'alert'
+                            : 'clock-outline'
+                        }
+                        size={14}
+                        color="#FFFFFF"
+                      />
+                      <Text style={styles.expenseStatusText}>{statusText}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.expenseBreakdown}>
+                    <View style={styles.expenseRow}>
+                      <Text style={styles.expenseLabel}>Total Amount</Text>
+                      <Text style={styles.expenseAmount}>{formatCurrency(expense.totalAmount)}</Text>
+                    </View>
+                    <View style={styles.expenseRow}>
+                      <Text style={styles.expenseLabel}>Due Date</Text>
+                      <Text style={styles.expenseAmount}>{formatDate(expense.dueDate)}</Text>
+                    </View>
+                    {currentUserSplit && (
+                      <>
+                        <View style={styles.expenseDivider} />
+                        <View style={styles.expenseRow}>
+                          <Text style={styles.expenseTotalLabel}>Your Share</Text>
+                          <Text style={styles.expenseTotalAmount}>
+                            {formatCurrency(currentUserSplit.amount)}
+                          </Text>
+                        </View>
+                      </>
+                    )}
+                  </View>
+                </LinearGradient>
+              );
+            })
+          ) : (
+            <View style={styles.emptyState}>
+              <Icon name="receipt-text-outline" size={48} color={colors.text.secondary} />
+              <Text style={styles.emptyStateText}>No expenses yet</Text>
             </View>
-            <View style={styles.expenseBreakdown}>
-              <View style={styles.expenseRow}>
-                <Text style={styles.expenseLabel}>Rent</Text>
-                <Text style={styles.expenseAmount}>$2,400</Text>
-              </View>
-              <View style={styles.expenseRow}>
-                <Text style={styles.expenseLabel}>Utilities</Text>
-                <Text style={styles.expenseAmount}>$180</Text>
-              </View>
-              <View style={styles.expenseRow}>
-                <Text style={styles.expenseLabel}>Internet</Text>
-                <Text style={styles.expenseAmount}>$60</Text>
-              </View>
-              <View style={styles.expenseDivider} />
-              <View style={styles.expenseRow}>
-                <Text style={styles.expenseTotalLabel}>Your Share</Text>
-                <Text style={styles.expenseTotalAmount}>$880</Text>
-              </View>
-            </View>
-          </LinearGradient>
+          )}
 
           {/* Recent Transactions */}
-          <View style={styles.transactionsContainer}>
-            <Text style={styles.transactionsTitle}>Recent Transactions</Text>
+          {recentTransactions.length > 0 && (
+            <View style={styles.transactionsContainer}>
+              <Text style={styles.transactionsTitle}>Recent Transactions</Text>
 
-            <View style={styles.transactionCard}>
-              <View style={styles.transactionIcon}>
-                <Icon name="arrow-up" size={18} color={colors.primary} />
-              </View>
-              <View style={styles.transactionInfo}>
-                <Text style={styles.transactionTitle}>Rent Payment - January</Text>
-                <Text style={styles.transactionSubtitle}>Paid to Sarah Martinez</Text>
-              </View>
-              <Text style={styles.transactionAmount}>$800</Text>
-            </View>
+              {recentTransactions.slice(0, 3).map((transaction) => {
+                const isIncoming = transaction.toUserId === members.find((m) => m.isCurrentUser)?.userId;
+                const fromMember = members.find((m) => m.userId === transaction.fromUserId);
+                const toMember = members.find((m) => m.userId === transaction.toUserId);
 
-            <View style={styles.transactionCard}>
-              <View style={styles.transactionIcon}>
-                <Icon name="arrow-down" size={18} color={colors.tertiary} />
-              </View>
-              <View style={styles.transactionInfo}>
-                <Text style={styles.transactionTitle}>Utilities Split</Text>
-                <Text style={styles.transactionSubtitle}>Received from Maria L.</Text>
-              </View>
-              <Text style={[styles.transactionAmount, { color: colors.primary }]}>+$60</Text>
+                return (
+                  <View key={transaction.id} style={styles.transactionCard}>
+                    <View style={styles.transactionIcon}>
+                      <Icon
+                        name={isIncoming ? 'arrow-down' : 'arrow-up'}
+                        size={18}
+                        color={isIncoming ? colors.primary : colors.tertiary}
+                      />
+                    </View>
+                    <View style={styles.transactionInfo}>
+                      <Text style={styles.transactionTitle}>{transaction.description}</Text>
+                      <Text style={styles.transactionSubtitle}>
+                        {isIncoming
+                          ? `Received from ${fromMember?.firstName || 'Unknown'}`
+                          : `Paid to ${toMember?.firstName || 'Household'}`}
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.transactionAmount,
+                        { color: isIncoming ? colors.primary : colors.text.primary },
+                      ]}
+                    >
+                      {isIncoming ? '+' : ''}
+                      {formatCurrency(transaction.amount)}
+                    </Text>
+                  </View>
+                );
+              })}
             </View>
-
-            <View style={styles.transactionCard}>
-              <View style={styles.transactionIcon}>
-                <Icon name="arrow-up" size={18} color={colors.primary} />
-              </View>
-              <View style={styles.transactionInfo}>
-                <Text style={styles.transactionTitle}>Internet Bill</Text>
-                <Text style={styles.transactionSubtitle}>Monthly payment</Text>
-              </View>
-              <Text style={styles.transactionAmount}>$20</Text>
-            </View>
-          </View>
+          )}
         </View>
 
         {/* Schedule Overview */}
@@ -308,6 +485,55 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: spacing.xl,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  loadingText: {
+    ...typography.body1,
+    color: colors.text.secondary,
+    marginTop: spacing.md,
+  },
+  emptyTitle: {
+    ...typography.h6,
+    color: colors.text.primary,
+    marginTop: spacing.md,
+    textAlign: 'center',
+  },
+  emptySubtitle: {
+    ...typography.body2,
+    color: colors.text.secondary,
+    marginTop: spacing.xs,
+    textAlign: 'center',
+  },
+  primaryButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    marginTop: spacing.lg,
+  },
+  primaryButtonText: {
+    ...typography.button,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: spacing.xl,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    marginBottom: spacing.md,
+  },
+  emptyStateText: {
+    ...typography.body2,
+    color: colors.text.secondary,
+    marginTop: spacing.sm,
   },
   header: {
     flexDirection: 'row',

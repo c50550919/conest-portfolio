@@ -43,10 +43,25 @@ export interface UserTypingEvent {
 
 export interface NewMessageEvent {
   messageId: string;
-  conversationId: string;
+  matchId: string;
   senderId: string;
   content: string;
+  messageType: 'text' | 'image';
+  fileUrl?: string;
   timestamp: string;
+}
+
+export interface MessageReadEvent {
+  messageId: string;
+  matchId: string;
+  readBy: string;
+  readAt: string;
+}
+
+export interface TypingEvent {
+  matchId: string;
+  userId: string;
+  isTyping: boolean;
 }
 
 export type SocketEventCallback<T> = (data: T) => void;
@@ -220,6 +235,86 @@ class SocketService {
    */
   emitTyping(recipientId: string, isTyping: boolean): void {
     this.socket?.emit('typing', { recipientId, isTyping });
+  }
+
+  /**
+   * Listen for new message events (real-time message delivery)
+   * @param callback - Event handler
+   */
+  onMessageReceived(callback: SocketEventCallback<NewMessageEvent>): void {
+    this.socket?.on('message.received', callback);
+  }
+
+  /**
+   * Remove message received listener
+   * @param callback - Event handler to remove
+   */
+  offMessageReceived(callback: SocketEventCallback<NewMessageEvent>): void {
+    this.socket?.off('message.received', callback);
+  }
+
+  /**
+   * Listen for message read events
+   * @param callback - Event handler
+   */
+  onMessageRead(callback: SocketEventCallback<MessageReadEvent>): void {
+    this.socket?.on('message.read', callback);
+  }
+
+  /**
+   * Remove message read listener
+   * @param callback - Event handler to remove
+   */
+  offMessageRead(callback: SocketEventCallback<MessageReadEvent>): void {
+    this.socket?.off('message.read', callback);
+  }
+
+  /**
+   * Listen for typing start events
+   * @param callback - Event handler
+   */
+  onTypingStart(callback: SocketEventCallback<TypingEvent>): void {
+    this.socket?.on('typing:start', callback);
+  }
+
+  /**
+   * Remove typing start listener
+   * @param callback - Event handler to remove
+   */
+  offTypingStart(callback: SocketEventCallback<TypingEvent>): void {
+    this.socket?.off('typing:start', callback);
+  }
+
+  /**
+   * Listen for typing stop events
+   * @param callback - Event handler
+   */
+  onTypingStop(callback: SocketEventCallback<TypingEvent>): void {
+    this.socket?.on('typing:stop', callback);
+  }
+
+  /**
+   * Remove typing stop listener
+   * @param callback - Event handler to remove
+   */
+  offTypingStop(callback: SocketEventCallback<TypingEvent>): void {
+    this.socket?.off('typing:stop', callback);
+  }
+
+  /**
+   * Emit typing start event
+   * @param matchId - UUID of match/conversation
+   */
+  emitTypingStart(matchId: string): void {
+    this.socket?.emit('typing:start', { matchId });
+  }
+
+  /**
+   * Emit typing stop event
+   * @param matchId - UUID of match/conversation
+   */
+  emitTypingStop(matchId: string): void {
+    this.socket?.emit('typing:stop', { matchId });
   }
 
   /**

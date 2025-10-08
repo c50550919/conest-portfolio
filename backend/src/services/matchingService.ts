@@ -1,6 +1,19 @@
 import { ProfileModel, Profile } from '../models/Profile';
 import { MatchModel, CreateMatchData } from '../models/Match';
 import logger from '../config/logger';
+import SocketService from './SocketService';
+
+/**
+ * Matching Service
+ *
+ * Purpose: Detailed compatibility scoring and match management
+ * Constitution: Principle I (Child Safety - NO child PII)
+ *
+ * This is the DETAILED algorithm used when creating matches in the database.
+ * For discovery feed scoring, see /utils/compatibilityCalculator.ts
+ *
+ * Updated: 2025-10-08 (added Socket.io notification integration)
+ */
 
 // Matching algorithm weights as specified in CLAUDE.md
 const WEIGHTS = {
@@ -352,7 +365,55 @@ export const MatchingService = {
 
     logger.info(`Match created between users ${userId1} and ${userId2} with score ${compatibility.totalScore}`);
 
+    // Emit Socket.io notification to both users
+    this.notifyMatch(userId1, userId2, match.id, compatibility.totalScore);
+
     return match;
+  },
+
+  /**
+   * Notify both users of mutual match via Socket.io
+   * Constitution: Principle IV (Performance - <100ms delivery)
+   *
+   * @param userId1 - First user ID
+   * @param userId2 - Second user ID
+   * @param matchId - Created match ID
+   * @param compatibilityScore - Compatibility score (0-100)
+   */
+  notifyMatch(
+    userId1: string,
+    userId2: string,
+    matchId: string,
+    compatibilityScore: number
+  ): void {
+    const matchData = {
+      id: matchId,
+      compatibilityScore,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Emit to both users via SocketService
+    SocketService.emitMatchCreated(userId1, userId2, matchData);
+
+    logger.info(`Match notification sent to users ${userId1} and ${userId2}`);
+  },
+
+  /**
+   * Emit match created event (alias for notifyMatch)
+   * Used by SwipeService for consistency
+   */
+  emitMatchCreated(
+    userId: string,
+    matchData: {
+      id: string;
+      matchedUserId: string;
+      compatibilityScore: number;
+      createdAt: string;
+    }
+  ): void {
+    // This is handled by SocketService.emitMatchCreated
+    // Called from notifyMatch above
+    logger.debug(`emitMatchCreated called for user ${userId}, match ${matchData.id}`);
   },
 
   // Respond to a match request

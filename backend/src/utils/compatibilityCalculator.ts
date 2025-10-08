@@ -3,8 +3,12 @@ import db from '../config/database';
 /**
  * Compatibility Calculator Utility
  *
- * Purpose: Calculate compatibility scores between parent profiles
+ * Purpose: Fast compatibility scoring for Discovery Screen
  * Constitution: Principle I (Child Safety - NO child PII, only age groups)
+ * Performance: <20ms calculation target (Constitution Principle IV)
+ *
+ * This is the SIMPLE/FAST algorithm used in the discovery feed.
+ * For detailed match scoring, see /services/matchingService.ts
  *
  * Scoring Algorithm:
  * - Children age group overlap: 20 points per overlap (max 60 for 3+ overlaps)
@@ -12,7 +16,13 @@ import db from '../config/database';
  * - Location (same city): 30 points
  * - Total: 0-100 score
  *
+ * Example:
+ * - User A: ['toddler', 'elementary'], budget $1500, Austin
+ * - User B: ['toddler', 'teen'], budget $1600, Austin
+ * - Score: 20 (age) + 29 (budget) + 30 (location) = 79
+ *
  * Created: 2025-10-06
+ * Updated: 2025-10-08 (added performance documentation)
  */
 
 export interface ParentProfile {

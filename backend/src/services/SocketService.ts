@@ -94,6 +94,46 @@ class SocketService {
       timestamp: new Date().toISOString(),
     });
   }
+
+  /**
+   * T067: Emit typing:start event
+   * @param userId - User who started typing
+   * @param matchId - Match ID
+   * @param recipientId - User who should receive the typing indicator
+   */
+  emitTypingStart(userId: string, matchId: string, recipientId: string): void {
+    if (!this.io) {
+      console.warn('Socket.io not initialized, skipping typing:start event');
+      return;
+    }
+
+    this.io.to(`user:${recipientId}`).emit('typing:start', {
+      userId,
+      matchId,
+      isTyping: true,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * T067: Emit typing:stop event
+   * @param userId - User who stopped typing
+   * @param matchId - Match ID
+   * @param recipientId - User who should receive the typing indicator
+   */
+  emitTypingStop(userId: string, matchId: string, recipientId: string): void {
+    if (!this.io) {
+      console.warn('Socket.io not initialized, skipping typing:stop event');
+      return;
+    }
+
+    this.io.to(`user:${recipientId}`).emit('typing:stop', {
+      userId,
+      matchId,
+      isTyping: false,
+      timestamp: new Date().toISOString(),
+    });
+  }
 }
 
 export default new SocketService();

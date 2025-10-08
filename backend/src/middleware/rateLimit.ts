@@ -1,0 +1,184 @@
+/**
+ * Rate Limit Middleware - T042
+ *
+ * Constitution Principle III: Security
+ * - General API: 100 req/15min
+ * - Auth endpoints: 5 req/15min
+ * - Redis-backed for distributed systems (fallback to memory store)
+ * - express-rate-limit package
+ *
+ * Usage:
+ *   app.use(generalRateLimit)
+ *   router.post('/auth/login', authRateLimit, handler)
+ *
+ * Note: For production, install rate-limit-redis package:
+ *   npm install rate-limit-redis
+ */
+
+import rateLimit from 'express-rate-limit';
+import redis from '../config/redis';
+
+// Try to import RedisStore, fallback to memory if not available
+let RedisStore: any;
+try {
+  RedisStore = require('rate-limit-redis').default;
+} catch (err) {
+  console.warn('⚠️  rate-limit-redis not installed, using memory store. Install for production use.');
+  RedisStore = null;
+}
+
+/**
+ * Get store configuration
+ * Uses Redis if available, otherwise falls back to memory store
+ */
+function getStore(prefix: string) {
+  if (RedisStore) {
+    return new RedisStore({
+      client: redis,
+      prefix,
+    });
+  }
+  // Return undefined to use default memory store
+  return undefined;
+}
+
+/**
+ * General API rate limiter
+ * 100 requests per 15 minutes
+ */
+export const generalRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: {
+    error: 'Too many requests',
+    message: 'You have exceeded the 100 requests in 15 minutes limit',
+    retryAfter: 'Please try again in 15 minutes',
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // Redis store for distributed rate limiting (falls back to memory)
+  store: getStore('rl:general:'),
+  // Skip successful requests (optional - can be removed if all requests should count)
+  skipSuccessfulRequests: false,
+  // Skip failed requests (optional)
+  skipFailedRequests: false,
+  // Custom key generator (uses IP by default)
+  keyGenerator: (req) => {
+    return req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+  },
+});
+
+/**
+ * Auth endpoints rate limiter
+ * 5 requests per 15 minutes (strict)
+ * For login, register, password reset endpoints
+ */
+export const authRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: {
+    error: 'Too many authentication attempts',
+    message: 'You have exceeded the 5 authentication attempts in 15 minutes limit',
+    retryAfter: 'Please try again in 15 minutes',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('rl:auth:'),
+  // Only count failed authentication attempts
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => {
+    return req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
+  },
+});
+
+/**
+ * Message sending rate limiter
+ * 30 messages per minute
+ */
+export const messageRateLimit = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  message: {
+    error: 'Too many messages',
+    message: 'You have exceeded the 30 messages per minute limit',
+    retryAfter: 'Please slow down',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('rl:message:'),
+});
+
+/**
+ * Verification request rate limiter
+ * 3 requests per hour
+ */
+export const verificationRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
+  message: {
+    error: 'Too many verification requests',
+    message: 'You have exceeded the 3 verification requests per hour limit',
+    retryAfter: 'Please try again later',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('rl:verify:'),
+});
+
+/**
+ * Payment processing rate limiter
+ * 10 requests per hour
+ */
+export const paymentRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  message: {
+    error: 'Too many payment requests',
+    message: 'You have exceeded the 10 payment requests per hour limit',
+    retryAfter: 'Please try again later',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('rl:payment:'),
+});
+
+/**
+ * Discovery/swipe rate limiter
+ * 100 swipes per hour
+ */
+export const swipeRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 100,
+  message: {
+    error: 'Too many swipes',
+    message: 'You have exceeded the 100 swipes per hour limit',
+    retryAfter: 'Please take a break and try again later',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('rl:swipe:'),
+  // Use user ID instead of IP for authenticated endpoints
+  keyGenerator: (req: any) => {
+    return req.userId || req.ip || 'unknown';
+  },
+});
+
+/**
+ * Profile update rate limiter
+ * 10 updates per hour
+ */
+export const profileUpdateRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  message: {
+    error: 'Too many profile updates',
+    message: 'You have exceeded the 10 profile updates per hour limit',
+    retryAfter: 'Please try again later',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('rl:profile:'),
+  keyGenerator: (req: any) => {
+    return req.userId || req.ip || 'unknown';
+  },
+});

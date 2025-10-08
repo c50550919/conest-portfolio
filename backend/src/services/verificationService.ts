@@ -34,7 +34,7 @@ export const VerificationService = {
   // Phone verification
   async sendPhoneVerification(userId: string): Promise<void> {
     const user = await UserModel.findById(userId);
-    if (!user || !user.phone) {
+    if (!user || !user.phone_number) {
       throw new Error('User or phone number not found');
     }
 
@@ -45,7 +45,7 @@ export const VerificationService = {
     // await redisClient.setEx(`phone_verify:${userId}`, 600, code);
 
     // MOCK: Send SMS via Twilio
-    await mockTwilioSendSMS(user.phone, code);
+    await mockTwilioSendSMS(user.phone_number, code);
   },
 
   async verifyPhoneCode(userId: string, code: string): Promise<boolean> {

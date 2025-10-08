@@ -101,3 +101,6 @@ export const requireFullVerification = async (
 
 // Import db for the requireFullVerification function
 import db from '../config/database';
+
+// Export alias for backwards compatibility
+export const authMiddleware = authenticateToken;
