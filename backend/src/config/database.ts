@@ -1,12 +1,20 @@
 import knex, { Knex } from 'knex';
-import knexConfig from '../../knexfile';
+import config from '../../knexfile';
 
+// Get environment-specific configuration
 const environment = process.env.NODE_ENV || 'development';
-const config = knexConfig[environment];
+const dbConfig = config[environment];
 
-const db: Knex = knex(config);
+if (!dbConfig) {
+  throw new Error(`No database configuration found for environment: ${environment}`);
+}
 
+// Create database instance
+const db = knex(dbConfig);
+
+// Export as both default and named export
 export default db;
+export { db };
 
 // Test database connection
 export const testConnection = async (): Promise<boolean> => {
