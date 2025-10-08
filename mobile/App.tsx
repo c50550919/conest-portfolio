@@ -1,34 +1,34 @@
 /**
  * CoNest/SafeNest Mobile App
- * Root component with Redux and theme providers
+ * Main entry point with Redux, React Query, and Navigation
  */
 
 import React from 'react';
 import { StatusBar } from 'react-native';
-import { Provider as PaperProvider } from 'react-native-paper';
-import { Provider as ReduxProvider } from 'react-redux';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { Provider } from 'react-redux';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
+import { PaperProvider } from 'react-native-paper';
 import { store } from './src/store';
-import { theme } from './src/theme';
 import AppNavigator from './src/navigation/AppNavigator';
+import { theme } from './src/theme';
 
-// Create React Query client
+// React Query client configuration
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes (replaces cacheTime)
       retry: 2,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: true,
     },
   },
 });
 
-const App: React.FC = () => {
+function App(): React.JSX.Element {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ReduxProvider store={store}>
+      <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           <PaperProvider theme={theme}>
             <StatusBar
@@ -38,9 +38,9 @@ const App: React.FC = () => {
             <AppNavigator />
           </PaperProvider>
         </QueryClientProvider>
-      </ReduxProvider>
+      </Provider>
     </GestureHandlerRootView>
   );
-};
+}
 
 export default App;
