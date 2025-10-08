@@ -1,4 +1,4 @@
-import db from '../config/database';
+import { db } from '../config/database';
 
 export interface User {
   id: string;
@@ -11,6 +11,9 @@ export interface User {
   two_factor_secret?: string;
   status: 'active' | 'suspended' | 'deactivated';
   last_login_at?: Date;
+  refresh_token?: string; // JWT refresh token (hashed)
+  refresh_token_expires_at?: Date; // 7 days from issue
+  refresh_token_issued_at?: Date; // Track when issued
   created_at: Date;
   updated_at: Date;
 }

@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # PostgreSQL test database
+  postgres-test:
+    image: postgres:14-alpine
+    container_name: conest-postgres-test
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: conest_test
+    ports:
+      - '5433:5432' # Different port to avoid conflicts with dev DB
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U test_user -d conest_test']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test-network
+
+  # Redis test cache
+  redis-test:
+    image: redis:7-alpine
+    container_name: conest-redis-test
+    command: redis-server --requirepass test_redis_password
+    ports:
+      - '6380:6379' # Different port to avoid conflicts with dev Redis
+    volumes:
+      - redis-test-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - test-network
+
+  # Backend test server
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: test
+    container_name: conest-backend-test
+    environment:
+      NODE_ENV: test
+      POSTGRES_HOST: postgres-test
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: conest_test
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      REDIS_HOST: redis-test
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: test_redis_password
+      JWT_SECRET: test-jwt-secret-key
+    ports:
+      - '3001:3000' # Different port for test server
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run test
+    networks:
+      - test-network
+
+volumes:
+  postgres-test-data:
+    driver: local
+  redis-test-data:
+    driver: local
+
+networks:
+  test-network:
+    driver: bridge

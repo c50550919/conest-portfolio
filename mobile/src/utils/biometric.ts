@@ -1,9 +1,11 @@
 /**
  * Biometric Authentication Utility
  * Face ID, Touch ID, and Fingerprint authentication for React Native
+ *
+ * TODO: Implement for bare React Native using react-native-biometrics
  */
 
-import * as LocalAuthentication from 'expo-local-authentication';
+// import * as LocalAuthentication from 'expo-local-authentication';
 
 export enum BiometricType {
   FINGERPRINT = 'fingerprint',
@@ -16,8 +18,9 @@ export enum BiometricType {
  */
 export async function isBiometricSupported(): Promise<boolean> {
   try {
-    const compatible = await LocalAuthentication.hasHardwareAsync();
-    return compatible;
+    // const compatible = await LocalAuthentication.hasHardwareAsync();
+    // return compatible;
+    return false; // TODO: Implement for bare RN
   } catch (error) {
     console.error('Error checking biometric support:', error);
     return false;
@@ -29,8 +32,9 @@ export async function isBiometricSupported(): Promise<boolean> {
  */
 export async function isBiometricEnrolled(): Promise<boolean> {
   try {
-    const enrolled = await LocalAuthentication.isEnrolledAsync();
-    return enrolled;
+    // const enrolled = await LocalAuthentication.isEnrolledAsync();
+    // return enrolled;
+    return false; // TODO: Implement for bare RN
   } catch (error) {
     console.error('Error checking biometric enrollment:', error);
     return false;
@@ -42,24 +46,25 @@ export async function isBiometricEnrolled(): Promise<boolean> {
  */
 export async function getSupportedBiometrics(): Promise<BiometricType[]> {
   try {
-    const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
-    const biometricTypes: BiometricType[] = [];
+    // const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
+    // const biometricTypes: BiometricType[] = [];
 
-    types.forEach(type => {
-      switch (type) {
-        case LocalAuthentication.AuthenticationType.FINGERPRINT:
-          biometricTypes.push(BiometricType.FINGERPRINT);
-          break;
-        case LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION:
-          biometricTypes.push(BiometricType.FACIAL_RECOGNITION);
-          break;
-        case LocalAuthentication.AuthenticationType.IRIS:
-          biometricTypes.push(BiometricType.IRIS);
-          break;
-      }
-    });
+    // types.forEach(type => {
+    //   switch (type) {
+    //     case LocalAuthentication.AuthenticationType.FINGERPRINT:
+    //       biometricTypes.push(BiometricType.FINGERPRINT);
+    //       break;
+    //     case LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION:
+    //       biometricTypes.push(BiometricType.FACIAL_RECOGNITION);
+    //       break;
+    //     case LocalAuthentication.AuthenticationType.IRIS:
+    //       biometricTypes.push(BiometricType.IRIS);
+    //       break;
+    //   }
+    // });
 
-    return biometricTypes;
+    // return biometricTypes;
+    return []; // TODO: Implement for bare RN
   } catch (error) {
     console.error('Error getting supported biometrics:', error);
     return [];
@@ -97,21 +102,25 @@ export async function authenticateWithBiometric(options?: {
     }
 
     // Attempt authentication
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: options?.promptMessage || 'Authenticate to continue',
-      cancelLabel: options?.cancelLabel || 'Cancel',
-      fallbackLabel: options?.fallbackLabel || 'Use Passcode',
-      disableDeviceFallback: options?.disableDeviceFallback || false,
-    });
+    // const result = await LocalAuthentication.authenticateAsync({
+    //   promptMessage: options?.promptMessage || 'Authenticate to continue',
+    //   cancelLabel: options?.cancelLabel || 'Cancel',
+    //   fallbackLabel: options?.fallbackLabel || 'Use Passcode',
+    //   disableDeviceFallback: options?.disableDeviceFallback || false,
+    // });
 
-    if (result.success) {
-      return { success: true };
-    } else {
-      return {
-        success: false,
-        error: result.error || 'Authentication failed',
-      };
-    }
+    // if (result.success) {
+    //   return { success: true };
+    // } else {
+    //   return {
+    //     success: false,
+    //     error: result.error || 'Authentication failed',
+    //   };
+    // }
+    return {
+      success: false,
+      error: 'Biometric auth not implemented for bare RN',
+    }; // TODO: Implement for bare RN
   } catch (error) {
     console.error('Biometric authentication error:', error);
     return {

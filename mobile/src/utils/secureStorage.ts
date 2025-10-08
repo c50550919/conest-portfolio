@@ -4,7 +4,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Crypto from 'expo-crypto';
+import { sha256 } from 'react-native-aes-crypto';
 
 // In production, derive this from device-specific data
 const ENCRYPTION_KEY = 'your-encryption-key-here';
@@ -14,11 +14,8 @@ const ENCRYPTION_KEY = 'your-encryption-key-here';
  */
 async function encrypt(data: string): Promise<string> {
   try {
-    // Use Expo Crypto for encryption
-    const encrypted = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      `${ENCRYPTION_KEY}:${data}`
-    );
+    // Use sha256 for encryption
+    const encrypted = await sha256(`${ENCRYPTION_KEY}:${data}`);
 
     // In production, use proper AES encryption library like react-native-aes-crypto
     return encrypted;

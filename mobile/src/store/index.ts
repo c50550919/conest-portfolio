@@ -9,6 +9,8 @@ import userReducer from './slices/userSlice';
 import matchesReducer from './slices/matchesSlice';
 import messagesReducer from './slices/messagesSlice';
 import householdReducer from './slices/householdSlice';
+import discoveryReducer from './slices/discoverySlice';
+import browseDiscoveryReducer from './slices/browseDiscoverySlice';
 
 export const store = configureStore({
   reducer: {
@@ -17,6 +19,8 @@ export const store = configureStore({
     matches: matchesReducer,
     messages: messagesReducer,
     household: householdReducer,
+    discovery: discoveryReducer,
+    browseDiscovery: browseDiscoveryReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

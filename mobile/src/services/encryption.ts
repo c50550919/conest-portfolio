@@ -3,7 +3,7 @@
  * Encrypts messages before sending to server
  */
 
-import * as Crypto from 'expo-crypto';
+import { sha256 } from 'react-native-aes-crypto';
 
 /**
  * Generate encryption key pair for E2E encryption
@@ -15,15 +15,9 @@ export async function generateKeyPair(): Promise<{
   // In production, use a proper E2E encryption library like Signal Protocol
   // or libsodium (react-native-sodium)
 
-  const publicKey = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    `public-${Date.now()}`
-  );
+  const publicKey = await sha256(`public-${Date.now()}`);
 
-  const privateKey = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    `private-${Date.now()}`
-  );
+  const privateKey = await sha256(`private-${Date.now()}`);
 
   return { publicKey, privateKey };
 }
@@ -39,10 +33,7 @@ export async function encryptMessage(
     // In production, use proper public key encryption
     // Example with libsodium: sodium.crypto_box_seal(message, recipientPublicKey)
 
-    const encrypted = await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      `${recipientPublicKey}:${message}`
-    );
+    const encrypted = await sha256(`${recipientPublicKey}:${message}`);
 
     return encrypted;
   } catch (error) {
@@ -81,10 +72,7 @@ export async function generateSharedSecret(
   // In production, use Diffie-Hellman key exchange
   // Example: ECDH with libsodium
 
-  const sharedSecret = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    `${myPrivateKey}:${theirPublicKey}`
-  );
+  const sharedSecret = await sha256(`${myPrivateKey}:${theirPublicKey}`);
 
   return sharedSecret;
 }
@@ -97,10 +85,7 @@ export async function encryptWithSharedSecret(
   sharedSecret: string
 ): Promise<string> {
   // Use shared secret for symmetric encryption (AES-256)
-  const encrypted = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    `${sharedSecret}:${data}`
-  );
+  const encrypted = await sha256(`${sharedSecret}:${data}`);
 
   return encrypted;
 }
@@ -125,10 +110,7 @@ export async function signMessage(
   privateKey: string
 ): Promise<string> {
   // In production, use Ed25519 or similar for signing
-  const signature = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    `${privateKey}:${message}`
-  );
+  const signature = await sha256(`${privateKey}:${message}`);
 
   return signature;
 }
@@ -142,10 +124,7 @@ export async function verifySignature(
   publicKey: string
 ): Promise<boolean> {
   // In production, verify using public key cryptography
-  const expectedSignature = await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    `${publicKey}:${message}`
-  );
+  const expectedSignature = await sha256(`${publicKey}:${message}`);
 
   // This is a simplified check - use proper verification in production
   return signature === expectedSignature;

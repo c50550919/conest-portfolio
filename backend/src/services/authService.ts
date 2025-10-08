@@ -1,14 +1,14 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { UserModel, CreateUserData } from '../models/User';
+import { UserModel } from '../models/User';
 import { VerificationModel } from '../models/Verification';
 import redisClient from '../config/redis';
 
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS) || 12;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
-const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
+const JWT_SECRET: string = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_REFRESH_SECRET: string = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key';
+const JWT_EXPIRES_IN: string = process.env.JWT_EXPIRES_IN || '15m';
+const JWT_REFRESH_EXPIRES_IN: string = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
 
 export interface RegisterData {
   email: string;
@@ -95,17 +95,21 @@ export const AuthService = {
   },
 
   async generateTokenPair(userId: string): Promise<TokenPair> {
-    const accessToken = jwt.sign({ userId }, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES_IN,
-    });
+    const accessToken = jwt.sign(
+      { userId },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions
+    );
 
-    const refreshToken = jwt.sign({ userId }, JWT_REFRESH_SECRET, {
-      expiresIn: JWT_REFRESH_EXPIRES_IN,
-    });
+    const refreshToken = jwt.sign(
+      { userId },
+      JWT_REFRESH_SECRET,
+      { expiresIn: JWT_REFRESH_EXPIRES_IN } as jwt.SignOptions
+    );
 
     // Store refresh token in Redis with expiration
     const expiresInSeconds = this.parseExpiration(JWT_REFRESH_EXPIRES_IN);
-    await redisClient.setEx(`refresh_token:${userId}`, expiresInSeconds, refreshToken);
+    await redisClient.setex(`refresh_token:${userId}`, expiresInSeconds, refreshToken);
 
     return {
       accessToken,
@@ -144,12 +148,14 @@ export const AuthService = {
     }
 
     // Generate reset token
-    const resetToken = jwt.sign({ userId: user.id, type: 'password_reset' }, JWT_SECRET, {
-      expiresIn: '1h',
-    });
+    const resetToken = jwt.sign(
+      { userId: user.id, type: 'password_reset' },
+      JWT_SECRET,
+      { expiresIn: '1h' } as jwt.SignOptions
+    );
 
     // Store in Redis with 1 hour expiration
-    await redisClient.setEx(`password_reset:${user.id}`, 3600, resetToken);
+    await redisClient.setex(`password_reset:${user.id}`, 3600, resetToken);
 
     // TODO: Send email with reset link
     console.log(`Password reset token for ${email}: ${resetToken}`);
@@ -208,7 +214,7 @@ export const AuthService = {
   async disable2FA(userId: string): Promise<void> {
     await UserModel.update(userId, {
       two_factor_enabled: false,
-      two_factor_secret: null,
+      two_factor_secret: undefined,
     });
   },
 
