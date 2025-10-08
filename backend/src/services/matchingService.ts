@@ -274,7 +274,6 @@ export const MatchingService = {
     preferences: MatchingPreferences = {}
   ): Promise<any[]> {
     const {
-      maxDistance = 20,
       minCompatibilityScore = 60,
       limit = 20
     } = preferences;

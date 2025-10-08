@@ -47,6 +47,7 @@ export const authenticateToken = async (
       res.status(403).json({ error: 'Invalid or expired token' });
       return;
     }
+    console.error('Authentication error:', error);
     res.status(500).json({ error: 'Authentication error' });
   }
 };

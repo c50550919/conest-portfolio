@@ -1,67 +1,26 @@
-import express, { Express } from 'express';
 import http from 'http';
 import dotenv from 'dotenv';
+import app from './app';
 import { testConnection } from './config/database';
-import { connectRedis } from './config/redis';
-import { setupSecurity } from './middleware/security';
-import { generalLimiter } from './middleware/rateLimiter';
-import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { checkRedisHealth } from './config/redis';
 import { initializeWebSocket } from './websockets/socketHandler';
 import logger from './config/logger';
-
-// Import routes
-import authRoutes from './routes/auth';
-import profileRoutes from './routes/profile';
-import verificationRoutes from './routes/verification';
-import matchRoutes from './routes/matches';
-import messageRoutes from './routes/messages';
-import paymentRoutes from './routes/payments';
+import SocketService from './services/SocketService';
 
 // Load environment variables
 dotenv.config();
 
-const app: Express = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 // Initialize WebSocket
 const io = initializeWebSocket(server);
 
+// Register Socket.io instance with SocketService
+SocketService.setIO(io);
+
 // Make io available to routes
 app.set('io', io);
-
-// Security middleware
-setupSecurity(app);
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Rate limiting
-app.use(generalLimiter);
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  });
-});
-
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api/profiles', profileRoutes);
-app.use('/api/verification', verificationRoutes);
-app.use('/api/matches', matchRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/payments', paymentRoutes);
-
-// 404 handler
-app.use(notFoundHandler);
-
-// Error handler (must be last)
-app.use(errorHandler);
 
 // Initialize server
 const startServer = async () => {
@@ -73,7 +32,7 @@ const startServer = async () => {
     }
 
     // Connect to Redis
-    await connectRedis();
+    await checkRedisHealth();
 
     // Start server
     server.listen(PORT, () => {
@@ -161,7 +120,9 @@ process.on('SIGINT', () => {
   });
 });
 
-// Start the server
-startServer();
+// Start the server only if this file is run directly (not imported by tests)
+if (require.main === module) {
+  startServer();
+}
 
 export default app;

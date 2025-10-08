@@ -168,7 +168,7 @@ export const VerificationService = {
   },
 
   // Income Verification (Real structure, but simplified)
-  async initiateIncomeVerification(userId: string, documents: any[]): Promise<void> {
+  async initiateIncomeVerification(userId: string, _documents: any[]): Promise<void> {
     logger.info(`Initiating income verification for user: ${userId}`);
 
     // In production, this would integrate with Plaid or manual document review

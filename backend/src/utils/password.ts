@@ -1,0 +1,18 @@
+/**
+ * Password Utility Functions
+ *
+ * Constitution Principle III: Security
+ * - bcrypt cost factor: 12
+ */
+
+import bcrypt from 'bcrypt';
+
+const SALT_ROUNDS = 12;
+
+export async function hashPassword(password: string): Promise<string> {
+  return await bcrypt.hash(password, SALT_ROUNDS);
+}
+
+export async function comparePassword(password: string, hash: string): Promise<boolean> {
+  return await bcrypt.compare(password, hash);
+}
