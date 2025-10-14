@@ -4,7 +4,7 @@ import type {
   CreateConnectionRequestData,
   ConnectionRequestWithProfiles,
 } from '../models/ConnectionRequest';
-import { io } from '../config/socket';
+import { getSocketIO } from '../config/socket';
 
 /**
  * ConnectionRequestService
@@ -46,11 +46,16 @@ export class ConnectionRequestService {
     const request = await ConnectionRequestModel.create(data);
 
     // Send real-time notification to recipient
-    io.to(`user:${recipientId}`).emit('connection_request_received', {
-      id: request.id,
-      sender_id: request.sender_id,
-      sent_at: request.sent_at,
-    });
+    try {
+      const io = getSocketIO();
+      io.to(`user:${recipientId}`).emit('connection_request:received', {
+        id: request.id,
+        sender_id: request.sender_id,
+        sent_at: request.sent_at,
+      });
+    } catch (err) {
+      console.warn('Socket.io not available for real-time notification:', err);
+    }
 
     return request;
   }
@@ -111,11 +116,16 @@ export class ConnectionRequestService {
     );
 
     // Send real-time notification to sender
-    io.to(`user:${request.sender_id}`).emit('connection_request_accepted', {
-      id: request.id,
-      recipient_id: request.recipient_id,
-      responded_at: request.responded_at,
-    });
+    try {
+      const io = getSocketIO();
+      io.to(`user:${request.sender_id}`).emit('connection_request:accepted', {
+        id: request.id,
+        recipient_id: request.recipient_id,
+        responded_at: request.responded_at,
+      });
+    } catch (err) {
+      console.warn('Socket.io not available for real-time notification:', err);
+    }
 
     return request;
   }
@@ -142,11 +152,16 @@ export class ConnectionRequestService {
     );
 
     // Send real-time notification to sender
-    io.to(`user:${request.sender_id}`).emit('connection_request_declined', {
-      id: request.id,
-      recipient_id: request.recipient_id,
-      responded_at: request.responded_at,
-    });
+    try {
+      const io = getSocketIO();
+      io.to(`user:${request.sender_id}`).emit('connection_request:declined', {
+        id: request.id,
+        recipient_id: request.recipient_id,
+        responded_at: request.responded_at,
+      });
+    } catch (err) {
+      console.warn('Socket.io not available for real-time notification:', err);
+    }
 
     return request;
   }
@@ -158,10 +173,15 @@ export class ConnectionRequestService {
     const request = await ConnectionRequestModel.cancel(id, senderId);
 
     // Send real-time notification to recipient
-    io.to(`user:${request.recipient_id}`).emit('connection_request_cancelled', {
-      id: request.id,
-      sender_id: request.sender_id,
-    });
+    try {
+      const io = getSocketIO();
+      io.to(`user:${request.recipient_id}`).emit('connection_request:cancelled', {
+        id: request.id,
+        sender_id: request.sender_id,
+      });
+    } catch (err) {
+      console.warn('Socket.io not available for real-time notification:', err);
+    }
 
     return request;
   }

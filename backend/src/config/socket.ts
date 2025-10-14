@@ -42,6 +42,23 @@ interface AuthenticatedSocket extends Socket {
 }
 
 /**
+ * Singleton Socket.io instance
+ * Initialized by initializeSocketIO() and accessible via getSocketIO()
+ */
+let ioInstance: Server | null = null;
+
+/**
+ * Get the Socket.io instance
+ * @throws Error if Socket.io not initialized
+ */
+export function getSocketIO(): Server {
+  if (!ioInstance) {
+    throw new Error('Socket.io not initialized. Call initializeSocketIO() first.');
+  }
+  return ioInstance;
+}
+
+/**
  * Initialize Socket.io server with authentication and event handlers
  */
 export function initializeSocketIO(httpServer: HTTPServer): Server {
@@ -88,6 +105,34 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
 
     // Emit presence update
     socket.broadcast.emit('user:online', { userId });
+
+    // ========================================
+    // CONNECTION REQUEST EVENTS
+    // ========================================
+
+    /**
+     * Server emits when connection request received
+     * Triggered by ConnectionRequestService.sendRequest()
+     */
+    // io.to(`user:${recipientId}`).emit('connection_request:received', { id, sender_id, sent_at })
+
+    /**
+     * Server emits when connection request accepted
+     * Triggered by ConnectionRequestService.acceptRequest()
+     */
+    // io.to(`user:${senderId}`).emit('connection_request:accepted', { id, recipient_id, responded_at })
+
+    /**
+     * Server emits when connection request declined
+     * Triggered by ConnectionRequestService.declineRequest()
+     */
+    // io.to(`user:${senderId}`).emit('connection_request:declined', { id, recipient_id, responded_at })
+
+    /**
+     * Server emits when connection request cancelled
+     * Triggered by ConnectionRequestService.cancelRequest()
+     */
+    // io.to(`user:${recipientId}`).emit('connection_request:cancelled', { id, sender_id })
 
     // ========================================
     // MATCH EVENTS
@@ -185,6 +230,10 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
   });
 
   console.log('✅ Socket.io server initialized with Redis adapter');
+
+  // Store singleton instance
+  ioInstance = io;
+
   return io;
 }
 
@@ -197,6 +246,7 @@ export async function closeSocketIO(io: Server): Promise<void> {
       console.log('✅ Socket.io server closed');
       pubClient.quit();
       subClient.quit();
+      ioInstance = null; // Clear singleton instance
       resolve();
     });
   });

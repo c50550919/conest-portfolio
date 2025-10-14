@@ -13,6 +13,8 @@ import messageRoutes from './routes/messages';
 import paymentRoutes, { stripeWebhookRouter } from './routes/payments';
 import discoveryRoutes from './routes/discovery';
 import householdRoutes from './routes/household';
+import savedProfileRoutes from './routes/savedProfiles';
+import connectionRequestRoutes from './routes/connectionRequests';
 
 // Load environment variables
 dotenv.config();
@@ -51,6 +53,8 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/discovery', discoveryRoutes);
 app.use('/api/household', householdRoutes);
+app.use('/api/saved-profiles', savedProfileRoutes);
+app.use('/api/connection-requests', connectionRequestRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
