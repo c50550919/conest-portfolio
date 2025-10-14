@@ -11,6 +11,8 @@ import messagesReducer from './slices/messagesSlice';
 import householdReducer from './slices/householdSlice';
 import discoveryReducer from './slices/discoverySlice';
 import browseDiscoveryReducer from './slices/browseDiscoverySlice';
+import savedProfilesReducer from './slices/savedProfilesSlice';
+import connectionRequestsReducer from './slices/connectionRequestsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -21,6 +23,8 @@ export const store = configureStore({
     household: householdReducer,
     discovery: discoveryReducer,
     browseDiscovery: browseDiscoveryReducer,
+    savedProfiles: savedProfilesReducer,
+    connectionRequests: connectionRequestsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
