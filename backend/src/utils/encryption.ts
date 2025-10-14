@@ -6,7 +6,7 @@
 import crypto from 'crypto';
 import { securityConfig } from '../config/security';
 
-const { algorithm, keyLength, ivLength, authTagLength, saltLength, iterations, digest } = securityConfig.encryption;
+const { algorithm, keyLength, ivLength, authTagLength: _authTagLength, saltLength, iterations, digest } = securityConfig.encryption;
 
 /**
  * Derive encryption key from master key using PBKDF2
@@ -92,7 +92,7 @@ export function decrypt(encrypted: string): string {
       throw new Error('Invalid encrypted data format');
     }
 
-    const [keyVersion, saltHex, ivHex, authTagHex, ciphertext] = parts;
+    const [_keyVersion, saltHex, ivHex, authTagHex, ciphertext] = parts;
 
     // Convert from hex
     const salt = Buffer.from(saltHex, 'hex');
@@ -126,7 +126,7 @@ export function encryptFields<T extends Record<string, any>>(
   obj: T,
   fieldsToEncrypt: string[]
 ): T {
-  const result = { ...obj };
+  const result = { ...obj } as any;
 
   for (const field of fieldsToEncrypt) {
     if (field in result && result[field]) {
@@ -134,7 +134,7 @@ export function encryptFields<T extends Record<string, any>>(
     }
   }
 
-  return result;
+  return result as T;
 }
 
 /**
@@ -147,7 +147,7 @@ export function decryptFields<T extends Record<string, any>>(
   obj: T,
   fieldsToDecrypt: string[]
 ): T {
-  const result = { ...obj };
+  const result = { ...obj } as any;
 
   for (const field of fieldsToDecrypt) {
     if (field in result && result[field]) {
@@ -160,7 +160,7 @@ export function decryptFields<T extends Record<string, any>>(
     }
   }
 
-  return result;
+  return result as T;
 }
 
 /**
@@ -200,4 +200,80 @@ export function verifyHash(data: string, hashedData: string): boolean {
 export function rotateKey(encrypted: string, newKeyVersion: string = 'v2'): string {
   const decrypted = decrypt(encrypted);
   return encrypt(decrypted, newKeyVersion);
+}
+
+/**
+ * Encrypt a note with separate IV for database storage
+ * Used for SavedProfile and ConnectionRequest notes
+ * @param plaintext - Note text to encrypt
+ * @returns Object with encrypted text and IV
+ */
+export function encryptNote(plaintext: string): { encrypted: string; iv: string } {
+  try {
+    const masterKey = getMasterKey();
+    const salt = crypto.randomBytes(saltLength);
+    const iv = crypto.randomBytes(ivLength);
+    const key = deriveKey(masterKey, salt);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+
+    let ciphertext = cipher.update(plaintext, 'utf8', 'hex');
+    ciphertext += cipher.final('hex');
+
+    const authTag = cipher.getAuthTag();
+
+    // Format: salt:authTag:ciphertext (IV stored separately)
+    const encrypted = [
+      salt.toString('hex'),
+      authTag.toString('hex'),
+      ciphertext,
+    ].join(':');
+
+    return {
+      encrypted,
+      iv: iv.toString('hex'),
+    };
+  } catch (error) {
+    throw new Error(`Note encryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Decrypt a note using encrypted text and IV
+ * Used for SavedProfile and ConnectionRequest notes
+ * @param encrypted - Encrypted note text
+ * @param ivHex - Initialization vector (hex string)
+ * @returns Decrypted plaintext
+ */
+export function decryptNote(encrypted: string, ivHex: string): string {
+  try {
+    const masterKey = getMasterKey();
+
+    // Split components: salt:authTag:ciphertext
+    const parts = encrypted.split(':');
+    if (parts.length !== 3) {
+      throw new Error('Invalid encrypted note format');
+    }
+
+    const [saltHex, authTagHex, ciphertext] = parts;
+
+    // Convert from hex
+    const salt = Buffer.from(saltHex, 'hex');
+    const iv = Buffer.from(ivHex, 'hex');
+    const authTag = Buffer.from(authTagHex, 'hex');
+
+    // Derive decryption key
+    const key = deriveKey(masterKey, salt);
+
+    // Create decipher
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    decipher.setAuthTag(authTag);
+
+    // Decrypt data
+    let plaintext = decipher.update(ciphertext, 'hex', 'utf8');
+    plaintext += decipher.final('utf8');
+
+    return plaintext;
+  } catch (error) {
+    throw new Error(`Note decryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
