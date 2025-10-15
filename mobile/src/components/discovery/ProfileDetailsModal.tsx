@@ -430,13 +430,15 @@ export default function ProfileDetailsModal({
                 </View>
                 {housingPreferences && (
                   <>
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Type:</Text>
-                      <Text style={styles.detailValue}>
-                        {housingPreferences.housingType.charAt(0).toUpperCase() +
-                          housingPreferences.housingType.slice(1)}
-                      </Text>
-                    </View>
+                    {housingPreferences.housingType && (
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Type:</Text>
+                        <Text style={styles.detailValue}>
+                          {housingPreferences.housingType.charAt(0).toUpperCase() +
+                            housingPreferences.housingType.slice(1)}
+                        </Text>
+                      </View>
+                    )}
                     <View style={styles.tagRow}>
                       {housingPreferences.petFriendly && (
                         <View style={styles.tag}>
@@ -467,13 +469,15 @@ export default function ProfileDetailsModal({
                 'clock-outline',
                 'Schedule',
                 <>
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Work schedule:</Text>
-                    <Text style={styles.detailValue}>
-                      {schedule.workSchedule.charAt(0).toUpperCase() +
-                        schedule.workSchedule.slice(1)}
-                    </Text>
-                  </View>
+                  {schedule.workSchedule && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Work schedule:</Text>
+                      <Text style={styles.detailValue}>
+                        {schedule.workSchedule.charAt(0).toUpperCase() +
+                          schedule.workSchedule.slice(1)}
+                      </Text>
+                    </View>
+                  )}
                   {schedule.typicalWorkHours && (
                     <View style={styles.detailRow}>
                       <Text style={styles.detailLabel}>Typical hours:</Text>
@@ -533,13 +537,15 @@ export default function ProfileDetailsModal({
                       </View>
                     </View>
                   )}
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Screen time:</Text>
-                    <Text style={styles.detailValue}>
-                      {parenting.screenTimeApproach.charAt(0).toUpperCase() +
-                        parenting.screenTimeApproach.slice(1)}
-                    </Text>
-                  </View>
+                  {parenting.screenTimeApproach && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Screen time:</Text>
+                      <Text style={styles.detailValue}>
+                        {parenting.screenTimeApproach.charAt(0).toUpperCase() +
+                          parenting.screenTimeApproach.slice(1)}
+                      </Text>
+                    </View>
+                  )}
                 </>,
                 'parenting-section'
               )
