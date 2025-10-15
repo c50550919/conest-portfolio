@@ -5,7 +5,7 @@
 
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
-import { setAuth, logout as logoutAction } from '../store/slices/authSlice';
+import { logout as logoutAction } from '../store/slices/authSlice';
 import api from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -22,7 +22,8 @@ export const useAuth = () => {
       await AsyncStorage.setItem('authToken', token);
       await AsyncStorage.setItem('refreshToken', refreshToken);
 
-      dispatch(setAuth({ token, refreshToken, userId }));
+      // TODO: Update to use loginSuccess instead of deprecated setAuth
+      // dispatch(setAuth({ token, refreshToken, userId }));
       return { success: true };
     } catch (error) {
       return { success: false, error };

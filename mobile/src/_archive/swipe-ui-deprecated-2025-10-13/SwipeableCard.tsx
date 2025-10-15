@@ -112,8 +112,9 @@ export default function SwipeableCard({
   };
 
   return (
-    <View style={[styles.cardContainer, { zIndex: 100 - index }]}>
+    <View testID={`swipeable-card-${index}`} style={[styles.cardContainer, { zIndex: 100 - index }]}>
       <Animated.View
+        testID="profile-card"
         style={[styles.card, animatedCardStyle]}
         {...(index === 0 ? panResponder.panHandlers : {})}
       >

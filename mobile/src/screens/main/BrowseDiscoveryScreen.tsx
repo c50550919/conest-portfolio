@@ -25,6 +25,9 @@ import {
   RefreshControl,
   ActivityIndicator,
   Dimensions,
+  SafeAreaView,
+  StatusBar,
+  Platform,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -44,6 +47,7 @@ import {
 } from '../../store/slices/browseDiscoverySlice';
 import { ProfileGridCard } from '../../components/discovery/ProfileGridCard';
 import { FilterPanel } from '../../components/discovery/FilterPanel';
+import ProfileDetailsModal from '../../components/discovery/ProfileDetailsModal';
 import {
   SORT_OPTIONS,
   VIEW_MODES,
@@ -75,6 +79,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
   const [filterPanelVisible, setFilterPanelVisible] = useState(false);
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<ExtendedProfileCard | null>(null);
+  const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
 
   // Mock data for UI development (remove when API is ready)
   const MOCK_PROFILES: ExtendedProfileCard[] = [
@@ -266,8 +271,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
   // Handle profile tap (open detailed view)
   const handleProfilePress = (profile: ExtendedProfileCard) => {
     setSelectedProfile(profile);
-    // TODO: Open detailed profile modal
-    alert(`Opening detailed view for ${profile.firstName}`);
+    setIsProfileModalVisible(true);
   };
 
   // Handle refresh
@@ -349,9 +353,11 @@ export const BrowseDiscoveryScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+    <SafeAreaView style={styles.safeArea} testID="discovery-screen">
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
         <Text style={styles.headerTitle}>Browse Connections</Text>
         <View style={styles.headerActions}>
           {/* View Mode Toggle */}
@@ -472,11 +478,30 @@ export const BrowseDiscoveryScreen: React.FC = () => {
         onApply={(newFilters) => dispatch(setFilters(newFilters))}
         onClose={() => setFilterPanelVisible(false)}
       />
-    </View>
+
+      {/* Profile Details Modal */}
+      <ProfileDetailsModal
+        visible={isProfileModalVisible}
+        profile={selectedProfile}
+        onClose={() => {
+          setIsProfileModalVisible(false);
+          setSelectedProfile(null);
+        }}
+        onInterested={() => {
+          // User is interested - add logic here for sending connection request
+          alert(`Connection request sent to ${selectedProfile?.firstName}`);
+        }}
+      />
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#fff', // Match header background for seamless look
+  },
   container: {
     flex: 1,
     backgroundColor: '#F5F6F7',

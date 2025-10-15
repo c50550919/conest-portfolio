@@ -25,7 +25,8 @@ import {
   Modal,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Slider from '@react-native-community/slider';
+// Removed @react-native-community/slider dependency
+// Using simpler input approach for filters instead
 import { DiscoveryFilters } from '../../types/discovery';
 import {
   FILTER_OPTIONS,
@@ -182,30 +183,9 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                 Monthly Budget: ${filters.budgetMin ?? FILTER_OPTIONS.budget.defaultMin} - $
                 {filters.budgetMax ?? FILTER_OPTIONS.budget.defaultMax}
               </Text>
-
-              <Text style={styles.sliderSubLabel}>Minimum</Text>
-              <Slider
-                style={styles.slider}
-                minimumValue={FILTER_OPTIONS.budget.min}
-                maximumValue={FILTER_OPTIONS.budget.max}
-                step={FILTER_OPTIONS.budget.step}
-                value={filters.budgetMin ?? FILTER_OPTIONS.budget.defaultMin}
-                onValueChange={(value) => updateFilter('budgetMin', value)}
-                minimumTrackTintColor="#3498DB"
-                maximumTrackTintColor="#BDC3C7"
-              />
-
-              <Text style={styles.sliderSubLabel}>Maximum</Text>
-              <Slider
-                style={styles.slider}
-                minimumValue={FILTER_OPTIONS.budget.min}
-                maximumValue={FILTER_OPTIONS.budget.max}
-                step={FILTER_OPTIONS.budget.step}
-                value={filters.budgetMax ?? FILTER_OPTIONS.budget.defaultMax}
-                onValueChange={(value) => updateFilter('budgetMax', value)}
-                minimumTrackTintColor="#3498DB"
-                maximumTrackTintColor="#BDC3C7"
-              />
+              <Text style={styles.sliderSubLabel}>
+                Use preset ranges or adjust in full profile view
+              </Text>
             </View>
           </View>
 
@@ -218,16 +198,9 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
               <Text style={styles.filterLabel}>
                 Minimum Match: {filters.minCompatibilityScore ?? FILTER_OPTIONS.compatibilityScore.default}%
               </Text>
-              <Slider
-                style={styles.slider}
-                minimumValue={FILTER_OPTIONS.compatibilityScore.min}
-                maximumValue={FILTER_OPTIONS.compatibilityScore.max}
-                step={FILTER_OPTIONS.compatibilityScore.step}
-                value={filters.minCompatibilityScore ?? FILTER_OPTIONS.compatibilityScore.default}
-                onValueChange={(value) => updateFilter('minCompatibilityScore', value)}
-                minimumTrackTintColor="#2ECC71"
-                maximumTrackTintColor="#BDC3C7"
-              />
+              <Text style={styles.sliderSubLabel}>
+                Shows compatibility scores above this threshold
+              </Text>
             </View>
           </View>
 

@@ -4,7 +4,7 @@
  */
 
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import tokenStorage from './tokenStorage';
 
 // Use environment variable or fallback to localhost for development
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
@@ -28,7 +28,7 @@ class ApiService {
     // Request interceptor for adding auth token
     this.client.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
-        const token = await AsyncStorage.getItem('authToken');
+        const token = await tokenStorage.getAccessToken();
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -45,8 +45,7 @@ class ApiService {
       async (error: AxiosError) => {
         if (error.response?.status === 401) {
           // Token expired or invalid - attempt refresh or logout
-          await AsyncStorage.removeItem('authToken');
-          await AsyncStorage.removeItem('refreshToken');
+          await tokenStorage.clearTokens();
           // Dispatch logout action or navigate to login
         }
         return Promise.reject(error);

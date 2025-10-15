@@ -22,7 +22,7 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView testID="home-screen" style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -31,7 +31,7 @@ const HomeScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Welcome back!</Text>
+            <Text testID="welcome-message" style={styles.greeting}>Welcome back!</Text>
             <Text style={styles.userName}>Sarah Martinez</Text>
           </View>
           <TouchableOpacity style={styles.notificationButton}>
@@ -44,21 +44,33 @@ const HomeScreen: React.FC = () => {
 
         {/* Quick Stats */}
         <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { backgroundColor: colors.primary + '15' }]}>
+          <TouchableOpacity
+            testID="stat-new-connections"
+            style={[styles.statCard, { backgroundColor: colors.primary + '15' }]}
+            onPress={() => navigation.navigate('Discover' as never)}
+          >
             <Icon name="account-search" size={32} color={colors.primary} />
             <Text style={styles.statNumber}>12</Text>
             <Text style={styles.statLabel}>New Connections</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: colors.secondary + '15' }]}>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="stat-messages"
+            style={[styles.statCard, { backgroundColor: colors.secondary + '15' }]}
+            onPress={() => navigation.navigate('Messages' as never)}
+          >
             <Icon name="message-text" size={32} color={colors.secondary} />
             <Text style={styles.statNumber}>5</Text>
             <Text style={styles.statLabel}>Messages</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: colors.tertiary + '15' }]}>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="stat-compatibility"
+            style={[styles.statCard, { backgroundColor: colors.tertiary + '15' }]}
+            onPress={() => navigation.navigate('Discover' as never)}
+          >
             <Icon name="home-group" size={32} color={colors.tertiary} />
             <Text style={styles.statNumber}>85%</Text>
             <Text style={styles.statLabel}>Compatibility</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Household Status */}
@@ -80,11 +92,19 @@ const HomeScreen: React.FC = () => {
             <Text style={styles.householdTitle}>Mountain View House</Text>
             <Text style={styles.householdSubtitle}>3 Bedrooms • 2 Parents • 4 Children</Text>
             <View style={styles.householdActions}>
-              <TouchableOpacity style={styles.householdButton}>
+              <TouchableOpacity
+                testID="household-schedule-button"
+                style={styles.householdButton}
+                onPress={() => navigation.navigate('Household' as never)}
+              >
                 <Icon name="calendar" size={18} color="#FFFFFF" />
                 <Text style={styles.householdButtonText}>Schedule</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.householdButton}>
+              <TouchableOpacity
+                testID="household-expenses-button"
+                style={styles.householdButton}
+                onPress={() => navigation.navigate('Household' as never)}
+              >
                 <Icon name="currency-usd" size={18} color="#FFFFFF" />
                 <Text style={styles.householdButtonText}>Expenses</Text>
               </TouchableOpacity>

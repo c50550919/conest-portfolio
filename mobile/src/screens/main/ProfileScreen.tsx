@@ -13,17 +13,50 @@ import {
   TouchableOpacity,
   StatusBar,
   Switch,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import { useDispatch } from 'react-redux';
+import { logout } from '../../store/slices/authSlice';
+import tokenStorage from '../../services/tokenStorage';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 const ProfileScreen: React.FC = () => {
+  const dispatch = useDispatch();
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [locationEnabled, setLocationEnabled] = React.useState(true);
 
+  const handleLogout = async () => {
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Log Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Clear tokens from secure storage
+              await tokenStorage.clearTokens();
+              // Clear Redux state
+              dispatch(logout());
+              console.log('[ProfileScreen] Logged out successfully');
+            } catch (error) {
+              console.error('[ProfileScreen] Logout error:', error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="profile-screen">
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -37,7 +70,7 @@ const ProfileScreen: React.FC = () => {
           end={{ x: 1, y: 1 }}
         >
           <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
+            <View testID="profile-photo" style={styles.avatar}>
               <Text style={styles.avatarText}>SM</Text>
             </View>
             <View style={styles.verifiedBadge}>
@@ -47,7 +80,7 @@ const ProfileScreen: React.FC = () => {
               <Icon name="camera" size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-          <Text style={styles.userName}>Sarah Martinez</Text>
+          <Text testID="profile-name" style={styles.userName}>Sarah Martinez</Text>
           <Text style={styles.userEmail}>sarah.martinez@email.com</Text>
           <View style={styles.memberSinceContainer}>
             <Icon name="calendar-check" size={16} color="rgba(255, 255, 255, 0.9)" />
@@ -106,10 +139,10 @@ const ProfileScreen: React.FC = () => {
         </View>
 
         {/* Account Settings */}
-        <View style={styles.section}>
+        <View style={styles.section} testID="settings-section">
           <Text style={styles.sectionTitle}>Account Settings</Text>
           <View style={styles.settingsCard}>
-            <TouchableOpacity style={styles.settingItem}>
+            <TouchableOpacity testID="edit-profile-button" style={styles.settingItem}>
               <View style={styles.settingIcon}>
                 <Icon name="account-edit" size={24} color={colors.primary} />
               </View>
@@ -120,7 +153,7 @@ const ProfileScreen: React.FC = () => {
               <Icon name="chevron-right" size={24} color={colors.text.secondary} />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.settingItem}>
+            <TouchableOpacity testID="settings-button" style={styles.settingItem}>
               <View style={styles.settingIcon}>
                 <Icon name="lock" size={24} color={colors.secondary} />
               </View>
@@ -269,7 +302,11 @@ const ProfileScreen: React.FC = () => {
         <View style={[styles.section, { marginBottom: spacing.xl }]}>
           <Text style={styles.sectionTitle}>Account Actions</Text>
           <View style={styles.settingsCard}>
-            <TouchableOpacity style={styles.settingItem}>
+            <TouchableOpacity
+              testID="logout-button"
+              style={styles.settingItem}
+              onPress={handleLogout}
+            >
               <View style={[styles.settingIcon, { backgroundColor: colors.error + '20' }]}>
                 <Icon name="logout" size={24} color={colors.error} />
               </View>

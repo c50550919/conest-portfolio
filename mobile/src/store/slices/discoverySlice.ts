@@ -41,10 +41,11 @@ const initialState: DiscoveryState = {
 /**
  * Discovery Slice
  *
- * Manages swipeable parent profile queue for Discovery Screen
+ * Manages parent profile data for Browse Discovery Screen
  *
- * Reference: specs/001-discovery-screen-swipeable/research.md lines 326-362
- * Updated: 2025-10-06 (no undo functionality - clarification applied)
+ * Note: Browse-based discovery (deliberate browsing, no swipe gestures)
+ * Created: 2025-10-06
+ * Updated: 2025-10-13 - Removed swipeable references
  */
 const discoverySlice = createSlice({
   name: 'discovery',

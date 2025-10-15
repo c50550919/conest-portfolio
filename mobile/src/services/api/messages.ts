@@ -14,9 +14,9 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import tokenStorage from '../tokenStorage';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://applaudably-inapprehensive-eugena.ngrok-free.dev/api';
 
 export interface Message {
   id: string;
@@ -95,7 +95,7 @@ class MessagesAPI {
     // Request interceptor for adding auth token
     this.client.interceptors.request.use(
       async (config) => {
-        const token = await AsyncStorage.getItem('authToken');
+        const token = await tokenStorage.getAccessToken();
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -110,8 +110,7 @@ class MessagesAPI {
       async (error) => {
         if (error.response?.status === 401) {
           // Token expired - handle logout
-          await AsyncStorage.removeItem('authToken');
-          await AsyncStorage.removeItem('refreshToken');
+          await tokenStorage.clearTokens();
         }
         return Promise.reject(error);
       }

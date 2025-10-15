@@ -23,7 +23,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import tokenStorage, { AuthTokens } from '../tokenStorage';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://applaudably-inapprehensive-eugena.ngrok-free.dev/api';
 
 export interface RegisterRequest {
   email: string;
@@ -112,14 +112,14 @@ class AuthAPI {
       (error) => Promise.reject(error)
     );
 
-    // Response interceptor: Handle 401 errors with automatic token refresh
+    // Response interceptor: Handle 401/403 errors with automatic token refresh
     this.client.interceptors.response.use(
       (response) => response,
       async (error: AxiosError) => {
         const originalRequest = error.config as any;
 
-        // If 401 error and not already retrying
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // If 401 or 403 error and not already retrying
+        if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
           if (this.isRefreshing) {
             // Wait for token refresh to complete
             return new Promise((resolve) => {
@@ -196,12 +196,41 @@ class AuthAPI {
    * @returns User profile and auth tokens
    */
   async login(request: LoginRequest): Promise<LoginResponse> {
-    const response = await this.client.post<LoginResponse>('/auth/login', request);
+    console.log('[AuthAPI] Login request:', { email: request.email });
+    const response = await this.client.post<any>('/auth/login', request);
+    console.log('[AuthAPI] Login response status:', response.status);
+    console.log('[AuthAPI] Login response data:', JSON.stringify(response.data, null, 2));
+
+    // Backend wraps response in { success, data: { user, tokens } }
+    const backendData = response.data.data;
+    console.log('[AuthAPI] Extracted backendData:', JSON.stringify(backendData, null, 2));
+
+    // Extract tokens with userId from backend user.id
+    const tokens: AuthTokens = {
+      accessToken: backendData.tokens.accessToken,
+      refreshToken: backendData.tokens.refreshToken,
+      userId: backendData.user.id,
+    };
+    console.log('[AuthAPI] Created tokens object:', JSON.stringify(tokens, null, 2));
 
     // Save tokens to secure storage
-    await tokenStorage.saveTokens(response.data.tokens);
+    console.log('[AuthAPI] Calling tokenStorage.saveTokens...');
+    const saveResult = await tokenStorage.saveTokens(tokens);
+    console.log('[AuthAPI] Token save result:', saveResult);
 
-    return response.data;
+    // Transform backend response to match mobile app expectations
+    const loginResponse = {
+      user: {
+        id: backendData.user.id,
+        email: backendData.user.email,
+        firstName: backendData.user.first_name || '',
+        lastName: backendData.user.last_name || '',
+        profileComplete: backendData.user.profile_complete || false,
+      },
+      tokens,
+    };
+    console.log('[AuthAPI] Returning login response:', JSON.stringify(loginResponse, null, 2));
+    return loginResponse;
   }
 
   /**

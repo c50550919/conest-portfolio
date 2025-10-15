@@ -127,8 +127,8 @@ const HouseholdScreen: React.FC = () => {
   // Show loading state on initial load
   if (loading && !household) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.centerContainer}>
+      <SafeAreaView style={styles.container} testID="household-screen">
+        <View style={styles.centerContainer} testID="household-loading-state">
           <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Loading household...</Text>
         </View>
@@ -139,14 +139,14 @@ const HouseholdScreen: React.FC = () => {
   // Show error state if no household found
   if (!household && !loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.centerContainer}>
+      <SafeAreaView style={styles.container} testID="household-screen">
+        <View style={styles.centerContainer} testID="empty-household-state">
           <Icon name="home-alert" size={64} color={colors.text.secondary} />
           <Text style={styles.emptyTitle}>No Household Found</Text>
           <Text style={styles.emptySubtitle}>
             You're not currently part of a household.
           </Text>
-          <TouchableOpacity style={styles.primaryButton}>
+          <TouchableOpacity style={styles.primaryButton} testID="find-roommates-button">
             <Text style={styles.primaryButtonText}>Find Roommates</Text>
           </TouchableOpacity>
         </View>
@@ -155,7 +155,7 @@ const HouseholdScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="household-screen">
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -170,33 +170,35 @@ const HouseholdScreen: React.FC = () => {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={styles.header} testID="household-info">
           <View>
-            <Text style={styles.householdName}>{household?.name || 'My Household'}</Text>
+            <Text style={styles.householdName} testID="household-name">
+              {household?.name || 'My Household'}
+            </Text>
             <Text style={styles.householdSubtitle}>
               {members.length} Members • Established {formatDate(household?.establishedAt || '')}
             </Text>
           </View>
-          <TouchableOpacity style={styles.settingsButton}>
+          <TouchableOpacity style={styles.settingsButton} testID="household-settings-button">
             <Icon name="cog-outline" size={24} color={colors.text.primary} />
           </TouchableOpacity>
         </View>
 
         {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.actionButton}>
+        <View style={styles.quickActions} testID="quick-actions">
+          <TouchableOpacity style={styles.actionButton} testID="add-member-button">
             <View style={[styles.actionIcon, { backgroundColor: colors.primary + '20' }]}>
               <Icon name="account-plus" size={20} color={colors.primary} />
             </View>
             <Text style={styles.actionText}>Add Member</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity style={styles.actionButton} testID="documents-button">
             <View style={[styles.actionIcon, { backgroundColor: colors.secondary + '20' }]}>
               <Icon name="file-document" size={20} color={colors.secondary} />
             </View>
             <Text style={styles.actionText}>Documents</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={handleSplitRent}>
+          <TouchableOpacity style={styles.actionButton} testID="split-rent-button" onPress={handleSplitRent}>
             <View style={[styles.actionIcon, { backgroundColor: colors.tertiary + '20' }]}>
               <Icon name="cash-multiple" size={20} color={colors.tertiary} />
             </View>
@@ -205,7 +207,7 @@ const HouseholdScreen: React.FC = () => {
         </View>
 
         {/* Household Members */}
-        <View style={styles.section}>
+        <View testID="household-members" style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Household Members</Text>
             <TouchableOpacity>
@@ -289,10 +291,10 @@ const HouseholdScreen: React.FC = () => {
         </View>
 
         {/* Expenses Overview */}
-        <View style={styles.section}>
+        <View testID="expense-split-section" style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Expenses</Text>
-            <TouchableOpacity>
+            <TouchableOpacity testID="view-all-expenses-button">
               <Text style={styles.seeAllText}>View All</Text>
             </TouchableOpacity>
           </View>
@@ -324,6 +326,7 @@ const HouseholdScreen: React.FC = () => {
                   key={expense.id}
                   colors={[statusColor, statusColor + 'CC']}
                   style={styles.expenseCard}
+                  testID={`expense-card-${expense.id}`}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
                 >
@@ -371,7 +374,7 @@ const HouseholdScreen: React.FC = () => {
               );
             })
           ) : (
-            <View style={styles.emptyState}>
+            <View style={styles.emptyState} testID="empty-expenses-state">
               <Icon name="receipt-text-outline" size={48} color={colors.text.secondary} />
               <Text style={styles.emptyStateText}>No expenses yet</Text>
             </View>
@@ -379,7 +382,7 @@ const HouseholdScreen: React.FC = () => {
 
           {/* Recent Transactions */}
           {recentTransactions.length > 0 && (
-            <View style={styles.transactionsContainer}>
+            <View style={styles.transactionsContainer} testID="recent-transactions">
               <Text style={styles.transactionsTitle}>Recent Transactions</Text>
 
               {recentTransactions.slice(0, 3).map((transaction) => {
@@ -388,7 +391,7 @@ const HouseholdScreen: React.FC = () => {
                 const toMember = members.find((m) => m.userId === transaction.toUserId);
 
                 return (
-                  <View key={transaction.id} style={styles.transactionCard}>
+                  <View key={transaction.id} style={styles.transactionCard} testID={`transaction-card-${transaction.id}`}>
                     <View style={styles.transactionIcon}>
                       <Icon
                         name={isIncoming ? 'arrow-down' : 'arrow-up'}
@@ -421,7 +424,7 @@ const HouseholdScreen: React.FC = () => {
         </View>
 
         {/* Schedule Overview */}
-        <View style={[styles.section, { marginBottom: spacing.xl }]}>
+        <View testID="shared-calendar" style={[styles.section, { marginBottom: spacing.xl }]}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Shared Schedule</Text>
             <TouchableOpacity>

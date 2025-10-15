@@ -15,8 +15,9 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as Keychain from 'react-native-keychain';
 
-// Base URL from environment or default to localhost
-const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
+// Base URL from environment or default to ngrok tunnel
+// ngrok provides public HTTPS URL to bypass Android emulator networking issues
+const API_BASE_URL = process.env.API_BASE_URL || 'https://applaudably-inapprehensive-eugena.ngrok-free.dev';
 
 /**
  * Main API client instance

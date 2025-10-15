@@ -1,21 +1,22 @@
 /**
  * Discovery API Service
  *
- * Purpose: API client for Discovery Screen (swipeable profiles)
+ * Purpose: API client for Browse Discovery Screen (deliberate browsing, no swipes)
  * Constitution: Principle I (Child Safety - NO child PII in requests/responses)
  *
  * Endpoints:
  * - GET /api/discovery/profiles - Fetch discovery profiles with pagination
- * - POST /api/discovery/swipe - Record swipe action (left/right)
  * - POST /api/discovery/screenshot - Report screenshot detection
  *
+ * Note: Browse-based discovery uses connection requests, not swipe actions
  * Created: 2025-10-06
+ * Updated: 2025-10-13 - Removed swipe functionality
  */
 
 import axios, { AxiosInstance } from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import tokenStorage from '../tokenStorage';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://applaudably-inapprehensive-eugena.ngrok-free.dev/api';
 
 export interface VerificationStatus {
   idVerified: boolean;
@@ -43,16 +44,7 @@ export interface DiscoveryResponse {
   nextCursor: string | null;
 }
 
-export interface SwipeResult {
-  swipeId: string;
-  matchCreated: boolean;
-  match?: {
-    id: string;
-    matchedUserId: string;
-    compatibilityScore: number;
-    createdAt: string;
-  };
-}
+// REMOVED: SwipeResult interface - Browse-based discovery uses connection requests
 
 export interface ScreenshotResponse {
   success: boolean;
@@ -78,23 +70,40 @@ class DiscoveryAPI {
     // Request interceptor for adding auth token
     this.client.interceptors.request.use(
       async (config) => {
-        const token = await AsyncStorage.getItem('authToken');
+        const token = await tokenStorage.getAccessToken();
+        console.log('[DiscoveryAPI] Token from storage:', token ? `${token.substring(0, 20)}...` : 'NOT FOUND');
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
+          console.log('[DiscoveryAPI] Request:', config.method?.toUpperCase(), config.url);
+        } else {
+          console.warn('[DiscoveryAPI] No auth token - request will fail');
         }
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => {
+        console.error('[DiscoveryAPI] Request interceptor error:', error);
+        return Promise.reject(error);
+      }
     );
 
     // Response interceptor for error handling
     this.client.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        console.log('[DiscoveryAPI] Response:', response.status, response.config.url);
+        return response;
+      },
       async (error) => {
-        if (error.response?.status === 401) {
-          // Token expired - handle logout
-          await AsyncStorage.removeItem('authToken');
-          await AsyncStorage.removeItem('refreshToken');
+        console.error('[DiscoveryAPI] Response error:', {
+          status: error.response?.status,
+          message: error.message,
+          url: error.config?.url,
+          data: error.response?.data
+        });
+        // Note: 401/403 token refresh is handled by authAPI interceptor
+        // Only clear tokens if it's a true authentication failure (not token expiry)
+        if (error.response?.status === 401 && error.response?.data?.error === 'Access token required') {
+          console.warn('[DiscoveryAPI] 401 No token - clearing tokens');
+          await tokenStorage.clearTokens();
         }
         return Promise.reject(error);
       }
@@ -116,30 +125,14 @@ class DiscoveryAPI {
       params.cursor = cursor;
     }
 
-    const response = await this.client.get<DiscoveryResponse>('/discovery/profiles', {
+    const response = await this.client.get<{success: boolean; data: DiscoveryResponse}>('/discovery/profiles', {
       params,
     });
 
-    return response.data;
+    return response.data.data; // Backend wraps response in {success, data}
   }
 
-  /**
-   * Record a swipe action (left or right)
-   * @param targetUserId - UUID of user being swiped on
-   * @param direction - Swipe direction ('left' or 'right')
-   * @returns Swipe result with match status
-   */
-  async recordSwipe(
-    targetUserId: string,
-    direction: 'left' | 'right'
-  ): Promise<SwipeResult> {
-    const response = await this.client.post<SwipeResult>('/discovery/swipe', {
-      targetUserId,
-      direction,
-    });
-
-    return response.data;
-  }
+  // REMOVED: recordSwipe() - Browse-based discovery uses connection requests via /api/connections endpoint
 
   /**
    * Report screenshot detection (child safety feature)

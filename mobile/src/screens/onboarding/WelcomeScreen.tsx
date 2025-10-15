@@ -73,7 +73,7 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
           mode="text"
           onPress={() => {}}
           style={styles.loginButton}
-          testID="login-button"
+          testID="welcome-back-to-login-button"
         >
           Already have an account? Log in
         </Button>

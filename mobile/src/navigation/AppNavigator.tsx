@@ -15,19 +15,20 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../store';
+import { createNavigationContainerRef } from '@react-navigation/native';
 
-import LoginScreen from '../screens/auth/LoginScreen';
-import SignupScreen from '../screens/auth/SignupScreen';
+import AuthNavigator from './AuthNavigator';
 import OnboardingNavigator from './OnboardingNavigator';
 import MainNavigator from './MainNavigator';
 import { theme } from '../theme';
 import tokenStorage from '../services/tokenStorage';
 import { loginSuccess } from '../store/slices/authSlice';
 
+// Navigation reference for programmatic navigation (including E2E tests)
+export const navigationRef = createNavigationContainerRef();
+
 export type RootStackParamList = {
-  Login: undefined;
-  Signup: undefined;
-  PhoneVerification: { phone: string };
+  Auth: undefined;
   Onboarding: undefined;
   Main: undefined;
 };
@@ -40,6 +41,7 @@ const AppNavigator: React.FC = () => {
     (state: RootState) => state.auth
   );
   const [isLoading, setIsLoading] = useState(true);
+
 
   /**
    * Check for existing auth tokens on app launch
@@ -78,6 +80,19 @@ const AppNavigator: React.FC = () => {
     checkAuth();
   }, [dispatch]);
 
+  // Expose navigation for E2E tests (test builds only)
+  useEffect(() => {
+    if (__DEV__) {
+      // @ts-ignore - global for testing only
+      global.__navigateForTesting = (screen: string) => {
+        if (navigationRef.isReady()) {
+          // @ts-ignore
+          navigationRef.navigate('Main', { screen });
+        }
+      };
+    }
+  }, []);
+
   // Show splash screen while checking auth
   if (isLoading) {
     return null; // TODO: Replace with proper SplashScreen component
@@ -85,6 +100,7 @@ const AppNavigator: React.FC = () => {
 
   return (
     <NavigationContainer
+      ref={navigationRef}
       theme={{
         dark: false,
         colors: {
@@ -104,16 +120,25 @@ const AppNavigator: React.FC = () => {
       >
         {!isAuthenticated ? (
           // Auth Flow: Not authenticated
-          <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Signup" component={SignupScreen} />
-          </>
+          <Stack.Screen
+            name="Auth"
+            component={AuthNavigator}
+            options={{ animationEnabled: false }}
+          />
         ) : !isOnboardingComplete ? (
           // Onboarding Flow: Authenticated but profile incomplete
-          <Stack.Screen name="Onboarding" component={OnboardingNavigator} />
+          <Stack.Screen
+            name="Onboarding"
+            component={OnboardingNavigator}
+            options={{ animationEnabled: false }}
+          />
         ) : (
           // Main App: Authenticated and onboarded
-          <Stack.Screen name="Main" component={MainNavigator} />
+          <Stack.Screen
+            name="Main"
+            component={MainNavigator}
+            options={{ animationEnabled: false }}
+          />
         )}
       </Stack.Navigator>
     </NavigationContainer>

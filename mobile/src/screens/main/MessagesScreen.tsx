@@ -227,10 +227,11 @@ const MessagesScreen: React.FC = () => {
     [selectedMatch]
   );
 
-  const renderMatchItem = ({ item }: { item: Match }) => (
+  const renderMatchItem = ({ item, index }: { item: Match; index: number }) => (
     <TouchableOpacity
       style={styles.conversationItem}
       onPress={() => setSelectedMatch(item)}
+      testID={`conversation-item-${index}`}
     >
       <View style={styles.profilePhotoContainer}>
         {item.profilePhoto ? (
@@ -241,13 +242,15 @@ const MessagesScreen: React.FC = () => {
       </View>
       <View style={styles.conversationContent}>
         <View style={styles.conversationHeader}>
-          <Text style={styles.conversationName}>{item.firstName}</Text>
+          <Text style={styles.conversationName} testID={`conversation-name-${index}`}>
+            {item.firstName}
+          </Text>
           <Text style={styles.timestamp}>
             {item.lastMessage ? formatTimestamp(item.lastMessage.createdAt) : ''}
           </Text>
         </View>
         <View style={styles.messageRow}>
-          <Text style={styles.lastMessage} numberOfLines={1}>
+          <Text style={styles.lastMessage} numberOfLines={1} testID={`conversation-preview-${index}`}>
             {item.lastMessage?.content || 'Start a conversation'}
           </Text>
           {item.unreadCount > 0 && (
@@ -374,7 +377,7 @@ const MessagesScreen: React.FC = () => {
   const totalUnreadCount = matches.reduce((sum, match) => sum + match.unreadCount, 0);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} testID="messages-screen">
       <View style={styles.header}>
         <Text style={styles.title}>Messages</Text>
         {totalUnreadCount > 0 && (
@@ -389,6 +392,7 @@ const MessagesScreen: React.FC = () => {
           renderItem={renderMatchItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.conversationList}
+          testID="conversation-list"
         />
       ) : (
         <View style={styles.emptyContainer}>

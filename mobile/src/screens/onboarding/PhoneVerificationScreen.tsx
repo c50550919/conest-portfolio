@@ -10,7 +10,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useDispatch } from 'react-redux';
 import { OnboardingStackParamList } from '../../navigation/OnboardingNavigator';
 import { colors, spacing, typography } from '../../theme';
-import { setAuth, setOnboardingComplete } from '../../store/slices/authSlice';
+import { setOnboardingComplete } from '../../store/slices/authSlice';
 
 type PhoneVerificationScreenNavigationProp = StackNavigationProp<
   OnboardingStackParamList,
@@ -26,12 +26,7 @@ const PhoneVerificationScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleSkipForTesting = () => {
     // Set auth state to bypass onboarding for testing
-    dispatch(setAuth({
-      isAuthenticated: true,
-      token: 'test-token',
-      refreshToken: 'test-refresh-token',
-      userId: 'test-user-123',
-    }));
+    // Note: loginSuccess should be used instead, but for testing we just mark onboarding complete
     dispatch(setOnboardingComplete(true));
   };
 

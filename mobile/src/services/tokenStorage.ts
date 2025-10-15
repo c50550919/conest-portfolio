@@ -36,7 +36,15 @@ class TokenStorageService {
    */
   async saveTokens(tokens: AuthTokens): Promise<boolean> {
     try {
+      console.log('[TokenStorage] saveTokens called with:', {
+        hasAccessToken: !!tokens.accessToken,
+        hasRefreshToken: !!tokens.refreshToken,
+        hasUserId: !!tokens.userId,
+        accessTokenLength: tokens.accessToken?.length,
+      });
+
       const tokenData = JSON.stringify(tokens);
+      console.log('[TokenStorage] Stringified token data length:', tokenData.length);
 
       await Keychain.setGenericPassword(
         this.USERNAME,
@@ -46,6 +54,16 @@ class TokenStorageService {
           accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
         }
       );
+
+      console.log('[TokenStorage] Tokens saved successfully to KeyChain');
+
+      // Verify save by reading back immediately
+      const verified = await this.getTokens();
+      console.log('[TokenStorage] Verification read:', {
+        success: !!verified,
+        hasAccessToken: !!verified?.accessToken,
+        userId: verified?.userId,
+      });
 
       return true;
     } catch (error) {
@@ -60,15 +78,29 @@ class TokenStorageService {
    */
   async getTokens(): Promise<AuthTokens | null> {
     try {
+      console.log('[TokenStorage] getTokens called, fetching from KeyChain...');
       const credentials = await Keychain.getGenericPassword({
         service: this.SERVICE_NAME,
       });
 
+      console.log('[TokenStorage] KeyChain result:', {
+        found: !!credentials,
+        hasUsername: !!credentials?.username,
+        hasPassword: !!credentials?.password,
+        passwordLength: credentials?.password?.length,
+      });
+
       if (!credentials) {
+        console.log('[TokenStorage] No credentials found in KeyChain');
         return null;
       }
 
       const tokens: AuthTokens = JSON.parse(credentials.password);
+      console.log('[TokenStorage] Parsed tokens:', {
+        hasAccessToken: !!tokens.accessToken,
+        hasRefreshToken: !!tokens.refreshToken,
+        userId: tokens.userId,
+      });
       return tokens;
     } catch (error) {
       console.error('[TokenStorage] Failed to get tokens:', error);

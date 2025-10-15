@@ -1,22 +1,22 @@
 /**
  * Discovery Profiles Hooks
  *
- * Purpose: React Query hooks for Discovery Screen data fetching and mutations
+ * Purpose: React Query hooks for Browse Discovery Screen data fetching
  * Constitution: Principle I (Child Safety), Principle IV (Performance)
  *
  * Hooks:
  * - useDiscoveryProfiles: Infinite query for profile cards with cursor pagination
- * - useRecordSwipe: Mutation for swipe actions with optimistic updates
  * - useReportScreenshot: Mutation for screenshot detection
  *
+ * Note: Browse-based discovery (no swipe gestures)
  * Created: 2025-10-06
+ * Updated: 2025-10-13 - Removed swipe functionality
  */
 
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import discoveryAPI, {
   DiscoveryResponse,
   ProfileCard,
-  SwipeResult,
 } from '../services/api/discoveryAPI';
 
 /**
@@ -34,8 +34,17 @@ import discoveryAPI, {
 export function useDiscoveryProfiles(limit: number = 10) {
   return useInfiniteQuery<DiscoveryResponse, Error>({
     queryKey: ['discovery', 'profiles', limit],
-    queryFn: ({ pageParam }) =>
-      discoveryAPI.getProfiles(pageParam as string | undefined, limit),
+    queryFn: async ({ pageParam }) => {
+      console.log('[useDiscoveryProfiles] Fetching profiles, cursor:', pageParam || 'initial');
+      try {
+        const result = await discoveryAPI.getProfiles(pageParam as string | undefined, limit);
+        console.log('[useDiscoveryProfiles] Success:', result.profiles.length, 'profiles, nextCursor:', result.nextCursor);
+        return result;
+      } catch (error: any) {
+        console.error('[useDiscoveryProfiles] Error:', error.message, error.response?.data);
+        throw error;
+      }
+    },
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -45,79 +54,8 @@ export function useDiscoveryProfiles(limit: number = 10) {
   });
 }
 
-/**
- * Record Swipe Mutation Hook
- *
- * Features:
- * - Optimistic updates for instant UI feedback
- * - Automatic cache invalidation on success
- * - Error rollback on failure
- * - Match notification handling
- *
- * @returns Mutation function and state
- */
-export function useRecordSwipe() {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    SwipeResult,
-    Error,
-    { targetUserId: string; direction: 'left' | 'right' }
-  >({
-    mutationFn: ({ targetUserId, direction }) =>
-      discoveryAPI.recordSwipe(targetUserId, direction),
-
-    // Optimistic update: Remove swiped profile from cache immediately
-    onMutate: async ({ targetUserId }) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['discovery', 'profiles'] });
-
-      // Snapshot current data for rollback
-      const previousData = queryClient.getQueryData(['discovery', 'profiles']);
-
-      // Optimistically remove the swiped profile
-      queryClient.setQueryData<any>(['discovery', 'profiles'], (old: any) => {
-        if (!old) return old;
-
-        return {
-          ...old,
-          pages: old.pages.map((page: DiscoveryResponse) => ({
-            ...page,
-            profiles: page.profiles.filter(
-              (profile: ProfileCard) => profile.userId !== targetUserId
-            ),
-          })),
-        };
-      });
-
-      return { previousData };
-    },
-
-    // Rollback on error
-    onError: (err, variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(['discovery', 'profiles'], context.previousData);
-      }
-    },
-
-    // Invalidate and refetch on success
-    onSuccess: (data, variables) => {
-      // If match was created, you might want to show a modal
-      if (data.matchCreated && data.match) {
-        // Dispatch event or update global state for match modal
-        // This will be handled by the component or Redux
-      }
-
-      // Invalidate profiles query to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ['discovery', 'profiles'] });
-
-      // Also invalidate matches list if match was created
-      if (data.matchCreated) {
-        queryClient.invalidateQueries({ queryKey: ['matches'] });
-      }
-    },
-  });
-}
+// REMOVED: useRecordSwipe() - Browse-based discovery uses deliberate connection requests, not swipes
+// See: BrowseDiscoveryScreen.tsx for connection request handling
 
 /**
  * Report Screenshot Mutation Hook

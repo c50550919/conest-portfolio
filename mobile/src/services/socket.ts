@@ -5,19 +5,20 @@
  * Constitution: Principle IV (Performance - real-time updates)
  *
  * Events:
- * - match_created: Mutual match notification
- * - swipe_received: Someone swiped right (premium feature)
+ * - match_created: Mutual match notification (connection requests accepted)
  * - screenshot_detected: Profile screenshot alert
  * - user_typing: Typing indicators for messages
  * - new_message: Real-time message delivery
  *
+ * Note: Browse-based discovery uses connection requests, not swipes
  * Created: 2025-10-06
+ * Updated: 2025-10-13 - Removed swipe events
  */
 
 import { io, Socket } from 'socket.io-client';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import tokenStorage from './tokenStorage';
 
-const SOCKET_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
+const SOCKET_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'https://applaudably-inapprehensive-eugena.ngrok-free.dev';
 
 export interface MatchCreatedEvent {
   matchId: string;
@@ -26,10 +27,7 @@ export interface MatchCreatedEvent {
   createdAt: string;
 }
 
-export interface SwipeReceivedEvent {
-  swiperId: string;
-  timestamp: string;
-}
+// REMOVED: SwipeReceivedEvent - Browse-based discovery uses connection requests
 
 export interface ScreenshotDetectedEvent {
   userId: string;
@@ -82,7 +80,7 @@ class SocketService {
     }
 
     try {
-      const token = await AsyncStorage.getItem('authToken');
+      const token = await tokenStorage.getAccessToken();
       if (!token) {
         console.warn('No auth token found, cannot connect to socket');
         return;
@@ -176,21 +174,7 @@ class SocketService {
     this.socket?.off('match_created', callback);
   }
 
-  /**
-   * Listen for swipe received events (premium feature)
-   * @param callback - Event handler
-   */
-  onSwipeReceived(callback: SocketEventCallback<SwipeReceivedEvent>): void {
-    this.socket?.on('swipe_received', callback);
-  }
-
-  /**
-   * Remove swipe received listener
-   * @param callback - Event handler to remove
-   */
-  offSwipeReceived(callback: SocketEventCallback<SwipeReceivedEvent>): void {
-    this.socket?.off('swipe_received', callback);
-  }
+  // REMOVED: onSwipeReceived() and offSwipeReceived() - Browse-based discovery uses connection requests
 
   /**
    * Listen for screenshot detected events

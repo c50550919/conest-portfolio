@@ -43,14 +43,18 @@ import {
   useMatchNotifications,
   useSocketConnection,
 } from '../../hooks/useMatchNotifications';
+import discoveryAPI from '../../services/api/discoveryAPI';
 
 // Components
 import SwipeableCard from '../../components/discovery/SwipeableCard';
 import MatchModal from '../../components/discovery/MatchModal';
+import ProfileDetailsModal from '../../components/discovery/ProfileDetailsModal';
 
 export default function DiscoverScreen() {
   const navigation = useNavigation();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<typeof profiles[0] | null>(null);
 
   // React Query - Fetch profiles
   const {
@@ -77,6 +81,29 @@ export default function DiscoverScreen() {
   // Get flattened profiles from infinite query
   const profiles = getFlattenedProfiles(data);
   const hasMore = hasMoreProfiles(data);
+
+  // DIAGNOSTIC: Component mount and query state logging
+  useEffect(() => {
+    console.log('[DiscoverScreen] ========== MOUNTED ==========');
+    console.log('[DiscoverScreen] isLoading:', isLoading);
+    console.log('[DiscoverScreen] isError:', isError);
+    console.log('[DiscoverScreen] isFetching:', isFetching);
+    console.log('[DiscoverScreen] data:', data);
+    console.log('[DiscoverScreen] error:', error);
+    console.log('[DiscoverScreen] profiles.length:', profiles.length);
+  }, [isLoading, isError, isFetching, data, error, profiles.length]);
+
+  // DIAGNOSTIC: Test direct API call bypassing React Query
+  useEffect(() => {
+    console.log('[DiscoverScreen] Testing direct API call...');
+    discoveryAPI.getProfiles(undefined, 10)
+      .then(result => {
+        console.log('[DiscoverScreen] Direct API SUCCESS:', result.profiles.length, 'profiles');
+      })
+      .catch(err => {
+        console.error('[DiscoverScreen] Direct API ERROR:', err.message, err.response?.data);
+      });
+  }, []);
 
   // Screenshot detection (Child Safety Feature)
   // TODO: Implement screenshot detection for bare React Native
@@ -158,7 +185,7 @@ export default function DiscoverScreen() {
   // Loading state
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView testID="discover-loading" style={styles.container}>
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color="#E91E63" />
           <Text style={styles.loadingText}>Finding compatible housing partners...</Text>
@@ -170,7 +197,7 @@ export default function DiscoverScreen() {
   // Error state
   if (isError) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView testID="discover-error" style={styles.container}>
         <View style={styles.centerContainer}>
           <MaterialCommunityIcons
             name="alert-circle"
@@ -182,6 +209,7 @@ export default function DiscoverScreen() {
             {error?.message || 'Unable to load profiles'}
           </Text>
           <TouchableOpacity
+            testID="retry-button"
             style={styles.retryButton}
             onPress={() => {
               setCurrentIndex(0);
@@ -198,7 +226,7 @@ export default function DiscoverScreen() {
   // Empty state - No more profiles
   if (profiles.length === 0 || currentIndex >= profiles.length) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView testID="discover-empty" style={styles.container}>
         <View style={styles.centerContainer}>
           <MaterialCommunityIcons
             name="home-search"
@@ -213,6 +241,7 @@ export default function DiscoverScreen() {
           </Text>
           {!hasMore && profiles.length > 0 && (
             <TouchableOpacity
+              testID="review-matches-button"
               style={styles.reviewButton}
               onPress={() => navigation.navigate('Matches' as never)}
             >
@@ -230,7 +259,7 @@ export default function DiscoverScreen() {
     .reverse(); // Reverse for correct z-index stacking
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView testID="discover-screen" style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.title}>Discover</Text>
@@ -269,6 +298,7 @@ export default function DiscoverScreen() {
       {/* Action Buttons */}
       <View style={styles.actions}>
         <TouchableOpacity
+          testID="pass-button"
           style={[styles.actionButton, styles.passButton]}
           onPress={() => handleSwipe('left')}
           disabled={isSwipePending}
@@ -279,15 +309,13 @@ export default function DiscoverScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
+          testID="info-button"
           style={[styles.actionButton, styles.infoButton]}
           onPress={() => {
             const profile = profiles[currentIndex];
             if (profile) {
-              Alert.alert(
-                'Profile Info',
-                `Household Fit: ${profile.compatibilityScore}%\nChildren: ${profile.childrenCount}\nAge Groups: ${profile.childrenAgeGroups.join(', ')}`,
-                [{ text: 'OK' }]
-              );
+              setSelectedProfile(profile);
+              setIsProfileModalVisible(true);
             }
           }}
           accessibilityLabel="View detailed profile information"
@@ -300,6 +328,7 @@ export default function DiscoverScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
+          testID="like-button"
           style={[styles.actionButton, styles.interestButton]}
           onPress={() => handleSwipe('right')}
           disabled={isSwipePending}
@@ -323,6 +352,20 @@ export default function DiscoverScreen() {
         match={currentMatch}
         onClose={closeMatchModal}
         onSendMessage={handleSendMessage}
+      />
+
+      {/* Profile Details Modal */}
+      <ProfileDetailsModal
+        visible={isProfileModalVisible}
+        profile={selectedProfile}
+        onClose={() => {
+          setIsProfileModalVisible(false);
+          setSelectedProfile(null);
+        }}
+        onInterested={() => {
+          // User is interested - trigger right swipe
+          handleSwipe('right');
+        }}
       />
     </SafeAreaView>
   );

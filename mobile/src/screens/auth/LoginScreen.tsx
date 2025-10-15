@@ -1,20 +1,22 @@
 /**
  * Login Screen
  *
- * Purpose: User authentication with email and password
+ * Purpose: User authentication with email/password and OAuth (Google/Apple)
  * Constitution: Principle IV (Performance - <500ms screen transitions)
  *              Principle II (Security - secure credential handling)
  *
  * Features:
  * - Email/password input validation
+ * - Google Sign In OAuth integration
+ * - Apple Sign In OAuth integration (iOS only)
  * - Biometric authentication (optional)
  * - Error handling with user feedback
  * - Navigation to Signup or Main app
  *
- * Created: 2025-10-08
+ * Updated: 2025-10-13 (Added OAuth integration)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -33,6 +35,10 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import authAPI from '@services/api/auth';
 import { loginSuccess, setLoading, setError } from '@store/slices/authSlice';
 import { theme } from '@theme';
+import GoogleSignInButton from '../../components/auth/GoogleSignInButton';
+import AppleSignInButton from '../../components/auth/AppleSignInButton';
+import { configureGoogleSignIn } from '../../services/api/oauth';
+import type { AuthSuccessResponse } from '../../types/oauth';
 
 type LoginScreenNavigationProp = StackNavigationProp<any, 'Login'>;
 
@@ -47,6 +53,47 @@ const LoginScreen: React.FC = () => {
     email?: string;
     password?: string;
   }>({});
+
+  /**
+   * Configure Google Sign In at component mount
+   */
+  useEffect(() => {
+    configureGoogleSignIn();
+  }, []);
+
+  /**
+   * Handle successful OAuth authentication
+   * Dispatches login success and navigates based on user status
+   */
+  const handleOAuthSuccess = (response: AuthSuccessResponse) => {
+    // Update Redux state with OAuth user data
+    dispatch(
+      loginSuccess({
+        user: {
+          id: response.user.id,
+          email: response.user.email,
+          firstName: '', // OAuth users may not have firstName initially
+          lastName: '',
+          profileComplete: !response.isNew, // New users need to complete profile
+          phoneVerified: response.user.phoneVerified,
+          idVerified: false,
+          backgroundCheckVerified: false,
+        },
+      })
+    );
+
+    // Show success message if account was linked
+    if (response.linked) {
+      Alert.alert(
+        'Account Linked',
+        'Your OAuth provider has been successfully linked to your existing account.'
+      );
+    }
+
+    // Navigation handled by AppNavigator based on profileComplete status
+    // New users (isNew=true) will be directed to onboarding
+    // Returning users will go directly to home
+  };
 
   /**
    * Validate email format
@@ -111,13 +158,7 @@ const LoginScreen: React.FC = () => {
           },
         })
       );
-
-      // Navigate to main app or onboarding
-      if (response.user.profileComplete) {
-        navigation.navigate('Main');
-      } else {
-        navigation.navigate('Onboarding');
-      }
+      // Note: Navigation happens automatically via AppNavigator conditional rendering
     } catch (error: any) {
       const errorMessage =
         error.response?.data?.message || 'Login failed. Please try again.';
@@ -147,6 +188,28 @@ const LoginScreen: React.FC = () => {
         <View style={styles.header}>
           <Text style={styles.title}>CoNest</Text>
           <Text style={styles.subtitle}>Welcome back</Text>
+        </View>
+
+        {/* OAuth Sign In Buttons */}
+        <View style={styles.oauthContainer}>
+          <GoogleSignInButton
+            onSuccess={handleOAuthSuccess}
+            disabled={loading}
+            style="dark"
+          />
+          <View style={styles.oauthSpacing} />
+          <AppleSignInButton
+            onSuccess={handleOAuthSuccess}
+            disabled={loading}
+            style="black"
+          />
+        </View>
+
+        {/* Divider */}
+        <View style={styles.dividerContainer}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>OR</Text>
+          <View style={styles.dividerLine} />
         </View>
 
         {/* Email Input */}
@@ -305,6 +368,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: theme.colors.primary,
+  },
+  oauthContainer: {
+    marginBottom: theme.spacing.lg,
+  },
+  oauthSpacing: {
+    height: theme.spacing.md,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: theme.spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: theme.colors.outline,
+  },
+  dividerText: {
+    marginHorizontal: theme.spacing.md,
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.onSurfaceVariant,
   },
 });
 

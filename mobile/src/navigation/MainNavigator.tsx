@@ -17,7 +17,7 @@ import { theme } from '../theme';
 
 export type MainTabParamList = {
   Home: undefined;
-  Browse: undefined;
+  Discover: undefined;
   Messages: undefined;
   Household: undefined;
   Profile: undefined;
@@ -44,21 +44,26 @@ const MainNavigator: React.FC = () => {
           fontSize: 12,
           fontWeight: '500',
         },
+        tabBarTestID: 'tab-bar',
       }}
     >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{
+          tabBarTestID: 'tab-home',
+          tabBarAccessibilityLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Icon name="home" size={size} color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="Browse"
+        name="Discover"
         component={BrowseDiscoveryScreen}
         options={{
+          tabBarTestID: 'tab-discover',
+          tabBarAccessibilityLabel: 'Discover',
           tabBarIcon: ({ color, size }) => (
             <Icon name="home-search" size={size} color={color} />
           ),
@@ -68,6 +73,8 @@ const MainNavigator: React.FC = () => {
         name="Messages"
         component={MessagesScreen}
         options={{
+          tabBarTestID: 'tab-messages',
+          tabBarAccessibilityLabel: 'Messages',
           tabBarIcon: ({ color, size }) => (
             <Icon name="message-text" size={size} color={color} />
           ),
@@ -78,6 +85,8 @@ const MainNavigator: React.FC = () => {
         name="Household"
         component={HouseholdScreen}
         options={{
+          tabBarTestID: 'tab-household',
+          tabBarAccessibilityLabel: 'Household',
           tabBarIcon: ({ color, size }) => (
             <Icon name="home-group" size={size} color={color} />
           ),
@@ -87,6 +96,8 @@ const MainNavigator: React.FC = () => {
         name="Profile"
         component={ProfileScreen}
         options={{
+          tabBarTestID: 'tab-profile',
+          tabBarAccessibilityLabel: 'Profile',
           tabBarIcon: ({ color, size }) => (
             <Icon name="account-circle" size={size} color={color} />
           ),
