@@ -28,6 +28,8 @@ import {
   SafeAreaView,
   StatusBar,
   Platform,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -80,6 +82,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<ExtendedProfileCard | null>(null);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
+  const [comparisonModalVisible, setComparisonModalVisible] = useState(false);
 
   // Mock data for UI development (remove when API is ready)
   const MOCK_PROFILES: ExtendedProfileCard[] = [
@@ -102,6 +105,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
       childrenCount: 2,
       childrenAgeGroups: ['toddler', 'elementary'],
       budget: 1500,
+      housingBudget: { min: 1200, max: 1800 },
       moveInDate: '2025-11-01',
       bio: 'Working mom looking for a supportive housing partner',
       housingPreferences: {
@@ -148,6 +152,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
       childrenCount: 1,
       childrenAgeGroups: ['infant'],
       budget: 1200,
+      housingBudget: { min: 1000, max: 1400 },
       moveInDate: '2025-12-01',
       bio: 'New mom seeking stable housing partnership',
       housingPreferences: {
@@ -174,6 +179,384 @@ export const BrowseDiscoveryScreen: React.FC = () => {
         experience: 'new-parent',
         supportNeeds: ['emotional-support', 'parenting-guidance'],
       },
+    },
+    {
+      userId: '3',
+      firstName: 'Jessica',
+      age: 29,
+      gender: 'female',
+      city: 'Oakland',
+      state: 'CA',
+      compatibilityScore: 91,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=47',
+      childrenCount: 1,
+      childrenAgeGroups: ['elementary'],
+      budget: 1400,
+      housingBudget: { min: 1200, max: 1600 },
+      moveInDate: '2025-11-15',
+      bio: 'Teacher and single mom, love reading and outdoor activities',
+      housingPreferences: { housingType: 'apartment', bedroomCount: 2, bathroomCount: 1, smokeFree: true, petFriendly: false },
+      location: { city: 'Oakland', state: 'CA', zipCode: '94612', latitude: 37.8044, longitude: -122.2712 },
+      schedule: { workSchedule: 'standard', flexibility: 'medium', weekendAvailability: true },
+      parenting: { philosophy: 'gentle-parenting', experience: 'experienced', supportNeeds: ['childcare-sharing'] },
+    },
+    {
+      userId: '4',
+      firstName: 'Amanda',
+      age: 34,
+      gender: 'female',
+      city: 'Berkeley',
+      state: 'CA',
+      compatibilityScore: 78,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: false },
+      profilePhoto: 'https://i.pravatar.cc/300?img=20',
+      childrenCount: 2,
+      childrenAgeGroups: ['infant', 'toddler'],
+      budget: 1800,
+      housingBudget: { min: 1500, max: 2000 },
+      moveInDate: '2026-01-01',
+      bio: 'Software engineer working from home, looking for quiet environment',
+      housingPreferences: { housingType: 'house', bedroomCount: 3, bathroomCount: 2, smokeFree: true, petFriendly: true },
+      location: { city: 'Berkeley', state: 'CA', zipCode: '94704', latitude: 37.8715, longitude: -122.2730 },
+      schedule: { workSchedule: 'flexible', flexibility: 'high', weekendAvailability: false },
+      parenting: { philosophy: 'montessori', experience: 'experienced', supportNeeds: ['emotional-support'] },
+    },
+    {
+      userId: '5',
+      firstName: 'Rachel',
+      age: 26,
+      gender: 'female',
+      city: 'San Jose',
+      state: 'CA',
+      compatibilityScore: 68,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=32',
+      childrenCount: 1,
+      childrenAgeGroups: ['infant'],
+      budget: 1100,
+      housingBudget: { min: 900, max: 1300 },
+      moveInDate: '2025-12-15',
+      bio: 'Retail manager, love music and cooking',
+      housingPreferences: { housingType: 'apartment', bedroomCount: 2, bathroomCount: 1, smokeFree: true, petFriendly: false },
+      location: { city: 'San Jose', state: 'CA', zipCode: '95110', latitude: 37.3382, longitude: -121.8863 },
+      schedule: { workSchedule: 'evening', flexibility: 'low', weekendAvailability: false },
+      parenting: { philosophy: 'attachment', experience: 'new-parent', supportNeeds: ['parenting-guidance', 'emotional-support'] },
+    },
+    {
+      userId: '6',
+      firstName: 'Nicole',
+      age: 31,
+      gender: 'female',
+      city: 'Fremont',
+      state: 'CA',
+      compatibilityScore: 84,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=44',
+      childrenCount: 1,
+      childrenAgeGroups: ['elementary'],
+      budget: 1500,
+      housingBudget: { min: 1300, max: 1700 },
+      moveInDate: '2025-11-20',
+      bio: 'Healthcare worker, early riser, enjoy gardening',
+      housingPreferences: { housingType: 'house', bedroomCount: 3, bathroomCount: 2, smokeFree: true, petFriendly: true },
+      location: { city: 'Fremont', state: 'CA', zipCode: '94536', latitude: 37.5483, longitude: -121.9886 },
+      schedule: { workSchedule: 'standard', flexibility: 'medium', weekendAvailability: true },
+      parenting: { philosophy: 'structured', experience: 'experienced', supportNeeds: ['childcare-sharing'] },
+    },
+    {
+      userId: '7',
+      firstName: 'Lisa',
+      age: 35,
+      gender: 'female',
+      city: 'Hayward',
+      state: 'CA',
+      compatibilityScore: 76,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=16',
+      childrenCount: 3,
+      childrenAgeGroups: ['elementary', 'middle-school', 'high-school'],
+      budget: 2000,
+      housingBudget: { min: 1800, max: 2200 },
+      moveInDate: '2025-12-01',
+      bio: 'Experienced mom of three, accountant, value stability',
+      housingPreferences: { housingType: 'house', bedroomCount: 4, bathroomCount: 2, smokeFree: true, petFriendly: false },
+      location: { city: 'Hayward', state: 'CA', zipCode: '94541', latitude: 37.6688, longitude: -122.0808 },
+      schedule: { workSchedule: 'standard', flexibility: 'low', weekendAvailability: true },
+      parenting: { philosophy: 'structured', experience: 'experienced', supportNeeds: [] },
+    },
+    {
+      userId: '8',
+      firstName: 'Kelly',
+      age: 27,
+      gender: 'female',
+      city: 'Richmond',
+      state: 'CA',
+      compatibilityScore: 89,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=29',
+      childrenCount: 1,
+      childrenAgeGroups: ['toddler'],
+      budget: 1300,
+      housingBudget: { min: 1100, max: 1500 },
+      moveInDate: '2025-11-10',
+      bio: 'Graphic designer, creative and organized, love art',
+      housingPreferences: { housingType: 'apartment', bedroomCount: 2, bathroomCount: 1, smokeFree: true, petFriendly: true },
+      location: { city: 'Richmond', state: 'CA', zipCode: '94801', latitude: 37.9358, longitude: -122.3478 },
+      schedule: { workSchedule: 'flexible', flexibility: 'high', weekendAvailability: true },
+      parenting: { philosophy: 'gentle-parenting', experience: 'new-parent', supportNeeds: ['emotional-support'] },
+    },
+    {
+      userId: '9',
+      firstName: 'Stephanie',
+      age: 30,
+      gender: 'female',
+      city: 'Daly City',
+      state: 'CA',
+      compatibilityScore: 81,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=41',
+      childrenCount: 2,
+      childrenAgeGroups: ['toddler', 'elementary'],
+      budget: 1600,
+      housingBudget: { min: 1400, max: 1800 },
+      moveInDate: '2025-12-10',
+      bio: 'Paralegal, organized and detail-oriented',
+      housingPreferences: { housingType: 'house', bedroomCount: 3, bathroomCount: 2, smokeFree: true, petFriendly: false },
+      location: { city: 'Daly City', state: 'CA', zipCode: '94014', latitude: 37.6879, longitude: -122.4702 },
+      schedule: { workSchedule: 'standard', flexibility: 'medium', weekendAvailability: false },
+      parenting: { philosophy: 'structured', experience: 'experienced', supportNeeds: ['childcare-sharing'] },
+    },
+    {
+      userId: '10',
+      firstName: 'Michelle',
+      age: 33,
+      gender: 'female',
+      city: 'Alameda',
+      state: 'CA',
+      compatibilityScore: 74,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: false },
+      profilePhoto: 'https://i.pravatar.cc/300?img=23',
+      childrenCount: 1,
+      childrenAgeGroups: ['infant'],
+      budget: 1700,
+      housingBudget: { min: 1500, max: 1900 },
+      moveInDate: '2026-01-15',
+      bio: 'Dental hygienist, health-conscious family',
+      housingPreferences: { housingType: 'apartment', bedroomCount: 2, bathroomCount: 1, smokeFree: true, petFriendly: true },
+      location: { city: 'Alameda', state: 'CA', zipCode: '94501', latitude: 37.7652, longitude: -122.2416 },
+      schedule: { workSchedule: 'standard', flexibility: 'low', weekendAvailability: true },
+      parenting: { philosophy: 'attachment', experience: 'new-parent', supportNeeds: ['parenting-guidance'] },
+    },
+    {
+      userId: '11',
+      firstName: 'Jennifer',
+      age: 36,
+      gender: 'female',
+      city: 'San Leandro',
+      state: 'CA',
+      compatibilityScore: 70,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=35',
+      childrenCount: 2,
+      childrenAgeGroups: ['elementary', 'middle-school'],
+      budget: 1900,
+      housingBudget: { min: 1700, max: 2100 },
+      moveInDate: '2025-11-25',
+      bio: 'Real estate agent, active lifestyle, sports enthusiast',
+      housingPreferences: { housingType: 'house', bedroomCount: 3, bathroomCount: 2, smokeFree: true, petFriendly: true },
+      location: { city: 'San Leandro', state: 'CA', zipCode: '94577', latitude: 37.7249, longitude: -122.1561 },
+      schedule: { workSchedule: 'flexible', flexibility: 'high', weekendAvailability: false },
+      parenting: { philosophy: 'balanced', experience: 'experienced', supportNeeds: [] },
+    },
+    {
+      userId: '12',
+      firstName: 'Laura',
+      age: 28,
+      gender: 'female',
+      city: 'Pacifica',
+      state: 'CA',
+      compatibilityScore: 86,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=48',
+      childrenCount: 1,
+      childrenAgeGroups: ['toddler'],
+      budget: 1500,
+      housingBudget: { min: 1300, max: 1700 },
+      moveInDate: '2025-12-05',
+      bio: 'Marketing coordinator, beach lover, outdoorsy',
+      housingPreferences: { housingType: 'apartment', bedroomCount: 2, bathroomCount: 1, smokeFree: true, petFriendly: true },
+      location: { city: 'Pacifica', state: 'CA', zipCode: '94044', latitude: 37.6138, longitude: -122.4869 },
+      schedule: { workSchedule: 'flexible', flexibility: 'medium', weekendAvailability: true },
+      parenting: { philosophy: 'gentle-parenting', experience: 'new-parent', supportNeeds: ['emotional-support'] },
+    },
+    {
+      userId: '13',
+      firstName: 'Danielle',
+      age: 32,
+      gender: 'female',
+      city: 'Walnut Creek',
+      state: 'CA',
+      compatibilityScore: 79,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=27',
+      childrenCount: 2,
+      childrenAgeGroups: ['infant', 'elementary'],
+      budget: 2100,
+      housingBudget: { min: 1900, max: 2300 },
+      moveInDate: '2026-01-05',
+      bio: 'HR manager, family-oriented, enjoy hiking',
+      housingPreferences: { housingType: 'house', bedroomCount: 3, bathroomCount: 2, smokeFree: true, petFriendly: false },
+      location: { city: 'Walnut Creek', state: 'CA', zipCode: '94596', latitude: 37.9101, longitude: -122.0652 },
+      schedule: { workSchedule: 'standard', flexibility: 'medium', weekendAvailability: true },
+      parenting: { philosophy: 'balanced', experience: 'experienced', supportNeeds: ['childcare-sharing'] },
+    },
+    {
+      userId: '14',
+      firstName: 'Angela',
+      age: 29,
+      gender: 'female',
+      city: 'Concord',
+      state: 'CA',
+      compatibilityScore: 92,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=38',
+      childrenCount: 1,
+      childrenAgeGroups: ['toddler'],
+      budget: 1400,
+      housingBudget: { min: 1200, max: 1600 },
+      moveInDate: '2025-11-18',
+      bio: 'Physical therapist, active and health-focused',
+      housingPreferences: { housingType: 'apartment', bedroomCount: 2, bathroomCount: 1, smokeFree: true, petFriendly: true },
+      location: { city: 'Concord', state: 'CA', zipCode: '94520', latitude: 37.9780, longitude: -122.0311 },
+      schedule: { workSchedule: 'standard', flexibility: 'medium', weekendAvailability: false },
+      parenting: { philosophy: 'montessori', experience: 'experienced', supportNeeds: [] },
+    },
+    {
+      userId: '15',
+      firstName: 'Christine',
+      age: 34,
+      gender: 'female',
+      city: 'Pleasanton',
+      state: 'CA',
+      compatibilityScore: 77,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=31',
+      childrenCount: 2,
+      childrenAgeGroups: ['elementary', 'middle-school'],
+      budget: 2200,
+      housingBudget: { min: 2000, max: 2400 },
+      moveInDate: '2025-12-20',
+      bio: 'Financial analyst, organized and planning-focused',
+      housingPreferences: { housingType: 'house', bedroomCount: 4, bathroomCount: 2, smokeFree: true, petFriendly: false },
+      location: { city: 'Pleasanton', state: 'CA', zipCode: '94566', latitude: 37.6624, longitude: -121.8747 },
+      schedule: { workSchedule: 'standard', flexibility: 'low', weekendAvailability: true },
+      parenting: { philosophy: 'structured', experience: 'experienced', supportNeeds: [] },
+    },
+    {
+      userId: '16',
+      firstName: 'Melissa',
+      age: 26,
+      gender: 'female',
+      city: 'Livermore',
+      state: 'CA',
+      compatibilityScore: 82,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: false },
+      profilePhoto: 'https://i.pravatar.cc/300?img=45',
+      childrenCount: 1,
+      childrenAgeGroups: ['infant'],
+      budget: 1200,
+      housingBudget: { min: 1000, max: 1400 },
+      moveInDate: '2025-11-22',
+      bio: 'Lab technician, science enthusiast, quiet lifestyle',
+      housingPreferences: { housingType: 'apartment', bedroomCount: 2, bathroomCount: 1, smokeFree: true, petFriendly: false },
+      location: { city: 'Livermore', state: 'CA', zipCode: '94550', latitude: 37.6819, longitude: -121.7680 },
+      schedule: { workSchedule: 'standard', flexibility: 'low', weekendAvailability: true },
+      parenting: { philosophy: 'attachment', experience: 'new-parent', supportNeeds: ['parenting-guidance', 'emotional-support'] },
+    },
+    {
+      userId: '17',
+      firstName: 'Tiffany',
+      age: 31,
+      gender: 'female',
+      city: 'Union City',
+      state: 'CA',
+      compatibilityScore: 75,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=49',
+      childrenCount: 2,
+      childrenAgeGroups: ['toddler', 'elementary'],
+      budget: 1650,
+      housingBudget: { min: 1450, max: 1850 },
+      moveInDate: '2025-12-12',
+      bio: 'Social worker, compassionate and community-minded',
+      housingPreferences: { housingType: 'house', bedroomCount: 3, bathroomCount: 2, smokeFree: true, petFriendly: true },
+      location: { city: 'Union City', state: 'CA', zipCode: '94587', latitude: 37.5933, longitude: -122.0438 },
+      schedule: { workSchedule: 'flexible', flexibility: 'medium', weekendAvailability: false },
+      parenting: { philosophy: 'gentle-parenting', experience: 'experienced', supportNeeds: ['emotional-support'] },
+    },
+    {
+      userId: '18',
+      firstName: 'Heather',
+      age: 35,
+      gender: 'female',
+      city: 'Dublin',
+      state: 'CA',
+      compatibilityScore: 88,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=26',
+      childrenCount: 1,
+      childrenAgeGroups: ['elementary'],
+      budget: 1950,
+      housingBudget: { min: 1750, max: 2150 },
+      moveInDate: '2025-11-28',
+      bio: 'Project manager, tech industry, structured lifestyle',
+      housingPreferences: { housingType: 'house', bedroomCount: 3, bathroomCount: 2, smokeFree: true, petFriendly: true },
+      location: { city: 'Dublin', state: 'CA', zipCode: '94568', latitude: 37.7022, longitude: -121.9358 },
+      schedule: { workSchedule: 'flexible', flexibility: 'high', weekendAvailability: true },
+      parenting: { philosophy: 'balanced', experience: 'experienced', supportNeeds: [] },
+    },
+    {
+      userId: '19',
+      firstName: 'Emily',
+      age: 27,
+      gender: 'female',
+      city: 'Newark',
+      state: 'CA',
+      compatibilityScore: 83,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=40',
+      childrenCount: 1,
+      childrenAgeGroups: ['infant'],
+      budget: 1350,
+      housingBudget: { min: 1150, max: 1550 },
+      moveInDate: '2025-12-08',
+      bio: 'Customer service manager, friendly and sociable',
+      housingPreferences: { housingType: 'apartment', bedroomCount: 2, bathroomCount: 1, smokeFree: true, petFriendly: false },
+      location: { city: 'Newark', state: 'CA', zipCode: '94560', latitude: 37.5297, longitude: -122.0402 },
+      schedule: { workSchedule: 'standard', flexibility: 'medium', weekendAvailability: true },
+      parenting: { philosophy: 'gentle-parenting', experience: 'new-parent', supportNeeds: ['emotional-support'] },
+    },
+    {
+      userId: '20',
+      firstName: 'Victoria',
+      age: 33,
+      gender: 'female',
+      city: 'Millbrae',
+      state: 'CA',
+      compatibilityScore: 87,
+      verificationStatus: { idVerified: true, backgroundCheckComplete: true, phoneVerified: true, emailVerified: true, incomeVerified: true },
+      profilePhoto: 'https://i.pravatar.cc/300?img=33',
+      childrenCount: 2,
+      childrenAgeGroups: ['toddler', 'elementary'],
+      budget: 2000,
+      housingBudget: { min: 1800, max: 2200 },
+      moveInDate: '2025-11-30',
+      bio: 'Flight attendant, world traveler, multicultural',
+      housingPreferences: { housingType: 'house', bedroomCount: 3, bathroomCount: 2, smokeFree: true, petFriendly: true },
+      location: { city: 'Millbrae', state: 'CA', zipCode: '94030', latitude: 37.5985, longitude: -122.3872 },
+      schedule: { workSchedule: 'flexible', flexibility: 'high', weekendAvailability: false },
+      parenting: { philosophy: 'balanced', experience: 'experienced', supportNeeds: ['childcare-sharing'] },
     },
   ];
 
@@ -442,7 +825,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
           </View>
           <TouchableOpacity
             style={styles.compareButton}
-            onPress={() => alert('Opening comparison view')}
+            onPress={() => setComparisonModalVisible(true)}
           >
             <Text style={styles.compareButtonText}>Compare</Text>
           </TouchableOpacity>
@@ -492,6 +875,77 @@ export const BrowseDiscoveryScreen: React.FC = () => {
           alert(`Connection request sent to ${selectedProfile?.firstName}`);
         }}
       />
+
+      {/* Comparison Modal */}
+      <Modal
+        visible={comparisonModalVisible}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setComparisonModalVisible(false)}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+          <View style={{ flex: 1 }}>
+            {/* Header */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderBottomColor: '#E1E8ED' }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#2C3E50' }}>
+                Compare Profiles ({comparisonProfiles.length})
+              </Text>
+              <TouchableOpacity onPress={() => setComparisonModalVisible(false)}>
+                <MaterialCommunityIcons name="close" size={24} color="#2C3E50" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Comparison Content */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={true} style={{ flex: 1 }}>
+              {comparisonProfiles.map((comparisonItem, index) => {
+                const profile = comparisonItem.profile;
+                return (
+                  <View key={profile.userId} style={{ width: width * 0.85, padding: 16, borderRightWidth: 1, borderRightColor: '#E1E8ED' }}>
+                    <View style={{ backgroundColor: '#F5F6F7', borderRadius: 12, padding: 16, marginBottom: 16 }}>
+                      <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#2C3E50', marginBottom: 8 }}>{profile.firstName}, {profile.age}</Text>
+                      <Text style={{ fontSize: 14, color: '#7F8C8D', marginBottom: 4 }}>{profile.city}, {profile.state}</Text>
+                      <Text style={{ fontSize: 14, color: '#3498DB', fontWeight: '600' }}>Compatibility: {profile.compatibilityScore}%</Text>
+                    </View>
+
+                    <View style={{ gap: 12 }}>
+                      <View>
+                        <Text style={{ fontSize: 12, color: '#7F8C8D', marginBottom: 4 }}>Children</Text>
+                        <Text style={{ fontSize: 14, color: '#2C3E50' }}>{profile.childrenCount} child(ren)</Text>
+                      </View>
+
+                      {profile.housingBudget && (
+                        <View>
+                          <Text style={{ fontSize: 12, color: '#7F8C8D', marginBottom: 4 }}>Budget</Text>
+                          <Text style={{ fontSize: 14, color: '#2C3E50' }}>${profile.housingBudget.min} - ${profile.housingBudget.max}/mo</Text>
+                        </View>
+                      )}
+
+                      {profile.parenting?.philosophy && (
+                        <View>
+                          <Text style={{ fontSize: 12, color: '#7F8C8D', marginBottom: 4 }}>Parenting Philosophy</Text>
+                          <Text style={{ fontSize: 14, color: '#2C3E50' }}>
+                            {profile.parenting.philosophy
+                              .split('-')
+                              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                              .join(' ')}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    <TouchableOpacity
+                      style={{ backgroundColor: '#E74C3C', padding: 12, borderRadius: 8, marginTop: 16, alignItems: 'center' }}
+                      onPress={() => dispatch(removeFromComparison(profile.userId))}
+                    >
+                      <Text style={{ color: '#fff', fontWeight: '600' }}>Remove</Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </SafeAreaView>
+      </Modal>
       </View>
     </SafeAreaView>
   );

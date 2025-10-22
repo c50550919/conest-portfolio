@@ -501,6 +501,17 @@ export default function ProfileDetailsModal({
                 'heart-outline',
                 'Parenting Philosophy',
                 <>
+                  {parenting.philosophy && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Philosophy:</Text>
+                      <Text style={styles.detailValue}>
+                        {parenting.philosophy
+                          .split('-')
+                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(' ')}
+                      </Text>
+                    </View>
+                  )}
                   {(parenting.parentingPhilosophy || []).length > 0 && (
                     <View style={styles.tagGroup}>
                       <Text style={styles.tagGroupLabel}>Philosophy:</Text>
