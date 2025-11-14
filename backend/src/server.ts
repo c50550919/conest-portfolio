@@ -6,9 +6,19 @@ import { checkRedisHealth } from './config/redis';
 import { initializeWebSocket } from './websockets/socketHandler';
 import logger from './config/logger';
 import SocketService from './services/SocketService';
+import { validateEnvironment, validateProductionSecurity } from './config/validation';
 
 // Load environment variables
 dotenv.config();
+
+// Validate environment variables (fail fast if misconfigured)
+try {
+  validateEnvironment();
+  validateProductionSecurity();
+} catch (error) {
+  logger.error('Environment validation failed. Server will not start.');
+  process.exit(1);
+}
 
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
@@ -39,7 +49,7 @@ const startServer = async () => {
       logger.info(`
 ╔════════════════════════════════════════════════════════════╗
 ║                                                            ║
-║   🏡 SafeNest API Server Running                          ║
+║   🏡 CoNest API Server Running                            ║
 ║                                                            ║
 ║   Environment: ${process.env.NODE_ENV || 'development'}                              ║
 ║   Port: ${PORT}                                             ║

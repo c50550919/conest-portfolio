@@ -16,7 +16,7 @@
 import axios, { AxiosInstance } from 'axios';
 import tokenStorage from '../tokenStorage';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://applaudably-inapprehensive-eugena.ngrok-free.dev/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
 export interface Message {
   id: string;

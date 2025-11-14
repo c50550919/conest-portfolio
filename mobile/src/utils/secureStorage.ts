@@ -1,142 +1,220 @@
 /**
  * Secure Storage Utility
- * Encrypted AsyncStorage wrapper for React Native
+ *
+ * Purpose: Secure storage wrapper using react-native-keychain for sensitive data
+ * Constitution: Principle IV (Performance - fast secure storage)
+ *
+ * Uses iOS Keychain and Android Keystore for hardware-backed encryption.
+ * All data is stored securely using platform-native secure storage mechanisms.
+ *
+ * Methods:
+ * - setSecureItem(): Store a single secure item
+ * - getSecureItem(): Retrieve a single secure item
+ * - removeSecureItem(): Remove a single secure item
+ * - setSecureItems(): Store multiple secure items
+ * - getSecureItems(): Retrieve multiple secure items
+ * - clearSecureStorage(): Clear all secure storage
+ * - setAuthToken(): Store authentication token
+ * - getAuthToken(): Retrieve authentication token
+ * - removeAuthToken(): Remove authentication token
+ * - setRefreshToken(): Store refresh token
+ * - getRefreshToken(): Retrieve refresh token
+ * - removeRefreshToken(): Remove refresh token
+ *
+ * Created: 2025-10-06
+ * Updated: 2025-11-10 - Security fix: Replaced SHA-256 with react-native-keychain
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { sha256 } from 'react-native-aes-crypto';
-
-// In production, derive this from device-specific data
-const ENCRYPTION_KEY = 'your-encryption-key-here';
+import * as Keychain from 'react-native-keychain';
 
 /**
- * Encrypt data using AES
+ * Security options for all keychain operations
+ * - WHEN_UNLOCKED_THIS_DEVICE_ONLY: Most secure option, requires device unlock
+ * - Data is hardware-backed on iOS and Android
+ * - No iCloud sync, device-only storage
  */
-async function encrypt(data: string): Promise<string> {
-  try {
-    // Use sha256 for encryption
-    const encrypted = await sha256(`${ENCRYPTION_KEY}:${data}`);
+const SECURITY_OPTIONS: Keychain.Options = {
+  accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+};
 
-    // In production, use proper AES encryption library like react-native-aes-crypto
-    return encrypted;
-  } catch (error) {
-    console.error('Encryption error:', error);
-    throw new Error('Failed to encrypt data');
-  }
+/**
+ * Generate a service name for keychain storage
+ * Each key gets its own service to avoid conflicts
+ */
+function getServiceName(key: string): string {
+  return `conest-secure-${key}`;
 }
 
 /**
- * Decrypt data
- */
-async function decrypt(encryptedData: string): Promise<string> {
-  try {
-    // This is a simplified example
-    // In production, use proper AES decryption
-    return encryptedData;
-  } catch (error) {
-    console.error('Decryption error:', error);
-    throw new Error('Failed to decrypt data');
-  }
-}
-
-/**
- * Securely store data
+ * Securely store data using react-native-keychain
+ *
+ * @param key - Unique identifier for the data
+ * @param value - Data to store securely
+ * @throws Error if storage fails
+ *
+ * @example
+ * await setSecureItem('user_email', 'user@example.com');
  */
 export async function setSecureItem(key: string, value: string): Promise<void> {
   try {
-    const encrypted = await encrypt(value);
-    await AsyncStorage.setItem(`secure_${key}`, encrypted);
+    await Keychain.setGenericPassword(
+      key, // username field (not used for auth, just metadata)
+      value, // password field (the actual secure data)
+      {
+        ...SECURITY_OPTIONS,
+        service: getServiceName(key),
+      }
+    );
   } catch (error) {
-    console.error('Error storing secure item:', error);
-    throw error;
+    console.error(`[SecureStorage] Error storing secure item '${key}':`, error);
+    throw new Error(`Failed to store secure item: ${key}`);
   }
 }
 
 /**
  * Retrieve securely stored data
+ *
+ * @param key - Unique identifier for the data
+ * @returns Stored value or null if not found
+ *
+ * @example
+ * const email = await getSecureItem('user_email');
  */
 export async function getSecureItem(key: string): Promise<string | null> {
   try {
-    const encrypted = await AsyncStorage.getItem(`secure_${key}`);
-    if (!encrypted) return null;
+    const credentials = await Keychain.getGenericPassword({
+      service: getServiceName(key),
+    });
 
-    return await decrypt(encrypted);
+    if (!credentials) {
+      return null;
+    }
+
+    return credentials.password;
   } catch (error) {
-    console.error('Error retrieving secure item:', error);
+    console.error(`[SecureStorage] Error retrieving secure item '${key}':`, error);
     return null;
   }
 }
 
 /**
  * Remove securely stored data
+ *
+ * @param key - Unique identifier for the data
+ * @throws Error if removal fails
+ *
+ * @example
+ * await removeSecureItem('user_email');
  */
 export async function removeSecureItem(key: string): Promise<void> {
   try {
-    await AsyncStorage.removeItem(`secure_${key}`);
+    await Keychain.resetGenericPassword({
+      service: getServiceName(key),
+    });
   } catch (error) {
-    console.error('Error removing secure item:', error);
-    throw error;
+    console.error(`[SecureStorage] Error removing secure item '${key}':`, error);
+    throw new Error(`Failed to remove secure item: ${key}`);
   }
 }
 
 /**
- * Store multiple secure items
+ * Store multiple secure items in parallel
+ *
+ * @param items - Array of [key, value] tuples
+ * @throws Error if any storage operation fails
+ *
+ * @example
+ * await setSecureItems([
+ *   ['user_email', 'user@example.com'],
+ *   ['user_phone', '+1234567890']
+ * ]);
  */
 export async function setSecureItems(items: Array<[string, string]>): Promise<void> {
   try {
-    const encryptedItems = await Promise.all(
-      items.map(async ([key, value]) => {
-        const encrypted = await encrypt(value);
-        return [`secure_${key}`, encrypted] as [string, string];
-      })
+    await Promise.all(
+      items.map(([key, value]) => setSecureItem(key, value))
     );
-
-    await AsyncStorage.multiSet(encryptedItems);
   } catch (error) {
-    console.error('Error storing secure items:', error);
+    console.error('[SecureStorage] Error storing secure items:', error);
     throw error;
   }
 }
 
 /**
- * Retrieve multiple secure items
+ * Retrieve multiple secure items in parallel
+ *
+ * @param keys - Array of keys to retrieve
+ * @returns Array of [key, value] tuples (value is null if not found)
+ *
+ * @example
+ * const items = await getSecureItems(['user_email', 'user_phone']);
+ * // Returns: [['user_email', 'user@example.com'], ['user_phone', '+1234567890']]
  */
 export async function getSecureItems(keys: string[]): Promise<Array<[string, string | null]>> {
   try {
-    const secureKeys = keys.map(key => `secure_${key}`);
-    const encryptedItems = await AsyncStorage.multiGet(secureKeys);
-
-    return await Promise.all(
-      encryptedItems.map(async ([key, value]) => {
-        const originalKey = key.replace('secure_', '');
-        if (!value) return [originalKey, null];
-
-        const decrypted = await decrypt(value);
-        return [originalKey, decrypted];
+    const results = await Promise.all(
+      keys.map(async (key) => {
+        const value = await getSecureItem(key);
+        return [key, value] as [string, string | null];
       })
     );
+
+    return results;
   } catch (error) {
-    console.error('Error retrieving secure items:', error);
+    console.error('[SecureStorage] Error retrieving secure items:', error);
     return keys.map(key => [key, null]);
   }
 }
 
 /**
  * Clear all secure storage
+ *
+ * Note: This only clears items stored through this utility.
+ * It does not affect tokens stored via tokenStorage.ts service.
+ *
+ * @throws Error if clearing fails
+ *
+ * @example
+ * await clearSecureStorage(); // Clears all secure storage on logout
  */
 export async function clearSecureStorage(): Promise<void> {
   try {
-    const allKeys = await AsyncStorage.getAllKeys();
-    const secureKeys = allKeys.filter(key => key.startsWith('secure_'));
-    await AsyncStorage.multiRemove(secureKeys);
+    // Note: react-native-keychain doesn't provide a way to enumerate all services
+    // We can only clear known keys. In practice, this should be called with
+    // specific keys to clear, or use removeSecureItem() for individual items.
+
+    // For now, we'll clear common secure items
+    const commonKeys = [
+      'auth_token',
+      'refresh_token',
+      'user_data',
+      'device_id',
+      'encryption_key',
+    ];
+
+    await Promise.all(
+      commonKeys.map(key =>
+        removeSecureItem(key).catch(() => {
+          // Ignore errors for non-existent keys
+        })
+      )
+    );
   } catch (error) {
-    console.error('Error clearing secure storage:', error);
-    throw error;
+    console.error('[SecureStorage] Error clearing secure storage:', error);
+    throw new Error('Failed to clear secure storage');
   }
 }
 
 /**
  * Store authentication token securely
+ *
+ * Note: For token storage, consider using tokenStorage.ts service
+ * which provides additional token-specific functionality.
+ *
+ * @param token - JWT authentication token
+ *
+ * @example
+ * await setAuthToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...');
  */
 export async function setAuthToken(token: string): Promise<void> {
   await setSecureItem('auth_token', token);
@@ -144,6 +222,11 @@ export async function setAuthToken(token: string): Promise<void> {
 
 /**
  * Retrieve authentication token
+ *
+ * @returns Token or null if not found
+ *
+ * @example
+ * const token = await getAuthToken();
  */
 export async function getAuthToken(): Promise<string | null> {
   return await getSecureItem('auth_token');
@@ -151,6 +234,9 @@ export async function getAuthToken(): Promise<string | null> {
 
 /**
  * Remove authentication token
+ *
+ * @example
+ * await removeAuthToken(); // Called on logout
  */
 export async function removeAuthToken(): Promise<void> {
   await removeSecureItem('auth_token');
@@ -158,6 +244,11 @@ export async function removeAuthToken(): Promise<void> {
 
 /**
  * Store refresh token securely
+ *
+ * @param token - JWT refresh token
+ *
+ * @example
+ * await setRefreshToken('refresh_token_here...');
  */
 export async function setRefreshToken(token: string): Promise<void> {
   await setSecureItem('refresh_token', token);
@@ -165,6 +256,11 @@ export async function setRefreshToken(token: string): Promise<void> {
 
 /**
  * Retrieve refresh token
+ *
+ * @returns Token or null if not found
+ *
+ * @example
+ * const refreshToken = await getRefreshToken();
  */
 export async function getRefreshToken(): Promise<string | null> {
   return await getSecureItem('refresh_token');
@@ -172,6 +268,9 @@ export async function getRefreshToken(): Promise<string | null> {
 
 /**
  * Remove refresh token
+ *
+ * @example
+ * await removeRefreshToken(); // Called on logout
  */
 export async function removeRefreshToken(): Promise<void> {
   await removeSecureItem('refresh_token');

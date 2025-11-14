@@ -9,6 +9,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import HomeScreen from '../screens/main/HomeScreen';
 import { BrowseDiscoveryScreen } from '../screens/main/BrowseDiscoveryScreen';
+import SavedProfilesScreen from '../screens/main/SavedProfilesScreen';
 import MessagesScreen from '../screens/main/MessagesScreen';
 import HouseholdScreen from '../screens/main/HouseholdScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
@@ -18,6 +19,7 @@ import { theme } from '../theme';
 export type MainTabParamList = {
   Home: undefined;
   Discover: undefined;
+  Saved: undefined;
   Messages: undefined;
   Household: undefined;
   Profile: undefined;
@@ -64,8 +66,19 @@ const MainNavigator: React.FC = () => {
         options={{
           tabBarTestID: 'tab-discover',
           tabBarAccessibilityLabel: 'Discover',
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size}) => (
             <Icon name="home-search" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Saved"
+        component={SavedProfilesScreen}
+        options={{
+          tabBarTestID: 'tab-saved',
+          tabBarAccessibilityLabel: 'Saved Profiles',
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="bookmark-multiple" size={size} color={color} />
           ),
         }}
       />

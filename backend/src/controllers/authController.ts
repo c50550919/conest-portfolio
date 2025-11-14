@@ -135,6 +135,9 @@ export const AuthController = {
    */
   verifyPhone: asyncHandler(async (req: Request, res: Response) => {
     try {
+      // Destructure for future use when phone verification is implemented
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // @ts-ignore - Planned for future implementation
       const { phone, code } = req.body;
 
       // TODO: Find user by phone number (for now, this is a simplified implementation)

@@ -94,7 +94,7 @@ export const saveProfile = createAsyncThunk(
     notes,
   }: {
     profileId: string;
-    folder?: 'top_choice' | 'strong_maybe' | 'considering' | 'backup' | null;
+    folder?: 'Top Choice' | 'Strong Maybe' | 'Considering' | 'Backup' | null;
     notes?: string;
   }) => {
     const savedProfile = await savedProfilesAPI.saveProfile(profileId, folder, notes);
@@ -113,7 +113,7 @@ export const updateSavedProfile = createAsyncThunk(
     notes,
   }: {
     id: string;
-    folder?: 'top_choice' | 'strong_maybe' | 'considering' | 'backup' | null;
+    folder?: 'Top Choice' | 'Strong Maybe' | 'Considering' | 'Backup' | null;
     notes?: string;
   }) => {
     const updatedProfile = await savedProfilesAPI.updateSavedProfile(id, folder, notes);

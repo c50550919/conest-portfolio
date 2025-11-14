@@ -1,28 +1,31 @@
 import db from '../config/database';
 
 /**
- * Compatibility Calculator Utility
+ * Compatibility Calculator Utility - FHA COMPLIANT VERSION
  *
- * Purpose: Fast compatibility scoring for Discovery Screen
- * Constitution: Principle I (Child Safety - NO child PII, only age groups)
+ * Purpose: Fast neutral compatibility scoring for Discovery Screen
+ * Constitution: Principle I (Child Safety - NO child PII)
  * Performance: <20ms calculation target (Constitution Principle IV)
  *
- * This is the SIMPLE/FAST algorithm used in the discovery feed.
- * For detailed match scoring, see /services/matchingService.ts
+ * FHA COMPLIANCE CHANGES (2025-11-07):
+ * REMOVED family composition scoring (60 points for age group overlap)
+ * RETAINED user preference factors only
  *
- * Scoring Algorithm:
- * - Children age group overlap: 20 points per overlap (max 60 for 3+ overlaps)
- * - Budget compatibility: 30 points max (decreases with budget difference)
- * - Location (same city): 30 points
+ * NEW Scoring Algorithm (FHA Compliant):
+ * - Budget compatibility: 50 points max (financial preference)
+ * - Location (same city): 50 points (geographic preference)
  * - Total: 0-100 score
  *
  * Example:
- * - User A: ['toddler', 'elementary'], budget $1500, Austin
- * - User B: ['toddler', 'teen'], budget $1600, Austin
- * - Score: 20 (age) + 29 (budget) + 30 (location) = 79
+ * - User A: budget $1500, Austin
+ * - User B: budget $1600, Austin
+ * - Score: 49 (budget) + 50 (location) = 99
+ *
+ * This creates a neutral platform design (CoAbode model) where users
+ * search based on their stated preferences, not algorithmic discrimination.
  *
  * Created: 2025-10-06
- * Updated: 2025-10-08 (added performance documentation)
+ * Updated: 2025-11-07 (FHA compliance - removed family composition scoring)
  */
 
 export interface ParentProfile {
@@ -60,7 +63,16 @@ export function calculateCompatibilityScore(
 }
 
 /**
- * Calculate detailed compatibility breakdown
+ * Calculate detailed compatibility breakdown - FHA COMPLIANT
+ *
+ * REMOVED (FHA violation):
+ * - ageGroupScore calculation (was 60 points based on family composition)
+ * - ageGroupOverlap tracking
+ *
+ * RETAINED (FHA compliant):
+ * - Budget compatibility (50 points) - financial preference
+ * - Location compatibility (50 points) - geographic preference
+ *
  * @param userProfile - First parent's profile
  * @param targetProfile - Second parent's profile
  * @returns Detailed compatibility breakdown
@@ -71,20 +83,7 @@ export function calculateCompatibilityBreakdown(
 ): CompatibilityBreakdown {
   let totalScore = 0;
 
-  // 1. Children age group overlap (20 points per overlap, max 60)
-  const userAgeGroups = Array.isArray(userProfile.children_age_groups)
-    ? userProfile.children_age_groups
-    : [];
-  const targetAgeGroups = Array.isArray(targetProfile.children_age_groups)
-    ? targetProfile.children_age_groups
-    : [];
-  const ageGroupOverlap = userAgeGroups.filter((ag: string) =>
-    targetAgeGroups.includes(ag)
-  ).length;
-  const ageGroupScore = Math.min(ageGroupOverlap * 20, 60);
-  totalScore += ageGroupScore;
-
-  // 2. Budget compatibility (30 points max)
+  // 1. Budget compatibility (50 points max) - User preference, not family composition
   const userBudget = calculateAverageBudget(
     userProfile.budget_min,
     userProfile.budget_max
@@ -100,23 +99,23 @@ export function calculateCompatibilityBreakdown(
   if (userBudget > 0 && targetBudget > 0) {
     budgetDiff = Math.abs(userBudget - targetBudget);
     // Score decreases as budget difference increases
-    // $0 diff = 30 points, $3000 diff = 0 points
-    budgetScore = Math.max(0, 30 - budgetDiff / 100);
+    // $0 diff = 50 points, $5000 diff = 0 points
+    budgetScore = Math.max(0, 50 - budgetDiff / 100);
   }
   totalScore += budgetScore;
 
-  // 3. Location compatibility (30 points for same city)
+  // 2. Location compatibility (50 points for same city) - Geographic preference
   const sameCity = userProfile.city === targetProfile.city && userProfile.city !== null;
-  const locationScore = sameCity ? 30 : 0;
+  const locationScore = sameCity ? 50 : 0;
   totalScore += locationScore;
 
   return {
     totalScore: Math.min(Math.round(totalScore), 100),
-    ageGroupScore: Math.round(ageGroupScore),
+    ageGroupScore: 0, // Removed for FHA compliance - was discriminatory
     budgetScore: Math.round(budgetScore),
     locationScore,
     breakdown: {
-      ageGroupOverlap,
+      ageGroupOverlap: 0, // Removed for FHA compliance
       budgetDifference: Math.round(budgetDiff),
       sameCity,
     },

@@ -30,6 +30,7 @@ import {
   Platform,
   Modal,
   ScrollView,
+  Alert,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -42,14 +43,20 @@ import {
   setRefreshing,
   setProfiles,
   appendProfiles,
-  addSavedProfile,
-  removeSavedProfile,
   addToComparison,
   removeFromComparison,
 } from '../../store/slices/browseDiscoverySlice';
+import {
+  saveProfile,
+  removeSavedProfile as removeSavedProfileThunk,
+  fetchSavedProfiles,
+} from '../../store/slices/savedProfilesSlice';
 import { ProfileGridCard } from '../../components/discovery/ProfileGridCard';
+import { FolderSelectionModal } from '../../components/discovery/FolderSelectionModal';
 import { FilterPanel } from '../../components/discovery/FilterPanel';
 import ProfileDetailsModal from '../../components/discovery/ProfileDetailsModal';
+import CompatibilityBreakdownModal from '../../components/compatibility/CompatibilityBreakdownModal';
+import compatibilityAPI, { CompatibilityBreakdown } from '../../services/api/compatibilityAPI';
 import {
   SORT_OPTIONS,
   VIEW_MODES,
@@ -78,16 +85,27 @@ export const BrowseDiscoveryScreen: React.FC = () => {
     comparisonProfiles,
   } = useSelector((state: RootState) => state.browseDiscovery);
 
+  // Get saved profiles from savedProfilesSlice (source of truth)
+  const { savedProfiles: persistedSavedProfiles } = useSelector(
+    (state: RootState) => state.savedProfiles
+  );
+
   const [filterPanelVisible, setFilterPanelVisible] = useState(false);
   const [sortMenuVisible, setSortMenuVisible] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<ExtendedProfileCard | null>(null);
   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
   const [comparisonModalVisible, setComparisonModalVisible] = useState(false);
+  const [folderModalVisible, setFolderModalVisible] = useState(false);
+  const [selectedProfileForSave, setSelectedProfileForSave] = useState<ExtendedProfileCard | null>(null);
+  const [showBreakdownModal, setShowBreakdownModal] = useState(false);
+  const [selectedBreakdown, setSelectedBreakdown] = useState<CompatibilityBreakdown | null>(null);
+  const [selectedPairNames, setSelectedPairNames] = useState<{profile1: string; profile2: string} | null>(null);
+  const [loadingBreakdown, setLoadingBreakdown] = useState(false);
 
   // Mock data for UI development (remove when API is ready)
   const MOCK_PROFILES: ExtendedProfileCard[] = [
     {
-      userId: '1',
+      userId: '64c3133d-4e0f-4a41-b537-db546f26ffee', // Real DB user: sarah.johnson@test.com
       firstName: 'Sarah',
       age: 32,
       gender: 'female',
@@ -134,7 +152,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
       },
     },
     {
-      userId: '2',
+      userId: '55ae5daf-dab9-4aa1-98ca-412a42cbfca4', // Real DB user: maria.rodriguez@test.com
       firstName: 'Maria',
       age: 28,
       gender: 'female',
@@ -181,7 +199,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
       },
     },
     {
-      userId: '3',
+      userId: 'e1259464-3932-4973-9085-c5adf5ca18ec', // Real DB user: jessica.martinez@test.com
       firstName: 'Jessica',
       age: 29,
       gender: 'female',
@@ -202,7 +220,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
       parenting: { philosophy: 'gentle-parenting', experience: 'experienced', supportNeeds: ['childcare-sharing'] },
     },
     {
-      userId: '4',
+      userId: '46d629df-941a-49d5-a7f1-a822a2fb553c', // Real DB user: amanda.chen@test.com
       firstName: 'Amanda',
       age: 34,
       gender: 'female',
@@ -223,7 +241,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
       parenting: { philosophy: 'montessori', experience: 'experienced', supportNeeds: ['emotional-support'] },
     },
     {
-      userId: '5',
+      userId: 'c4ee730f-2ed8-4598-a58d-bd303c7a96a1', // Real DB user: rachel.williams@test.com
       firstName: 'Rachel',
       age: 26,
       gender: 'female',
@@ -244,7 +262,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
       parenting: { philosophy: 'attachment', experience: 'new-parent', supportNeeds: ['parenting-guidance', 'emotional-support'] },
     },
     {
-      userId: '6',
+      userId: 'b9ea179a-81fa-406e-a48e-1cad0b11d639', // Real DB user: nicole.brown@test.com
       firstName: 'Nicole',
       age: 31,
       gender: 'female',
@@ -597,9 +615,11 @@ export const BrowseDiscoveryScreen: React.FC = () => {
     if (profiles.length === 0) {
       fetchProfiles();
     }
-  }, []);
+    // Fetch saved profiles to sync bookmark state
+    dispatch(fetchSavedProfiles() as any);
+  }, [dispatch]);
 
-  // Handle save profile
+  // Handle save profile - show folder selection modal
   const handleSaveProfile = (profile: ExtendedProfileCard) => {
     const validation = canSaveProfile(savedProfiles);
 
@@ -608,28 +628,39 @@ export const BrowseDiscoveryScreen: React.FC = () => {
       return;
     }
 
-    const saved: SavedProfile = {
-      profileId: profile.userId,
-      folder: 'considering',
+    // Store the profile and show folder selection modal
+    setSelectedProfileForSave(profile);
+    setFolderModalVisible(true);
+  };
+
+  // Handle folder selection and save profile
+  const handleFolderSelect = (folder: string) => {
+    if (!selectedProfileForSave) return;
+
+    dispatch(saveProfile({
+      profileId: selectedProfileForSave.userId,
+      folder: folder as 'Top Choice' | 'Strong Maybe' | 'Considering' | 'Backup',
       notes: '',
-      savedAt: new Date().toISOString(),
-      viewCount: 0,
-      lastViewedAt: new Date().toISOString(),
-    };
+    }));
 
-    dispatch(addSavedProfile(saved));
+    // Show success message
+    alert(SUCCESS_MESSAGES.PROFILE_SAVED.replace('{folder}', folder));
 
-    if (validation.reason === 'soft_warning') {
-      alert(validation.errorMessage);
-    } else {
-      alert(SUCCESS_MESSAGES.PROFILE_SAVED.replace('{folder}', 'Considering'));
-    }
+    // Clean up
+    setSelectedProfileForSave(null);
+    setFolderModalVisible(false);
   };
 
   // Handle unsave profile
   const handleUnsaveProfile = (profileId: string) => {
-    dispatch(removeSavedProfile(profileId));
-    alert(SUCCESS_MESSAGES.PROFILE_REMOVED);
+    // Find the saved profile entry by profile_id
+    const savedProfile = persistedSavedProfiles.find(sp => sp.profile_id === profileId);
+    if (savedProfile) {
+      dispatch(removeSavedProfileThunk(savedProfile.id));
+      alert(SUCCESS_MESSAGES.PROFILE_REMOVED);
+    } else {
+      console.error('Saved profile not found for profileId:', profileId);
+    }
   };
 
   // Handle comparison
@@ -669,9 +700,55 @@ export const BrowseDiscoveryScreen: React.FC = () => {
     }
   };
 
-  // Check if profile is saved
+  // Handle compatibility breakdown
+  const handleShowBreakdown = async () => {
+    if (comparisonProfiles.length !== 2) {
+      Alert.alert('Selection Required', 'Please select exactly 2 profiles to see compatibility breakdown');
+      return;
+    }
+
+    try {
+      setLoadingBreakdown(true);
+      const profile1 = comparisonProfiles[0];
+      const profile2 = comparisonProfiles[1];
+
+      const breakdown = await compatibilityAPI.calculateCompatibility(
+        profile1.profile.userId,
+        profile2.profile.userId
+      );
+
+      console.log('[BrowseDiscoveryScreen] Got breakdown:', breakdown);
+
+      setSelectedBreakdown(breakdown);
+      setSelectedPairNames({
+        profile1: profile1.profile.firstName,
+        profile2: profile2.profile.firstName,
+      });
+
+      console.log('[BrowseDiscoveryScreen] Closing comparison modal');
+      setComparisonModalVisible(false);
+
+      // Small delay to let comparison modal close before opening breakdown modal
+      setTimeout(() => {
+        console.log('[BrowseDiscoveryScreen] Setting showBreakdownModal to true');
+        setShowBreakdownModal(true);
+        console.log('[BrowseDiscoveryScreen] showBreakdownModal should now be true');
+      }, 300);
+    } catch (error) {
+      console.error('[BrowseDiscoveryScreen] Error calculating compatibility:', error);
+      Alert.alert(
+        'Error',
+        'Failed to calculate compatibility breakdown. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setLoadingBreakdown(false);
+    }
+  };
+
+  // Check if profile is saved (use persistedSavedProfiles as source of truth)
   const isProfileSaved = (profileId: string): boolean => {
-    return savedProfiles.some(sp => sp.profileId === profileId);
+    return persistedSavedProfiles.some(sp => sp.profile_id === profileId);
   };
 
   // Check if profile is in comparison
@@ -943,9 +1020,54 @@ export const BrowseDiscoveryScreen: React.FC = () => {
                 );
               })}
             </ScrollView>
+
+            {/* Compatibility Breakdown Button (only for 2 profiles) */}
+            {comparisonProfiles.length === 2 && (
+              <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: '#E1E8ED' }}>
+                <TouchableOpacity
+                  testID="compatibility-breakdown-button"
+                  style={{
+                    backgroundColor: '#4ECDC4',
+                    padding: 16,
+                    borderRadius: 12,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onPress={handleShowBreakdown}
+                  disabled={loadingBreakdown}
+                >
+                  <MaterialCommunityIcons name="chart-donut" size={24} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>
+                    {loadingBreakdown ? 'Loading...' : 'Show Detailed Compatibility'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         </SafeAreaView>
       </Modal>
+
+      {/* Folder Selection Modal */}
+      <FolderSelectionModal
+        visible={folderModalVisible}
+        onClose={() => setFolderModalVisible(false)}
+        onSelectFolder={handleFolderSelect}
+        profileName={selectedProfileForSave?.firstName || 'this profile'}
+      />
+
+      {/* Compatibility Breakdown Modal */}
+      <CompatibilityBreakdownModal
+        visible={showBreakdownModal}
+        breakdown={selectedBreakdown}
+        profile1Name={selectedPairNames?.profile1 || ''}
+        profile2Name={selectedPairNames?.profile2 || ''}
+        onClose={() => {
+          setShowBreakdownModal(false);
+          setSelectedBreakdown(null);
+          setSelectedPairNames(null);
+        }}
+      />
       </View>
     </SafeAreaView>
   );

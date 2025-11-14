@@ -94,6 +94,7 @@ export class DiscoveryCacheService {
    * @param userId - User ID
    * @param targetUserId - Target user ID
    * @param direction - Swipe direction
+   * NOTE: Swipe functionality not currently used in grid-based interface
    */
   async cacheSwipeState(
     userId: string,

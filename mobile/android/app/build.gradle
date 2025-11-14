@@ -98,6 +98,13 @@ android {
             keyPassword 'android'
         }
     }
+    flavorDimensions "store"
+    productFlavors {
+        play {
+            dimension "store"
+        }
+    }
+
     buildTypes {
         debug {
             signingConfig signingConfigs.debug

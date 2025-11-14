@@ -10,6 +10,7 @@ router.use(requireFullVerification);
 
 router.get('/find', matchController.findMatches);
 router.get('/my-matches', matchController.getMyMatches);
+router.get('/compatibility/:targetUserId', matchController.calculateCompatibility);
 router.get('/:id', matchController.getMatch);
 router.post('/create', matchController.createMatch);
 router.post('/:id/respond', matchController.respondToMatch);

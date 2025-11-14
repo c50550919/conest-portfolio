@@ -18,7 +18,7 @@
 import { io, Socket } from 'socket.io-client';
 import tokenStorage from './tokenStorage';
 
-const SOCKET_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'https://applaudably-inapprehensive-eugena.ngrok-free.dev';
+const SOCKET_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:3000';
 
 export interface MatchCreatedEvent {
   matchId: string;

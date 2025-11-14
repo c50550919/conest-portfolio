@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import savedProfileController from '../controllers/savedProfileController';
-import { authenticate } from '../middleware/auth.middleware';
+import { authenticateJWT } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validator';
 import {
   createSavedProfileSchema,
@@ -20,7 +20,7 @@ import {
 const router = Router();
 
 // All routes require authentication
-router.use(authenticate);
+router.use(authenticateJWT);
 
 /**
  * @route   POST /api/saved-profiles

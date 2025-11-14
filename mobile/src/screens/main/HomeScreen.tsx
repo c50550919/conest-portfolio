@@ -12,14 +12,39 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation();
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  // Debug logging
+  console.log('[HomeScreen] User from Redux:', user);
+
+  // Show loading state if user data is not yet available
+  if (!user) {
+    console.log('[HomeScreen] No user data found in Redux, showing loading state');
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading your dashboard...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Calculate full name from user data with fallbacks
+  const fullName = user.firstName && user.lastName
+    ? `${user.firstName} ${user.lastName}`
+    : user.email || 'User';
 
   return (
     <SafeAreaView testID="home-screen" style={styles.container}>
@@ -32,7 +57,7 @@ const HomeScreen: React.FC = () => {
         <View style={styles.header}>
           <View>
             <Text testID="welcome-message" style={styles.greeting}>Welcome back!</Text>
-            <Text style={styles.userName}>Sarah Martinez</Text>
+            <Text testID="user-name" style={styles.userName}>{fullName}</Text>
           </View>
           <TouchableOpacity style={styles.notificationButton}>
             <Icon name="bell-outline" size={24} color={colors.text.primary} />
@@ -440,6 +465,17 @@ const styles = StyleSheet.create({
     ...typography.body2,
     color: colors.text.secondary,
     lineHeight: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  loadingText: {
+    ...typography.body1,
+    color: colors.text.secondary,
+    marginTop: spacing.md,
   },
 });
 

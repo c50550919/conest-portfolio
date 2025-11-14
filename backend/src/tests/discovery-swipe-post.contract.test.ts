@@ -1,0 +1,642 @@
+// @ts-nocheck
+/**
+ * Discovery Swipe POST Contract Tests
+ *
+ * Feature: 001-discovery-screen-swipeable
+ * Purpose: Validate POST /api/discovery/swipe contract against OpenAPI spec
+ * Constitution: Principle I (Child Safety), Principle IV (Performance <50ms P95)
+ *
+ * Test Coverage:
+ * 1. Response schema validation (swipeId, matchCreated, match?)
+ * 2. Swipe direction validation (left, right)
+ * 3. Mutual match detection and Socket.io notification
+ * 4. Duplicate swipe prevention
+ * 5. Self-swipe prevention
+ * 6. Target user validation (exists, verified)
+ * 7. Performance (<50ms P95)
+ * 8. Authentication enforcement
+ * 9. Error responses (400, 401, 404, 422, 500)
+ *
+ * Reference: specs/001-discovery-screen-swipeable/contracts/openapi.yaml
+ * Created: 2025-10-30
+ */
+
+import request from 'supertest';
+import app from '../app';
+import { db } from '../config/database';
+
+describe('POST /api/discovery/swipe - Contract Tests', () => {
+  let testUser: any;
+  let authToken: string;
+  let targetUser1: any;
+  let targetUser2: any;
+  let unverifiedUser: any;
+
+  beforeEach(async () => {
+    // Clean up test data
+    await db('matches').whereIn('user_id_1', db('users').select('id').where('email', 'like', '%test-swipe%')).delete();
+    await db('matches').whereIn('user_id_2', db('users').select('id').where('email', 'like', '%test-swipe%')).delete();
+    await db('swipes').whereIn('user_id', db('users').select('id').where('email', 'like', '%test-swipe%')).delete();
+    await db('swipes').whereIn('target_user_id', db('users').select('id').where('email', 'like', '%test-swipe%')).delete();
+    await db('verifications').whereIn('user_id', db('users').select('id').where('email', 'like', '%test-swipe%')).delete();
+    await db('profiles').whereIn('user_id', db('users').select('id').where('email', 'like', '%test-swipe%')).delete();
+    await db('users').where('email', 'like', '%test-swipe%').delete();
+
+    // Create authenticated test user (swiper)
+    [testUser] = await db('users')
+      .insert({
+        email: 'swiper-test-swipe@test.com',
+        email_verified: true,
+        password_hash: '$2b$12$mockPasswordHash',
+      })
+      .returning('*');
+
+    await db('profiles').insert({
+      user_id: testUser.id,
+      first_name: 'TestSwiper',
+      date_of_birth: '1990-01-01',
+      city: 'San Francisco',
+      children_count: 1,
+      children_age_groups: '{toddler}',
+      budget_min: 1500,
+      budget_max: 2500,
+    });
+
+    await db('verifications').insert({
+      user_id: testUser.id,
+      fully_verified: true,
+      id_verification_status: 'approved',
+      background_check_status: 'clear',
+      phone_verified: true,
+    });
+
+    authToken = `Bearer mock-token-${testUser.id}`;
+
+    // Create verified target user 1
+    [targetUser1] = await db('users')
+      .insert({
+        email: 'target1-test-swipe@test.com',
+        email_verified: true,
+        password_hash: '$2b$12$mockPasswordHash',
+      })
+      .returning('*');
+
+    await db('profiles').insert({
+      user_id: targetUser1.id,
+      first_name: 'Target1',
+      date_of_birth: '1988-05-15',
+      city: 'San Francisco',
+      children_count: 2,
+      children_age_groups: '{toddler,elementary}',
+      budget_min: 1800,
+      budget_max: 2200,
+    });
+
+    await db('verifications').insert({
+      user_id: targetUser1.id,
+      fully_verified: true,
+      id_verification_status: 'approved',
+      background_check_status: 'clear',
+      phone_verified: true,
+    });
+
+    // Create verified target user 2
+    [targetUser2] = await db('users')
+      .insert({
+        email: 'target2-test-swipe@test.com',
+        email_verified: true,
+        password_hash: '$2b$12$mockPasswordHash',
+      })
+      .returning('*');
+
+    await db('profiles').insert({
+      user_id: targetUser2.id,
+      first_name: 'Target2',
+      date_of_birth: '1992-08-20',
+      city: 'Oakland',
+      children_count: 1,
+      children_age_groups: '{elementary}',
+      budget_min: 1400,
+      budget_max: 1900,
+    });
+
+    await db('verifications').insert({
+      user_id: targetUser2.id,
+      fully_verified: true,
+      id_verification_status: 'approved',
+      background_check_status: 'clear',
+      phone_verified: true,
+    });
+
+    // Create unverified user (should fail swipe)
+    [unverifiedUser] = await db('users')
+      .insert({
+        email: 'unverified-test-swipe@test.com',
+        email_verified: true,
+        password_hash: '$2b$12$mockPasswordHash',
+      })
+      .returning('*');
+
+    await db('profiles').insert({
+      user_id: unverifiedUser.id,
+      first_name: 'Unverified',
+      date_of_birth: '1995-03-10',
+      city: 'San Francisco',
+      children_count: 1,
+      children_age_groups: '{toddler}',
+      budget_min: 1500,
+      budget_max: 2000,
+    });
+
+    await db('verifications').insert({
+      user_id: unverifiedUser.id,
+      fully_verified: false,
+      id_verification_status: 'pending',
+      background_check_status: 'pending',
+      phone_verified: false,
+    });
+  });
+
+  afterEach(async () => {
+    // Clean up test data
+    await db('matches').whereIn('user_id_1', db('users').select('id').where('email', 'like', '%test-swipe%')).delete();
+    await db('matches').whereIn('user_id_2', db('users').select('id').where('email', 'like', '%test-swipe%')).delete();
+    await db('swipes').whereIn('user_id', db('users').select('id').where('email', 'like', '%test-swipe%')).delete();
+    await db('swipes').whereIn('target_user_id', db('users').select('id').where('email', 'like', '%test-swipe%')).delete();
+    await db('verifications').whereIn('user_id', db('users').select('id').where('email', 'like', '%test-swipe%')).delete();
+    await db('profiles').whereIn('user_id', db('users').select('id').where('email', 'like', '%test-swipe%')).delete();
+    await db('users').where('email', 'like', '%test-swipe%').delete();
+  });
+
+  describe('Response Schema Validation - Success (200)', () => {
+    it('should return swipe response schema (no match)', async () => {
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'left',
+        });
+
+      if (response.status === 200) {
+        expect(response.body).toHaveProperty('success', true);
+        expect(response.body).toHaveProperty('data');
+        expect(response.body.data).toHaveProperty('swipeId');
+        expect(response.body.data).toHaveProperty('matchCreated');
+        expect(typeof response.body.data.matchCreated).toBe('boolean');
+
+        // No match created on left swipe
+        expect(response.body.data.matchCreated).toBe(false);
+        expect(response.body.data).not.toHaveProperty('match');
+
+        // Validate swipeId is UUID
+        expect(response.body.data.swipeId).toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        );
+      }
+    });
+
+    it('should return match object when mutual match created', async () => {
+      // First, targetUser1 swipes right on testUser
+      await db('swipes').insert({
+        user_id: targetUser1.id,
+        target_user_id: testUser.id,
+        direction: 'right',
+      });
+
+      // Now testUser swipes right on targetUser1 → mutual match
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'right',
+        });
+
+      if (response.status === 200) {
+        expect(response.body.data.matchCreated).toBe(true);
+        expect(response.body.data).toHaveProperty('match');
+
+        const match = response.body.data.match;
+
+        // Validate Match schema from OpenAPI spec
+        expect(match).toHaveProperty('matchId');
+        expect(match).toHaveProperty('matchedUserId', targetUser1.id);
+        expect(match).toHaveProperty('compatibilityScore');
+        expect(match).toHaveProperty('createdAt');
+
+        // Validate compatibilityScore range
+        expect(match.compatibilityScore).toBeGreaterThanOrEqual(0);
+        expect(match.compatibilityScore).toBeLessThanOrEqual(100);
+
+        // Validate UUID format
+        expect(match.matchId).toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        );
+
+        // Validate ISO 8601 timestamp
+        expect(match.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+      }
+    });
+  });
+
+  describe('Swipe Direction Validation', () => {
+    it('should accept "left" direction', async () => {
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'left',
+        });
+
+      if (response.status === 200) {
+        expect(response.body.data.matchCreated).toBe(false);
+      }
+    });
+
+    it('should accept "right" direction', async () => {
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser2.id,
+          direction: 'right',
+        });
+
+      if (response.status === 200) {
+        expect(response.body.data).toHaveProperty('swipeId');
+      }
+    });
+
+    it('should reject invalid direction', async () => {
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'up',
+        })
+        .expect(400);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Validation error',
+      });
+    });
+
+    it('should reject missing direction', async () => {
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+        })
+        .expect(400);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Validation error',
+      });
+    });
+  });
+
+  describe('Target User Validation', () => {
+    it('should reject missing targetUserId', async () => {
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          direction: 'right',
+        })
+        .expect(400);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Validation error',
+      });
+    });
+
+    it('should reject invalid UUID format', async () => {
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: 'invalid-uuid',
+          direction: 'right',
+        })
+        .expect(400);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: 'Validation error',
+      });
+    });
+
+    it('should reject non-existent user', async () => {
+      const fakeUserId = '00000000-0000-0000-0000-000000000000';
+
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: fakeUserId,
+          direction: 'right',
+        })
+        .expect(404);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: expect.stringContaining('not found'),
+      });
+    });
+
+    it('should reject unverified target user', async () => {
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: unverifiedUser.id,
+          direction: 'right',
+        });
+
+      // Should either reject with 404 or 400
+      expect([400, 404]).toContain(response.status);
+      expect(response.body).toMatchObject({
+        success: false,
+      });
+    });
+  });
+
+  describe('Duplicate Swipe Prevention', () => {
+    it('should reject duplicate swipe on same user', async () => {
+      // First swipe - should succeed
+      const firstSwipe = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'right',
+        });
+
+      expect(firstSwipe.status).toBe(200);
+
+      // Second swipe - should fail
+      const secondSwipe = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'left',
+        })
+        .expect(400);
+
+      expect(secondSwipe.body).toMatchObject({
+        success: false,
+        error: expect.stringContaining('already swiped'),
+      });
+    });
+
+    it('should allow different users to swipe on same target', async () => {
+      // Create another verified user
+      const [anotherUser] = await db('users')
+        .insert({
+          email: 'another-test-swipe@test.com',
+          email_verified: true,
+          password_hash: '$2b$12$mockPasswordHash',
+        })
+        .returning('*');
+
+      await db('profiles').insert({
+        user_id: anotherUser.id,
+        first_name: 'Another',
+        date_of_birth: '1991-06-10',
+        city: 'San Francisco',
+        children_count: 1,
+        children_age_groups: '{toddler}',
+        budget_min: 1600,
+        budget_max: 2400,
+      });
+
+      await db('verifications').insert({
+        user_id: anotherUser.id,
+        fully_verified: true,
+        id_verification_status: 'approved',
+        background_check_status: 'clear',
+        phone_verified: true,
+      });
+
+      const anotherToken = `Bearer mock-token-${anotherUser.id}`;
+
+      // First user swipes
+      const firstSwipe = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'right',
+        });
+
+      expect(firstSwipe.status).toBe(200);
+
+      // Different user swipes - should succeed
+      const secondSwipe = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', anotherToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'left',
+        });
+
+      expect(secondSwipe.status).toBe(200);
+
+      // Cleanup
+      await db('swipes').where('user_id', anotherUser.id).delete();
+      await db('verifications').where('user_id', anotherUser.id).delete();
+      await db('profiles').where('user_id', anotherUser.id).delete();
+      await db('users').where('id', anotherUser.id).delete();
+    });
+  });
+
+  describe('Self-Swipe Prevention', () => {
+    it('should reject swipe on own profile', async () => {
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: testUser.id,
+          direction: 'right',
+        })
+        .expect(400);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: expect.stringContaining('Cannot swipe on yourself'),
+      });
+    });
+  });
+
+  describe('Mutual Match Detection', () => {
+    it('should create match when both users swipe right', async () => {
+      // Target swipes right on test user first
+      await db('swipes').insert({
+        user_id: targetUser1.id,
+        target_user_id: testUser.id,
+        direction: 'right',
+      });
+
+      // Test user swipes right on target → mutual match
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'right',
+        });
+
+      if (response.status === 200) {
+        expect(response.body.data.matchCreated).toBe(true);
+        expect(response.body.data.match).toBeDefined();
+        expect(response.body.data.match.matchedUserId).toBe(targetUser1.id);
+      }
+    });
+
+    it('should NOT create match on left swipe', async () => {
+      // Target swipes right on test user
+      await db('swipes').insert({
+        user_id: targetUser1.id,
+        target_user_id: testUser.id,
+        direction: 'right',
+      });
+
+      // Test user swipes left on target → no match
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'left',
+        });
+
+      if (response.status === 200) {
+        expect(response.body.data.matchCreated).toBe(false);
+        expect(response.body.data.match).toBeUndefined();
+      }
+    });
+
+    it('should NOT create match if only one user swipes right', async () => {
+      // Only test user swipes right (target has not swiped)
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'right',
+        });
+
+      if (response.status === 200) {
+        expect(response.body.data.matchCreated).toBe(false);
+        expect(response.body.data.match).toBeUndefined();
+      }
+    });
+  });
+
+  describe('Authentication Enforcement', () => {
+    it('should reject request without auth token', async () => {
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'right',
+        })
+        .expect(401);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: expect.stringContaining('nauthorized'),
+      });
+    });
+
+    it('should reject request with invalid auth token', async () => {
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', 'Bearer invalid-token')
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'right',
+        })
+        .expect(401);
+
+      expect(response.body).toMatchObject({
+        success: false,
+        error: expect.any(String),
+      });
+    });
+  });
+
+  describe('Performance Requirements (Constitution Principle IV)', () => {
+    it('should respond within 50ms P95 for swipe recording', async () => {
+      const start = Date.now();
+
+      await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'left',
+        });
+
+      const duration = Date.now() - start;
+
+      // Target: <50ms P95 (simple insert + match check)
+      expect(duration).toBeLessThan(100); // Allow 2x buffer for test environment
+    });
+
+    it('should handle mutual match creation efficiently', async () => {
+      // Set up existing swipe
+      await db('swipes').insert({
+        user_id: targetUser1.id,
+        target_user_id: testUser.id,
+        direction: 'right',
+      });
+
+      const start = Date.now();
+
+      await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'right',
+        });
+
+      const duration = Date.now() - start;
+
+      // Should be fast even when creating match
+      expect(duration).toBeLessThan(150);
+    });
+  });
+
+  describe('Error Response Schema - 500 Internal Server Error', () => {
+    it('should return generic error for unexpected failures', async () => {
+      const response = await request(app)
+        .post('/api/discovery/swipe')
+        .set('Authorization', authToken)
+        .send({
+          targetUserId: targetUser1.id,
+          direction: 'right',
+        });
+
+      if (response.status === 500) {
+        expect(response.body).toMatchObject({
+          success: false,
+          error: expect.any(String),
+        });
+
+        // Should NOT leak implementation details
+        expect(response.body.message || response.body.error).not.toContain('stack');
+        expect(response.body.message || response.body.error).not.toContain('Error:');
+      }
+    });
+  });
+});

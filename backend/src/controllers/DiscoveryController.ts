@@ -54,10 +54,15 @@ export class DiscoveryController {
       }
 
       // Get profiles from service
+      // FHA COMPLIANCE: Pass request context for audit logging
       const result = await DiscoveryService.getProfiles(
         userId,
         query.limit,
-        query.cursor
+        query.cursor,
+        {
+          ipAddress: req.ip || 'unknown',
+          userAgent: req.headers['user-agent'] || 'unknown'
+        }
       );
 
       // Success response with ProfileCard[] + nextCursor

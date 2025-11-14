@@ -20,5 +20,7 @@
         <domain includeSubdomains="true">localhost</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>
         <domain includeSubdomains="true">127.0.0.1</domain>
+        <!-- Apple Silicon Mac: Allow host machine IP for Android emulator networking -->
+        <domain includeSubdomains="true">192.168.1.172</domain>
     </domain-config>
 </network-security-config>

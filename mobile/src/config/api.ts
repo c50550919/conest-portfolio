@@ -14,10 +14,22 @@
 
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as Keychain from 'react-native-keychain';
+import { Platform } from 'react-native';
 
-// Base URL from environment or default to ngrok tunnel
-// ngrok provides public HTTPS URL to bypass Android emulator networking issues
-const API_BASE_URL = process.env.API_BASE_URL || 'https://applaudably-inapprehensive-eugena.ngrok-free.dev';
+// Base URL configuration for different platforms
+// Both iOS and Android can use localhost with adb reverse port forwarding
+const getApiBaseUrl = (): string => {
+  if (process.env.API_BASE_URL) {
+    return process.env.API_BASE_URL;
+  }
+
+  // Both platforms use localhost:3000
+  // Android: Requires adb reverse tcp:3000 tcp:3000 for port forwarding
+  // iOS: Works natively with localhost
+  return 'http://localhost:3000';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Main API client instance

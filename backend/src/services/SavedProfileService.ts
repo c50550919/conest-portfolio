@@ -64,8 +64,8 @@ export class SavedProfileService {
   async getSavedProfilesByFolder(userId: string): Promise<{
     'Top Choice': SavedProfileWithProfile[];
     'Strong Maybe': SavedProfileWithProfile[];
-    Considering: SavedProfileWithProfile[];
-    Backup: SavedProfileWithProfile[];
+    'Considering': SavedProfileWithProfile[];
+    'Backup': SavedProfileWithProfile[];
   }> {
     const [topChoice, strongMaybe, considering, backup] = await Promise.all([
       SavedProfileModel.findByUserId(userId, 'Top Choice'),
@@ -77,8 +77,8 @@ export class SavedProfileService {
     return {
       'Top Choice': topChoice,
       'Strong Maybe': strongMaybe,
-      Considering: considering,
-      Backup: backup,
+      'Considering': considering,
+      'Backup': backup,
     };
   }
 

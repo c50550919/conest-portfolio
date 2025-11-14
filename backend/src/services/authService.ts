@@ -12,14 +12,11 @@
  * - Redis-backed refresh token storage
  */
 
-import * as bcrypt from 'bcrypt';
 import { UserModel } from '../models/User';
 import { VerificationModel } from '../models/Verification';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, JWTPayload } from '../utils/jwt';
 import { hashPassword, comparePassword } from '../utils/password';
 import redis, { REDIS_TTL } from '../config/redis';
-
-const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS) || 12;
 
 // CRITICAL: Prohibited child PII fields - Constitution Principle I
 const PROHIBITED_CHILD_FIELDS = [
@@ -97,7 +94,7 @@ export const AuthService = {
     const user = await UserModel.create({
       email: data.email,
       password_hash,
-      phone_number: data.phoneNumber,
+      phone: data.phoneNumber,
     });
 
     // Create verification record
@@ -129,8 +126,8 @@ export const AuthService = {
     }
 
     // Check if account is active
-    if (user.status !== 'active') {
-      throw new Error(`Account is ${user.status}`);
+    if (user.account_status !== 'active') {
+      throw new Error(`Account is ${user.account_status}`);
     }
 
     // Update last login
@@ -162,7 +159,7 @@ export const AuthService = {
 
       // Verify user still exists and is active
       const user = await UserModel.findById(payload.userId);
-      if (!user || user.status !== 'active') {
+      if (!user || user.account_status !== 'active') {
         throw new Error('User not found or inactive');
       }
 

@@ -22,34 +22,34 @@
 import axios, { AxiosInstance } from 'axios';
 import tokenStorage from '../tokenStorage';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://applaudably-inapprehensive-eugena.ngrok-free.dev/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
 export interface SavedProfile {
   id: string;
   user_id: string;
   profile_id: string;
-  folder: 'top_choice' | 'strong_maybe' | 'considering' | 'backup' | null;
+  folder: 'Top Choice' | 'Strong Maybe' | 'Considering' | 'Backup' | null;
   notes_encrypted: string | null;
   notes_iv: string | null;
   saved_at: string;
   updated_at: string;
   // Profile data (joined from profiles table)
   profile?: {
-    firstName: string;
-    age: number;
+    user_id: string;
+    first_name: string;
+    age?: number;
     city: string;
-    childrenCount: number;
-    compatibilityScore: number;
-    profilePhoto?: string;
+    state: string;
+    verification_score: number;
   };
 }
 
 export interface SavedProfilesByFolder {
-  top_choice: SavedProfile[];
-  strong_maybe: SavedProfile[];
-  considering: SavedProfile[];
-  backup: SavedProfile[];
-  uncategorized: SavedProfile[];
+  'Top Choice': SavedProfile[];
+  'Strong Maybe': SavedProfile[];
+  'Considering': SavedProfile[];
+  'Backup': SavedProfile[];
+  'Uncategorized': SavedProfile[];
 }
 
 export interface LimitStatus {
@@ -79,6 +79,8 @@ class SavedProfilesAPI {
   private client: AxiosInstance;
 
   constructor() {
+    console.log('[SavedProfilesAPI] Initializing with API_BASE_URL:', API_BASE_URL);
+    console.log('[SavedProfilesAPI] Full baseURL:', `${API_BASE_URL}/saved-profiles`);
     this.client = axios.create({
       baseURL: `${API_BASE_URL}/saved-profiles`,
       timeout: 15000,
@@ -146,7 +148,7 @@ class SavedProfilesAPI {
    */
   async saveProfile(
     profileId: string,
-    folder: 'top_choice' | 'strong_maybe' | 'considering' | 'backup' | null = null,
+    folder: 'Top Choice' | 'Strong Maybe' | 'Considering' | 'Backup' | null = null,
     notes?: string
   ): Promise<SavedProfile> {
     const response = await this.client.post<{ success: boolean; data: SavedProfile }>('/', {
@@ -226,7 +228,7 @@ class SavedProfilesAPI {
    */
   async updateSavedProfile(
     id: string,
-    folder?: 'top_choice' | 'strong_maybe' | 'considering' | 'backup' | null,
+    folder?: 'Top Choice' | 'Strong Maybe' | 'Considering' | 'Backup' | null,
     notes?: string
   ): Promise<SavedProfile> {
     const response = await this.client.patch<{ success: boolean; data: SavedProfile }>(`/${id}`, {

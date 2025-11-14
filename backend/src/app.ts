@@ -15,6 +15,7 @@ import discoveryRoutes from './routes/discovery';
 import householdRoutes from './routes/household';
 import savedProfileRoutes from './routes/savedProfiles';
 import connectionRequestRoutes from './routes/connectionRequests';
+import comparisonRoutes from './routes/comparison';
 
 // Load environment variables
 dotenv.config();
@@ -55,6 +56,7 @@ app.use('/api/discovery', discoveryRoutes);
 app.use('/api/household', householdRoutes);
 app.use('/api/saved-profiles', savedProfileRoutes);
 app.use('/api/connection-requests', connectionRequestRoutes);
+app.use('/api/compatibility', comparisonRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

@@ -14,7 +14,7 @@ const folderSchema = z.enum(['Top Choice', 'Strong Maybe', 'Considering', 'Backu
 export const createSavedProfileSchema = z.object({
   body: z.object({
     profile_id: z.string().uuid('Invalid profile ID format'),
-    folder: folderSchema,
+    folder: folderSchema.nullable(),
     notes: z
       .string()
       .max(500, 'Notes must be 500 characters or less')
@@ -49,7 +49,7 @@ export const deleteSavedProfileSchema = z.object({
 export const getSavedProfilesSchema = z.object({
   query: z.object({
     folder: folderSchema.optional(),
-  }),
+  }).optional(),
 });
 
 // Compare profiles schema

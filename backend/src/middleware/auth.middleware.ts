@@ -75,10 +75,10 @@ export async function authenticateJWT(
       return;
     }
 
-    if (user.status !== 'active') {
+    if (user.account_status !== 'active') {
       res.status(403).json({
         error: 'Account inactive',
-        message: `Account is ${user.status}`,
+        message: `Account is ${user.account_status}`,
       });
       return;
     }
@@ -145,7 +145,7 @@ export async function authenticateJWTOptional(
       const payload = verificationResult.payload;
       const user = await UserModel.findById(payload.userId);
 
-      if (user && user.status === 'active') {
+      if (user && user.account_status === 'active') {
         req.userId = payload.userId;
         req.user = user;
         req.email = payload.email;

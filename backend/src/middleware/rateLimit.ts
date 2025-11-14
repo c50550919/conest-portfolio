@@ -145,6 +145,7 @@ export const paymentRateLimit = rateLimit({
 /**
  * Discovery/swipe rate limiter
  * 100 swipes per hour
+ * NOTE: Swipe functionality not currently used in grid-based interface
  */
 export const swipeRateLimit = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour

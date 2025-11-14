@@ -2,27 +2,32 @@ import { ProfileModel, Profile } from '../models/Profile';
 import { MatchModel, CreateMatchData } from '../models/Match';
 import logger from '../config/logger';
 import SocketService from './SocketService';
+import { logCompatibilityCalculation, logPairingCreated } from './auditService';
 
 /**
- * Matching Service
+ * Pairing Service (formerly Matching Service) - FHA COMPLIANT
  *
- * Purpose: Detailed compatibility scoring and match management
+ * Purpose: Neutral compatibility scoring and connection management
  * Constitution: Principle I (Child Safety - NO child PII)
  *
- * This is the DETAILED algorithm used when creating matches in the database.
+ * FHA COMPLIANCE CHANGES (2025-11-07):
+ * REMOVED family composition scoring from parenting compatibility
+ * RETAINED user preference factors only
+ *
+ * This is the DETAILED algorithm used when creating connections in the database.
  * For discovery feed scoring, see /utils/compatibilityCalculator.ts
  *
- * Updated: 2025-10-08 (added Socket.io notification integration)
+ * Updated: 2025-11-07 (FHA compliance - removed family composition scoring)
  */
 
-// Matching algorithm weights as specified in CLAUDE.md
+// Pairing algorithm weights - FHA COMPLIANT (preference-based only)
 const WEIGHTS = {
-  schedule: 0.25,      // 25% - Schedule compatibility
-  parenting: 0.20,     // 20% - Parenting philosophy
-  rules: 0.20,         // 20% - House rules alignment
-  location: 0.15,      // 15% - Location/schools
-  budget: 0.10,        // 10% - Budget match
-  lifestyle: 0.10,     // 10% - Lifestyle factors
+  schedule: 0.30,      // 30% - Schedule compatibility (user preference)
+  parenting: 0.20,     // 20% - Parenting philosophy (user preference, NOT child count)
+  rules: 0.20,         // 20% - House rules alignment (user preference)
+  location: 0.15,      // 15% - Location/schools (geographic preference)
+  budget: 0.10,        // 10% - Budget match (financial preference)
+  lifestyle: 0.05,     // 5% - Lifestyle factors (user preference)
 };
 
 interface MatchingPreferences {
@@ -31,7 +36,11 @@ interface MatchingPreferences {
   limit?: number;
 }
 
-export const MatchingService = {
+/**
+ * IMPORTANT: This service is exported as both "PairingService" (new, FHA-compliant name)
+ * and "MatchingService" (legacy, for backward compatibility during transition)
+ */
+export const PairingService = {
   // Calculate compatibility score between two profiles
   calculateCompatibility(profile1: Profile, profile2: Profile): {
     totalScore: number;
@@ -106,29 +115,31 @@ export const MatchingService = {
     return Math.min(score, 100);
   },
 
-  // Parenting philosophy compatibility
+  /**
+   * Parenting philosophy compatibility - FHA COMPLIANT
+   *
+   * REMOVED (FHA violation):
+   * - Number of children similarity scoring (was 10 points for family composition)
+   *
+   * RETAINED (FHA compliant):
+   * - Parenting style preference matching (user-stated philosophy, not family composition)
+   *
+   * This focuses on user's stated parenting preferences, not protected family characteristics.
+   */
   calculateParentingScore(profile1: Profile, profile2: Profile): number {
     let score = 50; // Base score
 
-    // Same parenting style is highly compatible
+    // Same parenting style is highly compatible - USER PREFERENCE, not family composition
     if (profile1.parenting_style && profile2.parenting_style) {
       if (profile1.parenting_style === profile2.parenting_style) {
-        score += 40;
+        score += 50; // Increased from 40 since we removed child count scoring
       } else if (
         profile1.parenting_style === 'balanced' ||
         profile2.parenting_style === 'balanced'
       ) {
         // Balanced parenting is moderately compatible with all
-        score += 20;
+        score += 25; // Increased from 20
       }
-    }
-
-    // Similar number of children
-    const childDiff = Math.abs(profile1.number_of_children - profile2.number_of_children);
-    if (childDiff === 0) {
-      score += 10;
-    } else if (childDiff === 1) {
-      score += 5;
     }
 
     return Math.min(score, 100);
@@ -281,8 +292,11 @@ export const MatchingService = {
     return degrees * (Math.PI / 180);
   },
 
-  // Find matches for a user
-  async findMatches(
+  /**
+   * Find potential pairings for a user - FHA COMPLIANT
+   * Uses neutral language: "pairings" instead of "matches"
+   */
+  async findPairings(
     userId: string,
     preferences: MatchingPreferences = {}
   ): Promise<any[]> {
@@ -323,13 +337,28 @@ export const MatchingService = {
       .sort((a, b) => b.compatibility.totalScore - a.compatibility.totalScore)
       .slice(0, limit);
 
-    logger.info(`Found ${matches.length} matches for user ${userId}`);
+    logger.info(`Found ${matches.length} compatible pairings for user ${userId}`);
 
     return matches;
   },
 
+  /**
+   * Legacy method name for backward compatibility
+   * @deprecated Use findPairings() instead
+   */
+  async findMatches(
+    userId: string,
+    preferences: MatchingPreferences = {}
+  ): Promise<any[]> {
+    return this.findPairings(userId, preferences);
+  },
+
   // Create a match request
-  async createMatch(userId1: string, userId2: string): Promise<any> {
+  async createMatch(
+    userId1: string,
+    userId2: string,
+    requestContext?: { ipAddress?: string; userAgent?: string }
+  ): Promise<any> {
     // Check if match already exists
     const existingMatch = await MatchModel.findExistingMatch(userId1, userId2);
     if (existingMatch) {
@@ -364,6 +393,22 @@ export const MatchingService = {
     const match = await MatchModel.create(matchData);
 
     logger.info(`Match created between users ${userId1} and ${userId2} with score ${compatibility.totalScore}`);
+
+    // FHA COMPLIANCE: Audit log pairing creation with preference-based scoring proof
+    try {
+      await logPairingCreated(
+        userId1,
+        userId2,
+        match.id,
+        compatibility.totalScore,
+        requestContext?.ipAddress || 'unknown',
+        requestContext?.userAgent || 'unknown',
+        compatibility.breakdown
+      );
+    } catch (auditError) {
+      // Log audit errors but don't fail the match creation
+      logger.error('Failed to create audit log for pairing:', auditError);
+    }
 
     // Emit Socket.io notification to both users
     this.notifyMatch(userId1, userId2, match.id, compatibility.totalScore);
@@ -437,3 +482,9 @@ export const MatchingService = {
     return updatedMatch;
   },
 };
+
+/**
+ * Legacy export for backward compatibility
+ * @deprecated Use PairingService instead
+ */
+export const MatchingService = PairingService;

@@ -35,10 +35,11 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import authAPI from '@services/api/auth';
 import { loginSuccess, setLoading, setError } from '@store/slices/authSlice';
 import { theme } from '@theme';
-import GoogleSignInButton from '../../components/auth/GoogleSignInButton';
-import AppleSignInButton from '../../components/auth/AppleSignInButton';
-import { configureGoogleSignIn } from '../../services/api/oauth';
-import type { AuthSuccessResponse } from '../../types/oauth';
+// Temporarily disabled OAuth for testing comparison flow
+// import GoogleSignInButton from '../../components/auth/GoogleSignInButton';
+// import AppleSignInButton from '../../components/auth/AppleSignInButton';
+// import { configureGoogleSignIn } from '../../services/api/oauth';
+// import type { AuthSuccessResponse } from '../../types/oauth';
 
 type LoginScreenNavigationProp = StackNavigationProp<any, 'Login'>;
 
@@ -57,43 +58,45 @@ const LoginScreen: React.FC = () => {
   /**
    * Configure Google Sign In at component mount
    */
-  useEffect(() => {
-    configureGoogleSignIn();
-  }, []);
+  // Temporarily disabled for testing
+  // useEffect(() => {
+  //   configureGoogleSignIn();
+  // }, []);
 
   /**
    * Handle successful OAuth authentication
    * Dispatches login success and navigates based on user status
    */
-  const handleOAuthSuccess = (response: AuthSuccessResponse) => {
-    // Update Redux state with OAuth user data
-    dispatch(
-      loginSuccess({
-        user: {
-          id: response.user.id,
-          email: response.user.email,
-          firstName: '', // OAuth users may not have firstName initially
-          lastName: '',
-          profileComplete: !response.isNew, // New users need to complete profile
-          phoneVerified: response.user.phoneVerified,
-          idVerified: false,
-          backgroundCheckVerified: false,
-        },
-      })
-    );
+  // Temporarily disabled for testing
+  // const handleOAuthSuccess = (response: AuthSuccessResponse) => {
+  //   // Update Redux state with OAuth user data
+  //   dispatch(
+  //     loginSuccess({
+  //       user: {
+  //         id: response.user.id,
+  //         email: response.user.email,
+  //         firstName: '', // OAuth users may not have firstName initially
+  //         lastName: '',
+  //         profileComplete: !response.isNew, // New users need to complete profile
+  //         phoneVerified: response.user.phoneVerified,
+  //         idVerified: false,
+  //         backgroundCheckVerified: false,
+  //       },
+  //     })
+  //   );
 
-    // Show success message if account was linked
-    if (response.linked) {
-      Alert.alert(
-        'Account Linked',
-        'Your OAuth provider has been successfully linked to your existing account.'
-      );
-    }
+  //   // Show success message if account was linked
+  //   if (response.linked) {
+  //     Alert.alert(
+  //       'Account Linked',
+  //       'Your OAuth provider has been successfully linked to your existing account.'
+  //     );
+  //   }
 
-    // Navigation handled by AppNavigator based on profileComplete status
-    // New users (isNew=true) will be directed to onboarding
-    // Returning users will go directly to home
-  };
+  //   // Navigation handled by AppNavigator based on profileComplete status
+  //   // New users (isNew=true) will be directed to onboarding
+  //   // Returning users will go directly to home
+  // };
 
   /**
    * Validate email format
@@ -190,8 +193,8 @@ const LoginScreen: React.FC = () => {
           <Text style={styles.subtitle}>Welcome back</Text>
         </View>
 
-        {/* OAuth Sign In Buttons */}
-        <View style={styles.oauthContainer}>
+        {/* OAuth Sign In Buttons - Temporarily disabled for testing */}
+        {/* <View style={styles.oauthContainer}>
           <GoogleSignInButton
             onSuccess={handleOAuthSuccess}
             disabled={loading}
@@ -203,14 +206,14 @@ const LoginScreen: React.FC = () => {
             disabled={loading}
             style="black"
           />
-        </View>
+        </View> */}
 
-        {/* Divider */}
-        <View style={styles.dividerContainer}>
+        {/* Divider - Temporarily hidden */}
+        {/* <View style={styles.dividerContainer}>
           <View style={styles.dividerLine} />
           <Text style={styles.dividerText}>OR</Text>
           <View style={styles.dividerLine} />
-        </View>
+        </View> */}
 
         {/* Email Input */}
         <View style={styles.inputContainer}>

@@ -1,0 +1,155 @@
+name: OWASP ZAP Security Scan
+
+on:
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly on Monday 2am UTC
+
+jobs:
+  zap-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_DB: safenest_test
+          POSTGRES_USER: safenest_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run database migrations
+        working-directory: ./backend
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: safenest_test
+          DB_USER: safenest_user
+          DB_PASSWORD: test_password
+          NODE_ENV: test
+        run: npm run migrate:latest
+
+      - name: Start backend server
+        working-directory: ./backend
+        env:
+          NODE_ENV: test
+          PORT: 3001
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: safenest_test
+          DB_USER: safenest_user
+          DB_PASSWORD: test_password
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: test-secret-minimum-32-characters-long-for-testing
+          JWT_REFRESH_SECRET: test-refresh-secret-minimum-32-characters-long
+          CORS_ORIGIN: http://localhost:3000
+          RATE_LIMIT_MAX_REQUESTS: 10000
+        run: |
+          npm run dev &
+          echo "Waiting for backend to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:3001/api/health > /dev/null; then
+              echo "✅ Backend is ready"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+          curl http://localhost:3001/api/health || exit 1
+
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          target: 'http://localhost:3001'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a -j'
+          allow_issue_writing: false
+
+      - name: Upload ZAP HTML Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: zap-scan-report
+          path: |
+            report_html.html
+            report_json.json
+            report_md.md
+
+      - name: Check for High Risk Alerts
+        if: always()
+        run: |
+          if [ -f report_json.json ]; then
+            HIGH_COUNT=$(jq '[.site[].alerts[] | select(.riskdesc | startswith("High"))] | length' report_json.json)
+            MEDIUM_COUNT=$(jq '[.site[].alerts[] | select(.riskdesc | startswith("Medium"))] | length' report_json.json)
+
+            echo "📊 ZAP Scan Results:"
+            echo "   High Risk: $HIGH_COUNT"
+            echo "   Medium Risk: $MEDIUM_COUNT"
+
+            if [ "$HIGH_COUNT" -gt 0 ]; then
+              echo "❌ FAIL: $HIGH_COUNT high-risk vulnerabilities found"
+              jq '.site[].alerts[] | select(.riskdesc | startswith("High")) | {name, riskdesc, desc}' report_json.json
+              exit 1
+            fi
+
+            echo "✅ PASS: No high-risk vulnerabilities"
+          else
+            echo "⚠️  Warning: report_json.json not found"
+          fi
+
+      - name: Comment PR with Results
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+
+            if (!fs.existsSync('report_md.md')) {
+              console.log('No report found');
+              return;
+            }
+
+            const report = fs.readFileSync('report_md.md', 'utf8');
+            const comment = `## 🔒 OWASP ZAP Security Scan Results\n\n${report}`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

@@ -74,15 +74,17 @@ export const ProfileCardSchema = z.object({
   age: z.number().int().min(18).max(100),
   city: z.string().min(1, 'City is required'),
 
-  // Child data - ONLY non-identifying information
-  childrenCount: z.number().int().min(1).max(10),
+  // FHA COMPLIANCE: Child data is OPTIONAL (user-initiated disclosure)
+  // Users can choose whether to share this information
+  // These fields are NOT used in algorithm scoring (preference-based only)
+  childrenCount: z.number().int().min(0).max(10).optional(),
   childrenAgeGroups: z.array(
     z.enum(['toddler', 'elementary', 'teen'], {
       errorMap: () => ({
         message: 'Age groups must be: toddler, elementary, or teen',
       }),
     })
-  ).min(1, 'At least one age group required'),
+  ).optional(),
 
   // Matching data
   compatibilityScore: z.number().int().min(0).max(100),

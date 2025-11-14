@@ -103,19 +103,27 @@ export class SwipeService {
   private async createMatch(userId: string, targetUserId: string): Promise<any> {
     const compatibilityScore = await getCompatibilityScoreFromDb(userId, targetUserId);
 
+    // Ensure user_id_1 < user_id_2 for unique constraint
+    const [user1, user2] = userId < targetUserId ? [userId, targetUserId] : [targetUserId, userId];
+
     const [match] = await db('matches')
       .insert({
-        user1_id: userId,
-        user2_id: targetUserId,
+        user_id_1: user1,
+        user_id_2: user2,
         compatibility_score: compatibilityScore,
+        schedule_score: 0, // TODO: Calculate from compatibility breakdown
+        parenting_score: 0,
+        rules_score: 0,
+        location_score: 0,
+        budget_score: 0,
+        lifestyle_score: 0,
+        initiated_by: userId,
         matched_at: new Date(),
-        created_at: new Date(),
-        updated_at: new Date(),
       })
       .returning('*');
 
     return {
-      id: match.id,
+      matchId: match.id,
       matchedUserId: targetUserId,
       compatibilityScore: match.compatibility_score,
       createdAt: match.matched_at.toISOString(),

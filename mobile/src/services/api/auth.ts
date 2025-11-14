@@ -21,9 +21,23 @@
  */
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import { Platform } from 'react-native';
 import tokenStorage, { AuthTokens } from '../tokenStorage';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://applaudably-inapprehensive-eugena.ngrok-free.dev/api';
+// Platform-specific API URL configuration
+// Both iOS and Android can use localhost with adb reverse port forwarding
+const getApiBaseUrl = (): string => {
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+
+  // Both platforms use localhost:3000
+  // Android: Requires adb reverse tcp:3000 tcp:3000 for port forwarding
+  // iOS: Works natively with localhost
+  return 'http://localhost:3000/api';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export interface RegisterRequest {
   email: string;
@@ -197,40 +211,51 @@ class AuthAPI {
    */
   async login(request: LoginRequest): Promise<LoginResponse> {
     console.log('[AuthAPI] Login request:', { email: request.email });
-    const response = await this.client.post<any>('/auth/login', request);
-    console.log('[AuthAPI] Login response status:', response.status);
-    console.log('[AuthAPI] Login response data:', JSON.stringify(response.data, null, 2));
+    console.log('[AuthAPI] Using API base URL:', API_BASE_URL);
+    console.log('[AuthAPI] Full login URL:', `${API_BASE_URL}/auth/login`);
 
-    // Backend wraps response in { success, data: { user, tokens } }
-    const backendData = response.data.data;
-    console.log('[AuthAPI] Extracted backendData:', JSON.stringify(backendData, null, 2));
+    try {
+      const response = await this.client.post<any>('/auth/login', request);
+      console.log('[AuthAPI] Login response status:', response.status);
+      console.log('[AuthAPI] Login response data:', JSON.stringify(response.data, null, 2));
 
-    // Extract tokens with userId from backend user.id
-    const tokens: AuthTokens = {
-      accessToken: backendData.tokens.accessToken,
-      refreshToken: backendData.tokens.refreshToken,
-      userId: backendData.user.id,
-    };
-    console.log('[AuthAPI] Created tokens object:', JSON.stringify(tokens, null, 2));
+      // Backend wraps response in { success, data: { user, tokens } }
+      const backendData = response.data.data;
+      console.log('[AuthAPI] Extracted backendData:', JSON.stringify(backendData, null, 2));
 
-    // Save tokens to secure storage
-    console.log('[AuthAPI] Calling tokenStorage.saveTokens...');
-    const saveResult = await tokenStorage.saveTokens(tokens);
-    console.log('[AuthAPI] Token save result:', saveResult);
+      // Extract tokens with userId from backend user.id
+      const tokens: AuthTokens = {
+        accessToken: backendData.tokens.accessToken,
+        refreshToken: backendData.tokens.refreshToken,
+        userId: backendData.user.id,
+      };
+      console.log('[AuthAPI] Created tokens object:', JSON.stringify(tokens, null, 2));
 
-    // Transform backend response to match mobile app expectations
-    const loginResponse = {
-      user: {
-        id: backendData.user.id,
-        email: backendData.user.email,
-        firstName: backendData.user.first_name || '',
-        lastName: backendData.user.last_name || '',
-        profileComplete: backendData.user.profile_complete || false,
-      },
-      tokens,
-    };
-    console.log('[AuthAPI] Returning login response:', JSON.stringify(loginResponse, null, 2));
-    return loginResponse;
+      // Save tokens to secure storage
+      console.log('[AuthAPI] Calling tokenStorage.saveTokens...');
+      const saveResult = await tokenStorage.saveTokens(tokens);
+      console.log('[AuthAPI] Token save result:', saveResult);
+
+      // Transform backend response to match mobile app expectations
+      const loginResponse = {
+        user: {
+          id: backendData.user.id,
+          email: backendData.user.email,
+          firstName: backendData.user.first_name || '',
+          lastName: backendData.user.last_name || '',
+          profileComplete: backendData.user.profile_complete || false,
+        },
+        tokens,
+      };
+      console.log('[AuthAPI] Returning login response:', JSON.stringify(loginResponse, null, 2));
+      return loginResponse;
+    } catch (error: any) {
+      console.error('[AuthAPI] Login error:', error.message);
+      console.error('[AuthAPI] Error code:', error.code);
+      console.error('[AuthAPI] Error response:', error.response?.data);
+      console.error('[AuthAPI] Error status:', error.response?.status);
+      throw error;
+    }
   }
 
   /**

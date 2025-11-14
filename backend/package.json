@@ -1,8 +1,8 @@
 {
-  "name": "safenest-api",
+  "name": "conest-api",
   "version": "1.0.0",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/server.ts",
+    "dev": "TS_NODE_TRANSPILE_ONLY=true nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "migrate": "knex migrate:latest",

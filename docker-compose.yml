@@ -3,7 +3,7 @@ version: '3.8'
 services:
   postgres:
     image: postgis/postgis:15-3.3-alpine
-    container_name: safenest-postgres
+    container_name: conest-postgres
     environment:
       POSTGRES_USER: safenest
       POSTGRES_PASSWORD: 
@@ -14,7 +14,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - safenest-network
+      - conest-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U safenest -d safenest_db"]
       interval: 10s
@@ -23,11 +23,11 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: safenest-redis
+    container_name: conest-redis
     ports:
       - "6380:6379"
     networks:
-      - safenest-network
+      - conest-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -38,16 +38,24 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: safenest-backend
+      target: development
+    container_name: conest-backend
     environment:
       NODE_ENV: development
       DATABASE_URL: postgresql://safenest:@postgres:5432/safenest_db
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: safenest_db
+      DB_USER: safenest
+      DB_PASSWORD: 
       REDIS_URL: redis://redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
       JWT_SECRET: dev-secret-change-in-production-2024
       JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production-2024
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_placeholder}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-safenest-dev}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-conest-dev}
       AWS_REGION: ${AWS_REGION:-us-east-1}
       TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-mock}
       TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-mock}
@@ -65,12 +73,12 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - safenest-network
+      - conest-network
     command: npm run dev
 
 volumes:
   postgres_data:
 
 networks:
-  safenest-network:
+  conest-network:
     driver: bridge

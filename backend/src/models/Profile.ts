@@ -1,6 +1,19 @@
 import db from '../config/database';
+import { EnhancedPreferences } from '../types/preferences';
 
-export interface Profile {
+/**
+ * Profile Model - FHA COMPLIANT
+ *
+ * Purpose: User profile with preference-based compatibility data
+ * Date: 2025-11-07 (Enhanced with 8-factor scoring)
+ *
+ * FHA COMPLIANCE:
+ * - Child data is OPTIONAL (user-initiated disclosure)
+ * - All compatibility fields are USER PREFERENCES, not protected characteristics
+ * - 100% preference-based scoring (0% family composition scoring)
+ */
+
+export interface Profile extends EnhancedPreferences {
   id: string;
   user_id: string;
   first_name: string;
@@ -9,31 +22,11 @@ export interface Profile {
   bio?: string;
   profile_image_url?: string;
 
-  // Location
-  city: string;
-  state: string;
-  zip_code: string;
-  latitude?: number;
-  longitude?: number;
-
-  // Housing preferences
-  budget_min: number;
-  budget_max: number;
-  move_in_date?: Date;
-  lease_duration_months?: number;
-
-  // Parenting info (NO CHILD DATA - only parent info)
-  number_of_children: number;
-  ages_of_children: string; // JSON string of age ranges only, e.g., "3-5,8-10"
-  parenting_style?: string; // e.g., "structured", "relaxed", "balanced"
-
-  // Compatibility factors
-  schedule_type: 'flexible' | 'fixed' | 'shift_work';
-  work_from_home: boolean;
-  pets?: boolean;
-  smoking?: boolean;
-  dietary_preferences?: string;
-  house_rules?: string; // JSON string
+  // FHA COMPLIANCE: Child data is OPTIONAL (user-initiated disclosure)
+  // Users can choose whether to share family information
+  number_of_children?: number; // OPTIONAL - not used in scoring
+  ages_of_children?: string; // OPTIONAL - not used in scoring
+  parenting_style?: string; // User preference (philosophy, not family composition)
 
   // Verification status
   verified: boolean;

@@ -93,16 +93,14 @@ export const SavedProfileModel = {
   ): Promise<SavedProfileWithProfile[]> {
     const query = db('saved_profiles as sp')
       .join('users as u', 'sp.profile_id', 'u.id')
-      .join('profiles as p', 'u.id', 'p.user_id')
-      .leftJoin('verifications as v', 'u.id', 'v.user_id')
+      .join('parents as p', 'u.id', 'p.user_id')
       .where('sp.user_id', userId)
       .select(
         'sp.*',
-        'u.first_name',
-        'p.age',
+        'p.first_name',
+        'p.date_of_birth',
         'p.city',
-        'p.state',
-        'v.verification_score'
+        'p.state'
       )
       .orderBy('sp.saved_at', 'desc');
 
@@ -225,21 +223,20 @@ export const SavedProfileModel = {
 
     const results = await db('saved_profiles as sp')
       .join('users as u', 'sp.profile_id', 'u.id')
-      .join('profiles as p', 'u.id', 'p.user_id')
-      .leftJoin('verifications as v', 'u.id', 'v.user_id')
+      .join('parents as p', 'u.id', 'p.user_id')
       .where('sp.user_id', userId)
       .whereIn('sp.id', ids)
       .select(
         'sp.*',
-        'u.first_name',
-        'p.age',
+        'p.first_name',
+        'p.date_of_birth',
         'p.city',
         'p.state',
         'p.work_schedule',
         'p.parenting_style',
-        'p.house_rules',
-        'p.budget',
-        'v.verification_score'
+        'p.household_preferences',
+        'p.budget_min',
+        'p.budget_max'
       )
       .orderBy('sp.saved_at', 'desc');
 

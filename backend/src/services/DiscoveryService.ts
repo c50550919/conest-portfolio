@@ -3,6 +3,8 @@ import SwipeModel from '../models/Swipe';
 import { ProfileCard, DiscoveryResponse } from '../types/ProfileCard';
 import { calculateAge } from '../utils/ageCalculator';
 import DiscoveryCacheService from './cache/DiscoveryCacheService';
+import { createAuditLog } from './auditService';
+import logger from '../config/logger';
 
 /**
  * DiscoveryService
@@ -18,7 +20,8 @@ export class DiscoveryService {
   async getProfiles(
     userId: string,
     limit: number = 10,
-    cursor?: string
+    cursor?: string,
+    requestContext?: { ipAddress?: string; userAgent?: string }
   ): Promise<DiscoveryResponse> {
     const swipedUserIds = await SwipeModel.getSwipedUserIds(userId);
 
@@ -94,6 +97,34 @@ export class DiscoveryService {
 
     profileCards.sort((a, b) => b.compatibilityScore - a.compatibilityScore);
 
+    // FHA COMPLIANCE: Audit log discovery feed request with preference-based scoring proof
+    try {
+      await createAuditLog({
+        userId,
+        operation: 'discovery.profiles_fetched',
+        resource: 'discovery',
+        action: 'read',
+        status: 'success',
+        ipAddress: requestContext?.ipAddress || 'unknown',
+        userAgent: requestContext?.userAgent || 'unknown',
+        metadata: {
+          profileCount: profileCards.length,
+          cursor,
+          limit,
+          scoringMethod: 'preference-based',
+          scoringFactors: ['budget', 'location', 'move_in_timing'],
+          familyCompositionUsed: false, // CRITICAL: Compliance proof
+          algorithmVersion: '1.0-neutral',
+          averageCompatibilityScore: profileCards.length > 0
+            ? Math.round(profileCards.reduce((sum, p) => sum + p.compatibilityScore, 0) / profileCards.length)
+            : 0,
+        },
+      });
+    } catch (auditError) {
+      // Log audit errors but don't fail the discovery request
+      logger.error('Failed to create audit log for discovery request:', auditError);
+    }
+
     return { profiles: profileCards, nextCursor };
   }
 
@@ -117,39 +148,49 @@ export class DiscoveryService {
     return enrichedProfile;
   }
 
+  /**
+   * FHA COMPLIANCE: Calculate neutral compatibility based on PREFERENCE factors only
+   *
+   * REMOVED (FHA violation - family composition):
+   * - Children age group overlap scoring
+   * - Children count similarity scoring
+   *
+   * RETAINED (FHA compliant - user preferences):
+   * - Budget compatibility (40 points) - financial preference
+   * - Location proximity (40 points) - geographic preference
+   * - Move-in date alignment (20 points) - timing preference
+   *
+   * This creates a neutral platform where users search based on their preferences,
+   * not algorithmic discrimination on protected characteristics.
+   */
   private calculateCompatibility(userProfile: any, targetProfile: any): number {
     let score = 0;
 
-    // Parse children_age_groups - can be string (comma-separated) or array
-    const userAgeGroups = Array.isArray(userProfile.children_age_groups)
-      ? userProfile.children_age_groups
-      : (typeof userProfile.children_age_groups === 'string' && userProfile.children_age_groups.length > 0)
-        ? userProfile.children_age_groups.split(',').map((s: string) => s.trim())
-        : [];
-
-    const targetAgeGroups = Array.isArray(targetProfile.childrenAgeGroups)
-      ? targetProfile.childrenAgeGroups
-      : (typeof targetProfile.childrenAgeGroups === 'string' && targetProfile.childrenAgeGroups.length > 0)
-        ? targetProfile.childrenAgeGroups.split(',').map((s: string) => s.trim())
-        : [];
-
-    const ageGroupOverlap = userAgeGroups.filter((ag: string) => targetAgeGroups.includes(ag)).length;
-    const maxAgeGroups = Math.max(userAgeGroups.length, targetAgeGroups.length);
-    if (maxAgeGroups > 0) score += (ageGroupOverlap / maxAgeGroups) * 30;
-
+    // Budget compatibility (40 points) - User preference, not family composition
     const userBudget = userProfile.budget || 0;
-    const targetBudget = (targetProfile.budgetMin && targetProfile.budgetMax) ? (targetProfile.budgetMin + targetProfile.budgetMax) / 2 : targetProfile.budgetMin || targetProfile.budgetMax || 0;
-    const budgetDiff = Math.abs(userBudget - targetBudget);
-    score += Math.min(Math.max(0, 20 - (budgetDiff / 100)), 20);
+    const targetBudget = (targetProfile.budgetMin && targetProfile.budgetMax)
+      ? (targetProfile.budgetMin + targetProfile.budgetMax) / 2
+      : targetProfile.budgetMin || targetProfile.budgetMax || 0;
 
-    if (userProfile.city === targetProfile.city) score += 20;
+    if (userBudget > 0 && targetBudget > 0) {
+      const budgetDiff = Math.abs(userBudget - targetBudget);
+      // $0 diff = 40 points, $4000+ diff = 0 points
+      score += Math.min(Math.max(0, 40 - (budgetDiff / 100)), 40);
+    }
 
-    const childrenDiff = Math.abs(userProfile.children_count - targetProfile.childrenCount);
-    score += Math.min(Math.max(0, 15 - childrenDiff * 5), 15);
+    // Location proximity (40 points) - Geographic preference
+    if (userProfile.city === targetProfile.city) {
+      score += 40;
+    }
 
+    // Move-in date alignment (20 points) - Timing preference
     if (userProfile.move_in_date && targetProfile.moveInDate) {
-      const daysDiff = Math.abs((new Date(userProfile.move_in_date).getTime() - new Date(targetProfile.moveInDate).getTime()) / (1000 * 60 * 60 * 24));
-      score += Math.min(Math.max(0, 15 - daysDiff / 7), 15);
+      const daysDiff = Math.abs(
+        (new Date(userProfile.move_in_date).getTime() - new Date(targetProfile.moveInDate).getTime())
+        / (1000 * 60 * 60 * 24)
+      );
+      // Same week = 20 points, decreasing by ~3 points per week
+      score += Math.min(Math.max(0, 20 - daysDiff / 7), 20);
     }
 
     return Math.round(score);

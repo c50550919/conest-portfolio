@@ -34,7 +34,7 @@ export const authenticateToken = async (
       return;
     }
 
-    if (user.status !== 'active') {
+    if (user.account_status !== 'active') {
       res.status(403).json({ error: 'Account is not active' });
       return;
     }

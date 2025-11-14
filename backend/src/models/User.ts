@@ -16,14 +16,14 @@ export interface User {
   id: string;
   email: string;
   password_hash: string;
-  phone_number?: string;
+  phone?: string; // Database column is "phone", not "phone_number"
   phone_verified: boolean;
   email_verified: boolean;
-  two_factor_enabled: boolean;
-  two_factor_secret?: string;
-  status: 'active' | 'suspended' | 'deactivated';
-  last_login_at?: Date;
-  refresh_tokens: string[]; // Array of hashed JWT refresh tokens for multi-device support
+  mfa_enabled: boolean; // Database column is "mfa_enabled", not "two_factor_enabled"
+  mfa_secret?: string; // Database column is "mfa_secret", not "two_factor_secret"
+  account_status: 'active' | 'suspended' | 'deleted'; // Database column is "account_status", not "status"
+  last_login?: Date; // Database column is "last_login", not "last_login_at"
+  refresh_token_hash?: string; // Database column is "refresh_token_hash", not array
   created_at: Date;
   updated_at: Date;
 }
@@ -31,7 +31,7 @@ export interface User {
 export interface CreateUserData {
   email: string;
   password_hash: string;
-  phone_number?: string;
+  phone?: string; // Database column is "phone", not "phone_number"
 }
 
 export const UserModel = {
@@ -49,7 +49,7 @@ export const UserModel = {
   },
 
   async findByPhone(phone: string): Promise<User | undefined> {
-    return await db('users').where({ phone_number: phone }).first();
+    return await db('users').where({ phone }).first();
   },
 
   async update(id: string, data: Partial<User>): Promise<User> {
@@ -63,7 +63,7 @@ export const UserModel = {
   async updateLastLogin(id: string): Promise<void> {
     await db('users')
       .where({ id })
-      .update({ last_login_at: db.fn.now() });
+      .update({ last_login: db.fn.now() });
   },
 
   async delete(id: string): Promise<void> {
@@ -71,46 +71,22 @@ export const UserModel = {
   },
 
   /**
-   * Add a refresh token to user's token array
-   * Supports multi-device login sessions
+   * Set refresh token hash (single token, not array)
+   * Database stores single refresh_token_hash, not array
    */
-  async addRefreshToken(userId: string, hashedToken: string): Promise<User> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const refreshTokens = user.refresh_tokens || [];
-    refreshTokens.push(hashedToken);
-
-    return await this.update(userId, { refresh_tokens: refreshTokens });
+  async setRefreshToken(userId: string, hashedToken: string): Promise<User> {
+    return await this.update(userId, { refresh_token_hash: hashedToken });
   },
 
   /**
-   * Remove a specific refresh token (for logout)
+   * Clear refresh token (for logout)
    */
-  async removeRefreshToken(userId: string, hashedToken: string): Promise<User> {
-    const user = await this.findById(userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const refreshTokens = (user.refresh_tokens || []).filter(
-      (token) => token !== hashedToken
-    );
-
-    return await this.update(userId, { refresh_tokens: refreshTokens });
+  async clearRefreshToken(userId: string): Promise<User> {
+    return await this.update(userId, { refresh_token_hash: null });
   },
 
   /**
-   * Clear all refresh tokens (for logout from all devices)
-   */
-  async clearRefreshTokens(userId: string): Promise<User> {
-    return await this.update(userId, { refresh_tokens: [] });
-  },
-
-  /**
-   * Verify if a refresh token exists for a user
+   * Verify if a refresh token matches stored hash
    */
   async hasRefreshToken(userId: string, hashedToken: string): Promise<boolean> {
     const user = await this.findById(userId);
@@ -118,7 +94,7 @@ export const UserModel = {
       return false;
     }
 
-    return (user.refresh_tokens || []).includes(hashedToken);
+    return user.refresh_token_hash === hashedToken;
   },
 };
 

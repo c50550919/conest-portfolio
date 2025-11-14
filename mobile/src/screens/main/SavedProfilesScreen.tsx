@@ -33,6 +33,7 @@ import {
   Platform,
   TextInput,
   Modal,
+  Image,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useDispatch, useSelector } from 'react-redux';
@@ -48,22 +49,22 @@ import {
 } from '../../store/slices/savedProfilesSlice';
 import { SavedProfile } from '../../services/api/savedProfilesAPI';
 
-type FolderTab = 'all' | 'top_choice' | 'strong_maybe' | 'considering' | 'backup' | 'uncategorized';
+type FolderTab = 'all' | 'Top Choice' | 'Strong Maybe' | 'Considering' | 'Backup' | 'Uncategorized';
 
 const FOLDER_TABS = [
   { key: 'all' as FolderTab, label: 'All', icon: 'view-grid' },
-  { key: 'top_choice' as FolderTab, label: 'Top Choice', icon: 'star' },
-  { key: 'strong_maybe' as FolderTab, label: 'Strong Maybe', icon: 'heart' },
-  { key: 'considering' as FolderTab, label: 'Considering', icon: 'lightbulb' },
-  { key: 'backup' as FolderTab, label: 'Backup', icon: 'shield' },
+  { key: 'Top Choice' as FolderTab, label: 'Top Choice', icon: 'star' },
+  { key: 'Strong Maybe' as FolderTab, label: 'Strong Maybe', icon: 'heart' },
+  { key: 'Considering' as FolderTab, label: 'Considering', icon: 'lightbulb' },
+  { key: 'Backup' as FolderTab, label: 'Backup', icon: 'shield' },
 ];
 
 const FOLDER_COLORS = {
-  top_choice: '#FFD700',
-  strong_maybe: '#FF6B6B',
-  considering: '#4ECDC4',
-  backup: '#95E1D3',
-  uncategorized: '#A0A0A0',
+  'Top Choice': '#FFD700',
+  'Strong Maybe': '#FF6B6B',
+  'Considering': '#4ECDC4',
+  'Backup': '#95E1D3',
+  'Uncategorized': '#A0A0A0',
 };
 
 export const SavedProfilesScreen: React.FC = () => {
@@ -89,7 +90,7 @@ export const SavedProfilesScreen: React.FC = () => {
   useEffect(() => {
     loadProfiles();
     loadLimitStatus();
-  }, []);
+  }, [loadProfiles]);
 
   useEffect(() => {
     if (error) {
@@ -99,12 +100,9 @@ export const SavedProfilesScreen: React.FC = () => {
   }, [error]);
 
   const loadProfiles = useCallback(() => {
-    if (activeTab === 'all') {
-      dispatch(fetchSavedProfiles() as any);
-    } else {
-      dispatch(fetchSavedProfilesByFolder() as any);
-    }
-  }, [activeTab, dispatch]);
+    // Always fetch all profiles, filtering happens client-side
+    dispatch(fetchSavedProfiles() as any);
+  }, [dispatch]);
 
   const loadLimitStatus = useCallback(() => {
     dispatch(fetchLimitStatus() as any);
@@ -193,11 +191,11 @@ export const SavedProfilesScreen: React.FC = () => {
   const getFilteredProfiles = useCallback(() => {
     if (activeTab === 'all') {
       return savedProfiles;
-    } else if (savedProfilesByFolder) {
-      return savedProfilesByFolder[activeTab] || [];
+    } else {
+      // Filter savedProfiles by the selected folder (client-side)
+      return savedProfiles.filter(profile => profile.folder === activeTab);
     }
-    return [];
-  }, [activeTab, savedProfiles, savedProfilesByFolder]);
+  }, [activeTab, savedProfiles]);
 
   const renderFolderBadge = (folder: string | null) => {
     if (!folder) return null;
@@ -222,66 +220,76 @@ export const SavedProfilesScreen: React.FC = () => {
             handleSelectProfile(item.id);
           } else {
             // Navigate to profile details
-            Alert.alert('Profile Details', `View ${item.profile?.firstName}'s profile`);
+            Alert.alert('Profile Details', `View ${item.profile?.first_name || 'profile'}'s profile`);
           }
         }}
         onLongPress={() => handleEditNotes(item)}
       >
-        <View style={styles.profileHeader}>
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>
-              {item.profile?.firstName || 'Unknown'}, {item.profile?.age || '?'}
+        <View style={styles.profileCardContent}>
+          {/* Profile Image - Note: profilePhoto not returned by backend yet */}
+          {/* TODO: Add profile photo support in backend */}
+
+          {/* Profile Details */}
+          <View style={styles.profileDetails}>
+            <View style={styles.profileHeader}>
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName}>
+                  {item.profile?.first_name || 'Unknown'}, {item.profile?.age || '?'}
+                </Text>
+                <Text style={styles.profileLocation}>
+                  {item.profile?.city && item.profile?.state
+                    ? `${item.profile.city}, ${item.profile.state}`
+                    : 'Unknown'}
+                </Text>
+                {renderFolderBadge(item.folder)}
+              </View>
+              <View style={styles.profileActions}>
+                {comparisonMode && (
+                  <MaterialCommunityIcons
+                    name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                    size={24}
+                    color={isSelected ? '#4ECDC4' : '#666'}
+                  />
+                )}
+                {!comparisonMode && (
+                  <>
+                    <TouchableOpacity onPress={() => handleEditNotes(item)}>
+                      <MaterialCommunityIcons name="note-edit" size={20} color="#666" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => handleRemoveProfile(item.id, item.profile?.first_name || 'profile')}
+                    >
+                      <MaterialCommunityIcons name="delete" size={20} color="#FF6B6B" />
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            </View>
+
+            <View style={styles.profileStats}>
+              <View style={styles.statItem}>
+                <MaterialCommunityIcons name="shield-check" size={16} color="#4CAF50" />
+                <Text style={styles.statText}>
+                  {item.profile?.verification_score ? `${item.profile.verification_score}% Verified` : 'Unverified'}
+                </Text>
+              </View>
+            </View>
+
+            {item.notes_encrypted && (
+              <View style={styles.notesPreview}>
+                <MaterialCommunityIcons name="note-text" size={14} color="#666" />
+                <Text style={styles.notesText} numberOfLines={2}>
+                  {item.notes_encrypted}
+                </Text>
+              </View>
+            )}
+
+            <Text style={styles.savedDate}>
+              Saved {new Date(item.saved_at).toLocaleDateString()}
             </Text>
-            <Text style={styles.profileLocation}>{item.profile?.city || 'Unknown'}</Text>
-            {renderFolderBadge(item.folder)}
-          </View>
-          <View style={styles.profileActions}>
-            {comparisonMode && (
-              <MaterialCommunityIcons
-                name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                size={24}
-                color={isSelected ? '#4ECDC4' : '#666'}
-              />
-            )}
-            {!comparisonMode && (
-              <>
-                <TouchableOpacity onPress={() => handleEditNotes(item)}>
-                  <MaterialCommunityIcons name="note-edit" size={20} color="#666" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={() => handleRemoveProfile(item.id, item.profile?.firstName || 'profile')}
-                >
-                  <MaterialCommunityIcons name="delete" size={20} color="#FF6B6B" />
-                </TouchableOpacity>
-              </>
-            )}
           </View>
         </View>
-
-        <View style={styles.profileStats}>
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons name="heart" size={16} color="#FF6B6B" />
-            <Text style={styles.statText}>{item.profile?.compatibilityScore || 0}% Match</Text>
-          </View>
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons name="account-group" size={16} color="#666" />
-            <Text style={styles.statText}>{item.profile?.childrenCount || 0} {item.profile?.childrenCount === 1 ? 'child' : 'children'}</Text>
-          </View>
-        </View>
-
-        {item.notes_encrypted && (
-          <View style={styles.notesPreview}>
-            <MaterialCommunityIcons name="note-text" size={14} color="#666" />
-            <Text style={styles.notesText} numberOfLines={2}>
-              {item.notes_encrypted}
-            </Text>
-          </View>
-        )}
-
-        <Text style={styles.savedDate}>
-          Saved {new Date(item.saved_at).toLocaleDateString()}
-        </Text>
       </TouchableOpacity>
     );
   }, [comparisonMode, selectedProfiles, handleSelectProfile, handleEditNotes, handleRemoveProfile]);
@@ -524,17 +532,29 @@ const styles = StyleSheet.create({
   profileCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 16,
     marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    overflow: 'hidden',
   },
   profileCardSelected: {
     borderWidth: 2,
     borderColor: '#4ECDC4',
+  },
+  profileCardContent: {
+    flexDirection: 'row',
+  },
+  profileImage: {
+    width: 100,
+    height: 120,
+    backgroundColor: '#E0E0E0',
+  },
+  profileDetails: {
+    flex: 1,
+    padding: 16,
   },
   profileHeader: {
     flexDirection: 'row',

@@ -14,18 +14,45 @@ import {
   StatusBar,
   Switch,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState } from '../../store';
 import { logout } from '../../store/slices/authSlice';
 import tokenStorage from '../../services/tokenStorage';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 
 const ProfileScreen: React.FC = () => {
   const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.auth.user);
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [locationEnabled, setLocationEnabled] = React.useState(true);
+
+  // Debug logging
+  console.log('[ProfileScreen] User from Redux:', user);
+
+  // Show loading state if user data is not yet available
+  if (!user) {
+    console.log('[ProfileScreen] No user data found in Redux, showing loading state');
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading your profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Calculate dynamic values from user data with fallbacks
+  const initials = (user.firstName && user.lastName)
+    ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+    : (user.email ? user.email.substring(0, 2).toUpperCase() : 'U');
+  const fullName = (user.firstName && user.lastName)
+    ? `${user.firstName} ${user.lastName}`
+    : (user.email || 'User');
 
   const handleLogout = async () => {
     Alert.alert(
@@ -71,7 +98,7 @@ const ProfileScreen: React.FC = () => {
         >
           <View style={styles.avatarContainer}>
             <View testID="profile-photo" style={styles.avatar}>
-              <Text style={styles.avatarText}>SM</Text>
+              <Text style={styles.avatarText}>{initials}</Text>
             </View>
             <View style={styles.verifiedBadge}>
               <Icon name="check-decagram" size={20} color={colors.primary} />
@@ -80,8 +107,8 @@ const ProfileScreen: React.FC = () => {
               <Icon name="camera" size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-          <Text testID="profile-name" style={styles.userName}>Sarah Martinez</Text>
-          <Text style={styles.userEmail}>sarah.martinez@email.com</Text>
+          <Text testID="profile-name" style={styles.userName}>{fullName}</Text>
+          <Text testID="profile-email" style={styles.userEmail}>{user.email}</Text>
           <View style={styles.memberSinceContainer}>
             <Icon name="calendar-check" size={16} color="rgba(255, 255, 255, 0.9)" />
             <Text style={styles.memberSinceText}>Member since Dec 2024</Text>
@@ -131,7 +158,7 @@ const ProfileScreen: React.FC = () => {
               </View>
               <View style={styles.verificationInfo}>
                 <Text style={styles.verificationTitle}>Email Verified</Text>
-                <Text style={styles.verificationSubtitle}>sarah.martinez@email.com</Text>
+                <Text style={styles.verificationSubtitle}>{user.email}</Text>
               </View>
               <Icon name="check" size={20} color={colors.primary} />
             </View>
@@ -505,6 +532,17 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.text.hint,
     marginTop: spacing.xxs,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+  },
+  loadingText: {
+    ...typography.body1,
+    color: colors.text.secondary,
+    marginTop: spacing.md,
   },
 });
 
