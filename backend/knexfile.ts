@@ -32,10 +32,10 @@ const config: { [key: string]: Knex.Config } = {
     client: 'postgresql',
     connection: {
       host: process.env.DB_HOST || 'localhost',
-      port: Number(process.env.DB_PORT) || 5433,
-      database: process.env.DB_NAME || 'conest_test',
-      user: process.env.DB_USER || 'test_user',
-      password: process.env.DB_PASSWORD || 'test_password',
+      port: Number(process.env.DB_PORT) || 5432,
+      database: process.env.DB_NAME || 'safenest_db',
+      user: process.env.DB_USER || 'safenest',
+      password: process.env.DB_PASSWORD || '',
     },
     pool: {
       min: 0,
