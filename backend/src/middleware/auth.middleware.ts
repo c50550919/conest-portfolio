@@ -24,6 +24,7 @@ export interface AuthRequest extends Request {
   user?: any;
   email?: string;
   jwtPayload?: JWTPayload;
+  file?: Express.Multer.File; // For multer file uploads
 }
 
 /**
@@ -33,12 +34,16 @@ export interface AuthRequest extends Request {
 export async function authenticateJWT(
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   try {
+    // SECURITY: Authentication ALWAYS validates - no runtime bypass allowed
+    // For dev/testing, use /api/dev/test-token to get a valid test JWT
+    // For unit tests, mock this middleware at the test framework level
+
     // Extract token from Authorization header
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+    const token = authHeader?.split(' ')[1]; // Bearer TOKEN
 
     if (!token) {
       res.status(401).json({
@@ -128,11 +133,11 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
 export async function authenticateJWTOptional(
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   try {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = authHeader?.split(' ')[1];
 
     if (!token) {
       next();
@@ -166,7 +171,7 @@ export async function authenticateJWTOptional(
 export function requireEmailVerification(
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   if (!req.user) {
     res.status(401).json({
@@ -193,7 +198,7 @@ export function requireEmailVerification(
 export function requirePhoneVerification(
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   if (!req.user) {
     res.status(401).json({
@@ -213,3 +218,61 @@ export function requirePhoneVerification(
 
   next();
 }
+
+/**
+ * Require full verification (ID + background check)
+ */
+export function requireFullVerification(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): void {
+  if (!req.user) {
+    res.status(401).json({
+      error: 'Authentication required',
+      message: 'Please log in first',
+    });
+    return;
+  }
+
+  if (!req.user.id_verified || !req.user.background_check_complete) {
+    res.status(403).json({
+      error: 'Full verification required',
+      message: 'Please complete ID verification and background check',
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Require admin role middleware
+ */
+export function requireAdmin(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): void {
+  if (!req.user) {
+    res.status(401).json({
+      error: 'Authentication required',
+      message: 'Please log in first',
+    });
+    return;
+  }
+
+  if (req.user.role !== 'admin') {
+    res.status(403).json({
+      error: 'Admin access required',
+      message: 'You do not have permission to access this resource',
+    });
+    return;
+  }
+
+  next();
+}
+
+// Backward-compatible aliases (from old auth.ts)
+export const authenticateToken = authenticateJWT;
+export const authMiddleware = authenticateJWT;

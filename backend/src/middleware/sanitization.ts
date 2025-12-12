@@ -223,10 +223,11 @@ export function detectMaliciousInput(req: Request, res: Response, next: NextFunc
     checkValue(req.params);
 
   if (isMalicious) {
-    return res.status(400).json({
+    res.status(400).json({
       error: 'Malicious input detected',
       code: 'MALICIOUS_INPUT',
     });
+    return;
   }
 
   next();

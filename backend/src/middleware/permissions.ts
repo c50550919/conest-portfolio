@@ -80,18 +80,20 @@ export function requireRole(...roles: Role[]) {
     const user = (req as any).user;
 
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Authentication required',
         code: 'AUTHENTICATION_REQUIRED',
       });
+      return;
     }
 
     if (!roles.includes(user.role)) {
-      return res.status(403).json({
+      res.status(403).json({
         error: 'Insufficient permissions',
         code: 'INSUFFICIENT_PERMISSIONS',
         required: roles,
       });
+      return;
     }
 
     next();
@@ -106,21 +108,23 @@ export function requirePermission(...permissions: Permission[]) {
     const user = (req as any).user;
 
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Authentication required',
         code: 'AUTHENTICATION_REQUIRED',
       });
+      return;
     }
 
     const userPermissions = rolePermissions[user.role as Role] || [];
     const hasPermission = permissions.every(p => userPermissions.includes(p));
 
     if (!hasPermission) {
-      return res.status(403).json({
+      res.status(403).json({
         error: 'Insufficient permissions',
         code: 'INSUFFICIENT_PERMISSIONS',
         required: permissions,
       });
+      return;
     }
 
     next();
@@ -135,27 +139,30 @@ export function requireOwnership(resourceIdParam: string = 'userId') {
     const user = (req as any).user;
 
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Authentication required',
         code: 'AUTHENTICATION_REQUIRED',
       });
+      return;
     }
 
     const resourceId = req.params[resourceIdParam];
 
     if (!resourceId) {
-      return res.status(400).json({
+      res.status(400).json({
         error: 'Resource ID not provided',
         code: 'RESOURCE_ID_MISSING',
       });
+      return;
     }
 
     // Allow if user is admin or owns the resource
     if (user.role === Role.ADMIN || user.id === resourceId) {
-      return next();
+      next();
+      return;
     }
 
-    return res.status(403).json({
+    res.status(403).json({
       error: 'Access denied',
       code: 'ACCESS_DENIED',
     });
@@ -168,23 +175,25 @@ export function requireOwnership(resourceIdParam: string = 'userId') {
 export async function requireHouseholdMembership(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   const user = (req as any).user;
   const householdId = req.params.householdId;
 
   if (!user) {
-    return res.status(401).json({
+    res.status(401).json({
       error: 'Authentication required',
       code: 'AUTHENTICATION_REQUIRED',
     });
+    return;
   }
 
   if (!householdId) {
-    return res.status(400).json({
+    res.status(400).json({
       error: 'Household ID not provided',
       code: 'HOUSEHOLD_ID_MISSING',
     });
+    return;
   }
 
   // TODO: Implement database query to check membership
@@ -195,10 +204,11 @@ export async function requireHouseholdMembership(
   const isMember = true; // Placeholder
 
   if (!isMember && user.role !== Role.ADMIN) {
-    return res.status(403).json({
+    res.status(403).json({
       error: 'Not a household member',
       code: 'NOT_HOUSEHOLD_MEMBER',
     });
+    return;
   }
 
   next();
@@ -217,15 +227,16 @@ export function preventChildDataAccess(req: Request, res: Response, next: NextFu
   const hasChildData = Object.keys(allData).some(key =>
     key.toLowerCase().includes('child') ||
     key.toLowerCase().includes('kid') ||
-    key.toLowerCase().includes('minor')
+    key.toLowerCase().includes('minor'),
   );
 
   if (hasChildData) {
-    return res.status(400).json({
+    res.status(400).json({
       error: 'Child data access forbidden',
       code: 'CHILD_DATA_FORBIDDEN',
       message: 'This platform does not store or process child data',
     });
+    return;
   }
 
   next();
@@ -235,34 +246,37 @@ export function preventChildDataAccess(req: Request, res: Response, next: NextFu
  * Check user permissions based on custom logic
  */
 export function requireCustomPermission(
-  checkFn: (req: Request, user: any) => Promise<boolean> | boolean
+  checkFn: (req: Request, user: any) => Promise<boolean> | boolean,
 ) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const user = (req as any).user;
 
     if (!user) {
-      return res.status(401).json({
+      res.status(401).json({
         error: 'Authentication required',
         code: 'AUTHENTICATION_REQUIRED',
       });
+      return;
     }
 
     try {
       const hasPermission = await checkFn(req, user);
 
       if (!hasPermission) {
-        return res.status(403).json({
+        res.status(403).json({
           error: 'Access denied',
           code: 'ACCESS_DENIED',
         });
+        return;
       }
 
       next();
     } catch (error) {
-      return res.status(500).json({
+      res.status(500).json({
         error: 'Permission check failed',
         code: 'PERMISSION_CHECK_FAILED',
       });
+      return;
     }
   };
 }

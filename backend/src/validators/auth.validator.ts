@@ -10,7 +10,7 @@ const PROHIBITED_FIELDS = ['childrenNames', 'childrenAges', 'childrenPhotos', 'c
 export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  phone: z.string().regex(/^\+[1-9]\d{1,14}$/),
+  phone: z.string().regex(/^\+[1-9]\d{1,14}$/).optional(), // Phone is optional
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -19,10 +19,10 @@ export const registerSchema = z.object({
   zipCode: z.string().length(5),
   childrenCount: z.number().int().min(0).max(10),
   childrenAgeGroups: z.array(z.enum(['toddler', 'elementary', 'teen'])),
-}).strict().refine((data) => {
+}).strict().refine((data) =>
   // Reject prohibited child PII fields
-  return PROHIBITED_FIELDS.every(field => !(field in data));
-}, { message: 'Prohibited child PII fields detected' });
+  PROHIBITED_FIELDS.every(field => !(field in data))
+, { message: 'Prohibited child PII fields detected' });
 
 export const loginSchema = z.object({
   email: z.string().email(),

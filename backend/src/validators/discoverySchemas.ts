@@ -3,10 +3,11 @@ import { z } from 'zod';
 /**
  * Discovery Validation Schemas
  *
- * Purpose: Request/response validation for Discovery Screen endpoints
+ * Purpose: Request/response validation for Browse Discovery endpoints
  * Constitution: Principle I (Child Safety - validate NO child PII)
  *
  * Updated: 2025-10-08 (added ProfileCard response validation with strict child safety)
+ * Updated: 2025-11-29 (removed swipe schemas - using connection requests instead)
  */
 
 // ========================================
@@ -26,14 +27,6 @@ export const GetProfilesQuerySchema = z.object({
     .string()
     .uuid('Cursor must be a valid UUID')
     .optional(),
-});
-
-// POST /api/discovery/swipe body
-export const SwipeBodySchema = z.object({
-  targetUserId: z.string().uuid('Target user ID must be a valid UUID'),
-  direction: z.enum(['left', 'right'], {
-    errorMap: () => ({ message: 'Direction must be "left" or "right"' }),
-  }),
 });
 
 // POST /api/discovery/screenshot body
@@ -83,7 +76,7 @@ export const ProfileCardSchema = z.object({
       errorMap: () => ({
         message: 'Age groups must be: toddler, elementary, or teen',
       }),
-    })
+    }),
   ).optional(),
 
   // Matching data
@@ -118,7 +111,7 @@ export const ProfileCardSchema = z.object({
     },
     {
       message: 'CHILD SAFETY VIOLATION: Profile contains prohibited child PII fields',
-    }
+    },
   );
 
 /**
@@ -130,36 +123,12 @@ export const DiscoveryResponseSchema = z.object({
   nextCursor: z.string().uuid().nullable(),
 }).strict();
 
-/**
- * Match Response Schema
- * Response for POST /api/discovery/swipe (when mutual match occurs)
- */
-export const MatchResponseSchema = z.object({
-  match: z.object({
-    id: z.string().uuid(),
-    userId1: z.string().uuid(),
-    userId2: z.string().uuid(),
-    compatibilityScore: z.number().int().min(0).max(100),
-    breakdown: z.object({
-      schedule: z.number().int().min(0).max(100),
-      parenting: z.number().int().min(0).max(100),
-      rules: z.number().int().min(0).max(100),
-      location: z.number().int().min(0).max(100),
-      budget: z.number().int().min(0).max(100),
-      lifestyle: z.number().int().min(0).max(100),
-    }).strict(),
-    createdAt: z.string().datetime(),
-  }).strict(),
-}).strict();
-
 // ========================================
 // TYPE EXPORTS
 // ========================================
 
 export type GetProfilesQuery = z.infer<typeof GetProfilesQuerySchema>;
-export type SwipeBody = z.infer<typeof SwipeBodySchema>;
 export type ScreenshotBody = z.infer<typeof ScreenshotBodySchema>;
 export type VerificationStatus = z.infer<typeof VerificationStatusSchema>;
 export type ProfileCard = z.infer<typeof ProfileCardSchema>;
 export type DiscoveryResponse = z.infer<typeof DiscoveryResponseSchema>;
-export type MatchResponse = z.infer<typeof MatchResponseSchema>;

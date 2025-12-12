@@ -43,6 +43,11 @@ function getStore(prefix: string) {
 }
 
 /**
+ * Skip rate limiting in test environment
+ */
+const isTestEnv = process.env.NODE_ENV === 'test';
+
+/**
  * General API rate limiter
  * 100 requests per 15 minutes
  */
@@ -62,10 +67,10 @@ export const generalRateLimit = rateLimit({
   skipSuccessfulRequests: false,
   // Skip failed requests (optional)
   skipFailedRequests: false,
+  // Skip all requests in test environment
+  skip: () => isTestEnv,
   // Custom key generator (uses IP by default)
-  keyGenerator: (req) => {
-    return req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
-  },
+  keyGenerator: (req) => req.ip || req.headers['x-forwarded-for'] as string || 'unknown',
 });
 
 /**
@@ -86,9 +91,9 @@ export const authRateLimit = rateLimit({
   store: getStore('rl:auth:'),
   // Only count failed authentication attempts
   skipSuccessfulRequests: true,
-  keyGenerator: (req) => {
-    return req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
-  },
+  // Skip all requests in test environment
+  skip: () => isTestEnv,
+  keyGenerator: (req) => req.ip || req.headers['x-forwarded-for'] as string || 'unknown',
 });
 
 /**
@@ -142,27 +147,8 @@ export const paymentRateLimit = rateLimit({
   store: getStore('rl:payment:'),
 });
 
-/**
- * Discovery/swipe rate limiter
- * 100 swipes per hour
- * NOTE: Swipe functionality not currently used in grid-based interface
- */
-export const swipeRateLimit = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 100,
-  message: {
-    error: 'Too many swipes',
-    message: 'You have exceeded the 100 swipes per hour limit',
-    retryAfter: 'Please take a break and try again later',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  store: getStore('rl:swipe:'),
-  // Use user ID instead of IP for authenticated endpoints
-  keyGenerator: (req: any) => {
-    return req.userId || req.ip || 'unknown';
-  },
-});
+// NOTE: swipeRateLimit removed (2025-11-29)
+// Swipe functionality deprecated - using connection requests instead
 
 /**
  * Profile update rate limiter
@@ -179,7 +165,48 @@ export const profileUpdateRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   store: getStore('rl:profile:'),
-  keyGenerator: (req: any) => {
-    return req.userId || req.ip || 'unknown';
-  },
+  keyGenerator: (req: any) => req.userId || req.ip || 'unknown',
 });
+
+/**
+ * Admin operations rate limiter
+ * 100 requests per 15 minutes (same as general but tracked separately)
+ */
+export const adminRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message: {
+    error: 'Too many admin requests',
+    message: 'You have exceeded the 100 admin requests in 15 minutes limit',
+    retryAfter: 'Please try again in 15 minutes',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('rl:admin:'),
+  keyGenerator: (req: any) => req.userId || req.ip || 'unknown',
+});
+
+/**
+ * Verification endpoint rate limiter
+ * 5 requests per hour per user
+ */
+export const verificationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5,
+  message: {
+    error: 'Too many verification requests',
+    message: 'You have exceeded the 5 verification requests per hour limit',
+    retryAfter: 'Please try again later',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('rl:verification:'),
+  keyGenerator: (req: any) => req.userId || req.ip || 'unknown',
+  skip: () => isTestEnv,
+});
+
+// Backward-compatible aliases (from old rateLimiter.ts)
+export const generalLimiter = generalRateLimit;
+export const authLimiter = authRateLimit;
+export const messageLimiter = messageRateLimit;
+export const paymentLimiter = paymentRateLimit;

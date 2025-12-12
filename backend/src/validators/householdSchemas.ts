@@ -66,7 +66,7 @@ export const CreateHouseholdSchema = z
     },
     {
       message: 'Lease end date must be after start date',
-    }
+    },
   );
 
 /**
@@ -146,13 +146,13 @@ export const UpdateHouseholdSchema = z
   })
   .strict()
   .refine(
-    (data) => {
+    (data) => 
       // At least one field must be provided
-      return Object.keys(data).length > 0;
-    },
+      Object.keys(data).length > 0
+    ,
     {
       message: 'At least one field must be provided for update',
-    }
+    },
   );
 
 /**

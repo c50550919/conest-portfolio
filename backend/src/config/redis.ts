@@ -113,7 +113,7 @@ export async function checkRedisHealth(): Promise<boolean> {
 export async function setWithTTL(
   key: string,
   value: string,
-  ttl: number
+  ttl: number,
 ): Promise<'OK'> {
   return redis.setex(key, ttl, value);
 }
@@ -124,7 +124,7 @@ export async function setWithTTL(
 export async function setJSONWithTTL<T>(
   key: string,
   value: T,
-  ttl: number
+  ttl: number,
 ): Promise<'OK'> {
   return redis.setex(key, ttl, JSON.stringify(value));
 }
@@ -156,7 +156,7 @@ export async function deleteByPattern(pattern: string): Promise<number> {
       'MATCH',
       pattern,
       'COUNT',
-      100
+      100,
     );
     cursor = nextCursor;
 

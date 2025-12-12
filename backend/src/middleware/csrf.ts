@@ -74,7 +74,7 @@ export async function generateCSRFToken(sessionId: string): Promise<string> {
  */
 export async function validateCSRFToken(
   sessionId: string,
-  token: string
+  token: string,
 ): Promise<boolean> {
   const redisKey = `${CSRF_KEY_PREFIX}${sessionId}`;
 
@@ -101,7 +101,7 @@ export async function validateCSRFToken(
 export async function attachCSRFToken(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   const sessionId = (req as any).sessionId || req.ip;
 
@@ -131,7 +131,7 @@ export async function attachCSRFToken(
 export async function verifyCSRFToken(
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   // Skip CSRF for safe methods
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
@@ -144,32 +144,35 @@ export async function verifyCSRFToken(
   const token = (req.headers[headerName] as string) || req.body?._csrf;
 
   if (!token) {
-    return res.status(403).json({
+    res.status(403).json({
       success: false,
       error: 'CSRF token missing',
       code: 'CSRF_TOKEN_MISSING',
     });
+    return;
   }
 
   try {
     // Validate token
     const isValid = await validateCSRFToken(sessionId, token);
     if (!isValid) {
-      return res.status(403).json({
+      res.status(403).json({
         success: false,
         error: 'Invalid CSRF token',
         code: 'CSRF_TOKEN_INVALID',
       });
+      return;
     }
 
     next();
   } catch (error) {
     console.error('Error verifying CSRF token:', error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       error: 'CSRF verification failed',
       code: 'CSRF_VERIFICATION_ERROR',
     });
+    return;
   }
 }
 

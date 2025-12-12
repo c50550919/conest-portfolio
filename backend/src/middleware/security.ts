@@ -19,7 +19,7 @@ export const setupSecurity = (app: Express): void => {
         includeSubDomains: true,
         preload: true,
       },
-    })
+    }),
   );
 
   // CORS configuration

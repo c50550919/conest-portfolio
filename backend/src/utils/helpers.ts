@@ -5,9 +5,7 @@
 /**
  * Format currency amount in cents to dollars
  */
-export const formatCurrency = (cents: number): string => {
-  return `$${(cents / 100).toFixed(2)}`;
-};
+export const formatCurrency = (cents: number): string => `$${(cents / 100).toFixed(2)}`;
 
 /**
  * Parse currency string to cents
@@ -78,58 +76,46 @@ export const calculateAge = (dateOfBirth: Date): number => {
 /**
  * Sanitize user input to prevent XSS
  */
-export const sanitizeInput = (input: string): string => {
-  return input
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
-};
+export const sanitizeInput = (input: string): string => input
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#x27;')
+  .replace(/\//g, '&#x2F;');
 
 /**
  * Generate slug from string
  */
-export const generateSlug = (text: string): string => {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/--+/g, '-')
-    .trim();
-};
+export const generateSlug = (text: string): string => text
+  .toLowerCase()
+  .replace(/[^\w\s-]/g, '')
+  .replace(/\s+/g, '-')
+  .replace(/--+/g, '-')
+  .trim();
 
 /**
  * Check if date is in the past
  */
-export const isPastDate = (date: Date): boolean => {
-  return new Date(date) < new Date();
-};
+export const isPastDate = (date: Date): boolean => new Date(date) < new Date();
 
 /**
  * Check if date is in the future
  */
-export const isFutureDate = (date: Date): boolean => {
-  return new Date(date) > new Date();
-};
+export const isFutureDate = (date: Date): boolean => new Date(date) > new Date();
 
 /**
  * Format date to readable string
  */
-export const formatDate = (date: Date): string => {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
+export const formatDate = (date: Date): string => new Date(date).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
 
 /**
  * Delay function for testing/rate limiting
  */
-export const delay = (ms: number): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-};
+export const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
  * Safely parse JSON with fallback

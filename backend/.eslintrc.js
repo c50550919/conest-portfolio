@@ -3,7 +3,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2022,
     sourceType: 'module',
-    project: './tsconfig.json',
+    project: './tsconfig.eslint.json',
   },
   extends: [
     'eslint:recommended',
@@ -77,10 +77,20 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['**/*.test.ts', '**/*.spec.ts'],
+      files: ['**/*.test.ts', '**/*.spec.ts', '__tests__/**/*.ts', 'tests/**/*.ts'],
       rules: {
         '@typescript-eslint/no-explicit-any': 'off',
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        '@typescript-eslint/no-unsafe-member-access': 'off',
+        '@typescript-eslint/no-unsafe-call': 'off',
+        '@typescript-eslint/no-unsafe-return': 'off',
+        '@typescript-eslint/no-unsafe-argument': 'off',
+        '@typescript-eslint/unbound-method': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
         'max-lines-per-function': 'off',
+        'max-lines': 'off',
+        'max-statements': 'off',
+        'no-console': 'off',
       },
     },
   ],

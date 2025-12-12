@@ -10,6 +10,7 @@
 
 import * as jwt from 'jsonwebtoken';
 import { JsonWebTokenError, TokenExpiredError, NotBeforeError } from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes
@@ -40,11 +41,16 @@ export function generateAccessToken(payload: JWTPayload): string {
 
 /**
  * Generate refresh token for session renewal
+ * Each token includes a unique jti (JWT ID) for token rotation support
  * @param payload - JWT payload with userId and email
- * @returns JWT refresh token with 7 day expiry
+ * @returns JWT refresh token with 7 day expiry and unique jti
  */
 export function generateRefreshToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
+  return jwt.sign(
+    { ...payload, jti: randomUUID() },
+    JWT_SECRET,
+    { expiresIn: REFRESH_TOKEN_EXPIRY }
+  );
 }
 
 /**

@@ -140,7 +140,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
 
     /**
      * Server emits to both users when mutual match detected
-     * Triggered by SwipeService after POST /api/discovery/swipe
+     * Triggered by ConnectionRequestService when a request is accepted
      */
     // io.to(`user:${userId}`).emit('match:new', { matchId, otherUserId, compatibilityScore })
 

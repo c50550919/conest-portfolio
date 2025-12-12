@@ -17,7 +17,7 @@ function deriveKey(masterKey: string, salt: Buffer): Buffer {
     salt,
     iterations,
     keyLength,
-    digest
+    digest,
   );
 }
 
@@ -124,7 +124,7 @@ export function decrypt(encrypted: string): string {
  */
 export function encryptFields<T extends Record<string, any>>(
   obj: T,
-  fieldsToEncrypt: string[]
+  fieldsToEncrypt: string[],
 ): T {
   const result = { ...obj } as any;
 
@@ -145,7 +145,7 @@ export function encryptFields<T extends Record<string, any>>(
  */
 export function decryptFields<T extends Record<string, any>>(
   obj: T,
-  fieldsToDecrypt: string[]
+  fieldsToDecrypt: string[],
 ): T {
   const result = { ...obj } as any;
 
@@ -189,17 +189,6 @@ export function hash(data: string): string {
  */
 export function verifyHash(data: string, hashedData: string): boolean {
   return hash(data) === hashedData;
-}
-
-/**
- * Key rotation helper - re-encrypt data with new key version
- * @param encrypted - Data encrypted with old key
- * @param newKeyVersion - New key version identifier
- * @returns Data encrypted with new key version
- */
-export function rotateKey(encrypted: string, newKeyVersion: string = 'v2'): string {
-  const decrypted = decrypt(encrypted);
-  return encrypt(decrypted, newKeyVersion);
 }
 
 /**

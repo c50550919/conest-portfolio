@@ -61,11 +61,12 @@ export const RegisterRequestSchema = z
       .regex(/[0-9]/, 'Password must contain at least one number')
       .regex(
         /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/,
-        'Password must contain at least one special character'
+        'Password must contain at least one special character',
       ),
     phone: z
       .string()
-      .regex(/^\+[1-9]\d{1,14}$/, 'Phone must be in E.164 format (e.g., +14155552671)'),
+      .regex(/^\+[1-9]\d{1,14}$/, 'Phone must be in E.164 format (e.g., +14155552671)')
+      .optional(),
     firstName: z.string().min(1, 'First name is required'),
     lastName: z.string().min(1, 'Last name is required'),
     dateOfBirth: z
@@ -83,20 +84,20 @@ export const RegisterRequestSchema = z
       .array(
         z.enum(['toddler', 'elementary', 'teen'], {
           errorMap: () => ({ message: 'Age group must be toddler, elementary, or teen' }),
-        })
+        }),
       )
       .min(0, 'Children age groups must be an array'),
   })
   .strict() // Reject any additional fields not defined in schema
   .refine(
-    (data) => {
+    (data) => 
       // CRITICAL CHILD SAFETY: Reject if ANY prohibited child PII fields are present
-      return PROHIBITED_CHILD_PII_FIELDS.every((field) => !(field in data));
-    },
+      PROHIBITED_CHILD_PII_FIELDS.every((field) => !(field in data))
+    ,
     {
       message:
         'CHILD SAFETY VIOLATION: Prohibited child PII fields detected (childrenNames, childrenPhotos, childrenAges, childrenSchools)',
-    }
+    },
   );
 
 /**

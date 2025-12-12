@@ -1,0 +1,18 @@
+# Build output
+dist/
+build/
+
+# Dependencies
+node_modules/
+
+# Generated files
+*.d.ts
+
+# Archive
+src/_archive/
+
+# Test declaration files (generated)
+__tests__/**/*.d.ts
+
+# Coverage
+coverage/

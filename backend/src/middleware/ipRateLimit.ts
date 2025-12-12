@@ -73,11 +73,12 @@ export function ipRateLimit(options?: {
         res.setHeader('X-RateLimit-Remaining', '0');
         res.setHeader('X-RateLimit-Reset', (Date.now() + ttl * 1000).toString());
 
-        return res.status(429).json({
+        res.status(429).json({
           error: 'Too many requests from this IP',
           code: 'RATE_LIMIT_EXCEEDED',
           retryAfter: ttl,
         });
+        return;
       }
 
       // Increment counter
@@ -154,11 +155,12 @@ export function userRateLimit(options?: {
       if (count >= maxRequests) {
         const ttl = await redisClient.ttl(key);
 
-        return res.status(429).json({
+        res.status(429).json({
           error: 'Too many requests',
           code: 'RATE_LIMIT_EXCEEDED',
           retryAfter: ttl,
         });
+        return;
       }
 
       const multi = redisClient.multi();

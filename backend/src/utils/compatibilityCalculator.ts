@@ -56,7 +56,7 @@ export interface CompatibilityBreakdown {
  */
 export function calculateCompatibilityScore(
   userProfile: ParentProfile,
-  targetProfile: ParentProfile
+  targetProfile: ParentProfile,
 ): number {
   const breakdown = calculateCompatibilityBreakdown(userProfile, targetProfile);
   return breakdown.totalScore;
@@ -79,18 +79,18 @@ export function calculateCompatibilityScore(
  */
 export function calculateCompatibilityBreakdown(
   userProfile: ParentProfile,
-  targetProfile: ParentProfile
+  targetProfile: ParentProfile,
 ): CompatibilityBreakdown {
   let totalScore = 0;
 
   // 1. Budget compatibility (50 points max) - User preference, not family composition
   const userBudget = calculateAverageBudget(
     userProfile.budget_min,
-    userProfile.budget_max
+    userProfile.budget_max,
   );
   const targetBudget = calculateAverageBudget(
     targetProfile.budget_min,
-    targetProfile.budget_max
+    targetProfile.budget_max,
   );
 
   let budgetScore = 0;
@@ -130,7 +130,7 @@ export function calculateCompatibilityBreakdown(
  */
 function calculateAverageBudget(
   budgetMin: number | null,
-  budgetMax: number | null
+  budgetMax: number | null,
 ): number {
   if (budgetMin !== null && budgetMax !== null) {
     return (budgetMin + budgetMax) / 2;
@@ -146,7 +146,7 @@ function calculateAverageBudget(
  */
 export async function getCompatibilityScoreFromDb(
   userId: string,
-  targetUserId: string
+  targetUserId: string,
 ): Promise<number> {
   const userProfile = await db('parents').where('user_id', userId).first();
   const targetProfile = await db('parents').where('user_id', targetUserId).first();
@@ -166,7 +166,7 @@ export async function getCompatibilityScoreFromDb(
  */
 export async function getCompatibilityBreakdownFromDb(
   userId: string,
-  targetUserId: string
+  targetUserId: string,
 ): Promise<CompatibilityBreakdown> {
   const userProfile = await db('parents').where('user_id', userId).first();
   const targetProfile = await db('parents').where('user_id', targetUserId).first();

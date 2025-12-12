@@ -1,27 +1,26 @@
 import http from 'http';
-import dotenv from 'dotenv';
 import app from './app';
 import { testConnection } from './config/database';
 import { checkRedisHealth } from './config/redis';
 import { initializeWebSocket } from './websockets/socketHandler';
 import logger from './config/logger';
 import SocketService from './services/SocketService';
-import { validateEnvironment, validateProductionSecurity } from './config/validation';
-
-// Load environment variables
-dotenv.config();
+import { validateEnv, getEnv } from './config/env';
+import { moderationWorker } from './workers/moderationWorker';
 
 // Validate environment variables (fail fast if misconfigured)
+let env;
 try {
-  validateEnvironment();
-  validateProductionSecurity();
+  env = validateEnv();
+  logger.info('✅ Environment validation complete');
 } catch (error) {
-  logger.error('Environment validation failed. Server will not start.');
+  logger.error('❌ Environment validation failed. Server will not start.');
+  console.error(error);
   process.exit(1);
 }
 
 const server = http.createServer(app);
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT;
 
 // Initialize WebSocket
 const io = initializeWebSocket(server);
@@ -46,28 +45,36 @@ const startServer = async () => {
 
     // Start server
     server.listen(PORT, () => {
+      const securityStatus = [
+        env.ENABLE_RATE_LIMITING ? '✅ Rate Limiting' : '❌ Rate Limiting',
+        env.ENABLE_JWT_VALIDATION ? '✅ JWT Validation' : '❌ JWT Validation',
+        env.ENABLE_ENCRYPTION ? '✅ Message Encryption' : '❌ Message Encryption',
+        env.ENABLE_ACCOUNT_LOCKOUT ? '✅ Account Lockout' : '⚠️  Account Lockout',
+        env.ENABLE_VERIFICATION_CHECKS ? '✅ Verification Checks' : '❌ Verification Checks',
+      ].join('\n║   ');
+
       logger.info(`
 ╔════════════════════════════════════════════════════════════╗
 ║                                                            ║
 ║   🏡 CoNest API Server Running                            ║
 ║                                                            ║
-║   Environment: ${process.env.NODE_ENV || 'development'}                              ║
+║   Environment: ${env.NODE_ENV.padEnd(20)}                              ║
+║   Security Mode: ${env.SECURITY_MODE.toUpperCase().padEnd(16)}                          ║
 ║   Port: ${PORT}                                             ║
-║   API URL: http://localhost:${PORT}                         ║
+║   API URL: ${env.API_URL || `http://localhost:${PORT}`}                         ║
 ║                                                            ║
 ║   📊 Health: http://localhost:${PORT}/health                ║
 ║   🔌 WebSocket: Enabled                                   ║
-║   🔒 Security: Active                                     ║
 ║                                                            ║
-║   MOCK Services Active:                                   ║
-║   - Checkr (Background Checks)                            ║
-║   - Jumio (ID Verification)                               ║
-║   - Twilio (SMS/2FA)                                      ║
+║   🔒 Security Features:                                   ║
+║   ${securityStatus}
 ║                                                            ║
-║   Real Services:                                          ║
-║   - Stripe (Test Mode)                                    ║
-║   - PostgreSQL                                            ║
-║   - Redis                                                 ║
+║   Verification Providers:                                 ║
+║   - ID Verification: ${env.ID_PROVIDER.toUpperCase().padEnd(10)}                       ║
+║   - Background Check: ${env.BG_CHECK_PROVIDER.toUpperCase().padEnd(9)}                      ║
+║                                                            ║
+║   Database: PostgreSQL (${env.DB_HOST}:${env.DB_PORT})                      ║
+║   Cache: Redis (${env.REDIS_HOST}:${env.REDIS_PORT})                           ║
 ║                                                            ║
 ╚════════════════════════════════════════════════════════════╝
       `);
@@ -106,6 +113,18 @@ const startServer = async () => {
       console.log('     GET  /api/payments/my-payments');
       console.log('     POST /api/payments/stripe/create-account');
       console.log('');
+
+      // Start AI Content Moderation Worker
+      const aiModerationEnabled = process.env.AI_MODERATION_ENABLED === 'true';
+      if (aiModerationEnabled) {
+        moderationWorker.start();
+        const shadowMode = process.env.AI_MODERATION_SHADOW_MODE === 'true';
+        console.log(`\n🤖 AI Content Moderation: ${shadowMode ? 'SHADOW MODE (logging only)' : 'ACTIVE'}`);
+        console.log('   - Primary Provider: ' + (process.env.AI_MODERATION_PRIMARY_PROVIDER || 'gemini'));
+        console.log('   - Fallback Provider: ' + (process.env.AI_MODERATION_FALLBACK_PROVIDER || 'openai'));
+      } else {
+        console.log('\n⚠️  AI Content Moderation: DISABLED');
+      }
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
@@ -116,6 +135,7 @@ const startServer = async () => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully');
+  moderationWorker.stop();
   server.close(() => {
     logger.info('Server closed');
     process.exit(0);
@@ -124,6 +144,7 @@ process.on('SIGTERM', () => {
 
 process.on('SIGINT', () => {
   logger.info('SIGINT received, shutting down gracefully');
+  moderationWorker.stop();
   server.close(() => {
     logger.info('Server closed');
     process.exit(0);

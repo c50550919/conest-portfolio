@@ -109,7 +109,7 @@ const ENV_VALIDATION_RULES: Record<string, ValidationRule> = {
         'jwt_secret',
       ];
       return !insecurePlaceholders.some(placeholder =>
-        value.toLowerCase().includes(placeholder)
+        value.toLowerCase().includes(placeholder),
       );
     },
   },
@@ -126,7 +126,7 @@ const ENV_VALIDATION_RULES: Record<string, ValidationRule> = {
         'refresh_secret',
       ];
       return !insecurePlaceholders.some(placeholder =>
-        value.toLowerCase().includes(placeholder)
+        value.toLowerCase().includes(placeholder),
       );
     },
   },
@@ -252,61 +252,89 @@ interface ValidationError {
 }
 
 /**
+ * Individual validation check functions
+ * Each returns an error message or null if valid
+ */
+const validationChecks = {
+  required: (value: string | undefined, rule: ValidationRule, varName: string): string | null => {
+    if (rule.required && !value) {
+      return rule.errorMessage ?? `${varName} is required but not set`;
+    }
+    return null;
+  },
+
+  minLength: (value: string, rule: ValidationRule, varName: string): string | null => {
+    if (rule.minLength && value.length < rule.minLength) {
+      return rule.errorMessage ?? `${varName} must be at least ${rule.minLength} characters`;
+    }
+    return null;
+  },
+
+  maxLength: (value: string, rule: ValidationRule, varName: string): string | null => {
+    if (rule.maxLength && value.length > rule.maxLength) {
+      return rule.errorMessage ?? `${varName} must be at most ${rule.maxLength} characters`;
+    }
+    return null;
+  },
+
+  pattern: (value: string, rule: ValidationRule, varName: string): string | null => {
+    if (rule.pattern && !rule.pattern.test(value)) {
+      return rule.errorMessage ?? `${varName} does not match required format`;
+    }
+    return null;
+  },
+
+  customValidator: (value: string, rule: ValidationRule, varName: string): string | null => {
+    if (rule.validator && !rule.validator(value)) {
+      return rule.errorMessage ?? `${varName} failed custom validation`;
+    }
+    return null;
+  },
+};
+
+/**
+ * Truncate value for error display (security: don't expose full secrets)
+ */
+function truncateForDisplay(value: string, maxLen = 20): string {
+  return value.length > maxLen ? `${value.substring(0, maxLen)}...` : value;
+}
+
+/**
  * Validate a single environment variable
+ * Refactored to reduce cyclomatic complexity using validation pipeline
  */
 function validateVariable(
   varName: string,
-  rule: ValidationRule
+  rule: ValidationRule,
 ): ValidationError | null {
   const value = process.env[varName];
 
-  // Check if required
-  if (rule.required && !value) {
-    return {
-      variable: varName,
-      error: rule.errorMessage || `${varName} is required but not set`,
-    };
+  // Check required first (special case: value may not exist)
+  const requiredError = validationChecks.required(value, rule, varName);
+  if (requiredError) {
+    return { variable: varName, error: requiredError };
   }
 
-  // If not required and not set, skip validation
-  if (!value) {
-    return null;
-  }
+  // If not required and not set, skip remaining validation
+  if (!value) return null;
 
-  // Check minimum length
-  if (rule.minLength && value.length < rule.minLength) {
-    return {
-      variable: varName,
-      error: rule.errorMessage || `${varName} must be at least ${rule.minLength} characters`,
-      currentValue: `${value.substring(0, 10)}... (length: ${value.length})`,
-    };
-  }
+  // Run all value-based checks
+  const checks: Array<(v: string, r: ValidationRule, n: string) => string | null> = [
+    validationChecks.minLength,
+    validationChecks.maxLength,
+    validationChecks.pattern,
+    validationChecks.customValidator,
+  ];
 
-  // Check maximum length
-  if (rule.maxLength && value.length > rule.maxLength) {
-    return {
-      variable: varName,
-      error: rule.errorMessage || `${varName} must be at most ${rule.maxLength} characters`,
-      currentValue: `${value.substring(0, 10)}... (length: ${value.length})`,
-    };
-  }
-
-  // Check pattern
-  if (rule.pattern && !rule.pattern.test(value)) {
-    return {
-      variable: varName,
-      error: rule.errorMessage || `${varName} does not match required format`,
-      currentValue: value.substring(0, 20) + (value.length > 20 ? '...' : ''),
-    };
-  }
-
-  // Check custom validator
-  if (rule.validator && !rule.validator(value)) {
-    return {
-      variable: varName,
-      error: rule.errorMessage || `${varName} failed custom validation`,
-      currentValue: value.substring(0, 20) + (value.length > 20 ? '...' : ''),
-    };
+  for (const check of checks) {
+    const error = check(value, rule, varName);
+    if (error) {
+      return {
+        variable: varName,
+        error,
+        currentValue: truncateForDisplay(value),
+      };
+    }
   }
 
   return null;
@@ -347,7 +375,7 @@ export function validateEnvironment(): void {
     logger.error('See .env.example for correct format and required values.');
 
     throw new Error(
-      `Environment validation failed with ${errors.length} error(s). Check logs for details.`
+      `Environment validation failed with ${errors.length} error(s). Check logs for details.`,
     );
   }
 
@@ -364,7 +392,7 @@ export function getValidationSummary(): {
   requiredVariables: string[];
   optionalVariables: string[];
   missingRequired: string[];
-} {
+  } {
   const requiredVariables: string[] = [];
   const optionalVariables: string[] = [];
   const missingRequired: string[] = [];

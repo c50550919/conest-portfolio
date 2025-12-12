@@ -48,7 +48,7 @@ export function tokenizePhone(phone: string): string {
   const countryCode = cleaned.length >= 10 ? cleaned.slice(0, cleaned.length - 10) : '';
   const token = tokenizePII(cleaned.slice(0, -4));
 
-  return `${countryCode ? '+' + countryCode : ''}***${last4}`;
+  return `${countryCode ? `+${  countryCode}` : ''}***${last4}`;
 }
 
 /**
@@ -77,7 +77,7 @@ export function tokenizeAddress(address: {
   }
 
   if (address.zipCode) {
-    parts.push('***' + address.zipCode.slice(-2));
+    parts.push(`***${  address.zipCode.slice(-2)}`);
   }
 
   if (address.country) {
@@ -88,75 +88,77 @@ export function tokenizeAddress(address: {
 }
 
 /**
+ * Sensitive field patterns that should be completely redacted
+ */
+const REDACTED_PATTERNS = ['password', 'token', 'secret', 'ssn', 'creditcard', 'cvv'];
+
+/**
+ * PII field handlers for tokenization
+ * Each handler specifies the field pattern and how to tokenize it
+ */
+const PII_HANDLERS: Array<{
+  pattern: string;
+  handler: (value: any) => any;
+  valueType: 'string' | 'object';
+}> = [
+  { pattern: 'email', handler: tokenizeEmail, valueType: 'string' },
+  { pattern: 'phone', handler: tokenizePhone, valueType: 'string' },
+  { pattern: 'address', handler: tokenizeAddress, valueType: 'object' },
+];
+
+/**
+ * Check if field should be redacted
+ */
+function shouldRedact(lowerKey: string): boolean {
+  return REDACTED_PATTERNS.some((pattern) => lowerKey.includes(pattern));
+}
+
+/**
+ * Find matching PII handler for a field
+ */
+function findPIIHandler(lowerKey: string, value: any): ((v: any) => any) | null {
+  const handler = PII_HANDLERS.find(
+    (h) => lowerKey.includes(h.pattern) && typeof value === h.valueType,
+  );
+  return handler?.handler ?? null;
+}
+
+/**
+ * Sanitize a single field value
+ */
+function sanitizeField(key: string, value: any, depth: number): any {
+  const lowerKey = key.toLowerCase();
+
+  // Check for redaction first
+  if (shouldRedact(lowerKey)) return '[REDACTED]';
+
+  // Check for PII tokenization
+  const piiHandler = findPIIHandler(lowerKey, value);
+  if (piiHandler) return piiHandler(value);
+
+  // Recursively sanitize objects
+  if (typeof value === 'object') return sanitizeForLogging(value, depth + 1);
+
+  // Return primitive values as-is
+  return value;
+}
+
+/**
  * Sanitize object for logging
  * Automatically tokenizes common PII fields
+ * Refactored to reduce cyclomatic complexity using configuration-driven approach
  */
 export function sanitizeForLogging(obj: any, depth: number = 0): any {
   if (depth > 5) return '[MAX_DEPTH_REACHED]';
-
   if (obj === null || obj === undefined) return obj;
-
-  if (Array.isArray(obj)) {
-    return obj.map(item => sanitizeForLogging(item, depth + 1));
-  }
-
+  if (Array.isArray(obj)) return obj.map((item) => sanitizeForLogging(item, depth + 1));
   if (typeof obj !== 'object') return obj;
 
   const sanitized: any = {};
-
   for (const [key, value] of Object.entries(obj)) {
-    const lowerKey = key.toLowerCase();
-
-    // Remove sensitive fields entirely
-    if (
-      lowerKey.includes('password') ||
-      lowerKey.includes('token') ||
-      lowerKey.includes('secret') ||
-      lowerKey.includes('ssn') ||
-      lowerKey.includes('creditcard') ||
-      lowerKey.includes('cvv')
-    ) {
-      sanitized[key] = '[REDACTED]';
-      continue;
-    }
-
-    // Tokenize PII fields
-    if (lowerKey.includes('email') && typeof value === 'string') {
-      sanitized[key] = tokenizeEmail(value);
-    } else if (lowerKey.includes('phone') && typeof value === 'string') {
-      sanitized[key] = tokenizePhone(value);
-    } else if (lowerKey.includes('address') && typeof value === 'object') {
-      sanitized[key] = tokenizeAddress(value);
-    } else if (typeof value === 'object') {
-      sanitized[key] = sanitizeForLogging(value, depth + 1);
-    } else {
-      sanitized[key] = value;
-    }
+    sanitized[key] = sanitizeField(key, value, depth);
   }
-
   return sanitized;
-}
-
-/**
- * Mask credit card number
- * Shows only last 4 digits
- */
-export function maskCreditCard(cardNumber: string): string {
-  const cleaned = cardNumber.replace(/\D/g, '');
-  if (cleaned.length < 4) return '****';
-
-  return '**** **** **** ' + cleaned.slice(-4);
-}
-
-/**
- * Mask SSN
- * Shows only last 4 digits
- */
-export function maskSSN(ssn: string): string {
-  const cleaned = ssn.replace(/\D/g, '');
-  if (cleaned.length < 4) return '***-**-****';
-
-  return '***-**-' + cleaned.slice(-4);
 }
 
 /**

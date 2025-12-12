@@ -92,7 +92,7 @@ export const STRIPE_CONNECT_CONFIG = {
  */
 export const createConnectedAccount = async (
   email: string,
-  metadata?: Record<string, string>
+  metadata?: Record<string, string>,
 ): Promise<Stripe.Account> => {
   try {
     const account = await stripe.accounts.create({
@@ -136,7 +136,7 @@ export const createConnectedAccount = async (
 export const createAccountLink = async (
   accountId: string,
   refreshUrl: string,
-  returnUrl: string
+  returnUrl: string,
 ): Promise<Stripe.AccountLink> => {
   try {
     const accountLink = await stripe.accountLinks.create({
@@ -172,7 +172,7 @@ export const createAccountLink = async (
  */
 export const verifyWebhookSignature = (
   payload: Buffer | string,
-  signature: string
+  signature: string,
 ): Stripe.Event => {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 

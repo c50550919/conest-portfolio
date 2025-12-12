@@ -4,7 +4,14 @@ module.exports = {
   roots: ['<rootDir>/src', '<rootDir>/tests'],
   testMatch: ['**/tests/**/*.test.ts', '**/?(*.)+(spec|test).ts', '!**/tests/e2e/**'],
   transform: {
-    '^.+\\.ts$': 'ts-jest',
+    '^.+\\.ts$': ['ts-jest', {
+      tsconfig: {
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        noUnusedLocals: false,
+        noUnusedParameters: false,
+      },
+    }],
   },
   collectCoverageFrom: [
     'src/**/*.ts',
@@ -42,15 +49,8 @@ module.exports = {
     '^@utils/(.*)$': '<rootDir>/src/utils/$1',
     '^@services/(.*)$': '<rootDir>/src/services/$1',
     '^@middleware/(.*)$': '<rootDir>/src/middleware/$1',
-  },
-  globals: {
-    'ts-jest': {
-      tsconfig: {
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-        noUnusedLocals: false,
-        noUnusedParameters: false,
-      },
-    },
+    // Auto-mock auth middleware for all tests
+    // This redirects all imports of auth.middleware to the mock version
+    '^(.*)/middleware/auth\\.middleware$': '<rootDir>/src/middleware/__mocks__/auth.middleware.ts',
   },
 };

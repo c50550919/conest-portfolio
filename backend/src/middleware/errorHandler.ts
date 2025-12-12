@@ -18,7 +18,7 @@ export const errorHandler = (
   err: Error | AppError,
   req: Request,
   res: Response,
-  _next: NextFunction
+  _next: NextFunction,
 ): void => {
   let statusCode = 500;
   let message = 'Internal server error';
@@ -54,18 +54,16 @@ export const errorHandler = (
 export const notFoundHandler = (
   req: Request,
   _res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   const error = new AppError(
     `Route ${req.originalUrl} not found`,
-    404
+    404,
   );
   next(error);
 };
 
 // Async error wrapper
-export const asyncHandler = (fn: Function) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
-  };
+export const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
 };

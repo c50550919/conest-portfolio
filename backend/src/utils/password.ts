@@ -98,7 +98,7 @@ export async function hashPasswordSafe(password: string): Promise<PasswordHashRe
  */
 export async function comparePasswordSafe(
   password: string,
-  hash: string
+  hash: string,
 ): Promise<PasswordCompareResult> {
   try {
     const match = await comparePassword(password, hash);
