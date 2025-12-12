@@ -191,7 +191,7 @@ describe('POST /api/discovery/swipe - Contract Tests', () => {
 
         // Validate swipeId is UUID
         expect(response.body.data.swipeId).toMatch(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
         );
       }
     });
@@ -231,7 +231,7 @@ describe('POST /api/discovery/swipe - Contract Tests', () => {
 
         // Validate UUID format
         expect(match.matchId).toMatch(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
         );
 
         // Validate ISO 8601 timestamp

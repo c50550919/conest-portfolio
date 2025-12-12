@@ -68,7 +68,7 @@ describe('SwipeService', () => {
       expect(DiscoveryCacheService.cacheSwipeState).toHaveBeenCalledWith(
         userId,
         targetUserId,
-        'left'
+        'left',
       );
 
       expect(DiscoveryCacheService.invalidateProfileQueue).toHaveBeenCalledWith(userId);
@@ -126,13 +126,13 @@ describe('SwipeService', () => {
       expect(SocketService.emitMatchCreated).toHaveBeenCalledWith(
         userId,
         targetUserId,
-        result.match
+        result.match,
       );
     });
 
     it('should prevent swiping on yourself', async () => {
       await expect(swipeService.swipe(userId, userId, 'right')).rejects.toThrow(
-        'Cannot swipe on yourself'
+        'Cannot swipe on yourself',
       );
 
       expect(SwipeModel.create).not.toHaveBeenCalled();
@@ -142,7 +142,7 @@ describe('SwipeService', () => {
       (DiscoveryCacheService.hasCachedSwipe as jest.Mock).mockResolvedValue(true);
 
       await expect(swipeService.swipe(userId, targetUserId, 'right')).rejects.toThrow(
-        'You have already swiped on this user'
+        'You have already swiped on this user',
       );
 
       expect(SwipeModel.create).not.toHaveBeenCalled();
@@ -153,7 +153,7 @@ describe('SwipeService', () => {
       (SwipeModel.hasSwipedOn as jest.Mock).mockResolvedValue(true);
 
       await expect(swipeService.swipe(userId, targetUserId, 'right')).rejects.toThrow(
-        'You have already swiped on this user'
+        'You have already swiped on this user',
       );
 
       expect(SwipeModel.create).not.toHaveBeenCalled();
@@ -163,7 +163,7 @@ describe('SwipeService', () => {
       (SwipeModel.getSwipeCount as jest.Mock).mockResolvedValue(5);
 
       await expect(swipeService.swipe(userId, targetUserId, 'right')).rejects.toThrow(
-        'Rate limit exceeded. Please try again in 15 minutes.'
+        'Rate limit exceeded. Please try again in 15 minutes.',
       );
 
       expect(SwipeModel.create).not.toHaveBeenCalled();
@@ -182,7 +182,7 @@ describe('SwipeService', () => {
       (DiscoveryCacheService.hasCachedSwipe as jest.Mock).mockResolvedValue(true);
 
       await expect(swipeService.swipe(userId, targetUserId, 'right')).rejects.toThrow(
-        'You have already swiped on this user'
+        'You have already swiped on this user',
       );
 
       // Cache check should prevent database query
@@ -194,7 +194,7 @@ describe('SwipeService', () => {
       (SwipeModel.hasSwipedOn as jest.Mock).mockResolvedValue(true);
 
       await expect(swipeService.swipe(userId, targetUserId, 'right')).rejects.toThrow(
-        'You have already swiped on this user'
+        'You have already swiped on this user',
       );
 
       expect(SwipeModel.hasSwipedOn).toHaveBeenCalledWith(userId, targetUserId);
@@ -340,7 +340,7 @@ describe('SwipeService', () => {
           user1_id: userId,
           user2_id: targetUserId,
           compatibility_score: 85,
-        })
+        }),
       );
     });
 
@@ -428,7 +428,7 @@ describe('SwipeService', () => {
           id: 'match333',
           matchedUserId: targetUserId,
           compatibilityScore: 95,
-        })
+        }),
       );
     });
   });
@@ -458,7 +458,7 @@ describe('SwipeService', () => {
       expect(DiscoveryCacheService.cacheSwipeState).toHaveBeenCalledWith(
         userId,
         targetUserId,
-        'right'
+        'right',
       );
     });
 
@@ -506,17 +506,17 @@ describe('SwipeService', () => {
       (SwipeModel.create as jest.Mock).mockRejectedValue(new Error('Database connection failed'));
 
       await expect(swipeService.swipe('user1', 'user2', 'right')).rejects.toThrow(
-        'Database connection failed'
+        'Database connection failed',
       );
     });
 
     it('should handle cache service errors gracefully', async () => {
       (DiscoveryCacheService.hasCachedSwipe as jest.Mock).mockRejectedValue(
-        new Error('Redis connection failed')
+        new Error('Redis connection failed'),
       );
 
       await expect(swipeService.swipe('user1', 'user2', 'right')).rejects.toThrow(
-        'Redis connection failed'
+        'Redis connection failed',
       );
     });
   });

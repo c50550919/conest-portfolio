@@ -77,7 +77,7 @@ describe('Integration Test: Swipe Right (Express Interest)', () => {
 
       // Find target profile
       const targetProfile = profilesResponse.body.profiles.find(
-        (p: any) => p.userId === targetUserId
+        (p: any) => p.userId === targetUserId,
       );
       expect(targetProfile).toBeDefined();
       expect(targetProfile.compatibilityScore).toBeGreaterThanOrEqual(70);
@@ -102,7 +102,7 @@ describe('Integration Test: Swipe Right (Express Interest)', () => {
 
       // UUID validation
       expect(swipeResponse.body.swipeId).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
 
       // Step 4: Profile disappears from queue
@@ -314,15 +314,15 @@ describe('Integration Test: Swipe Right (Express Interest)', () => {
         .expect(200);
 
       const highCompatProfile = profilesResponse.body.profiles.find(
-        (p: any) => p.userId === highCompatibilityUser.id
+        (p: any) => p.userId === highCompatibilityUser.id,
       );
       const lowCompatProfile = profilesResponse.body.profiles.find(
-        (p: any) => p.userId === lowCompatibilityUser.id
+        (p: any) => p.userId === lowCompatibilityUser.id,
       );
 
       // High compatibility user should have higher score
       expect(highCompatProfile.compatibilityScore).toBeGreaterThan(
-        lowCompatProfile.compatibilityScore
+        lowCompatProfile.compatibilityScore,
       );
     });
   });
@@ -432,7 +432,7 @@ describe('Integration Test: Swipe Right (Express Interest)', () => {
             },
           });
           return target.id;
-        })
+        }),
       );
 
       // Create 10 different users to swipe
@@ -455,7 +455,7 @@ describe('Integration Test: Swipe Right (Express Interest)', () => {
             },
           });
           return getAuthToken(user.id);
-        })
+        }),
       );
 
       // Perform 10 concurrent swipes
@@ -466,7 +466,7 @@ describe('Integration Test: Swipe Right (Express Interest)', () => {
           .send({
             targetUserId: targets[i],
             direction: 'right',
-          })
+          }),
       );
 
       const results = await Promise.all(requests);

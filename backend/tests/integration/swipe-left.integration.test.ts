@@ -75,7 +75,7 @@ describe('Integration Test: Swipe Left (Pass)', () => {
         .expect(200);
 
       const targetProfile = profilesResponse.body.profiles.find(
-        (p: any) => p.userId === targetUserId
+        (p: any) => p.userId === targetUserId,
       );
       expect(targetProfile).toBeDefined();
 
@@ -96,7 +96,7 @@ describe('Integration Test: Swipe Left (Pass)', () => {
 
       // UUID validation
       expect(response.body.swipeId).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
 
       // Step 4: Profile disappears from queue
@@ -268,7 +268,7 @@ describe('Integration Test: Swipe Left (Pass)', () => {
             },
           });
           return target.id;
-        })
+        }),
       );
 
       // Perform 5 left swipes
@@ -334,7 +334,7 @@ describe('Integration Test: Swipe Left (Pass)', () => {
             },
           });
           return target.id;
-        })
+        }),
       );
 
       // Perform 3 left swipes and 2 right swipes (total 5)

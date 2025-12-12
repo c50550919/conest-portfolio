@@ -1,0 +1,17 @@
+// @ts-nocheck
+/**
+ * DEPRECATED: Discovery Swipe POST Contract Tests
+ *
+ * This test file is DEPRECATED as of 2025-11-29
+ * The swipe endpoint has been removed from the API.
+ * Users now express interest via connection requests instead.
+ *
+ * See: /api/connection-requests
+ * Replacement tests: connection-requests-post.contract.test.ts
+ *
+ * Original Feature: 001-discovery-screen-swipeable
+ * Updated Architecture: Browse-based discovery with connection requests
+ */
+
+// This file is kept for historical reference only
+// DO NOT RUN THESE TESTS - the endpoint no longer exists
