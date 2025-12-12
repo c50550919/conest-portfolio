@@ -43,14 +43,10 @@ describe('secureStorage', () => {
 
       await setSecureItem(key, value);
 
-      expect(Keychain.setGenericPassword).toHaveBeenCalledWith(
-        key,
-        value,
-        {
-          accessible: 'WHEN_UNLOCKED_THIS_DEVICE_ONLY',
-          service: `conest-secure-${key}`,
-        }
-      );
+      expect(Keychain.setGenericPassword).toHaveBeenCalledWith(key, value, {
+        accessible: 'WHEN_UNLOCKED_THIS_DEVICE_ONLY',
+        service: `conest-secure-${key}`,
+      });
     });
 
     it('should handle empty string values', async () => {
@@ -78,11 +74,7 @@ describe('secureStorage', () => {
 
       await setSecureItem(key, value);
 
-      expect(Keychain.setGenericPassword).toHaveBeenCalledWith(
-        key,
-        value,
-        expect.any(Object)
-      );
+      expect(Keychain.setGenericPassword).toHaveBeenCalledWith(key, value, expect.any(Object));
     });
 
     it('should handle large data strings', async () => {
@@ -93,22 +85,18 @@ describe('secureStorage', () => {
 
       await setSecureItem(key, value);
 
-      expect(Keychain.setGenericPassword).toHaveBeenCalledWith(
-        key,
-        value,
-        expect.any(Object)
-      );
+      expect(Keychain.setGenericPassword).toHaveBeenCalledWith(key, value, expect.any(Object));
     });
 
     it('should throw error when keychain storage fails', async () => {
       const key = 'failKey';
       const value = 'failValue';
 
-      (Keychain.setGenericPassword as jest.Mock).mockRejectedValue(
-        new Error('Keychain error')
-      );
+      (Keychain.setGenericPassword as jest.Mock).mockRejectedValue(new Error('Keychain error'));
 
-      await expect(setSecureItem(key, value)).rejects.toThrow(`Failed to store secure item: ${key}`);
+      await expect(setSecureItem(key, value)).rejects.toThrow(
+        `Failed to store secure item: ${key}`,
+      );
     });
 
     it('should use unique service names for different keys', async () => {
@@ -204,9 +192,7 @@ describe('secureStorage', () => {
     it('should throw error when removal fails', async () => {
       const key = 'removeFailKey';
 
-      (Keychain.resetGenericPassword as jest.Mock).mockRejectedValue(
-        new Error('Removal failed')
-      );
+      (Keychain.resetGenericPassword as jest.Mock).mockRejectedValue(new Error('Removal failed'));
 
       await expect(removeSecureItem(key)).rejects.toThrow(`Failed to remove secure item: ${key}`);
     });
@@ -315,9 +301,7 @@ describe('secureStorage', () => {
     it('should return null for all keys on error', async () => {
       const keys = ['key1', 'key2'];
 
-      (Keychain.getGenericPassword as jest.Mock).mockRejectedValue(
-        new Error('Keychain error')
-      );
+      (Keychain.getGenericPassword as jest.Mock).mockRejectedValue(new Error('Keychain error'));
 
       const result = await getSecureItems(keys);
 
@@ -376,9 +360,7 @@ describe('secureStorage', () => {
     });
 
     it('should not throw error for non-existent keys', async () => {
-      (Keychain.resetGenericPassword as jest.Mock).mockRejectedValue(
-        new Error('Key not found')
-      );
+      (Keychain.resetGenericPassword as jest.Mock).mockRejectedValue(new Error('Key not found'));
 
       // Should not throw error
       await expect(clearSecureStorage()).resolves.not.toThrow();
@@ -520,11 +502,7 @@ describe('secureStorage', () => {
       (Keychain.setGenericPassword as jest.Mock).mockResolvedValue(true);
 
       // Execute multiple operations concurrently
-      await Promise.all([
-        setAuthToken('token1'),
-        setRefreshToken('token2'),
-        setSecureItems(items),
-      ]);
+      await Promise.all([setAuthToken('token1'), setRefreshToken('token2'), setSecureItems(items)]);
 
       // Total calls: 2 (tokens) + 2 (items) = 4
       expect(Keychain.setGenericPassword).toHaveBeenCalledTimes(4);
@@ -540,11 +518,7 @@ describe('secureStorage', () => {
 
       await setSecureItem(key, value);
 
-      expect(Keychain.setGenericPassword).toHaveBeenCalledWith(
-        key,
-        value,
-        expect.any(Object)
-      );
+      expect(Keychain.setGenericPassword).toHaveBeenCalledWith(key, value, expect.any(Object));
     });
 
     it('should handle whitespace-only values', async () => {
@@ -555,11 +529,7 @@ describe('secureStorage', () => {
 
       await setSecureItem(key, value);
 
-      expect(Keychain.setGenericPassword).toHaveBeenCalledWith(
-        key,
-        value,
-        expect.any(Object)
-      );
+      expect(Keychain.setGenericPassword).toHaveBeenCalledWith(key, value, expect.any(Object));
     });
 
     it('should handle very long keys', async () => {

@@ -3,7 +3,7 @@
  * Dashboard with quick actions, match notifications, and household status
  */
 
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -16,14 +16,72 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../store';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import connectionRequestsAPI from '../../services/api/connectionRequestsAPI';
+import enhancedMessagesAPI from '../../services/api/enhancedMessagesAPI';
+
+interface DashboardStats {
+  pendingConnections: number;
+  unreadMessages: number;
+  avgCompatibility: number;
+}
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation();
   const user = useSelector((state: RootState) => state.auth.user);
+
+  // Dashboard stats state
+  const [stats, setStats] = useState<DashboardStats>({
+    pendingConnections: 0,
+    unreadMessages: 0,
+    avgCompatibility: 0,
+  });
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  // Fetch dashboard stats
+  const fetchDashboardStats = useCallback(async () => {
+    setIsLoadingStats(true);
+
+    let pendingConnections = 0;
+    let unreadMessages = 0;
+    const avgCompatibility = 0; // TODO: Add compatibility score API endpoint
+
+    // Fetch connection request statistics (independent call)
+    try {
+      const connectionStats = await connectionRequestsAPI.getStatistics();
+      pendingConnections = connectionStats.received?.pending ?? 0;
+    } catch (err) {
+      console.log('[HomeScreen] Could not fetch connection stats:', err);
+      // Continue with 0 value - user may not have any pending requests
+    }
+
+    // Fetch conversations to count unread messages (independent call)
+    try {
+      const response = await enhancedMessagesAPI.getConversations();
+      const conversations = response.data || [];
+      unreadMessages = conversations.reduce((total, conv) => total + (conv.unreadCount || 0), 0);
+    } catch (err) {
+      console.log('[HomeScreen] Could not fetch messages:', err);
+      // Continue with 0 value
+    }
+
+    setStats({
+      pendingConnections,
+      unreadMessages,
+      avgCompatibility,
+    });
+    setIsLoadingStats(false);
+  }, []);
+
+  // Fetch stats when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboardStats();
+    }, [fetchDashboardStats])
+  );
 
   // Debug logging
   console.log('[HomeScreen] User from Redux:', user);
@@ -42,22 +100,22 @@ const HomeScreen: React.FC = () => {
   }
 
   // Calculate full name from user data with fallbacks
-  const fullName = user.firstName && user.lastName
-    ? `${user.firstName} ${user.lastName}`
-    : user.email || 'User';
+  const fullName =
+    user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email || 'User';
 
   return (
     <SafeAreaView testID="home-screen" style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text testID="welcome-message" style={styles.greeting}>Welcome back!</Text>
-            <Text testID="user-name" style={styles.userName}>{fullName}</Text>
+            <Text testID="welcome-message" style={styles.greeting}>
+              Welcome back!
+            </Text>
+            <Text testID="user-name" style={styles.userName}>
+              {fullName}
+            </Text>
           </View>
           <TouchableOpacity style={styles.notificationButton}>
             <Icon name="bell-outline" size={24} color={colors.text.primary} />
@@ -72,11 +130,11 @@ const HomeScreen: React.FC = () => {
           <TouchableOpacity
             testID="stat-new-connections"
             style={[styles.statCard, { backgroundColor: colors.primary + '15' }]}
-            onPress={() => navigation.navigate('Discover' as never)}
+            onPress={() => navigation.navigate('ConnectionRequests' as never)}
           >
-            <Icon name="account-search" size={32} color={colors.primary} />
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>New Connections</Text>
+            <Icon name="account-multiple-plus" size={32} color={colors.primary} />
+            <Text style={styles.statNumber}>{isLoadingStats ? '-' : stats.pendingConnections}</Text>
+            <Text style={styles.statLabel}>Pending Requests</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="stat-messages"
@@ -84,17 +142,23 @@ const HomeScreen: React.FC = () => {
             onPress={() => navigation.navigate('Messages' as never)}
           >
             <Icon name="message-text" size={32} color={colors.secondary} />
-            <Text style={styles.statNumber}>5</Text>
-            <Text style={styles.statLabel}>Messages</Text>
+            <Text style={styles.statNumber}>{isLoadingStats ? '-' : stats.unreadMessages}</Text>
+            <Text style={styles.statLabel}>Unread Messages</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="stat-compatibility"
             style={[styles.statCard, { backgroundColor: colors.tertiary + '15' }]}
             onPress={() => navigation.navigate('Discover' as never)}
           >
-            <Icon name="home-group" size={32} color={colors.tertiary} />
-            <Text style={styles.statNumber}>85%</Text>
-            <Text style={styles.statLabel}>Compatibility</Text>
+            <Icon name="home-search" size={32} color={colors.tertiary} />
+            <Text style={styles.statNumber}>
+              {isLoadingStats
+                ? '-'
+                : stats.avgCompatibility > 0
+                  ? `${stats.avgCompatibility}%`
+                  : 'N/A'}
+            </Text>
+            <Text style={styles.statLabel}>Discover</Text>
           </TouchableOpacity>
         </View>
 
@@ -195,7 +259,9 @@ const HomeScreen: React.FC = () => {
             </View>
             <View style={styles.activityContent}>
               <Text style={styles.activityTitle}>New Connection!</Text>
-              <Text style={styles.activitySubtitle}>Connected with Jennifer K. • 95% compatible</Text>
+              <Text style={styles.activitySubtitle}>
+                Connected with Jennifer K. • 95% compatible
+              </Text>
               <Text style={styles.activityTime}>2 hours ago</Text>
             </View>
           </View>
@@ -230,7 +296,8 @@ const HomeScreen: React.FC = () => {
             <View style={styles.tipContent}>
               <Text style={styles.tipTitle}>Safety First</Text>
               <Text style={styles.tipText}>
-                Remember to always meet potential roommates in public places and verify their identity before sharing personal information.
+                Remember to always meet potential roommates in public places and verify their
+                identity before sharing personal information.
               </Text>
             </View>
           </View>

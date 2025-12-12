@@ -16,14 +16,7 @@
  * @module encryption
  */
 
-import {
-  encrypt,
-  decrypt,
-  randomKey,
-  pbkdf2,
-  hmac256,
-  sha256,
-} from 'react-native-aes-crypto';
+import { encrypt, decrypt, randomKey, pbkdf2, hmac256, sha256 } from 'react-native-aes-crypto';
 
 // ============================================================================
 // Constants
@@ -87,20 +80,8 @@ export async function generateKeyPair(): Promise<{
 
     // Derive keys using PBKDF2 for additional entropy mixing
     const salt = await randomKey(16);
-    const privateKey = await pbkdf2(
-      privateSeed,
-      salt,
-      PBKDF2_ITERATIONS,
-      KEY_SIZE,
-      'sha256'
-    );
-    const publicKey = await pbkdf2(
-      publicSeed,
-      salt,
-      PBKDF2_ITERATIONS,
-      KEY_SIZE,
-      'sha256'
-    );
+    const privateKey = await pbkdf2(privateSeed, salt, PBKDF2_ITERATIONS, KEY_SIZE, 'sha256');
+    const publicKey = await pbkdf2(publicSeed, salt, PBKDF2_ITERATIONS, KEY_SIZE, 'sha256');
 
     return { publicKey, privateKey };
   } catch (error) {
@@ -137,10 +118,7 @@ export async function generateKeyPair(): Promise<{
  * const encrypted = await encryptMessage("Hello!", recipientPublicKey);
  * // Send encrypted to recipient via server
  */
-export async function encryptMessage(
-  message: string,
-  recipientPublicKey: string
-): Promise<string> {
+export async function encryptMessage(message: string, recipientPublicKey: string): Promise<string> {
   try {
     // Generate unique IV for this message (prevents pattern analysis)
     const iv = await randomKey(IV_SIZE);
@@ -278,13 +256,7 @@ export async function generateSharedSecret(
     const salt = saltMaterial.slice(0, 32); // First 16 bytes as hex
 
     // Generate shared secret with high iteration count
-    const sharedSecret = await pbkdf2(
-      combined,
-      salt,
-      PBKDF2_ITERATIONS,
-      KEY_SIZE,
-      'sha256'
-    );
+    const sharedSecret = await pbkdf2(combined, salt, PBKDF2_ITERATIONS, KEY_SIZE, 'sha256');
 
     return sharedSecret;
   } catch (error) {
@@ -314,10 +286,7 @@ export async function generateSharedSecret(
  * const sharedSecret = await generateSharedSecret(myPrivate, theirPublic);
  * const encrypted = await encryptWithSharedSecret("Secret message", sharedSecret);
  */
-export async function encryptWithSharedSecret(
-  data: string,
-  sharedSecret: string
-): Promise<string> {
+export async function encryptWithSharedSecret(data: string, sharedSecret: string): Promise<string> {
   try {
     // Generate unique IV for this encryption
     const iv = await randomKey(IV_SIZE);
@@ -417,10 +386,7 @@ export async function decryptWithSharedSecret(
  * const signature = await signMessage("Important message", myPrivateKey);
  * // Distribute message + signature to recipients
  */
-export async function signMessage(
-  message: string,
-  privateKey: string
-): Promise<string> {
+export async function signMessage(message: string, privateKey: string): Promise<string> {
   try {
     // Use HMAC-SHA256 for message authentication
     // In production, consider Ed25519 for better performance

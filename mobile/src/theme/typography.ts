@@ -98,6 +98,20 @@ export const typography = {
     fontWeight: fontWeights.semibold,
   },
 
+  // Subtitles
+  subtitle1: {
+    fontFamily: fontFamily.medium,
+    fontSize: fontSizes.base,
+    lineHeight: lineHeights.base,
+    fontWeight: fontWeights.medium,
+  },
+  subtitle2: {
+    fontFamily: fontFamily.medium,
+    fontSize: fontSizes.sm,
+    lineHeight: lineHeights.sm,
+    fontWeight: fontWeights.medium,
+  },
+
   // Body text
   body1: {
     fontFamily: fontFamily.regular,

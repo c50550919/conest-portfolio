@@ -6,25 +6,25 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './slices/authSlice';
 import userReducer from './slices/userSlice';
-import matchesReducer from './slices/matchesSlice';
-import messagesReducer from './slices/messagesSlice';
+import enhancedMessagesReducer from './slices/enhancedMessagesSlice';
 import householdReducer from './slices/householdSlice';
-import discoveryReducer from './slices/discoverySlice';
 import browseDiscoveryReducer from './slices/browseDiscoverySlice';
 import savedProfilesReducer from './slices/savedProfilesSlice';
 import connectionRequestsReducer from './slices/connectionRequestsSlice';
+import verificationReducer from './slices/verificationSlice';
+import moderationReducer from './slices/moderationSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     user: userReducer,
-    matches: matchesReducer,
-    messages: messagesReducer,
+    enhancedMessages: enhancedMessagesReducer,
     household: householdReducer,
-    discovery: discoveryReducer,
     browseDiscovery: browseDiscoveryReducer,
     savedProfiles: savedProfilesReducer,
     connectionRequests: connectionRequestsReducer,
+    verification: verificationReducer,
+    moderation: moderationReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

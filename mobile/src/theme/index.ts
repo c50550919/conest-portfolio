@@ -3,68 +3,11 @@
  * Centralized theme configuration
  */
 
-import { MD3LightTheme, configureFonts } from 'react-native-paper';
+import { MD3LightTheme } from 'react-native-paper';
 import { colors } from './colors';
 import { typography, fontFamily } from './typography';
 import { spacing, borderRadius, iconSizes } from './spacing';
 import { animations } from './animations';
-
-const fontConfig = {
-  web: {
-    regular: {
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: '400' as const,
-    },
-    medium: {
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: '500' as const,
-    },
-    light: {
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: '300' as const,
-    },
-    thin: {
-      fontFamily: 'Inter, system-ui, sans-serif',
-      fontWeight: '100' as const,
-    },
-  },
-  ios: {
-    regular: {
-      fontFamily: 'System',
-      fontWeight: '400' as const,
-    },
-    medium: {
-      fontFamily: 'System',
-      fontWeight: '500' as const,
-    },
-    light: {
-      fontFamily: 'System',
-      fontWeight: '300' as const,
-    },
-    thin: {
-      fontFamily: 'System',
-      fontWeight: '100' as const,
-    },
-  },
-  android: {
-    regular: {
-      fontFamily: 'Roboto',
-      fontWeight: 'normal' as const,
-    },
-    medium: {
-      fontFamily: 'Roboto-Medium',
-      fontWeight: 'normal' as const,
-    },
-    light: {
-      fontFamily: 'Roboto-Light',
-      fontWeight: 'normal' as const,
-    },
-    thin: {
-      fontFamily: 'Roboto-Thin',
-      fontWeight: 'normal' as const,
-    },
-  },
-};
 
 export const theme = {
   ...MD3LightTheme,
@@ -105,7 +48,7 @@ export const theme = {
     inverseOnSurface: '#FFFFFF',
     inversePrimary: colors.primaryLight,
   },
-  fonts: configureFonts({ config: fontConfig }),
+  fonts: MD3LightTheme.fonts,
   roundness: borderRadius.md,
   animation: {
     scale: 1.0,

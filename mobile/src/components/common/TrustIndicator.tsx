@@ -35,8 +35,12 @@ const TrustIndicator: React.FC<TrustIndicatorProps> = ({
   };
 
   const getResponseRateColor = () => {
-    if (responseRate >= 80) return colors.success;
-    if (responseRate >= 50) return colors.warning;
+    if (responseRate >= 80) {
+      return colors.success;
+    }
+    if (responseRate >= 50) {
+      return colors.warning;
+    }
     return colors.error;
   };
 
@@ -49,9 +53,7 @@ const TrustIndicator: React.FC<TrustIndicatorProps> = ({
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.label}>Verified</Text>
-          <Text style={styles.value}>
-            {daysSinceVerification} days ago
-          </Text>
+          <Text style={styles.value}>{daysSinceVerification} days ago</Text>
         </View>
       </View>
 
@@ -71,17 +73,11 @@ const TrustIndicator: React.FC<TrustIndicatorProps> = ({
       {/* Response Rate */}
       <View style={styles.metric}>
         <View style={styles.iconContainer}>
-          <Icon
-            name="message-reply-text"
-            size={20}
-            color={getResponseRateColor()}
-          />
+          <Icon name="message-reply-text" size={20} color={getResponseRateColor()} />
         </View>
         <View style={styles.textContainer}>
           <Text style={styles.label}>Response Rate</Text>
-          <Text style={[styles.value, { color: getResponseRateColor() }]}>
-            {responseRate}%
-          </Text>
+          <Text style={[styles.value, { color: getResponseRateColor() }]}>{responseRate}%</Text>
         </View>
       </View>
 

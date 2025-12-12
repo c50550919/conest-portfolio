@@ -65,16 +65,24 @@ export interface TypingEvent {
 export type SocketEventCallback<T> = (data: T) => void;
 
 class SocketService {
-  private socket: Socket | null = null;
+  private _socket: Socket | null = null;
   private isConnected: boolean = false;
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
 
   /**
+   * Get the underlying socket instance for direct event handling
+   * Use with caution - prefer using the provided methods when available
+   */
+  get socket(): Socket | null {
+    return this._socket;
+  }
+
+  /**
    * Initialize Socket.io connection with JWT authentication
    */
   async connect(): Promise<void> {
-    if (this.socket?.connected) {
+    if (this._socket?.connected) {
       console.log('Socket already connected');
       return;
     }
@@ -86,7 +94,7 @@ class SocketService {
         return;
       }
 
-      this.socket = io(SOCKET_URL, {
+      this._socket = io(SOCKET_URL, {
         auth: { token },
         transports: ['websocket'],
         reconnection: true,
@@ -106,25 +114,27 @@ class SocketService {
    * Setup Socket.io event listeners
    */
   private setupListeners(): void {
-    if (!this.socket) return;
+    if (!this._socket) {
+      return;
+    }
 
-    this.socket.on('connect', () => {
-      console.log(' Socket connected:', this.socket?.id);
+    this._socket.on('connect', () => {
+      console.log(' Socket connected:', this._socket?.id);
       this.isConnected = true;
       this.reconnectAttempts = 0;
     });
 
-    this.socket.on('disconnect', (reason) => {
+    this._socket.on('disconnect', (reason) => {
       console.log('L Socket disconnected:', reason);
       this.isConnected = false;
 
       if (reason === 'io server disconnect') {
         // Server disconnected - need to manually reconnect
-        this.socket?.connect();
+        this._socket?.connect();
       }
     });
 
-    this.socket.on('connect_error', (error) => {
+    this._socket.on('connect_error', (error) => {
       console.error('Socket connection error:', error);
       this.reconnectAttempts++;
 
@@ -134,7 +144,7 @@ class SocketService {
       }
     });
 
-    this.socket.on('error', (error) => {
+    this._socket.on('error', (error) => {
       console.error('Socket error:', error);
     });
   }
@@ -143,9 +153,9 @@ class SocketService {
    * Disconnect Socket.io connection
    */
   disconnect(): void {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
+    if (this._socket) {
+      this._socket.disconnect();
+      this._socket = null;
       this.isConnected = false;
       console.log('Socket disconnected manually');
     }
@@ -155,7 +165,7 @@ class SocketService {
    * Check if socket is connected
    */
   connected(): boolean {
-    return this.isConnected && this.socket?.connected === true;
+    return this.isConnected && this._socket?.connected === true;
   }
 
   /**
@@ -163,7 +173,7 @@ class SocketService {
    * @param callback - Event handler
    */
   onMatchCreated(callback: SocketEventCallback<MatchCreatedEvent>): void {
-    this.socket?.on('match_created', callback);
+    this._socket?.on('match_created', callback);
   }
 
   /**
@@ -171,7 +181,7 @@ class SocketService {
    * @param callback - Event handler to remove
    */
   offMatchCreated(callback: SocketEventCallback<MatchCreatedEvent>): void {
-    this.socket?.off('match_created', callback);
+    this._socket?.off('match_created', callback);
   }
 
   // REMOVED: onSwipeReceived() and offSwipeReceived() - Browse-based discovery uses connection requests
@@ -180,20 +190,16 @@ class SocketService {
    * Listen for screenshot detected events
    * @param callback - Event handler
    */
-  onScreenshotDetected(
-    callback: SocketEventCallback<ScreenshotDetectedEvent>
-  ): void {
-    this.socket?.on('screenshot_detected', callback);
+  onScreenshotDetected(callback: SocketEventCallback<ScreenshotDetectedEvent>): void {
+    this._socket?.on('screenshot_detected', callback);
   }
 
   /**
    * Remove screenshot detected listener
    * @param callback - Event handler to remove
    */
-  offScreenshotDetected(
-    callback: SocketEventCallback<ScreenshotDetectedEvent>
-  ): void {
-    this.socket?.off('screenshot_detected', callback);
+  offScreenshotDetected(callback: SocketEventCallback<ScreenshotDetectedEvent>): void {
+    this._socket?.off('screenshot_detected', callback);
   }
 
   /**
@@ -201,7 +207,7 @@ class SocketService {
    * @param callback - Event handler
    */
   onUserTyping(callback: SocketEventCallback<UserTypingEvent>): void {
-    this.socket?.on('user_typing', callback);
+    this._socket?.on('user_typing', callback);
   }
 
   /**
@@ -209,7 +215,7 @@ class SocketService {
    * @param callback - Event handler to remove
    */
   offUserTyping(callback: SocketEventCallback<UserTypingEvent>): void {
-    this.socket?.off('user_typing', callback);
+    this._socket?.off('user_typing', callback);
   }
 
   /**
@@ -218,7 +224,7 @@ class SocketService {
    * @param isTyping - Typing state
    */
   emitTyping(recipientId: string, isTyping: boolean): void {
-    this.socket?.emit('typing', { recipientId, isTyping });
+    this._socket?.emit('typing', { recipientId, isTyping });
   }
 
   /**
@@ -226,7 +232,7 @@ class SocketService {
    * @param callback - Event handler
    */
   onMessageReceived(callback: SocketEventCallback<NewMessageEvent>): void {
-    this.socket?.on('message.received', callback);
+    this._socket?.on('message.received', callback);
   }
 
   /**
@@ -234,7 +240,7 @@ class SocketService {
    * @param callback - Event handler to remove
    */
   offMessageReceived(callback: SocketEventCallback<NewMessageEvent>): void {
-    this.socket?.off('message.received', callback);
+    this._socket?.off('message.received', callback);
   }
 
   /**
@@ -242,7 +248,7 @@ class SocketService {
    * @param callback - Event handler
    */
   onMessageRead(callback: SocketEventCallback<MessageReadEvent>): void {
-    this.socket?.on('message.read', callback);
+    this._socket?.on('message.read', callback);
   }
 
   /**
@@ -250,7 +256,7 @@ class SocketService {
    * @param callback - Event handler to remove
    */
   offMessageRead(callback: SocketEventCallback<MessageReadEvent>): void {
-    this.socket?.off('message.read', callback);
+    this._socket?.off('message.read', callback);
   }
 
   /**
@@ -258,7 +264,7 @@ class SocketService {
    * @param callback - Event handler
    */
   onTypingStart(callback: SocketEventCallback<TypingEvent>): void {
-    this.socket?.on('typing:start', callback);
+    this._socket?.on('typing:start', callback);
   }
 
   /**
@@ -266,7 +272,7 @@ class SocketService {
    * @param callback - Event handler to remove
    */
   offTypingStart(callback: SocketEventCallback<TypingEvent>): void {
-    this.socket?.off('typing:start', callback);
+    this._socket?.off('typing:start', callback);
   }
 
   /**
@@ -274,7 +280,7 @@ class SocketService {
    * @param callback - Event handler
    */
   onTypingStop(callback: SocketEventCallback<TypingEvent>): void {
-    this.socket?.on('typing:stop', callback);
+    this._socket?.on('typing:stop', callback);
   }
 
   /**
@@ -282,7 +288,7 @@ class SocketService {
    * @param callback - Event handler to remove
    */
   offTypingStop(callback: SocketEventCallback<TypingEvent>): void {
-    this.socket?.off('typing:stop', callback);
+    this._socket?.off('typing:stop', callback);
   }
 
   /**
@@ -290,7 +296,7 @@ class SocketService {
    * @param matchId - UUID of match/conversation
    */
   emitTypingStart(matchId: string): void {
-    this.socket?.emit('typing:start', { matchId });
+    this._socket?.emit('typing:start', { matchId });
   }
 
   /**
@@ -298,7 +304,7 @@ class SocketService {
    * @param matchId - UUID of match/conversation
    */
   emitTypingStop(matchId: string): void {
-    this.socket?.emit('typing:stop', { matchId });
+    this._socket?.emit('typing:stop', { matchId });
   }
 
   /**
@@ -306,7 +312,7 @@ class SocketService {
    * @param conversationId - Conversation UUID
    */
   joinConversation(conversationId: string): void {
-    this.socket?.emit('join_conversation', { conversationId });
+    this._socket?.emit('join_conversation', { conversationId });
   }
 
   /**
@@ -314,7 +320,7 @@ class SocketService {
    * @param conversationId - Conversation UUID
    */
   leaveConversation(conversationId: string): void {
-    this.socket?.emit('leave_conversation', { conversationId });
+    this._socket?.emit('leave_conversation', { conversationId });
   }
 
   /**
@@ -330,7 +336,7 @@ class SocketService {
     messageType: string = 'text',
     fileUrl?: string
   ): void {
-    this.socket?.emit('send_message', {
+    this._socket?.emit('send_message', {
       recipientId,
       content,
       messageType,
@@ -343,7 +349,7 @@ class SocketService {
    * @param status - Presence status (online, away, busy)
    */
   updatePresence(status: 'online' | 'away' | 'busy'): void {
-    this.socket?.emit('presence_update', { status });
+    this._socket?.emit('presence_update', { status });
   }
 }
 

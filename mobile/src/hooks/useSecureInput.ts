@@ -38,14 +38,9 @@ function sanitizeInput(input: string): string {
  * Check for malicious patterns
  */
 function hasMaliciousPattern(input: string): boolean {
-  const patterns = [
-    /<script/i,
-    /javascript:/i,
-    /on\w+=/i,
-    /<iframe/i,
-  ];
+  const patterns = [/<script/i, /javascript:/i, /on\w+=/i, /<iframe/i];
 
-  return patterns.some(pattern => pattern.test(input));
+  return patterns.some((pattern) => pattern.test(input));
 }
 
 /**
@@ -149,12 +144,24 @@ export function useSecurePasswordInput() {
   const calculateStrength = useCallback((pwd: string): number => {
     let score = 0;
 
-    if (pwd.length >= 8) score += 20;
-    if (pwd.length >= 12) score += 20;
-    if (/[a-z]/.test(pwd)) score += 15;
-    if (/[A-Z]/.test(pwd)) score += 15;
-    if (/\d/.test(pwd)) score += 15;
-    if (/[^a-zA-Z0-9]/.test(pwd)) score += 15;
+    if (pwd.length >= 8) {
+      score += 20;
+    }
+    if (pwd.length >= 12) {
+      score += 20;
+    }
+    if (/[a-z]/.test(pwd)) {
+      score += 15;
+    }
+    if (/[A-Z]/.test(pwd)) {
+      score += 15;
+    }
+    if (/\d/.test(pwd)) {
+      score += 15;
+    }
+    if (/[^a-zA-Z0-9]/.test(pwd)) {
+      score += 15;
+    }
 
     return Math.min(100, score);
   }, []);

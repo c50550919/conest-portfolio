@@ -3,7 +3,7 @@
  * User profile, settings, verification status, and account management
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,19 +19,37 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../../store';
+import { useNavigation } from '@react-navigation/native';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { RootState, AppDispatch } from '../../store';
 import { logout } from '../../store/slices/authSlice';
+import {
+  fetchVerificationStatus,
+  selectVerificationStatus,
+  selectVerificationScore,
+} from '../../store/slices/verificationSlice';
 import tokenStorage from '../../services/tokenStorage';
 import { colors, spacing, typography, borderRadius } from '../../theme';
+import type { ProfileStackParamList } from '../../navigation/ProfileNavigator';
+
+type ProfileScreenNavigationProp = StackNavigationProp<ProfileStackParamList, 'ProfileScreen'>;
 
 const ProfileScreen: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+  const navigation = useNavigation<ProfileScreenNavigationProp>();
   const user = useSelector((state: RootState) => state.auth.user);
+  const verificationStatus = useSelector(selectVerificationStatus);
+  const verificationScore = useSelector(selectVerificationScore);
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [locationEnabled, setLocationEnabled] = React.useState(true);
 
   // Debug logging
   console.log('[ProfileScreen] User from Redux:', user);
+
+  // Fetch verification status on mount
+  useEffect(() => {
+    dispatch(fetchVerificationStatus());
+  }, [dispatch]);
 
   // Show loading state if user data is not yet available
   if (!user) {
@@ -47,48 +65,43 @@ const ProfileScreen: React.FC = () => {
   }
 
   // Calculate dynamic values from user data with fallbacks
-  const initials = (user.firstName && user.lastName)
-    ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
-    : (user.email ? user.email.substring(0, 2).toUpperCase() : 'U');
-  const fullName = (user.firstName && user.lastName)
-    ? `${user.firstName} ${user.lastName}`
-    : (user.email || 'User');
+  const initials =
+    user.firstName && user.lastName
+      ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+      : user.email
+        ? user.email.substring(0, 2).toUpperCase()
+        : 'U';
+  const fullName =
+    user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email || 'User';
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Log Out',
-      'Are you sure you want to log out?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
+    Alert.alert('Log Out', 'Are you sure you want to log out?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Log Out',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            // Clear tokens from secure storage
+            await tokenStorage.clearTokens();
+            // Clear Redux state
+            dispatch(logout());
+            console.log('[ProfileScreen] Logged out successfully');
+          } catch (error) {
+            console.error('[ProfileScreen] Logout error:', error);
+          }
         },
-        {
-          text: 'Log Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // Clear tokens from secure storage
-              await tokenStorage.clearTokens();
-              // Clear Redux state
-              dispatch(logout());
-              console.log('[ProfileScreen] Logged out successfully');
-            } catch (error) {
-              console.error('[ProfileScreen] Logout error:', error);
-            }
-          },
-        },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
     <SafeAreaView style={styles.container} testID="profile-screen">
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Profile Header */}
         <LinearGradient
           colors={[colors.primary, colors.primaryDark]}
@@ -107,8 +120,12 @@ const ProfileScreen: React.FC = () => {
               <Icon name="camera" size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-          <Text testID="profile-name" style={styles.userName}>{fullName}</Text>
-          <Text testID="profile-email" style={styles.userEmail}>{user.email}</Text>
+          <Text testID="profile-name" style={styles.userName}>
+            {fullName}
+          </Text>
+          <Text testID="profile-email" style={styles.userEmail}>
+            {user.email}
+          </Text>
           <View style={styles.memberSinceContainer}>
             <Icon name="calendar-check" size={16} color="rgba(255, 255, 255, 0.9)" />
             <Text style={styles.memberSinceText}>Member since Dec 2024</Text>
@@ -117,52 +134,226 @@ const ProfileScreen: React.FC = () => {
 
         {/* Verification Status */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Verification Status</Text>
-          <View style={styles.verificationCard}>
-            <View style={styles.verificationItem}>
-              <View style={styles.verificationIcon}>
-                <Icon name="check-circle" size={24} color={colors.primary} />
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Verification Status</Text>
+            <TouchableOpacity
+              testID="manage-verification-button"
+              onPress={() => navigation.navigate('Verification', { screen: 'Dashboard' })}
+              style={styles.manageButton}
+            >
+              <Text style={styles.manageButtonText}>Manage</Text>
+              <Icon name="chevron-right" size={16} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            style={styles.verificationCard}
+            onPress={() => navigation.navigate('Verification', { screen: 'Dashboard' })}
+            activeOpacity={0.7}
+            accessibilityLabel="View verification details"
+            accessibilityRole="button"
+          >
+            {/* Verification Score */}
+            <View style={styles.verificationScoreContainer}>
+              <View style={styles.verificationScoreCircle}>
+                <Text style={styles.verificationScoreText}>{verificationScore}</Text>
+                <Text style={styles.verificationScoreLabel}>Score</Text>
               </View>
-              <View style={styles.verificationInfo}>
-                <Text style={styles.verificationTitle}>Identity Verified</Text>
-                <Text style={styles.verificationSubtitle}>Government ID confirmed</Text>
+              <View style={styles.verificationScoreInfo}>
+                <Text style={styles.verificationScoreTitle}>
+                  {verificationScore >= 85
+                    ? 'Fully Verified'
+                    : verificationScore >= 50
+                      ? 'Partially Verified'
+                      : 'Verification Needed'}
+                </Text>
+                <Text style={styles.verificationScoreSubtitle}>
+                  {verificationScore >= 85
+                    ? 'All verifications complete'
+                    : 'Complete more verifications to increase trust'}
+                </Text>
               </View>
-              <Icon name="check" size={20} color={colors.primary} />
             </View>
 
-            <View style={styles.verificationItem}>
-              <View style={styles.verificationIcon}>
-                <Icon name="check-circle" size={24} color={colors.primary} />
-              </View>
-              <View style={styles.verificationInfo}>
-                <Text style={styles.verificationTitle}>Background Check</Text>
-                <Text style={styles.verificationSubtitle}>Completed Jan 2025</Text>
-              </View>
-              <Icon name="check" size={20} color={colors.primary} />
-            </View>
+            <View style={styles.verificationDivider} />
 
+            {/* Phone Verification */}
             <View style={styles.verificationItem}>
-              <View style={styles.verificationIcon}>
-                <Icon name="check-circle" size={24} color={colors.primary} />
+              <View
+                style={[
+                  styles.verificationIcon,
+                  {
+                    backgroundColor: verificationStatus?.phone_verified
+                      ? `${colors.primary}15`
+                      : `${colors.warning}15`,
+                  },
+                ]}
+              >
+                <Icon
+                  name={verificationStatus?.phone_verified ? 'check-circle' : 'clock-outline'}
+                  size={24}
+                  color={verificationStatus?.phone_verified ? colors.primary : colors.warning}
+                />
               </View>
               <View style={styles.verificationInfo}>
                 <Text style={styles.verificationTitle}>Phone Verified</Text>
-                <Text style={styles.verificationSubtitle}>+1 (555) 123-4567</Text>
+                <Text style={styles.verificationSubtitle}>
+                  {verificationStatus?.phone_verified ? 'Verified' : 'Not verified'}
+                </Text>
               </View>
-              <Icon name="check" size={20} color={colors.primary} />
+              <Icon
+                name={verificationStatus?.phone_verified ? 'check' : 'chevron-right'}
+                size={20}
+                color={verificationStatus?.phone_verified ? colors.primary : colors.text.secondary}
+              />
             </View>
 
+            {/* Email Verification */}
             <View style={styles.verificationItem}>
-              <View style={styles.verificationIcon}>
-                <Icon name="check-circle" size={24} color={colors.primary} />
+              <View
+                style={[
+                  styles.verificationIcon,
+                  {
+                    backgroundColor: verificationStatus?.email_verified
+                      ? `${colors.primary}15`
+                      : `${colors.warning}15`,
+                  },
+                ]}
+              >
+                <Icon
+                  name={verificationStatus?.email_verified ? 'check-circle' : 'clock-outline'}
+                  size={24}
+                  color={verificationStatus?.email_verified ? colors.primary : colors.warning}
+                />
               </View>
               <View style={styles.verificationInfo}>
                 <Text style={styles.verificationTitle}>Email Verified</Text>
-                <Text style={styles.verificationSubtitle}>{user.email}</Text>
+                <Text style={styles.verificationSubtitle}>
+                  {verificationStatus?.email_verified ? user.email : 'Not verified'}
+                </Text>
               </View>
-              <Icon name="check" size={20} color={colors.primary} />
+              <Icon
+                name={verificationStatus?.email_verified ? 'check' : 'chevron-right'}
+                size={20}
+                color={verificationStatus?.email_verified ? colors.primary : colors.text.secondary}
+              />
             </View>
-          </View>
+
+            {/* ID Verification */}
+            <View style={styles.verificationItem}>
+              <View
+                style={[
+                  styles.verificationIcon,
+                  {
+                    backgroundColor:
+                      verificationStatus?.id_verification_status === 'approved'
+                        ? `${colors.primary}15`
+                        : verificationStatus?.id_verification_status === 'pending'
+                          ? `${colors.warning}15`
+                          : `${colors.text.secondary}15`,
+                  },
+                ]}
+              >
+                <Icon
+                  name={
+                    verificationStatus?.id_verification_status === 'approved'
+                      ? 'check-circle'
+                      : verificationStatus?.id_verification_status === 'pending'
+                        ? 'clock-outline'
+                        : 'card-account-details-outline'
+                  }
+                  size={24}
+                  color={
+                    verificationStatus?.id_verification_status === 'approved'
+                      ? colors.primary
+                      : verificationStatus?.id_verification_status === 'pending'
+                        ? colors.warning
+                        : colors.text.secondary
+                  }
+                />
+              </View>
+              <View style={styles.verificationInfo}>
+                <Text style={styles.verificationTitle}>Identity Verified</Text>
+                <Text style={styles.verificationSubtitle}>
+                  {verificationStatus?.id_verification_status === 'approved'
+                    ? 'Government ID confirmed'
+                    : verificationStatus?.id_verification_status === 'pending'
+                      ? 'Verification in progress'
+                      : 'Not started'}
+                </Text>
+              </View>
+              <Icon
+                name={
+                  verificationStatus?.id_verification_status === 'approved'
+                    ? 'check'
+                    : 'chevron-right'
+                }
+                size={20}
+                color={
+                  verificationStatus?.id_verification_status === 'approved'
+                    ? colors.primary
+                    : colors.text.secondary
+                }
+              />
+            </View>
+
+            {/* Background Check */}
+            <View style={[styles.verificationItem, { borderBottomWidth: 0 }]}>
+              <View
+                style={[
+                  styles.verificationIcon,
+                  {
+                    backgroundColor:
+                      verificationStatus?.background_check_status === 'approved'
+                        ? `${colors.primary}15`
+                        : verificationStatus?.background_check_status === 'pending'
+                          ? `${colors.warning}15`
+                          : `${colors.text.secondary}15`,
+                  },
+                ]}
+              >
+                <Icon
+                  name={
+                    verificationStatus?.background_check_status === 'approved'
+                      ? 'check-circle'
+                      : verificationStatus?.background_check_status === 'pending'
+                        ? 'clock-outline'
+                        : 'shield-account-outline'
+                  }
+                  size={24}
+                  color={
+                    verificationStatus?.background_check_status === 'approved'
+                      ? colors.primary
+                      : verificationStatus?.background_check_status === 'pending'
+                        ? colors.warning
+                        : colors.text.secondary
+                  }
+                />
+              </View>
+              <View style={styles.verificationInfo}>
+                <Text style={styles.verificationTitle}>Background Check</Text>
+                <Text style={styles.verificationSubtitle}>
+                  {verificationStatus?.background_check_status === 'approved'
+                    ? 'Cleared'
+                    : verificationStatus?.background_check_status === 'pending'
+                      ? 'In progress (24-48 hours)'
+                      : 'Not started'}
+                </Text>
+              </View>
+              <Icon
+                name={
+                  verificationStatus?.background_check_status === 'approved'
+                    ? 'check'
+                    : 'chevron-right'
+                }
+                size={20}
+                color={
+                  verificationStatus?.background_check_status === 'approved'
+                    ? colors.primary
+                    : colors.text.secondary
+                }
+              />
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Account Settings */}
@@ -448,10 +639,66 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     marginBottom: spacing.lg,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
   sectionTitle: {
     ...typography.h6,
     color: colors.text.primary,
+  },
+  manageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  manageButtonText: {
+    ...typography.body2,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  verificationScoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: spacing.md,
+  },
+  verificationScoreCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: `${colors.primary}15`,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  verificationScoreText: {
+    ...typography.h5,
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  verificationScoreLabel: {
+    ...typography.caption,
+    color: colors.primary,
+    fontSize: 10,
+  },
+  verificationScoreInfo: {
+    flex: 1,
+  },
+  verificationScoreTitle: {
+    ...typography.subtitle1,
+    color: colors.text.primary,
+    fontWeight: '600',
+    marginBottom: spacing.xxs,
+  },
+  verificationScoreSubtitle: {
+    ...typography.body2,
+    color: colors.text.secondary,
+  },
+  verificationDivider: {
+    height: 1,
+    backgroundColor: colors.border.light,
+    marginBottom: spacing.sm,
   },
   verificationCard: {
     backgroundColor: colors.surface,
@@ -468,6 +715,11 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border.light,
   },
   verificationIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: spacing.md,
   },
   verificationInfo: {

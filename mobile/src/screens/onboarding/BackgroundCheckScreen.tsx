@@ -11,7 +11,13 @@ const BackgroundCheckScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', padding: spacing.lg },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
   text: { ...typography.h4, color: colors.text.primary },
 });
 

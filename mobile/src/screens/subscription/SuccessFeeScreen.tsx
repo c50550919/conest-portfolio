@@ -92,7 +92,9 @@ const SuccessFeeScreen: React.FC<SuccessFeeScreenProps> = ({
             try {
               setPurchasing(true);
 
-              const result = await GooglePlayBillingService.purchaseProduct(PRODUCT_SKUS.SUCCESS_FEE);
+              const result = await GooglePlayBillingService.purchaseProduct(
+                PRODUCT_SKUS.SUCCESS_FEE,
+              );
 
               if (result.success) {
                 setPaymentComplete(true);
@@ -109,7 +111,10 @@ const SuccessFeeScreen: React.FC<SuccessFeeScreenProps> = ({
                   ]
                 );
               } else {
-                Alert.alert('Payment Failed', result.error || 'Unable to complete payment. Please try again.');
+                Alert.alert(
+                  'Payment Failed',
+                  result.error || 'Unable to complete payment. Please try again.',
+                );
               }
             } catch (error: any) {
               console.error('Payment error:', error);

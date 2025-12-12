@@ -186,8 +186,7 @@ const SignupScreen: React.FC = () => {
       // Navigate to phone verification
       navigation.navigate('PhoneVerification', { phone: phone.replace(/\D/g, '') });
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message || 'Signup failed. Please try again.';
+      const errorMessage = error.response?.data?.message || 'Signup failed. Please try again.';
 
       dispatch(setError(errorMessage));
       Alert.alert('Signup Error', errorMessage);
@@ -230,7 +229,7 @@ const SignupScreen: React.FC = () => {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>First Name</Text>
             <TextInput
-              style={[styles.input, validationErrors.firstName && styles.inputError]}
+              style={[styles.input, validationErrors.firstName ? styles.inputError : undefined]}
               placeholder="Enter your first name"
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={firstName}
@@ -252,7 +251,7 @@ const SignupScreen: React.FC = () => {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Last Name</Text>
             <TextInput
-              style={[styles.input, validationErrors.lastName && styles.inputError]}
+              style={[styles.input, validationErrors.lastName ? styles.inputError : undefined]}
               placeholder="Enter your last name"
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={lastName}
@@ -274,7 +273,7 @@ const SignupScreen: React.FC = () => {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Email</Text>
             <TextInput
-              style={[styles.input, validationErrors.email && styles.inputError]}
+              style={[styles.input, validationErrors.email ? styles.inputError : undefined]}
               placeholder="Enter your email"
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={email}
@@ -297,7 +296,7 @@ const SignupScreen: React.FC = () => {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Phone Number</Text>
             <TextInput
-              style={[styles.input, validationErrors.phone && styles.inputError]}
+              style={[styles.input, validationErrors.phone ? styles.inputError : undefined]}
               placeholder="(555) 123-4567"
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={phone}
@@ -319,7 +318,7 @@ const SignupScreen: React.FC = () => {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Password</Text>
             <TextInput
-              style={[styles.input, validationErrors.password && styles.inputError]}
+              style={[styles.input, validationErrors.password ? styles.inputError : undefined]}
               placeholder="Create a password"
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={password}
@@ -342,7 +341,10 @@ const SignupScreen: React.FC = () => {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Confirm Password</Text>
             <TextInput
-              style={[styles.input, validationErrors.confirmPassword && styles.inputError]}
+              style={[
+                styles.input,
+                validationErrors.confirmPassword ? styles.inputError : undefined,
+              ]}
               placeholder="Confirm your password"
               placeholderTextColor={theme.colors.onSurfaceVariant}
               value={confirmPassword}

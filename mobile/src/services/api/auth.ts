@@ -133,7 +133,10 @@ class AuthAPI {
         const originalRequest = error.config as any;
 
         // If 401 or 403 error and not already retrying
-        if ((error.response?.status === 401 || error.response?.status === 403) && !originalRequest._retry) {
+        if (
+          (error.response?.status === 401 || error.response?.status === 403) &&
+          !originalRequest._retry
+        ) {
           if (this.isRefreshing) {
             // Wait for token refresh to complete
             return new Promise((resolve) => {
@@ -165,9 +168,7 @@ class AuthAPI {
             await tokenStorage.saveTokens(data.tokens);
 
             // Notify all waiting requests
-            this.refreshSubscribers.forEach((callback) =>
-              callback(data.tokens.accessToken)
-            );
+            this.refreshSubscribers.forEach((callback) => callback(data.tokens.accessToken));
             this.refreshSubscribers = [];
 
             // Retry original request
@@ -284,10 +285,7 @@ class AuthAPI {
    * @returns Verification status
    */
   async verifyPhone(request: VerifyPhoneRequest): Promise<VerifyPhoneResponse> {
-    const response = await this.client.post<VerifyPhoneResponse>(
-      '/auth/verify-phone',
-      request
-    );
+    const response = await this.client.post<VerifyPhoneResponse>('/auth/verify-phone', request);
 
     return response.data;
   }

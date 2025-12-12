@@ -15,18 +15,8 @@
  */
 
 import React, { useState } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
-import {
-  GoogleSigninButton,
-  statusCodes,
-} from '@react-native-google-signin/google-signin';
+import { StyleSheet, View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { GoogleSigninButton, statusCodes } from '@react-native-google-signin/google-signin';
 import { signInWithGoogle } from '../../services/api/oauth';
 import type { AuthSuccessResponse } from '../../types/oauth';
 import { OAuthError } from '../../types/oauth';
@@ -55,7 +45,9 @@ const GoogleSignInButtonComponent: React.FC<GoogleSignInButtonProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   const handleGoogleSignIn = async () => {
-    if (disabled || loading) return;
+    if (disabled || loading) {
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -84,8 +76,7 @@ const GoogleSignInButtonComponent: React.FC<GoogleSignInButtonProps> = ({
           break;
 
         case 'network_error':
-          errorMessage =
-            'Network error. Please check your connection and try again.';
+          errorMessage = 'Network error. Please check your connection and try again.';
           break;
 
         case 'rate_limit_exceeded':
@@ -133,9 +124,7 @@ const GoogleSignInButtonComponent: React.FC<GoogleSignInButtonProps> = ({
               style={styles.googleButton}
               size={GoogleSigninButton.Size.Wide}
               color={
-                style === 'dark'
-                  ? GoogleSigninButton.Color.Dark
-                  : GoogleSigninButton.Color.Light
+                style === 'dark' ? GoogleSigninButton.Color.Dark : GoogleSigninButton.Color.Light
               }
               onPress={handleGoogleSignIn}
               disabled={disabled || loading}

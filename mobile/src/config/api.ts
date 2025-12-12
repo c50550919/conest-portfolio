@@ -31,6 +31,9 @@ const getApiBaseUrl = (): string => {
 
 const API_BASE_URL = getApiBaseUrl();
 
+// Export for components that need the base URL directly
+export const API_URL = API_BASE_URL;
+
 /**
  * Main API client instance
  */
@@ -49,10 +52,7 @@ apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     try {
       // Skip auth for login/register endpoints
-      if (
-        config.url?.includes('/auth/login') ||
-        config.url?.includes('/auth/register')
-      ) {
+      if (config.url?.includes('/auth/login') || config.url?.includes('/auth/register')) {
         return config;
       }
 
@@ -167,15 +167,10 @@ apiClient.interceptors.response.use(
 /**
  * Helper: Store JWT tokens in secure storage
  */
-export async function storeTokens(
-  accessToken: string,
-  refreshToken: string
-): Promise<void> {
-  await Keychain.setGenericPassword(
-    'user',
-    JSON.stringify({ accessToken, refreshToken }),
-    { service: 'auth' }
-  );
+export async function storeTokens(accessToken: string, refreshToken: string): Promise<void> {
+  await Keychain.setGenericPassword('user', JSON.stringify({ accessToken, refreshToken }), {
+    service: 'auth',
+  });
 }
 
 /**
@@ -191,7 +186,9 @@ export async function clearTokens(): Promise<void> {
 export async function hasValidTokens(): Promise<boolean> {
   try {
     const credentials = await Keychain.getGenericPassword({ service: 'auth' });
-    if (!credentials) return false;
+    if (!credentials) {
+      return false;
+    }
 
     const { accessToken, refreshToken } = JSON.parse(credentials.password);
     return Boolean(accessToken && refreshToken);

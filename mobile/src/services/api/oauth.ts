@@ -23,24 +23,17 @@ import { appleAuth } from '@invertase/react-native-apple-authentication';
 import { Platform } from 'react-native';
 import axios from 'axios';
 import tokenStorage from '../tokenStorage';
-import type {
-  GoogleAuthRequest,
-  AppleAuthRequest,
-  AuthSuccessResponse,
-} from '../../types/oauth';
+import type { GoogleAuthRequest, AppleAuthRequest, AuthSuccessResponse } from '../../types/oauth';
 import { OAuthError } from '../../types/oauth';
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_URL ||
-  'http://localhost:3000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
 /**
  * Google OAuth Configuration
  * WebClientId should match backend GOOGLE_CLIENT_ID
  */
 const GOOGLE_WEB_CLIENT_ID =
-  process.env.GOOGLE_WEB_CLIENT_ID ||
-  'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com';
+  process.env.GOOGLE_WEB_CLIENT_ID || 'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com';
 
 /**
  * Configure Google Sign In
@@ -49,10 +42,7 @@ const GOOGLE_WEB_CLIENT_ID =
 export const configureGoogleSignIn = () => {
   try {
     // Only configure if credentials are provided (not placeholder values)
-    if (
-      GOOGLE_WEB_CLIENT_ID &&
-      !GOOGLE_WEB_CLIENT_ID.includes('YOUR_GOOGLE_WEB_CLIENT_ID')
-    ) {
+    if (GOOGLE_WEB_CLIENT_ID && !GOOGLE_WEB_CLIENT_ID.includes('YOUR_GOOGLE_WEB_CLIENT_ID')) {
       GoogleSignin.configure({
         webClientId: GOOGLE_WEB_CLIENT_ID,
         offlineAccess: false,
@@ -106,7 +96,11 @@ export const signInWithGoogle = async (): Promise<AuthSuccessResponse> => {
 
     // Step 5: Store tokens securely
     if (response.data.success && response.data.tokens) {
-      await tokenStorage.setTokens(response.data.tokens);
+      await tokenStorage.setTokens({
+        accessToken: response.data.tokens.accessToken,
+        refreshToken: response.data.tokens.refreshToken,
+        userId: response.data.user.id,
+      });
     }
 
     // Step 6: Return user and metadata
@@ -114,11 +108,7 @@ export const signInWithGoogle = async (): Promise<AuthSuccessResponse> => {
   } catch (error: any) {
     // Handle Google Sign In cancellation
     if (error.code === 'SIGN_IN_CANCELLED') {
-      throw new OAuthError(
-        'user_cancelled',
-        'Google Sign In was cancelled',
-        400
-      );
+      throw new OAuthError('user_cancelled', 'Google Sign In was cancelled', 400);
     }
 
     // Handle network errors
@@ -138,19 +128,14 @@ export const signInWithGoogle = async (): Promise<AuthSuccessResponse> => {
       if (apiError.error === 'conflict') {
         throw new OAuthError(
           'account_conflict',
-          apiError.message ||
-            'This email is already associated with a different sign-in method',
+          apiError.message || 'This email is already associated with a different sign-in method',
           409
         );
       }
 
       // Unauthorized (401)
       if (apiError.error === 'unauthorized') {
-        throw new OAuthError(
-          'invalid_token',
-          'Google Sign In failed. Please try again.',
-          401
-        );
+        throw new OAuthError('invalid_token', 'Google Sign In failed. Please try again.', 401);
       }
 
       // Rate limiting (429)
@@ -188,11 +173,7 @@ export const signInWithGoogle = async (): Promise<AuthSuccessResponse> => {
 export const signInWithApple = async (): Promise<AuthSuccessResponse> => {
   // Step 1: Platform check (Apple Sign In is iOS-only)
   if (Platform.OS !== 'ios') {
-    throw new OAuthError(
-      'platform_not_supported',
-      'Apple Sign In is only available on iOS',
-      400
-    );
+    throw new OAuthError('platform_not_supported', 'Apple Sign In is only available on iOS', 400);
   }
 
   try {
@@ -212,11 +193,7 @@ export const signInWithApple = async (): Promise<AuthSuccessResponse> => {
     );
 
     if (credentialState !== appleAuth.State.AUTHORIZED) {
-      throw new OAuthError(
-        'apple_signin_failed',
-        'Apple Sign In authorization failed',
-        401
-      );
+      throw new OAuthError('apple_signin_failed', 'Apple Sign In authorization failed', 401);
     }
 
     // Step 5: Extract identity token
@@ -249,7 +226,11 @@ export const signInWithApple = async (): Promise<AuthSuccessResponse> => {
 
     // Step 7: Store tokens securely
     if (response.data.success && response.data.tokens) {
-      await tokenStorage.setTokens(response.data.tokens);
+      await tokenStorage.setTokens({
+        accessToken: response.data.tokens.accessToken,
+        refreshToken: response.data.tokens.refreshToken,
+        userId: response.data.user.id,
+      });
     }
 
     // Step 8: Return user and metadata
@@ -257,11 +238,7 @@ export const signInWithApple = async (): Promise<AuthSuccessResponse> => {
   } catch (error: any) {
     // Handle Apple Sign In cancellation
     if (error.code === '1001') {
-      throw new OAuthError(
-        'user_cancelled',
-        'Apple Sign In was cancelled',
-        400
-      );
+      throw new OAuthError('user_cancelled', 'Apple Sign In was cancelled', 400);
     }
 
     // Handle backend API errors
@@ -272,19 +249,14 @@ export const signInWithApple = async (): Promise<AuthSuccessResponse> => {
       if (apiError.error === 'conflict') {
         throw new OAuthError(
           'account_conflict',
-          apiError.message ||
-            'This email is already associated with a different sign-in method',
+          apiError.message || 'This email is already associated with a different sign-in method',
           409
         );
       }
 
       // Unauthorized (401)
       if (apiError.error === 'unauthorized') {
-        throw new OAuthError(
-          'invalid_token',
-          'Apple Sign In failed. Please try again.',
-          401
-        );
+        throw new OAuthError('invalid_token', 'Apple Sign In failed. Please try again.', 401);
       }
 
       // Rate limiting (429)
@@ -310,11 +282,7 @@ export const signInWithApple = async (): Promise<AuthSuccessResponse> => {
     }
 
     // Unknown error
-    throw new OAuthError(
-      'unknown_error',
-      'An unexpected error occurred during Apple Sign In',
-      500
-    );
+    throw new OAuthError('unknown_error', 'An unexpected error occurred during Apple Sign In', 500);
   }
 };
 
@@ -325,8 +293,7 @@ export const signInWithApple = async (): Promise<AuthSuccessResponse> => {
  * @returns 32-character random string
  */
 const generateNonce = (): string => {
-  const charset =
-    '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+  const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
   let result = '';
 
   // Generate 32 random characters

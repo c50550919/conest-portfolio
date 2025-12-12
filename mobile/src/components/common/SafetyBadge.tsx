@@ -10,12 +10,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors, spacing, borderRadius, typography } from '../../theme';
 
 export type VerificationStatus = 'verified' | 'partial' | 'unverified';
-export type VerificationType =
-  | 'id'
-  | 'background'
-  | 'phone'
-  | 'email'
-  | 'income';
+export type VerificationType = 'id' | 'background' | 'phone' | 'email' | 'income';
 
 interface SafetyBadgeProps {
   status: VerificationStatus;
@@ -90,9 +85,7 @@ const SafetyBadge: React.FC<SafetyBadgeProps> = ({
         <Icon name={getIconName()} size={getIconSize()} color="#FFFFFF" />
       </View>
       {showLabel && (
-        <Text style={[styles.label, size === 'small' && styles.labelSmall]}>
-          {getLabel()}
-        </Text>
+        <Text style={[styles.label, size === 'small' && styles.labelSmall]}>{getLabel()}</Text>
       )}
     </View>
   );

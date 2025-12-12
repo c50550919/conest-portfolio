@@ -30,14 +30,22 @@ const CompatibilityScore: React.FC<CompatibilityScoreProps> = ({
   const progress = (score / 100) * circumference;
 
   const getScoreColor = () => {
-    if (score >= 70) return colors.compatibility.high;
-    if (score >= 40) return colors.compatibility.medium;
+    if (score >= 70) {
+      return colors.compatibility.high;
+    }
+    if (score >= 40) {
+      return colors.compatibility.medium;
+    }
     return colors.compatibility.low;
   };
 
   const getScoreLabel = () => {
-    if (score >= 70) return 'Great Match';
-    if (score >= 40) return 'Good Match';
+    if (score >= 70) {
+      return 'Great Match';
+    }
+    if (score >= 40) {
+      return 'Good Match';
+    }
     return 'Fair Match';
   };
 
@@ -71,13 +79,9 @@ const CompatibilityScore: React.FC<CompatibilityScoreProps> = ({
         />
       </Svg>
       <View style={styles.scoreContainer}>
-        <Text style={[styles.scoreText, { color: scoreColor }]}>
-          {Math.round(score)}%
-        </Text>
+        <Text style={[styles.scoreText, { color: scoreColor }]}>{Math.round(score)}%</Text>
       </View>
-      {showLabel && (
-        <Text style={styles.label}>{getScoreLabel()}</Text>
-      )}
+      {showLabel && <Text style={styles.label}>{getScoreLabel()}</Text>}
     </View>
   );
 

@@ -48,9 +48,7 @@ class HouseholdAPI {
    * @returns Household info with members
    */
   async getHousehold(householdId: string): Promise<GetHouseholdResponse> {
-    const response = await apiClient.get<GetHouseholdResponse>(
-      `/api/households/${householdId}`
-    );
+    const response = await apiClient.get<GetHouseholdResponse>(`/api/households/${householdId}`);
     return response.data;
   }
 
@@ -94,9 +92,7 @@ class HouseholdAPI {
     householdId: string,
     userId: string
   ): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.delete(
-      `/api/households/${householdId}/members/${userId}`
-    );
+    const response = await apiClient.delete(`/api/households/${householdId}/members/${userId}`);
     return response.data;
   }
 
@@ -123,10 +119,7 @@ class HouseholdAPI {
   async createExpense(request: CreateExpenseRequest): Promise<Expense> {
     const { householdId, ...data } = request;
 
-    const response = await apiClient.post<Expense>(
-      `/api/households/${householdId}/expenses`,
-      data
-    );
+    const response = await apiClient.post<Expense>(`/api/households/${householdId}/expenses`, data);
     return response.data;
   }
 
@@ -159,9 +152,7 @@ class HouseholdAPI {
     householdId: string,
     expenseId: string
   ): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.delete(
-      `/api/households/${householdId}/expenses/${expenseId}`
-    );
+    const response = await apiClient.delete(`/api/households/${householdId}/expenses/${expenseId}`);
     return response.data;
   }
 
@@ -185,9 +176,7 @@ class HouseholdAPI {
    * @param request - Filter parameters
    * @returns Paginated transactions
    */
-  async getTransactions(
-    request: GetTransactionsRequest
-  ): Promise<GetTransactionsResponse> {
+  async getTransactions(request: GetTransactionsRequest): Promise<GetTransactionsResponse> {
     const { householdId, ...params } = request;
 
     const response = await apiClient.get<GetTransactionsResponse>(
@@ -257,10 +246,7 @@ class HouseholdAPI {
    * @param daysAhead - Number of days to look ahead (default 30)
    * @returns List of upcoming expenses
    */
-  async getUpcomingPayments(
-    householdId: string,
-    daysAhead: number = 30
-  ): Promise<Expense[]> {
+  async getUpcomingPayments(householdId: string, daysAhead: number = 30): Promise<Expense[]> {
     const response = await apiClient.get<Expense[]>(
       `/api/households/${householdId}/upcoming-payments`,
       { params: { daysAhead } }
@@ -274,10 +260,7 @@ class HouseholdAPI {
    * @param limit - Number of transactions to fetch
    * @returns Recent transactions
    */
-  async getRecentTransactions(
-    householdId: string,
-    limit: number = 10
-  ): Promise<Transaction[]> {
+  async getRecentTransactions(householdId: string, limit: number = 10): Promise<Transaction[]> {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -297,11 +280,7 @@ class HouseholdAPI {
    * @param notes - Optional payment notes
    * @returns Updated expense
    */
-  async markAsPaid(
-    householdId: string,
-    expenseId: string,
-    notes?: string
-  ): Promise<Expense> {
+  async markAsPaid(householdId: string, expenseId: string, notes?: string): Promise<Expense> {
     const response = await apiClient.post<Expense>(
       `/api/households/${householdId}/expenses/${expenseId}/mark-paid`,
       { notes }

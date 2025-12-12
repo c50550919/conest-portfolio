@@ -59,11 +59,7 @@ class ApiService {
     return response.data;
   }
 
-  async register(data: {
-    email: string;
-    password: string;
-    phone: string;
-  }) {
+  async register(data: { email: string; password: string; phone: string }) {
     const response = await this.client.post('/auth/register', data);
     return response.data;
   }
@@ -73,23 +69,60 @@ class ApiService {
     return response.data;
   }
 
-  // User/Parent endpoints
+  // Profile endpoints - matches backend /api/profiles routes
   async getUserProfile() {
-    const response = await this.client.get('/parents/profile');
+    const response = await this.client.get('/profiles/me');
     return response.data;
   }
 
-  async updateProfile(data: Record<string, any>) {
-    const response = await this.client.patch('/parents/profile', data);
+  async createProfile(data: {
+    first_name: string;
+    last_name: string;
+    date_of_birth: string;
+    city: string;
+    state: string;
+    zip_code: string;
+    bio?: string;
+    occupation?: string;
+    budget_min?: number;
+    budget_max?: number;
+    number_of_children?: number;
+    ages_of_children?: string;
+    schedule_type?: 'flexible' | 'fixed' | 'shift_work';
+    work_from_home?: boolean;
+  }) {
+    const response = await this.client.post('/profiles', data);
+    return response.data;
+  }
+
+  async updateProfile(data: Record<string, unknown>) {
+    const response = await this.client.put('/profiles/me', data);
     return response.data;
   }
 
   async uploadProfilePhoto(formData: FormData) {
-    const response = await this.client.post('/parents/profile/photo', formData, {
+    const response = await this.client.post('/profiles/photo', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 30000, // Extended timeout for file uploads
     });
+    return response.data;
+  }
+
+  async deleteProfile() {
+    const response = await this.client.delete('/profiles/me');
+    return response.data;
+  }
+
+  async searchProfiles(filters: {
+    city?: string;
+    state?: string;
+    budgetMin?: number;
+    budgetMax?: number;
+    verified?: boolean;
+  }) {
+    const response = await this.client.get('/profiles/search', { params: filters });
     return response.data;
   }
 
@@ -152,6 +185,17 @@ class ApiService {
 
   async updateHousehold(data: Record<string, any>) {
     const response = await this.client.patch('/household', data);
+    return response.data;
+  }
+
+  // Moderation endpoints
+  async getModerationStatus() {
+    const response = await this.client.get('/profile/moderation-status');
+    return response.data;
+  }
+
+  async checkSuspension() {
+    const response = await this.client.get('/auth/check-suspension');
     return response.data;
   }
 }

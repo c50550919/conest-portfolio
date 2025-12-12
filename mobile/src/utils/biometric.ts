@@ -160,9 +160,7 @@ export async function enableBiometric(): Promise<boolean> {
 /**
  * Verify biometric before sensitive operation
  */
-export async function verifyBiometricForOperation(
-  operationName: string
-): Promise<boolean> {
+export async function verifyBiometricForOperation(operationName: string): Promise<boolean> {
   const result = await authenticateWithBiometric({
     promptMessage: `Use biometric to ${operationName}`,
   });

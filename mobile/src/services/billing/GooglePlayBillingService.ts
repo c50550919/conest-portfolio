@@ -181,11 +181,9 @@ class GooglePlayBillingService {
     );
 
     // Purchase error listener
-    this.purchaseErrorSubscription = purchaseErrorListener(
-      (error: PurchaseError) => {
-        console.error('Purchase error:', error);
-      }
-    );
+    this.purchaseErrorSubscription = purchaseErrorListener((error: PurchaseError) => {
+      console.error('Purchase error:', error);
+    });
   }
 
   /**
@@ -201,7 +199,7 @@ class GooglePlayBillingService {
       const products = await getProducts({ skus: [PRODUCT_SKUS.SUCCESS_FEE] });
       console.log('Available products:', products);
 
-      return products.map(product => ({
+      return products.map((product) => ({
         productId: product.productId,
         title: product.title,
         description: product.description,
@@ -228,7 +226,7 @@ class GooglePlayBillingService {
       const subscriptions = await getSubscriptions({ skus: [PRODUCT_SKUS.PREMIUM_MONTHLY] });
       console.log('Available subscriptions:', subscriptions);
 
-      return subscriptions.map(subscription => ({
+      return subscriptions.map((subscription) => ({
         productId: subscription.productId,
         title: subscription.title,
         description: subscription.description,

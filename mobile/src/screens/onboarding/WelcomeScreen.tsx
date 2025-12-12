@@ -12,10 +12,7 @@ import { OnboardingStackParamList } from '../../navigation/OnboardingNavigator';
 import { colors, spacing, typography } from '../../theme';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-type WelcomeScreenNavigationProp = StackNavigationProp<
-  OnboardingStackParamList,
-  'Welcome'
->;
+type WelcomeScreenNavigationProp = StackNavigationProp<OnboardingStackParamList, 'Welcome'>;
 
 interface Props {
   navigation: WelcomeScreenNavigationProp;
@@ -28,9 +25,7 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
         <Icon name="home-heart" size={80} color={colors.primary} />
 
         <Text style={styles.title}>Welcome to CoNest</Text>
-        <Text style={styles.subtitle}>
-          Safe, verified housing for single parents
-        </Text>
+        <Text style={styles.subtitle}>Safe, verified housing for single parents</Text>
 
         <View style={styles.featuresContainer}>
           <View style={styles.feature}>
@@ -62,7 +57,7 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.footer}>
         <Button
           mode="contained"
-          onPress={() => navigation.navigate('PhoneVerification')}
+          onPress={() => navigation.navigate('PhoneVerification', {})}
           style={styles.button}
           contentStyle={styles.buttonContent}
           testID="get-started-button"

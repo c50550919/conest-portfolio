@@ -104,7 +104,7 @@ export const PREMIUM_PRICING = {
     {
       icon: 'eye',
       title: 'See Who Likes You',
-      description: 'Know who\'s interested before you swipe',
+      description: "Know who's interested before you swipe",
     },
     {
       icon: 'check-double',
@@ -185,14 +185,8 @@ export const PRICING_TIERS = [
     price: 0,
     displayPrice: 'Free',
     description: 'Explore profiles in your area',
-    features: [
-      'View profiles',
-      'See compatibility scores',
-    ],
-    restrictions: [
-      'No swiping',
-      'No messaging',
-    ],
+    features: ['View profiles', 'See compatibility scores'],
+    restrictions: ['No swiping', 'No messaging'],
     buttonText: 'Continue Browsing',
     buttonStyle: 'outline' as const,
   },
@@ -255,7 +249,7 @@ export const PricingHelpers = {
     percentage: number;
     display: string;
   } {
-    const regular = VERIFICATION_PRICING.amount + (PREMIUM_PRICING.monthlyAmount * 6);
+    const regular = VERIFICATION_PRICING.amount + PREMIUM_PRICING.monthlyAmount * 6;
     const bundle = BUNDLE_PRICING.amount;
     const savings = regular - bundle;
     const percentage = Math.round((savings / regular) * 100);
@@ -271,7 +265,7 @@ export const PricingHelpers = {
    * Get pricing tier by ID
    */
   getTier(tierId: 'browse' | 'verified' | 'premium' | 'bundle') {
-    return PRICING_TIERS.find(tier => tier.id === tierId);
+    return PRICING_TIERS.find((tier) => tier.id === tierId);
   },
 
   /**

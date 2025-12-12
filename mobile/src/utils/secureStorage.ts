@@ -131,9 +131,7 @@ export async function removeSecureItem(key: string): Promise<void> {
  */
 export async function setSecureItems(items: Array<[string, string]>): Promise<void> {
   try {
-    await Promise.all(
-      items.map(([key, value]) => setSecureItem(key, value))
-    );
+    await Promise.all(items.map(([key, value]) => setSecureItem(key, value)));
   } catch (error) {
     console.error('[SecureStorage] Error storing secure items:', error);
     throw error;
@@ -162,7 +160,7 @@ export async function getSecureItems(keys: string[]): Promise<Array<[string, str
     return results;
   } catch (error) {
     console.error('[SecureStorage] Error retrieving secure items:', error);
-    return keys.map(key => [key, null]);
+    return keys.map((key) => [key, null]);
   }
 }
 
@@ -184,20 +182,14 @@ export async function clearSecureStorage(): Promise<void> {
     // specific keys to clear, or use removeSecureItem() for individual items.
 
     // For now, we'll clear common secure items
-    const commonKeys = [
-      'auth_token',
-      'refresh_token',
-      'user_data',
-      'device_id',
-      'encryption_key',
-    ];
+    const commonKeys = ['auth_token', 'refresh_token', 'user_data', 'device_id', 'encryption_key'];
 
     await Promise.all(
-      commonKeys.map(key =>
+      commonKeys.map((key) =>
         removeSecureItem(key).catch(() => {
           // Ignore errors for non-existent keys
         })
-      )
+      ),
     );
   } catch (error) {
     console.error('[SecureStorage] Error clearing secure storage:', error);

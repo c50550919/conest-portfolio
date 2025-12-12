@@ -7,12 +7,12 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import HomeScreen from '../screens/main/HomeScreen';
+import HomeNavigator from './HomeNavigator';
 import { BrowseDiscoveryScreen } from '../screens/main/BrowseDiscoveryScreen';
 import SavedProfilesScreen from '../screens/main/SavedProfilesScreen';
-import MessagesScreen from '../screens/main/MessagesScreen';
+import MessagesNavigator from './MessagesNavigator';
 import HouseholdScreen from '../screens/main/HouseholdScreen';
-import ProfileScreen from '../screens/main/ProfileScreen';
+import ProfileNavigator from './ProfileNavigator';
 
 import { theme } from '../theme';
 
@@ -51,13 +51,11 @@ const MainNavigator: React.FC = () => {
     >
       <Tab.Screen
         name="Home"
-        component={HomeScreen}
+        component={HomeNavigator}
         options={{
           tabBarTestID: 'tab-home',
           tabBarAccessibilityLabel: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="home" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Icon name="home" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -66,9 +64,7 @@ const MainNavigator: React.FC = () => {
         options={{
           tabBarTestID: 'tab-discover',
           tabBarAccessibilityLabel: 'Discover',
-          tabBarIcon: ({ color, size}) => (
-            <Icon name="home-search" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Icon name="home-search" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -84,13 +80,11 @@ const MainNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="Messages"
-        component={MessagesScreen}
+        component={MessagesNavigator}
         options={{
           tabBarTestID: 'tab-messages',
           tabBarAccessibilityLabel: 'Messages',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="message-text" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Icon name="message-text" size={size} color={color} />,
           tabBarBadge: undefined, // Will be dynamic based on unread count
         }}
       />
@@ -100,20 +94,16 @@ const MainNavigator: React.FC = () => {
         options={{
           tabBarTestID: 'tab-household',
           tabBarAccessibilityLabel: 'Household',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="home-group" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Icon name="home-group" size={size} color={color} />,
         }}
       />
       <Tab.Screen
         name="Profile"
-        component={ProfileScreen}
+        component={ProfileNavigator}
         options={{
           tabBarTestID: 'tab-profile',
           tabBarAccessibilityLabel: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <Icon name="account-circle" size={size} color={color} />
-          ),
+          tabBarIcon: ({ color, size }) => <Icon name="account-circle" size={size} color={color} />,
         }}
       />
     </Tab.Navigator>

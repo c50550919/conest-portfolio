@@ -110,24 +110,25 @@ const SubscriptionScreen: React.FC = () => {
     try {
       setPurchasing(true);
 
-      const result = await GooglePlayBillingService.purchaseSubscription(PRODUCT_SKUS.PREMIUM_MONTHLY);
+      const result = await GooglePlayBillingService.purchaseSubscription(
+        PRODUCT_SKUS.PREMIUM_MONTHLY,
+      );
 
       if (result.success) {
-        Alert.alert(
-          'Success!',
-          'Your subscription is now active. Enjoy premium features!',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                // Refresh subscription status
-                initializeBilling();
-              },
+        Alert.alert('Success!', 'Your subscription is now active. Enjoy premium features!', [
+          {
+            text: 'OK',
+            onPress: () => {
+              // Refresh subscription status
+              initializeBilling();
             },
-          ]
-        );
+          },
+        ]);
       } else {
-        Alert.alert('Purchase Failed', result.error || 'Unable to complete purchase. Please try again.');
+        Alert.alert(
+          'Purchase Failed',
+          result.error || 'Unable to complete purchase. Please try again.',
+        );
       }
     } catch (error: any) {
       console.error('Subscription error:', error);

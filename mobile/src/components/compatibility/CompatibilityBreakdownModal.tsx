@@ -90,7 +90,7 @@ export default function CompatibilityBreakdownModal({
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) => {
         // Only enable pull-to-close at the top of scroll
-        return gestureState.dy > 10 && scrollY._value === 0;
+        return gestureState.dy > 10 && (scrollY as any)._value === 0;
       },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
@@ -126,17 +126,29 @@ export default function CompatibilityBreakdownModal({
 
   // Get color based on score
   const getScoreColor = (score: number): string => {
-    if (score >= 80) return '#4CAF50'; // Green
-    if (score >= 60) return '#FFC107'; // Yellow
-    if (score >= 40) return '#FF9800'; // Orange
+    if (score >= 80) {
+      return '#4CAF50';
+    } // Green
+    if (score >= 60) {
+      return '#FFC107';
+    } // Yellow
+    if (score >= 40) {
+      return '#FF9800';
+    } // Orange
     return '#F44336'; // Red
   };
 
   // Get score label
   const getScoreLabel = (score: number): string => {
-    if (score >= 80) return 'Excellent';
-    if (score >= 60) return 'Good';
-    if (score >= 40) return 'Fair';
+    if (score >= 80) {
+      return 'Excellent';
+    }
+    if (score >= 60) {
+      return 'Good';
+    }
+    if (score >= 40) {
+      return 'Fair';
+    }
     return 'Poor';
   };
 
@@ -203,12 +215,7 @@ export default function CompatibilityBreakdownModal({
       statusBarTranslucent
     >
       <View style={styles.modalOverlay}>
-        <Animated.View
-          style={[
-            styles.modalContainer,
-            { transform: [{ translateY: slideAnim }] },
-          ]}
-        >
+        <Animated.View style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
           {/* Header with gradient */}
           <LinearGradient
             colors={['#6A11CB', '#2575FC']}
@@ -239,9 +246,7 @@ export default function CompatibilityBreakdownModal({
 
               {/* Overall score */}
               <View style={styles.overallScoreContainer}>
-                <Text style={styles.overallScoreValue}>
-                  {breakdown.overallScore}%
-                </Text>
+                <Text style={styles.overallScoreValue}>{breakdown.overallScore}%</Text>
                 <Text style={styles.overallScoreLabel}>{overallLabel} Match</Text>
               </View>
             </View>
@@ -252,28 +257,23 @@ export default function CompatibilityBreakdownModal({
             testID="dimensions-scroll"
             style={styles.dimensionsScroll}
             showsVerticalScrollIndicator={false}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: false }
-            )}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+              useNativeDriver: false,
+            })}
             scrollEventThrottle={16}
           >
             {/* Dimensions explanation */}
             <View style={styles.explanationContainer}>
-              <Text style={styles.explanationTitle}>
-                How we calculate compatibility:
-              </Text>
+              <Text style={styles.explanationTitle}>How we calculate compatibility:</Text>
               <Text style={styles.explanationBody}>
-                We analyze 6 key dimensions of compatibility, each weighted based on
-                importance for successful co-living. Scores are calculated by comparing
-                your responses across multiple factors.
+                We analyze 6 key dimensions of compatibility, each weighted based on importance for
+                successful co-living. Scores are calculated by comparing your responses across
+                multiple factors.
               </Text>
             </View>
 
             {/* Dimension cards */}
-            {breakdown.dimensions.map((dimension, index) =>
-              renderDimensionCard(dimension, index)
-            )}
+            {breakdown.dimensions.map((dimension, index) => renderDimensionCard(dimension, index))}
 
             {/* Footer info */}
             <View style={styles.footerInfo}>

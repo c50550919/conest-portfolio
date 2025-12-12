@@ -39,14 +39,24 @@ export const formatRelativeTime = (date: string | Date): string => {
   const diffHour = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHour / 24);
 
-  if (diffSec < 60) return 'just now';
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHour < 24) return `${diffHour}h ago`;
-  if (diffDay < 7) return `${diffDay}d ago`;
+  if (diffSec < 60) {
+    return 'just now';
+  }
+  if (diffMin < 60) {
+    return `${diffMin}m ago`;
+  }
+  if (diffHour < 24) {
+    return `${diffHour}h ago`;
+  }
+  if (diffDay < 7) {
+    return `${diffDay}d ago`;
+  }
   return formatDate(d);
 };
 
 export const truncateText = (text: string, maxLength: number): string => {
-  if (text.length <= maxLength) return text;
+  if (text.length <= maxLength) {
+    return text;
+  }
   return `${text.substring(0, maxLength)}...`;
 };

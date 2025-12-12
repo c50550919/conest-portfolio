@@ -46,14 +46,10 @@ class TokenStorageService {
       const tokenData = JSON.stringify(tokens);
       console.log('[TokenStorage] Stringified token data length:', tokenData.length);
 
-      await Keychain.setGenericPassword(
-        this.USERNAME,
-        tokenData,
-        {
-          service: this.SERVICE_NAME,
-          accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-        }
-      );
+      await Keychain.setGenericPassword(this.USERNAME, tokenData, {
+        service: this.SERVICE_NAME,
+        accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+      });
 
       console.log('[TokenStorage] Tokens saved successfully to KeyChain');
 
@@ -85,9 +81,9 @@ class TokenStorageService {
 
       console.log('[TokenStorage] KeyChain result:', {
         found: !!credentials,
-        hasUsername: !!credentials?.username,
-        hasPassword: !!credentials?.password,
-        passwordLength: credentials?.password?.length,
+        hasUsername: credentials && 'username' in credentials ? !!credentials.username : false,
+        hasPassword: credentials && 'password' in credentials ? !!credentials.password : false,
+        passwordLength: credentials && 'password' in credentials ? credentials.password?.length : 0,
       });
 
       if (!credentials) {
@@ -167,6 +163,15 @@ class TokenStorageService {
   async getUserId(): Promise<string | null> {
     const tokens = await this.getTokens();
     return tokens?.userId || null;
+  }
+
+  /**
+   * Alias for saveTokens (for backwards compatibility)
+   * @param tokens - Access and refresh tokens with user ID
+   * @returns Success status
+   */
+  async setTokens(tokens: AuthTokens): Promise<boolean> {
+    return this.saveTokens(tokens);
   }
 }
 

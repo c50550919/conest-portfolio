@@ -184,7 +184,12 @@ export interface PaymentIntent {
   userId: string;
   amount: number;
   currency: 'USD';
-  status: 'requires_payment_method' | 'requires_confirmation' | 'processing' | 'succeeded' | 'canceled';
+  status:
+    | 'requires_payment_method'
+    | 'requires_confirmation'
+    | 'processing'
+    | 'succeeded'
+    | 'canceled';
   clientSecret: string; // For Stripe SDK
   createdAt: string;
 }

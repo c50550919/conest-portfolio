@@ -22,6 +22,8 @@ export interface VerificationStatus {
   idVerified: boolean;
   backgroundCheckComplete: boolean;
   phoneVerified: boolean;
+  emailVerified?: boolean;
+  incomeVerified?: boolean;
 }
 
 export interface HousingPreferences {
@@ -30,19 +32,26 @@ export interface HousingPreferences {
   petFriendly: boolean;
   smokeFree: boolean;
   accessibility?: 'wheelchair' | 'visual' | 'hearing' | 'none';
+  bedroomCount?: number;
+  bathroomCount?: number;
 }
 
 export interface ScheduleInfo {
-  workSchedule: 'flexible' | 'standard' | 'shift' | 'remote';
+  workSchedule: 'flexible' | 'standard' | 'shift' | 'remote' | 'evening';
   typicalWorkHours?: string; // "9am-5pm"
   weekendAvailability: boolean;
+  flexibility?: 'low' | 'medium' | 'moderate' | 'high';
 }
 
 export interface ParentingInfo {
-  parentingPhilosophy: string[]; // Tags: "gentle-parenting", "structured", "attachment"
-  disciplineStyle: string[]; // Tags: "timeout", "natural-consequences", "reward-based"
-  educationPriorities: string[]; // Tags: "academics", "arts", "sports", "social"
-  screenTimeApproach: 'limited' | 'moderate' | 'flexible';
+  parentingPhilosophy?: string[]; // Tags: "gentle-parenting", "structured", "attachment"
+  disciplineStyle?: string[]; // Tags: "timeout", "natural-consequences", "reward-based"
+  educationPriorities?: string[]; // Tags: "academics", "arts", "sports", "social"
+  screenTimeApproach?: 'limited' | 'moderate' | 'flexible';
+  // Alternative single-value format used by some components
+  philosophy?: string;
+  experience?: string;
+  supportNeeds?: string[];
 }
 
 /**
@@ -61,12 +70,26 @@ export interface ExtendedProfileCard {
   additionalPhotos?: string[]; // Up to 5 total
 
   // Location & Distance
-  distanceMeters: number;
+  distanceMeters?: number;
   zipCode?: string; // For filtering, not display
+  location?: {
+    city: string;
+    state: string;
+    zipCode?: string;
+    latitude?: number;
+    longitude?: number;
+  };
 
   // Children Info (NO PII - Constitution Principle I)
   childrenCount: number;
-  childrenAgeGroups: ('infant' | 'toddler' | 'elementary' | 'teen')[];
+  childrenAgeGroups: (
+    | 'infant'
+    | 'toddler'
+    | 'elementary'
+    | 'middle-school'
+    | 'high-school'
+    | 'teen'
+  )[];
 
   // Verification
   verificationStatus: VerificationStatus;
@@ -84,8 +107,9 @@ export interface ExtendedProfileCard {
 
   // Housing Details
   budget: number; // Monthly rent budget
+  housingBudget?: { min: number; max: number }; // Budget range alternative
   moveInDate: string; // ISO date
-  desiredLeaseTerm: number; // months
+  desiredLeaseTerm?: number; // months
   housingPreferences: HousingPreferences;
 
   // Schedule & Availability
@@ -93,21 +117,21 @@ export interface ExtendedProfileCard {
 
   // Parenting & Lifestyle
   parenting: ParentingInfo;
-  personalityTraits: string[]; // Tags: "introverted", "organized", "spontaneous"
-  interests: string[]; // Tags: "cooking", "hiking", "reading"
+  personalityTraits?: string[]; // Tags: "introverted", "organized", "spontaneous"
+  interests?: string[]; // Tags: "cooking", "hiking", "reading"
 
   // About
   bio: string;
-  lookingFor: string; // What they're seeking in a housing partner
+  lookingFor?: string; // What they're seeking in a housing partner
   dealBreakers?: string[]; // Optional transparency
 
   // References (visible after connection request)
-  hasReferences: boolean;
+  hasReferences?: boolean;
   referenceCount?: number;
 
   // Activity
-  lastActive: string; // ISO timestamp
-  joinedDate: string; // ISO timestamp
+  lastActive?: string; // ISO timestamp
+  joinedDate?: string; // ISO timestamp
   responseRate?: number; // 0-100, if they've had conversations
 }
 
@@ -135,21 +159,30 @@ export interface DiscoveryFilters {
   budgetMax?: number;
 
   // Children
-  childrenAgeGroups?: ('infant' | 'toddler' | 'elementary' | 'teen')[];
+  childrenAgeGroups?: (
+    | 'infant'
+    | 'toddler'
+    | 'elementary'
+    | 'middle-school'
+    | 'high-school'
+    | 'teen'
+  )[];
   childrenCountMin?: number;
   childrenCountMax?: number;
 
   // Move-in Timeline
   moveInDateStart?: string; // ISO date
   moveInDateEnd?: string; // ISO date
+  moveInDateDays?: number; // Days from now (alternative to date range)
 
   // Housing Type
   housingTypes?: ('apartment' | 'house' | 'townhouse' | 'either')[];
+  housingType?: 'apartment' | 'house' | 'townhouse' | 'either'; // Single selection variant
   petFriendly?: boolean;
   smokeFree?: boolean;
 
   // Schedule
-  workSchedules?: ('flexible' | 'standard' | 'shift' | 'remote')[];
+  workSchedules?: ('flexible' | 'standard' | 'shift' | 'remote' | 'evening')[];
 
   // Parenting
   parentingPhilosophy?: string[];

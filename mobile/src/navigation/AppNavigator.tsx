@@ -21,8 +21,40 @@ import AuthNavigator from './AuthNavigator';
 import OnboardingNavigator from './OnboardingNavigator';
 import MainNavigator from './MainNavigator';
 import { theme } from '../theme';
+
+// Deep linking configuration for verification flows
+const linking = {
+  prefixes: ['conest://', 'safenest://', 'https://conest.app', 'https://safenest.app'],
+  config: {
+    screens: {
+      Main: {
+        screens: {
+          Profile: {
+            screens: {
+              Verification: {
+                screens: {
+                  EmailVerification: 'verify-email/:token',
+                  Dashboard: 'verification',
+                  PhoneVerification: 'verify-phone',
+                  IDVerification: 'verify-id',
+                  BackgroundCheck: 'background-check',
+                  IncomeVerification: 'income-verification',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+};
 import tokenStorage from '../services/tokenStorage';
 import { loginSuccess } from '../store/slices/authSlice';
+import socketService from '../services/socket';
+import {
+  initializeMessagingSocket,
+  cleanupMessagingSocket,
+} from '../services/messaging/socketIntegration';
 
 // Navigation reference for programmatic navigation (including E2E tests)
 export const navigationRef = createNavigationContainerRef();
@@ -37,11 +69,8 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator: React.FC = () => {
   const dispatch = useDispatch();
-  const { isAuthenticated, isOnboardingComplete } = useSelector(
-    (state: RootState) => state.auth
-  );
+  const { isAuthenticated, isOnboardingComplete } = useSelector((state: RootState) => state.auth);
   const [isLoading, setIsLoading] = useState(true);
-
 
   /**
    * Check for existing auth tokens on app launch
@@ -80,6 +109,42 @@ const AppNavigator: React.FC = () => {
     checkAuth();
   }, [dispatch]);
 
+  /**
+   * Initialize Socket.io and messaging integration when authenticated
+   * Cleanup when user logs out
+   */
+  useEffect(() => {
+    const initializeSocket = async () => {
+      if (isAuthenticated && isOnboardingComplete) {
+        console.log('[AppNavigator] Initializing Socket.io and messaging integration...');
+        try {
+          // Connect to Socket.io server
+          await socketService.connect();
+
+          // Initialize messaging socket event listeners
+          initializeMessagingSocket();
+
+          console.log('[AppNavigator] Socket.io and messaging integration initialized');
+        } catch (error) {
+          console.error('[AppNavigator] Failed to initialize socket:', error);
+        }
+      } else {
+        // User logged out or onboarding incomplete, cleanup socket connections
+        console.log('[AppNavigator] Cleaning up Socket.io and messaging integration...');
+        cleanupMessagingSocket();
+        socketService.disconnect();
+      }
+    };
+
+    initializeSocket();
+
+    // Cleanup on unmount
+    return () => {
+      cleanupMessagingSocket();
+      socketService.disconnect();
+    };
+  }, [isAuthenticated, isOnboardingComplete]);
+
   // Expose navigation for E2E tests (test builds only)
   useEffect(() => {
     if (__DEV__) {
@@ -101,6 +166,7 @@ const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer
       ref={navigationRef}
+      linking={linking}
       theme={{
         dark: false,
         colors: {

@@ -41,11 +41,7 @@ const ParentCard: React.FC<ParentCardProps> = ({
   onCardPress,
 }) => {
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={onCardPress}
-      activeOpacity={0.9}
-    >
+    <TouchableOpacity style={styles.card} onPress={onCardPress} activeOpacity={0.9}>
       <View style={styles.header}>
         {/* Profile Photo */}
         <View style={styles.photoContainer}>
@@ -94,28 +90,18 @@ const ParentCard: React.FC<ParentCardProps> = ({
 
       {/* Verification Badges */}
       <View style={styles.badgesContainer}>
-        {isVerified && (
-          <SafetyBadge status="verified" type="id" size="small" />
-        )}
-        {hasBackgroundCheck && (
-          <SafetyBadge status="verified" type="background" size="small" />
-        )}
+        {isVerified && <SafetyBadge status="verified" type="id" size="small" />}
+        {hasBackgroundCheck && <SafetyBadge status="verified" type="background" size="small" />}
       </View>
 
       {/* Action Buttons */}
       <View style={styles.actionsContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.viewButton]}
-          onPress={onViewPress}
-        >
+        <TouchableOpacity style={[styles.button, styles.viewButton]} onPress={onViewPress}>
           <Icon name="eye" size={20} color={colors.primary} />
           <Text style={styles.viewButtonText}>View Profile</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, styles.messageButton]}
-          onPress={onMessagePress}
-        >
+        <TouchableOpacity style={[styles.button, styles.messageButton]} onPress={onMessagePress}>
           <Icon name="message" size={20} color={colors.surface} />
           <Text style={styles.messageButtonText}>Message</Text>
         </TouchableOpacity>

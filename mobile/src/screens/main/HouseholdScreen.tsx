@@ -35,14 +35,9 @@ import { Member, Expense } from '../../types/household';
 
 const HouseholdScreen: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const {
-    household,
-    members,
-    expenses,
-    recentTransactions,
-    loading,
-    error,
-  } = useSelector((state: RootState) => state.household);
+  const { household, members, expenses, recentTransactions, loading, error } = useSelector(
+    (state: RootState) => state.household,
+  );
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -74,7 +69,9 @@ const HouseholdScreen: React.FC = () => {
   }, []);
 
   const handleSplitRent = async () => {
-    if (!household) return;
+    if (!household) {
+      return;
+    }
 
     Alert.alert(
       'Split Rent',
@@ -143,9 +140,7 @@ const HouseholdScreen: React.FC = () => {
         <View style={styles.centerContainer} testID="empty-household-state">
           <Icon name="home-alert" size={64} color={colors.text.secondary} />
           <Text style={styles.emptyTitle}>No Household Found</Text>
-          <Text style={styles.emptySubtitle}>
-            You're not currently part of a household.
-          </Text>
+          <Text style={styles.emptySubtitle}>You're not currently part of a household.</Text>
           <TouchableOpacity style={styles.primaryButton} testID="find-roommates-button">
             <Text style={styles.primaryButtonText}>Find Roommates</Text>
           </TouchableOpacity>
@@ -198,7 +193,11 @@ const HouseholdScreen: React.FC = () => {
             </View>
             <Text style={styles.actionText}>Documents</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} testID="split-rent-button" onPress={handleSplitRent}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            testID="split-rent-button"
+            onPress={handleSplitRent}
+          >
             <View style={[styles.actionIcon, { backgroundColor: colors.tertiary + '20' }]}>
               <Icon name="cash-multiple" size={20} color={colors.tertiary} />
             </View>
@@ -224,13 +223,12 @@ const HouseholdScreen: React.FC = () => {
             const avatarColor = avatarColors[index % avatarColors.length];
 
             // Child safety: Show only count and age groups, NO names or ages
-            const childrenInfo = member.childrenCount > 0
-              ? `${member.childrenCount} ${member.childrenCount === 1 ? 'child' : 'children'}${
-                  member.childrenAgeGroups
-                    ? ` (${member.childrenAgeGroups.join(', ')})`
-                    : ''
-                }`
-              : 'No children';
+            const childrenInfo =
+              member.childrenCount > 0
+                ? `${member.childrenCount} ${member.childrenCount === 1 ? 'child' : 'children'}${
+                    member.childrenAgeGroups ? ` (${member.childrenAgeGroups.join(', ')})` : ''
+                  }`
+                : 'No children';
 
             const roleText = member.role === 'lease-holder' ? 'Lease holder' : 'Co-tenant';
             const joinDate = formatDate(member.joinedAt);
@@ -305,17 +303,17 @@ const HouseholdScreen: React.FC = () => {
                 expense.status === 'paid'
                   ? colors.primary
                   : expense.status === 'overdue'
-                  ? colors.error
-                  : colors.tertiary;
+                    ? colors.error
+                    : colors.tertiary;
 
               const statusText =
                 expense.status === 'paid'
                   ? 'All Paid'
                   : expense.status === 'partial'
-                  ? 'Partial'
-                  : expense.status === 'overdue'
-                  ? 'Overdue'
-                  : 'Pending';
+                    ? 'Partial'
+                    : expense.status === 'overdue'
+                      ? 'Overdue'
+                      : 'Pending';
 
               const currentUserSplit = expense.splits.find(
                 (s) => members.find((m) => m.isCurrentUser)?.userId === s.userId
@@ -340,8 +338,8 @@ const HouseholdScreen: React.FC = () => {
                           expense.status === 'paid'
                             ? 'check'
                             : expense.status === 'overdue'
-                            ? 'alert'
-                            : 'clock-outline'
+                              ? 'alert'
+                              : 'clock-outline'
                         }
                         size={14}
                         color="#FFFFFF"
@@ -352,7 +350,9 @@ const HouseholdScreen: React.FC = () => {
                   <View style={styles.expenseBreakdown}>
                     <View style={styles.expenseRow}>
                       <Text style={styles.expenseLabel}>Total Amount</Text>
-                      <Text style={styles.expenseAmount}>{formatCurrency(expense.totalAmount)}</Text>
+                      <Text style={styles.expenseAmount}>
+                        {formatCurrency(expense.totalAmount)}
+                      </Text>
                     </View>
                     <View style={styles.expenseRow}>
                       <Text style={styles.expenseLabel}>Due Date</Text>
@@ -386,12 +386,17 @@ const HouseholdScreen: React.FC = () => {
               <Text style={styles.transactionsTitle}>Recent Transactions</Text>
 
               {recentTransactions.slice(0, 3).map((transaction) => {
-                const isIncoming = transaction.toUserId === members.find((m) => m.isCurrentUser)?.userId;
+                const isIncoming =
+                  transaction.toUserId === members.find((m) => m.isCurrentUser)?.userId;
                 const fromMember = members.find((m) => m.userId === transaction.fromUserId);
                 const toMember = members.find((m) => m.userId === transaction.toUserId);
 
                 return (
-                  <View key={transaction.id} style={styles.transactionCard} testID={`transaction-card-${transaction.id}`}>
+                  <View
+                    key={transaction.id}
+                    style={styles.transactionCard}
+                    testID={`transaction-card-${transaction.id}`}
+                  >
                     <View style={styles.transactionIcon}>
                       <Icon
                         name={isIncoming ? 'arrow-down' : 'arrow-up'}

@@ -33,7 +33,7 @@ export function useMatchNotifications() {
 
   // Handle match created event
   const handleMatchCreated = useCallback((data: MatchCreatedEvent) => {
-    console.log('<‰ Match created:', data);
+    console.log('<ï¿½ Match created:', data);
 
     // Update state to show match modal
     setCurrentMatch({
@@ -81,18 +81,15 @@ export function useScreenshotAlerts() {
     timestamp: string;
   } | null>(null);
 
-  const handleScreenshotDetected = useCallback(
-    (data: { userId: string; timestamp: string }) => {
-      console.log('=ø Screenshot detected:', data);
-      setScreenshotAlert(data);
+  const handleScreenshotDetected = useCallback((data: { userId: string; timestamp: string }) => {
+    console.log('=ï¿½ Screenshot detected:', data);
+    setScreenshotAlert(data);
 
-      // Auto-dismiss after 5 seconds
-      setTimeout(() => {
-        setScreenshotAlert(null);
-      }, 5000);
-    },
-    []
-  );
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      setScreenshotAlert(null);
+    }, 5000);
+  }, []);
 
   const dismissAlert = useCallback(() => {
     setScreenshotAlert(null);

@@ -55,7 +55,7 @@ export function createSecureAxiosInstance(baseURL: string): AxiosInstance {
 
   // Add request interceptor for additional security
   instance.interceptors.request.use(
-    async config => {
+    async (config) => {
       // Add security headers
       config.headers['X-Requested-With'] = 'XMLHttpRequest';
       config.headers['X-Client-Version'] = '1.0.0';
@@ -63,15 +63,15 @@ export function createSecureAxiosInstance(baseURL: string): AxiosInstance {
 
       return config;
     },
-    error => {
+    (error) => {
       return Promise.reject(error);
     }
   );
 
   // Add response interceptor for error handling
   instance.interceptors.response.use(
-    response => response,
-    error => {
+    (response) => response,
+    (error) => {
       if (error.response?.status === 495) {
         // SSL Certificate Error
         console.error('SSL Certificate validation failed');
@@ -89,10 +89,7 @@ export function createSecureAxiosInstance(baseURL: string): AxiosInstance {
  * Validate SSL certificate fingerprint
  * This is a placeholder - implement with native module
  */
-export async function validateCertificate(
-  hostname: string,
-  certificate: string
-): Promise<boolean> {
+export async function validateCertificate(hostname: string, certificate: string): Promise<boolean> {
   try {
     const pins = getCertificatePins();
 
@@ -101,7 +98,7 @@ export async function validateCertificate(
     // const isValid = await SSLPinning.validateCertificate(hostname, pins);
 
     // Placeholder validation
-    const isValid = pins.some(pin => certificate.includes(pin));
+    const isValid = pins.some((pin) => certificate.includes(pin));
 
     if (!isValid) {
       console.error('Certificate validation failed for', hostname);

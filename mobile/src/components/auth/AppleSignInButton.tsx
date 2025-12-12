@@ -16,18 +16,8 @@
  */
 
 import React, { useState } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  ActivityIndicator,
-  Alert,
-  Platform,
-} from 'react-native';
-import {
-  AppleButton,
-  appleAuth,
-} from '@invertase/react-native-apple-authentication';
+import { StyleSheet, View, Text, ActivityIndicator, Alert, Platform } from 'react-native';
+import { AppleButton, appleAuth } from '@invertase/react-native-apple-authentication';
 import { signInWithApple } from '../../services/api/oauth';
 import type { AuthSuccessResponse } from '../../types/oauth';
 import { OAuthError } from '../../types/oauth';
@@ -61,7 +51,9 @@ const AppleSignInButtonComponent: React.FC<AppleSignInButtonProps> = ({
   }
 
   const handleAppleSignIn = async () => {
-    if (disabled || loading) return;
+    if (disabled || loading) {
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -90,8 +82,7 @@ const AppleSignInButtonComponent: React.FC<AppleSignInButtonProps> = ({
           break;
 
         case 'network_error':
-          errorMessage =
-            'Network error. Please check your connection and try again.';
+          errorMessage = 'Network error. Please check your connection and try again.';
           break;
 
         case 'rate_limit_exceeded':
@@ -141,10 +132,7 @@ const AppleSignInButtonComponent: React.FC<AppleSignInButtonProps> = ({
       >
         {loading ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator
-              color={style === 'black' ? '#FFFFFF' : '#000000'}
-              size="small"
-            />
+            <ActivityIndicator color={style === 'black' ? '#FFFFFF' : '#000000'} size="small" />
             <Text
               style={[
                 styles.loadingText,

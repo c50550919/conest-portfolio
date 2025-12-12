@@ -44,9 +44,7 @@ export function canSendConnectionRequest(
 
   // Check 1: Daily limit (5 per day)
   const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  const requestsLast24h = sentRequests.filter(
-    (r) => new Date(r.sentAt) >= last24Hours
-  );
+  const requestsLast24h = sentRequests.filter((r) => new Date(r.sentAt) >= last24Hours);
 
   if (requestsLast24h.length >= CONNECTION_REQUEST_LIMITS.maxPerDay) {
     const oldestRequest = requestsLast24h.sort(
@@ -71,9 +69,7 @@ export function canSendConnectionRequest(
 
   // Check 2: Weekly limit (15 per week)
   const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const requestsLast7Days = sentRequests.filter(
-    (r) => new Date(r.sentAt) >= last7Days
-  );
+  const requestsLast7Days = sentRequests.filter((r) => new Date(r.sentAt) >= last7Days);
 
   if (requestsLast7Days.length >= CONNECTION_REQUEST_LIMITS.maxPerWeek) {
     return {
@@ -85,15 +81,13 @@ export function canSendConnectionRequest(
 
   // Check 3: Monthly limit (40 per month)
   const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-  const requestsLast30Days = sentRequests.filter(
-    (r) => new Date(r.sentAt) >= last30Days
-  );
+  const requestsLast30Days = sentRequests.filter((r) => new Date(r.sentAt) >= last30Days);
 
   if (requestsLast30Days.length >= CONNECTION_REQUEST_LIMITS.maxPerMonth) {
     return {
       allowed: false,
       reason: 'monthly_limit',
-      errorMessage: 'You\'ve reached your monthly limit of 40 connection requests.',
+      errorMessage: "You've reached your monthly limit of 40 connection requests.",
     };
   }
 
@@ -259,9 +253,9 @@ export function getSavedProfileStats(savedProfiles: SavedProfile[]): {
     byFolder: {
       'top-choice': savedProfiles.filter((p) => p.folder === 'top-choice').length,
       'strong-maybe': savedProfiles.filter((p) => p.folder === 'strong-maybe').length,
-      'considering': savedProfiles.filter((p) => p.folder === 'considering').length,
-      'backup': savedProfiles.filter((p) => p.folder === 'backup').length,
-      'archived': savedProfiles.filter((p) => p.folder === 'archived').length,
+      considering: savedProfiles.filter((p) => p.folder === 'considering').length,
+      backup: savedProfiles.filter((p) => p.folder === 'backup').length,
+      archived: savedProfiles.filter((p) => p.folder === 'archived').length,
     },
     limit: SAVED_PROFILE_LIMITS.total,
     remaining: SAVED_PROFILE_LIMITS.total - active.length,
@@ -281,10 +275,7 @@ export function getArchiveSuggestions(savedProfiles: SavedProfile[]): SavedProfi
 
   return savedProfiles
     .filter(
-      (p) =>
-        p.folder !== 'archived' &&
-        new Date(p.savedAt) < cutoffDate &&
-        p.viewCount <= 2 // Haven't viewed much
+      (p) => p.folder !== 'archived' && new Date(p.savedAt) < cutoffDate && p.viewCount <= 2 // Haven't viewed much
     )
     .sort((a, b) => new Date(a.savedAt).getTime() - new Date(b.savedAt).getTime());
 }
@@ -299,8 +290,7 @@ export function getArchiveSuggestions(savedProfiles: SavedProfile[]): SavedProfi
 export function isRequestExpiringSoon(request: ConnectionRequest): boolean {
   const now = new Date();
   const expiresAt = new Date(request.expiresAt);
-  const daysUntilExpiration =
-    (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+  const daysUntilExpiration = (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
 
   return (
     request.status === 'pending' &&
@@ -321,9 +311,7 @@ export function getDaysUntilExpiration(request: ConnectionRequest): number {
 /**
  * Filter out expired requests
  */
-export function filterExpiredRequests(
-  requests: ConnectionRequest[]
-): ConnectionRequest[] {
+export function filterExpiredRequests(requests: ConnectionRequest[]): ConnectionRequest[] {
   const now = new Date();
   return requests.filter((r) => new Date(r.expiresAt) > now || r.status !== 'pending');
 }

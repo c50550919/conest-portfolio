@@ -163,8 +163,7 @@ const LoginScreen: React.FC = () => {
       );
       // Note: Navigation happens automatically via AppNavigator conditional rendering
     } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message || 'Login failed. Please try again.';
+      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
 
       dispatch(setError(errorMessage));
       Alert.alert('Login Error', errorMessage);
@@ -219,7 +218,7 @@ const LoginScreen: React.FC = () => {
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Email</Text>
           <TextInput
-            style={[styles.input, validationErrors.email && styles.inputError]}
+            style={[styles.input, validationErrors.email ? styles.inputError : undefined]}
             placeholder="Enter your email"
             placeholderTextColor={theme.colors.onSurfaceVariant}
             value={email}
@@ -235,16 +234,14 @@ const LoginScreen: React.FC = () => {
             editable={!loading}
             testID="email-input"
           />
-          {validationErrors.email && (
-            <Text style={styles.errorText}>{validationErrors.email}</Text>
-          )}
+          {validationErrors.email && <Text style={styles.errorText}>{validationErrors.email}</Text>}
         </View>
 
         {/* Password Input */}
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Password</Text>
           <TextInput
-            style={[styles.input, validationErrors.password && styles.inputError]}
+            style={[styles.input, validationErrors.password ? styles.inputError : undefined]}
             placeholder="Enter your password"
             placeholderTextColor={theme.colors.onSurfaceVariant}
             value={password}
