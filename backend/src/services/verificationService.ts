@@ -1,30 +1,11 @@
 import { VerificationModel } from '../models/Verification';
 import { UserModel } from '../models/User';
+import { VerificationPaymentModel } from '../models/VerificationPayment';
 import logger from '../config/logger';
+import VeriffClient from './veriff/VeriffClient';
+import CertnClient from './certn/CertnClient';
 
-// MOCK Checkr API
-const mockCheckrBackgroundCheck = async (userId: string): Promise<string> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 2000));
-
-  logger.info(`[MOCK] Checkr background check initiated for user: ${userId}`);
-
-  // Always return "clear" for development
-  return 'clear';
-};
-
-// MOCK Jumio API
-const mockJumioIDVerification = async (userId: string): Promise<string> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1500));
-
-  logger.info(`[MOCK] Jumio ID verification initiated for user: ${userId}`);
-
-  // Always return "approved" for development
-  return 'approved';
-};
-
-// MOCK Twilio SMS
+// MOCK Twilio SMS (keep for now until Twilio integration)
 const mockTwilioSendSMS = async (phone: string, code: string): Promise<void> => {
   logger.info(`[MOCK] SMS sent to ${phone}: Your verification code is ${code}`);
   console.log(`\n📱 MOCK SMS to ${phone}: Verification code is ${code}\n`);
@@ -34,7 +15,7 @@ export const VerificationService = {
   // Phone verification
   async sendPhoneVerification(userId: string): Promise<void> {
     const user = await UserModel.findById(userId);
-    if (!user || !user.phone_number) {
+    if (!user || !(user as any).phone_number) {
       throw new Error('User or phone number not found');
     }
 
@@ -45,7 +26,7 @@ export const VerificationService = {
     // await redisClient.setEx(`phone_verify:${userId}`, 600, code);
 
     // MOCK: Send SMS via Twilio
-    await mockTwilioSendSMS(user.phone_number, code);
+    await mockTwilioSendSMS((user as any).phone_number, code);
   },
 
   async verifyPhoneCode(userId: string, code: string): Promise<boolean> {
@@ -107,64 +88,242 @@ export const VerificationService = {
     await VerificationModel.updateVerificationScore(userId);
   },
 
-  // ID Verification (Jumio - MOCK)
-  async initiateIDVerification(userId: string): Promise<{ verificationUrl: string }> {
-    logger.info(`Initiating ID verification for user: ${userId}`);
+  // ID Verification (Veriff)
+  async initiateIDVerification(userId: string): Promise<{ verificationUrl: string; sessionId: string }> {
+    try {
+      logger.info(`Initiating Veriff ID verification for user: ${userId}`);
 
-    // MOCK: Return a fake verification URL
-    const mockUrl = `https://mock-jumio.example.com/verify/${userId}`;
+      // Get user email for Veriff session
+      const user = await UserModel.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
 
-    // Update verification status to pending
-    await VerificationModel.update(userId, {
-      id_verification_status: 'pending',
-    });
+      // Create Veriff session
+      const callbackUrl = `${process.env.API_URL}/api/webhooks/veriff`;
+      const session = await VeriffClient.createSession(userId, callbackUrl);
 
-    return { verificationUrl: mockUrl };
+      // Update verification status to pending
+      await VerificationModel.update(userId, {
+        id_verification_status: 'pending',
+        id_verification_data: JSON.stringify({
+          sessionId: session.verification.id,
+          sessionUrl: session.verification.url,
+          createdAt: new Date().toISOString(),
+        }),
+      });
+
+      logger.info(`Veriff session created for user ${userId}`, {
+        sessionId: session.verification.id,
+      });
+
+      return {
+        verificationUrl: session.verification.url,
+        sessionId: session.verification.id,
+      };
+    } catch (error: any) {
+      logger.error('Failed to initiate ID verification', {
+        userId,
+        error: error.message,
+      });
+      throw new Error(`ID verification initiation failed: ${error.message}`);
+    }
   },
 
-  async completeIDVerification(userId: string): Promise<void> {
-    // MOCK: Simulate Jumio webhook callback
-    const result = await mockJumioIDVerification(userId);
+  async completeIDVerification(userId: string, sessionId: string): Promise<void> {
+    try {
+      logger.info(`Processing Veriff decision for user ${userId}`, { sessionId });
 
-    await VerificationModel.update(userId, {
-      id_verification_status: result === 'approved' ? 'approved' : 'rejected',
-      id_verification_date: new Date(),
-    });
+      // Get verification decision from Veriff
+      const decision = await VeriffClient.getDecision(sessionId);
 
-    // Recalculate verification score
-    await VerificationModel.updateVerificationScore(userId);
+      // Map Veriff status to our internal status
+      let internalStatus: 'approved' | 'rejected' | 'pending';
 
-    logger.info(`ID verification completed for user ${userId}: ${result}`);
+      switch (decision.verification.status) {
+        case 'approved':
+          internalStatus = 'approved';
+          break;
+        case 'declined':
+        case 'expired':
+        case 'abandoned':
+          internalStatus = 'rejected';
+          break;
+        case 'resubmission_requested':
+          internalStatus = 'pending';
+          break;
+        default:
+          internalStatus = 'pending';
+      }
+
+      // Update verification record
+      await VerificationModel.update(userId, {
+        id_verification_status: internalStatus,
+        id_verification_date: new Date(),
+        id_verification_data: JSON.stringify({
+          sessionId,
+          status: decision.verification.status,
+          reason: decision.verification.reason,
+          completedAt: new Date().toISOString(),
+        }),
+      });
+
+      // Recalculate verification score
+      await VerificationModel.updateVerificationScore(userId);
+
+      logger.info(`ID verification completed for user ${userId}`, {
+        sessionId,
+        status: internalStatus,
+      });
+    } catch (error: any) {
+      logger.error('Failed to complete ID verification', {
+        userId,
+        sessionId,
+        error: error.message,
+      });
+      throw new Error(`ID verification completion failed: ${error.message}`);
+    }
   },
 
-  // Background Check (Checkr - MOCK)
+  // Background Check (Certn)
   async initiateBackgroundCheck(userId: string): Promise<void> {
-    logger.info(`Initiating background check for user: ${userId}`);
+    try {
+      logger.info(`Initiating Certn background check for user: ${userId}`);
 
-    // Update verification status to pending
-    await VerificationModel.update(userId, {
-      background_check_status: 'pending',
-    });
+      // Get user information
+      const user = await UserModel.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
 
-    // MOCK: Simulate async background check
-    setTimeout(async () => {
-      try {
-        const result = await mockCheckrBackgroundCheck(userId);
+      // Create Certn applicant
+      const applicant = await CertnClient.createApplicant({
+        email: user.email,
+        phone: user.phone,
+        custom_id: userId,
+      });
 
+      // Create Certn application with basic package
+      const application = await CertnClient.createApplication({
+        applicant_id: applicant.id,
+        package: 'basic', // Can be configured based on requirements
+      });
+
+      // Update verification status to pending
+      await VerificationModel.update(userId, {
+        background_check_status: 'pending',
+        certn_applicant_id: applicant.id,
+        background_check_report_id: application.id,
+      });
+
+      logger.info(`Certn background check initiated for user ${userId}`, {
+        applicantId: applicant.id,
+        applicationId: application.id,
+      });
+    } catch (error: any) {
+      logger.error('Failed to initiate background check', {
+        userId,
+        error: error.message,
+      });
+
+      // Update status to rejected on failure
+      await VerificationModel.update(userId, {
+        background_check_status: 'rejected',
+      });
+
+      throw new Error(`Background check initiation failed: ${error.message}`);
+    }
+  },
+
+  /**
+   * Process Certn background check completion
+   * Called from webhook handler
+   */
+  async processBackgroundCheckResult(
+    userId: string,
+    applicationId: string,
+  ): Promise<void> {
+    try {
+      logger.info(`Processing Certn result for user ${userId}`, { applicationId });
+
+      // Get application details from Certn
+      const application = await CertnClient.getApplication(applicationId);
+
+      // Parse status
+      const internalStatus = CertnClient.parseStatus(application.report_status || 'PENDING');
+
+      // Extract flagged records if status is 'consider'
+      let flaggedRecords = null;
+      let requiresAdminReview = false;
+
+      if (internalStatus === 'consider') {
+        flaggedRecords = CertnClient.extractFlaggedRecords(application);
+        requiresAdminReview = true;
+      }
+
+      // Update verification record
+      if (requiresAdminReview) {
+        await VerificationModel.markForAdminReview(userId, flaggedRecords);
+      } else {
         await VerificationModel.update(userId, {
-          background_check_status: result as any,
+          background_check_status: internalStatus,
           background_check_date: new Date(),
-          background_check_report_id: `mock_report_${userId}`,
         });
 
-        // Recalculate verification score
+        // Only update score if not requiring admin review
         await VerificationModel.updateVerificationScore(userId);
-
-        logger.info(`Background check completed for user ${userId}: ${result}`);
-      } catch (error) {
-        logger.error(`Background check failed for user ${userId}:`, error);
       }
-    }, 3000); // 3 second delay to simulate async processing
+
+      logger.info(`Background check processed for user ${userId}`, {
+        status: internalStatus,
+        requiresAdminReview,
+      });
+
+      // Handle automatic refund for rejected background checks
+      if (internalStatus === 'rejected') {
+        await this.processAutomaticRefund(userId);
+      }
+    } catch (error: any) {
+      logger.error('Failed to process background check result', {
+        userId,
+        applicationId,
+        error: error.message,
+      });
+      throw new Error(`Background check processing failed: ${error.message}`);
+    }
+  },
+
+  /**
+   * Process automatic refund for failed background check
+   * 100% refund policy for automated failures
+   */
+  async processAutomaticRefund(userId: string): Promise<void> {
+    try {
+      const payments = await VerificationPaymentModel.findByUserId(userId, 1);
+      const payment = payments[0];
+
+      if (!payment || payment.status !== 'succeeded') {
+        logger.info(`No refundable payment found for user ${userId}`);
+        return;
+      }
+
+      // Process 100% refund for automated failure
+      await VerificationPaymentModel.processRefund(payment.id, {
+        reason: 'automated_fail',
+        amount: payment.amount, // Full refund
+      });
+
+      logger.info(`Automatic refund processed for user ${userId}`, {
+        paymentId: payment.id,
+        amount: payment.amount,
+      });
+    } catch (error: any) {
+      logger.error('Failed to process automatic refund', {
+        userId,
+        error: error.message,
+      });
+      // Don't throw - refund failure shouldn't block verification update
+    }
   },
 
   // Income Verification (Real structure, but simplified)
@@ -195,8 +354,19 @@ export const VerificationService = {
   // Get verification status
   async getVerificationStatus(userId: string) {
     const verification = await VerificationModel.findByUserId(userId);
+
+    // Return default values for users without verification records
+    // This is expected for new users who haven't started verification
     if (!verification) {
-      throw new Error('Verification record not found');
+      return {
+        email_verified: false,
+        phone_verified: false,
+        id_verification_status: 'pending',
+        background_check_status: 'pending',
+        income_verification_status: 'pending',
+        verification_score: 0,
+        fully_verified: false,
+      };
     }
 
     return {

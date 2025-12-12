@@ -29,7 +29,7 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         phone: '+12345678901',
         phone_verified: false,
         email_verified: true,
-        status: 'active',
+        account_status: 'active',
         created_at: new Date(),
         updated_at: new Date(),
       };
@@ -52,6 +52,7 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         verification_score: 30, // Email + Phone
       };
 
+      (UserModel.findByPhone as jest.Mock).mockResolvedValue(mockUser);
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue(code);
       (UserModel.update as jest.Mock).mockResolvedValue({ ...mockUser, phone_verified: true });
@@ -82,9 +83,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         email: 'test@example.com',
         phone: '+12345678901',
         phone_verified: false,
-        status: 'active',
+        account_status: 'active',
       };
 
+      (UserModel.findByPhone as jest.Mock).mockResolvedValue(mockUser);
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue(code);
       (UserModel.update as jest.Mock).mockResolvedValue({ ...mockUser, phone_verified: true });
@@ -102,7 +104,7 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
 
       expect(UserModel.update).toHaveBeenCalledWith(
         userId,
-        expect.objectContaining({ phone_verified: true })
+        expect.objectContaining({ phone_verified: true }),
       );
     });
 
@@ -115,7 +117,7 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         email: 'test@example.com',
         phone: '+12345678901',
         phone_verified: false,
-        status: 'active',
+        account_status: 'active',
       };
 
       const mockVerification = {
@@ -125,6 +127,7 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         verification_score: 15,
       };
 
+      (UserModel.findByPhone as jest.Mock).mockResolvedValue(mockUser);
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue(code);
       (UserModel.update as jest.Mock).mockResolvedValue({ ...mockUser, phone_verified: true });
@@ -145,7 +148,7 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         expect.objectContaining({
           phone_verified: true,
           phone_verification_date: expect.any(Date),
-        })
+        }),
       );
       expect(VerificationModel.updateVerificationScore).toHaveBeenCalledWith(userId);
     });
@@ -159,9 +162,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         email: 'test@example.com',
         phone: '+12345678901',
         phone_verified: false,
-        status: 'active',
+        account_status: 'active',
       };
 
+      (UserModel.findByPhone as jest.Mock).mockResolvedValue(mockUser);
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue(code);
       (UserModel.update as jest.Mock).mockResolvedValue({ ...mockUser, phone_verified: true });
@@ -262,9 +266,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         email: 'test@example.com',
         phone: '+12345678901',
         phone_verified: false,
-        status: 'active',
+        account_status: 'active',
       };
 
+      (UserModel.findByPhone as jest.Mock).mockResolvedValue(mockUser);
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue('654321'); // Different code
 
@@ -288,9 +293,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         email: 'test@example.com',
         phone: '+12345678901',
         phone_verified: false,
-        status: 'active',
+        account_status: 'active',
       };
 
+      (UserModel.findByPhone as jest.Mock).mockResolvedValue(mockUser);
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue(null); // Code expired
 
@@ -307,7 +313,7 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
     });
 
     it('should return 404 for non-existent user', async () => {
-      (UserModel.findById as jest.Mock).mockResolvedValue(null);
+      (UserModel.findByPhone as jest.Mock).mockResolvedValue(null);
 
       const response = await request(app)
         .post('/api/auth/verify-phone')
@@ -332,9 +338,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         email: 'test@example.com',
         phone: '+12345678901',
         phone_verified: false,
-        status: 'active',
+        account_status: 'active',
       };
 
+      (UserModel.findByPhone as jest.Mock).mockResolvedValue(mockUser);
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue(code);
       (UserModel.update as jest.Mock).mockResolvedValue({ ...mockUser, phone_verified: true });
@@ -367,9 +374,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         password_hash: 'should_not_appear',
         phone: '+12345678901',
         phone_verified: false,
-        status: 'active',
+        account_status: 'active',
       };
 
+      (UserModel.findByPhone as jest.Mock).mockResolvedValue(mockUser);
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue(code);
       (UserModel.update as jest.Mock).mockResolvedValue({ ...mockUser, phone_verified: true });
@@ -401,9 +409,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         email: 'test@example.com',
         phone: '+12345678901',
         phone_verified: true, // Already verified
-        status: 'active',
+        account_status: 'active',
       };
 
+      (UserModel.findByPhone as jest.Mock).mockResolvedValue(mockUser);
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue(code);
       (UserModel.update as jest.Mock).mockResolvedValue(mockUser);
@@ -438,9 +447,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         email: 'test@example.com',
         phone: '+12345678901',
         phone_verified: false,
-        status: 'active',
+        account_status: 'active',
       };
 
+      (UserModel.findByPhone as jest.Mock).mockResolvedValue(mockUser);
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue('654321');
 
@@ -481,9 +491,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
         email: 'test@example.com',
         phone: '+12345678901',
         phone_verified: false,
-        status: 'active',
+        account_status: 'active',
       };
 
+      (UserModel.findByPhone as jest.Mock).mockResolvedValue(mockUser);
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue(null); // Expired
 

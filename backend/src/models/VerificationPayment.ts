@@ -102,7 +102,7 @@ export const VerificationPaymentModel = {
    * Used in webhook processing
    */
   async findByStripePaymentIntentId(
-    stripePaymentIntentId: string
+    stripePaymentIntentId: string,
   ): Promise<VerificationPayment | undefined> {
     return await db('verification_payments')
       .where({ stripe_payment_intent_id: stripePaymentIntentId })
@@ -113,7 +113,7 @@ export const VerificationPaymentModel = {
    * Find payment by connection request ID
    */
   async findByConnectionRequestId(
-    connectionRequestId: string
+    connectionRequestId: string,
   ): Promise<VerificationPayment | undefined> {
     return await db('verification_payments')
       .where({ connection_request_id: connectionRequestId })
@@ -126,7 +126,7 @@ export const VerificationPaymentModel = {
    */
   async findByUserId(
     userId: string,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<VerificationPayment[]> {
     return await db('verification_payments')
       .where({ user_id: userId })
@@ -190,7 +190,7 @@ export const VerificationPaymentModel = {
    */
   async processRefund(
     id: string,
-    refundData: RefundVerificationPaymentData
+    refundData: RefundVerificationPaymentData,
   ): Promise<VerificationPayment> {
     const payment = await this.findById(id);
 
@@ -202,7 +202,9 @@ export const VerificationPaymentModel = {
       throw new Error('PAYMENT_NOT_SUCCEEDED');
     }
 
-    if (payment.status === 'refunded') {
+    // Note: If payment was refunded, status would not be 'succeeded'
+    // so this check is redundant but kept for clarity
+    if ((payment as any).refund_status === 'refunded') {
       throw new Error('PAYMENT_ALREADY_REFUNDED');
     }
 
@@ -242,7 +244,7 @@ export const VerificationPaymentModel = {
         db.raw('SUM(CASE WHEN status = \'succeeded\' THEN amount ELSE 0 END) as total_amount_paid'),
         db.raw('SUM(refund_amount) as total_refunded'),
         db.raw('COUNT(CASE WHEN status = \'succeeded\' THEN 1 END) as successful_payments'),
-        db.raw('COUNT(CASE WHEN status = \'failed\' THEN 1 END) as failed_payments')
+        db.raw('COUNT(CASE WHEN status = \'failed\' THEN 1 END) as failed_payments'),
       )
       .first();
 

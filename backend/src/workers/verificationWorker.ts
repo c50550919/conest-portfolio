@@ -21,12 +21,17 @@ interface VerificationJob {
 
 // Process verification jobs
 verificationQueue.process('id_verification', async (job) => {
-  const { userId } = job.data as VerificationJob;
+  const { userId, sessionId } = job.data as VerificationJob & { sessionId: string };
 
   logger.info(`Processing ID verification for user ${userId}`);
 
+  if (!sessionId) {
+    logger.error(`ID verification failed for user ${userId}: Missing sessionId`);
+    throw new Error('Session ID is required for ID verification');
+  }
+
   try {
-    await VerificationService.completeIDVerification(userId);
+    await VerificationService.completeIDVerification(userId, sessionId);
     logger.info(`ID verification completed for user ${userId}`);
     return { success: true };
   } catch (error) {

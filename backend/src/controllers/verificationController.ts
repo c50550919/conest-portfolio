@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { VerificationService } from '../services/verificationService';
 import { asyncHandler } from '../middleware/errorHandler';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../middleware/auth.middleware';
 
 export const verificationController = {
   getStatus: asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -103,7 +103,13 @@ export const verificationController = {
       return;
     }
 
-    await VerificationService.completeIDVerification(req.userId);
+    const { sessionId } = req.body;
+    if (!sessionId) {
+      res.status(400).json({ error: 'Session ID is required' });
+      return;
+    }
+
+    await VerificationService.completeIDVerification(req.userId, sessionId);
 
     res.json({
       success: true,

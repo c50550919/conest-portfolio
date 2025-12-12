@@ -96,7 +96,7 @@ export const VerificationModel = {
     if (verification.email_verified) score += 15;
     if (verification.phone_verified) score += 15;
     if (verification.id_verification_status === 'approved') score += 30;
-    if (verification.background_check_status === 'clear') score += 30;
+    if (verification.background_check_status === 'approved') score += 30;
     if (verification.income_verification_status === 'verified') score += 10;
 
     const fullyVerified = score >= 90;
@@ -115,7 +115,7 @@ export const VerificationModel = {
    */
   async markForAdminReview(
     userId: string,
-    flaggedRecords: any
+    flaggedRecords: any,
   ): Promise<Verification> {
     return await this.update(userId, {
       background_check_status: 'consider',
@@ -131,7 +131,7 @@ export const VerificationModel = {
   async adminApprove(
     userId: string,
     adminUserId: string,
-    notes?: string
+    notes?: string,
   ): Promise<Verification> {
     const verification = await this.update(userId, {
       background_check_status: 'approved',
@@ -152,7 +152,7 @@ export const VerificationModel = {
   async adminReject(
     userId: string,
     adminUserId: string,
-    notes?: string
+    notes?: string,
   ): Promise<Verification> {
     return await this.update(userId, {
       background_check_status: 'rejected',

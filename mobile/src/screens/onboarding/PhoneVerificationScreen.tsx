@@ -39,9 +39,7 @@ const PhoneVerificationScreen: React.FC<Props> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Phone Verification</Text>
-        <Text style={styles.subtitle}>
-          This screen will implement OTP verification
-        </Text>
+        <Text style={styles.subtitle}>This screen will implement OTP verification</Text>
 
         <View style={styles.buttonContainer}>
           <Button
