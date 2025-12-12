@@ -70,15 +70,26 @@
 		<string>Zocial.ttf</string>
 		<string>Fontisto.ttf</string>
 	</array>
-	<!-- Google Sign In OAuth Configuration -->
+	<!-- URL Schemes Configuration -->
 	<key>CFBundleURLTypes</key>
 	<array>
+		<!-- Google Sign In OAuth -->
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<!-- TODO: Replace with reversed Google Client ID from Google Cloud Console -->
 				<!-- Format: com.googleusercontent.apps.YOUR_CLIENT_ID -->
 				<string>com.googleusercontent.apps.REPLACE_WITH_YOUR_REVERSED_CLIENT_ID</string>
+			</array>
+		</dict>
+		<!-- CoNest Deep Linking (for email verification, etc.) -->
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.conest.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>conest</string>
+				<string>safenest</string>
 			</array>
 		</dict>
 	</array>

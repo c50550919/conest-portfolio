@@ -3,14 +3,7 @@
  * Comprehensive test coverage for AES-256-CBC + HMAC encryption
  */
 
-import {
-  encrypt,
-  decrypt,
-  randomKey,
-  pbkdf2,
-  hmac256,
-  sha256,
-} from 'react-native-aes-crypto';
+import { encrypt, decrypt, randomKey, pbkdf2, hmac256, sha256 } from 'react-native-aes-crypto';
 import {
   generateKeyPair,
   encryptMessage,
@@ -49,9 +42,7 @@ describe('Encryption Service', () => {
         .mockResolvedValueOnce(privateSeed)
         .mockResolvedValueOnce(publicSeed)
         .mockResolvedValueOnce(salt);
-      (pbkdf2 as jest.Mock)
-        .mockResolvedValueOnce(privateKey)
-        .mockResolvedValueOnce(publicKey);
+      (pbkdf2 as jest.Mock).mockResolvedValueOnce(privateKey).mockResolvedValueOnce(publicKey);
 
       const keyPair = await generateKeyPair();
 
@@ -65,9 +56,7 @@ describe('Encryption Service', () => {
         .mockResolvedValue('random_seed')
         .mockResolvedValue('random_seed')
         .mockResolvedValue('salt');
-      (pbkdf2 as jest.Mock)
-        .mockResolvedValue('derived_key')
-        .mockResolvedValue('derived_key');
+      (pbkdf2 as jest.Mock).mockResolvedValue('derived_key').mockResolvedValue('derived_key');
 
       await generateKeyPair();
 
@@ -132,14 +121,9 @@ describe('Encryption Service', () => {
       const message = 'test message';
       const publicKey = 'a'.repeat(64);
 
-      (randomKey as jest.Mock)
-        .mockResolvedValueOnce('iv1')
-        .mockResolvedValueOnce('iv2');
-      (encrypt as jest.Mock)
-        .mockResolvedValueOnce('cipher1')
-        .mockResolvedValueOnce('cipher2');
-      (hmac256 as jest.Mock)
-        .mockResolvedValue('tag');
+      (randomKey as jest.Mock).mockResolvedValueOnce('iv1').mockResolvedValueOnce('iv2');
+      (encrypt as jest.Mock).mockResolvedValueOnce('cipher1').mockResolvedValueOnce('cipher2');
+      (hmac256 as jest.Mock).mockResolvedValue('tag');
 
       const encrypted1 = await encryptMessage(message, publicKey);
       const encrypted2 = await encryptMessage(message, publicKey);
@@ -220,7 +204,12 @@ describe('Encryption Service', () => {
 
       expect(result).toBe(plaintext);
       expect(hmac256).toHaveBeenCalledWith('test_iv:test_cipher', senderPublicKey);
-      expect(decrypt).toHaveBeenCalledWith('test_cipher', senderPublicKey, 'test_iv', 'aes-256-cbc');
+      expect(decrypt).toHaveBeenCalledWith(
+        'test_cipher',
+        senderPublicKey,
+        'test_iv',
+        'aes-256-cbc',
+      );
     });
 
     it('should throw error on HMAC authentication failure', async () => {
@@ -234,8 +223,9 @@ describe('Encryption Service', () => {
 
       (hmac256 as jest.Mock).mockResolvedValue('expected_tag'); // Different tag
 
-      await expect(decryptMessage(encryptedMessage, senderPublicKey, privateKey))
-        .rejects.toThrow('Message authentication failed');
+      await expect(decryptMessage(encryptedMessage, senderPublicKey, privateKey)).rejects.toThrow(
+        'Message authentication failed',
+      );
     });
 
     it('should throw error on malformed encrypted data', async () => {
@@ -243,8 +233,9 @@ describe('Encryption Service', () => {
       const senderPublicKey = 'a'.repeat(64);
       const privateKey = 'private_key';
 
-      await expect(decryptMessage(encryptedMessage, senderPublicKey, privateKey))
-        .rejects.toThrow('Failed to decrypt message');
+      await expect(decryptMessage(encryptedMessage, senderPublicKey, privateKey)).rejects.toThrow(
+        'Failed to decrypt message',
+      );
     });
 
     it('should handle decryption of empty messages', async () => {
@@ -306,15 +297,14 @@ describe('Encryption Service', () => {
     it('should throw error on shared secret generation failure', async () => {
       (sha256 as jest.Mock).mockRejectedValue(new Error('Hash failed'));
 
-      await expect(generateSharedSecret('key1', 'key2'))
-        .rejects.toThrow('Failed to generate shared secret');
+      await expect(generateSharedSecret('key1', 'key2')).rejects.toThrow(
+        'Failed to generate shared secret',
+      );
     });
 
     it('should produce different secrets for different key pairs', async () => {
       (sha256 as jest.Mock).mockResolvedValue('salt');
-      (pbkdf2 as jest.Mock)
-        .mockResolvedValueOnce('secret1')
-        .mockResolvedValueOnce('secret2');
+      (pbkdf2 as jest.Mock).mockResolvedValueOnce('secret1').mockResolvedValueOnce('secret2');
 
       const secret1 = await generateSharedSecret('private1', 'public1');
       const secret2 = await generateSharedSecret('private2', 'public2');
@@ -346,14 +336,9 @@ describe('Encryption Service', () => {
       const data = 'test data';
       const secret = 'a'.repeat(64);
 
-      (randomKey as jest.Mock)
-        .mockResolvedValueOnce('iv1')
-        .mockResolvedValueOnce('iv2');
-      (encrypt as jest.Mock)
-        .mockResolvedValueOnce('cipher1')
-        .mockResolvedValueOnce('cipher2');
-      (hmac256 as jest.Mock)
-        .mockResolvedValue('tag');
+      (randomKey as jest.Mock).mockResolvedValueOnce('iv1').mockResolvedValueOnce('iv2');
+      (encrypt as jest.Mock).mockResolvedValueOnce('cipher1').mockResolvedValueOnce('cipher2');
+      (hmac256 as jest.Mock).mockResolvedValue('tag');
 
       const encrypted1 = await encryptWithSharedSecret(data, secret);
       const encrypted2 = await encryptWithSharedSecret(data, secret);
@@ -382,8 +367,9 @@ describe('Encryption Service', () => {
       (randomKey as jest.Mock).mockResolvedValue('iv');
       (encrypt as jest.Mock).mockRejectedValue(new Error('Encryption failed'));
 
-      await expect(encryptWithSharedSecret('data', 'secret'))
-        .rejects.toThrow('Failed to encrypt with shared secret');
+      await expect(encryptWithSharedSecret('data', 'secret')).rejects.toThrow(
+        'Failed to encrypt with shared secret',
+      );
     });
   });
 
@@ -417,8 +403,9 @@ describe('Encryption Service', () => {
 
       (hmac256 as jest.Mock).mockResolvedValue('expected_tag');
 
-      await expect(decryptWithSharedSecret(encryptedData, secret))
-        .rejects.toThrow('Message authentication failed');
+      await expect(decryptWithSharedSecret(encryptedData, secret)).rejects.toThrow(
+        'Message authentication failed',
+      );
     });
 
     it('should handle empty encrypted data', async () => {
@@ -482,8 +469,7 @@ describe('Encryption Service', () => {
     it('should throw error on signing failure', async () => {
       (hmac256 as jest.Mock).mockRejectedValue(new Error('HMAC failed'));
 
-      await expect(signMessage('message', 'key'))
-        .rejects.toThrow('Failed to sign message');
+      await expect(signMessage('message', 'key')).rejects.toThrow('Failed to sign message');
     });
   });
 
@@ -652,14 +638,9 @@ describe('Encryption Service', () => {
       const message = 'sensitive data';
       const key = 'a'.repeat(64);
 
-      (randomKey as jest.Mock)
-        .mockResolvedValueOnce('iv1')
-        .mockResolvedValueOnce('iv2');
-      (encrypt as jest.Mock)
-        .mockResolvedValueOnce('cipher1')
-        .mockResolvedValueOnce('cipher2');
-      (hmac256 as jest.Mock)
-        .mockResolvedValue('tag');
+      (randomKey as jest.Mock).mockResolvedValueOnce('iv1').mockResolvedValueOnce('iv2');
+      (encrypt as jest.Mock).mockResolvedValueOnce('cipher1').mockResolvedValueOnce('cipher2');
+      (hmac256 as jest.Mock).mockResolvedValue('tag');
 
       const encrypted1 = await encryptMessage(message, key);
       const encrypted2 = await encryptMessage(message, key);
@@ -690,8 +671,9 @@ describe('Encryption Service', () => {
       (hmac256 as jest.Mock).mockResolvedValue('expected_tag_for_tampered');
 
       // Should fail authentication
-      await expect(decryptMessage(tamperedData, key, 'private'))
-        .rejects.toThrow('Message authentication failed');
+      await expect(decryptMessage(tamperedData, key, 'private')).rejects.toThrow(
+        'Message authentication failed',
+      );
     });
 
     it('should handle key rotation scenario', async () => {
@@ -731,8 +713,7 @@ describe('Encryption Service', () => {
       (randomKey as jest.Mock).mockResolvedValue('iv');
       (encrypt as jest.Mock).mockRejectedValue(new Error('AES encryption failed'));
 
-      await expect(encryptMessage('message', 'key'))
-        .rejects.toThrow('Failed to encrypt message');
+      await expect(encryptMessage('message', 'key')).rejects.toThrow('Failed to encrypt message');
     });
 
     it('should handle decryption errors gracefully', async () => {
@@ -745,8 +726,9 @@ describe('Encryption Service', () => {
       (hmac256 as jest.Mock).mockResolvedValue('tag');
       (decrypt as jest.Mock).mockRejectedValue(new Error('AES decryption failed'));
 
-      await expect(decryptMessage(encryptedData, 'key', 'private'))
-        .rejects.toThrow('Failed to decrypt message');
+      await expect(decryptMessage(encryptedData, 'key', 'private')).rejects.toThrow(
+        'Failed to decrypt message',
+      );
     });
 
     it('should preserve authentication errors', async () => {
@@ -758,22 +740,23 @@ describe('Encryption Service', () => {
 
       (hmac256 as jest.Mock).mockResolvedValue('expected_tag');
 
-      await expect(decryptMessage(encryptedData, 'key', 'private'))
-        .rejects.toThrow('Message authentication failed');
+      await expect(decryptMessage(encryptedData, 'key', 'private')).rejects.toThrow(
+        'Message authentication failed',
+      );
     });
 
     it('should handle malformed JSON gracefully', async () => {
       const malformedData = 'not valid json';
 
-      await expect(decryptMessage(malformedData, 'key', 'private'))
-        .rejects.toThrow('Failed to decrypt message');
+      await expect(decryptMessage(malformedData, 'key', 'private')).rejects.toThrow(
+        'Failed to decrypt message',
+      );
     });
 
     it('should handle crypto library errors', async () => {
       (randomKey as jest.Mock).mockRejectedValue(new Error('Crypto library error'));
 
-      await expect(generateKeyPair())
-        .rejects.toThrow('Failed to generate encryption key pair');
+      await expect(generateKeyPair()).rejects.toThrow('Failed to generate encryption key pair');
     });
   });
 });

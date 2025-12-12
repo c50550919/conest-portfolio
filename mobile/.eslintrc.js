@@ -17,7 +17,7 @@ module.exports = {
   },
   rules: {
     // Code Complexity Rules (Constitution Principle II)
-    'complexity': ['error', 15], // Max cyclomatic complexity
+    complexity: ['error', 15], // Max cyclomatic complexity
     'max-depth': ['error', 4], // Max nesting depth
     'max-lines': ['warn', { max: 300, skipBlankLines: true, skipComments: true }],
     'max-lines-per-function': ['warn', { max: 50, skipBlankLines: true, skipComments: true }],
@@ -33,17 +33,24 @@ module.exports = {
     // TypeScript Rules
     '@typescript-eslint/explicit-function-return-type': 'off', // Too strict for React components
     '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': ['error', {
-      argsIgnorePattern: '^_',
-      varsIgnorePattern: '^_',
-    }],
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      },
+    ],
 
     // Code Quality Rules
     'no-console': ['warn', { allow: ['warn', 'error'] }],
     'no-debugger': 'error',
     'prefer-const': 'error',
-    'eqeqeq': ['error', 'always'],
+    eqeqeq: ['error', 'always'],
     'no-var': 'error',
+
+    // Disable rules that conflict with prettier
+    'comma-dangle': 'off',
+    'prettier/prettier': ['error', {}, { usePrettierrc: true }],
 
     // Security Rules (Constitution Principle III)
     'no-eval': 'error',
