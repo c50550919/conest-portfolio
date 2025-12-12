@@ -104,7 +104,9 @@ describe('CoNest App E2E Tests', () => {
 
     it('should show mock conversations', async () => {
       await expect(element(by.text('Sarah Johnson'))).toBeVisible();
-      await expect(element(by.text('That sounds great! When can we schedule a tour?'))).toBeVisible();
+      await expect(
+        element(by.text('That sounds great! When can we schedule a tour?')),
+      ).toBeVisible();
     });
 
     it('should open chat when conversation is tapped', async () => {
@@ -121,7 +123,9 @@ describe('CoNest App E2E Tests', () => {
     it('should show message bubbles in chat', async () => {
       await element(by.text('Sarah Johnson')).atIndex(0).tap();
 
-      await waitFor(element(by.text('Hello! I saw your profile and we seem to have similar schedules.')))
+      await waitFor(
+        element(by.text('Hello! I saw your profile and we seem to have similar schedules.')),
+      )
         .toBeVisible()
         .withTimeout(2000);
     });

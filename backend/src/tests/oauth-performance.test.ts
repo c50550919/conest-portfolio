@@ -92,7 +92,7 @@ describe('T023: OAuth Performance Test', () => {
       // Measure token verification time specifically
       const startTime = Date.now();
 
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(async () => {
         const verifyStart = Date.now();
         await new Promise((resolve) => setTimeout(resolve, 50));
@@ -282,7 +282,7 @@ describe('T023: OAuth Performance Test', () => {
       });
 
       // Mock fast OAuth verification
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(async () => {
         await new Promise((resolve) => setTimeout(resolve, 10));
         return {
@@ -317,7 +317,7 @@ describe('T023: OAuth Performance Test', () => {
 
       for (let i = 0; i < concurrentRequests; i++) {
         // Mock different users for each request
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+        // @ts-expect-error - Mocking Google OAuth2Client for testing
         jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(async () => {
           await new Promise((resolve) => setTimeout(resolve, 50));
           return {
@@ -334,7 +334,7 @@ describe('T023: OAuth Performance Test', () => {
         requests.push(
           request(app)
             .post('/api/auth/oauth/google')
-            .send({ idToken: `mock_token_${i}` })
+            .send({ idToken: `mock_token_${i}` }),
         );
       }
 
@@ -398,7 +398,7 @@ describe('T023: OAuth Performance Test', () => {
       const startTime = Date.now();
 
       // Mock with timing instrumentation
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(async () => {
         const verifyStart = Date.now();
         await new Promise((resolve) => setTimeout(resolve, 50));

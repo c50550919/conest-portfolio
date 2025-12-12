@@ -75,7 +75,6 @@ describe('Complete User Journey - Login to Messaging', () => {
           .withTimeout(30000);
 
         console.log('   ✅ Login successful - authenticated');
-
       } catch (e) {
         // ALREADY LOGGED IN PATH: Session persisted from previous run
         console.log('   ℹ️  Already logged in from previous session');
@@ -239,7 +238,6 @@ describe('Complete User Journey - Login to Messaging', () => {
         } catch (e) {
           console.log('   ℹ️  Compatibility score not visible (may not be calculated yet)');
         }
-
       } catch (e) {
         console.log('   ℹ️  Skipping profile details test (no profiles available)');
       }
@@ -281,7 +279,6 @@ describe('Complete User Journey - Login to Messaging', () => {
         }
 
         console.log('   ✅ Interest expressed successfully');
-
       } catch (e) {
         console.log('   ℹ️  Skipping express interest test (no profiles available)');
       }
@@ -303,7 +300,6 @@ describe('Complete User Journey - Login to Messaging', () => {
         // Dismiss match notification
         await element(by.id('match-notification-dismiss')).tap();
         console.log('   ✅ Match notification dismissed');
-
       } catch (e) {
         console.log('   ℹ️  No immediate match (not mutual interest or no profiles)');
       }
@@ -348,7 +344,6 @@ describe('Complete User Journey - Login to Messaging', () => {
         // Verify conversation has user name and preview
         await detoxExpect(element(by.id('conversation-name-0'))).toBeVisible();
         console.log('   ✅ Conversation name visible');
-
       } catch (e) {
         console.log('   ℹ️  No matched conversations yet');
       }
@@ -390,7 +385,6 @@ describe('Complete User Journey - Login to Messaging', () => {
         console.log('   ✅ Message sent and displayed successfully');
 
         await device.takeScreenshot('message-sent');
-
       } catch (e) {
         console.log('   ℹ️  Skipping message send test (no conversations available)');
       }
@@ -411,7 +405,6 @@ describe('Complete User Journey - Login to Messaging', () => {
         } catch (e) {
           console.log('   ℹ️  Message status not implemented yet');
         }
-
       } catch (e) {
         console.log('   ℹ️  Skipping message metadata test');
       }
@@ -477,7 +470,6 @@ describe('Complete User Journey - Login to Messaging', () => {
         } catch (e) {
           console.log('   ℹ️  Expense splitting not visible');
         }
-
       } catch (e) {
         // User may not have a household yet
         console.log('   ℹ️  No household established (empty state)');

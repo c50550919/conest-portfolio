@@ -12,8 +12,8 @@ describe('Simple Launch Test', () => {
 
   it('should launch app without crashing', async () => {
     // Just wait a bit to see if app crashes
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
     console.log('✅ App launched successfully - no immediate crash');
   });
 
@@ -29,7 +29,7 @@ describe('Simple Launch Test', () => {
         'login-screen',
       ];
 
-      let found = [];
+      const found = [];
       for (const id of selectors) {
         try {
           await expect(element(by.id(id))).toExist();

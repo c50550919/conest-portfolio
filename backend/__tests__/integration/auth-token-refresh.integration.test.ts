@@ -72,7 +72,7 @@ describe('Integration Test: Token Refresh Flow', () => {
   });
 
   describe('Complete Token Refresh Flow', () => {
-    it('should login ’ wait ’ refresh ’ access with new token', async () => {
+    it('should login ï¿½ wait ï¿½ refresh ï¿½ access with new token', async () => {
       // STEP 1: Login to get initial tokens
       const loginResponse = await request(app)
         .post('/api/auth/login')
@@ -177,7 +177,7 @@ describe('Integration Test: Token Refresh Flow', () => {
       const expiredToken = jwt.sign(
         { userId: testUserId, email: testUser.email },
         process.env.JWT_SECRET || 'test-secret',
-        { expiresIn: '-1s' }
+        { expiresIn: '-1s' },
       );
 
       // Try to access protected endpoint with expired token
@@ -194,7 +194,7 @@ describe('Integration Test: Token Refresh Flow', () => {
       const expiredRefreshToken = jwt.sign(
         { userId: testUserId, email: testUser.email },
         process.env.JWT_SECRET || 'test-secret',
-        { expiresIn: '-1s' }
+        { expiresIn: '-1s' },
       );
 
       // Try to refresh with expired token

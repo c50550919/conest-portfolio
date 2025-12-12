@@ -88,7 +88,7 @@ describe('Household Creation Flow - Integration Tests', () => {
 
       // Verify newly added member is in the list
       const addedMember = getMembersResponse.body.members.find(
-        (m: any) => m.userId === memberUserId
+        (m: any) => m.userId === memberUserId,
       );
       expect(addedMember).toBeDefined();
       expect(addedMember.rentShare).toBe(150000);
@@ -211,13 +211,13 @@ describe('Household Creation Flow - Integration Tests', () => {
       // Verify rent split totals
       const totalRentShare = getMembersResponse.body.members.reduce(
         (sum: number, member: any) => sum + member.rentShare,
-        0
+        0,
       );
       expect(totalRentShare).toBe(360000); // Should equal total rent
 
       // Verify at least one admin exists
       const adminMembers = getMembersResponse.body.members.filter(
-        (m: any) => m.role === 'admin'
+        (m: any) => m.role === 'admin',
       );
       expect(adminMembers.length).toBeGreaterThanOrEqual(1);
     });
@@ -380,7 +380,7 @@ describe('Household Creation Flow - Integration Tests', () => {
         .expect(200);
 
       const member = getMembersResponse.body.members.find(
-        (m: any) => m.userId === memberUserId
+        (m: any) => m.userId === memberUserId,
       );
       expect(member).toBeDefined();
       expect(member.householdId).toBe(householdId);

@@ -28,7 +28,7 @@ describe('Authentication Bypass Prevention', () => {
       const expiredToken = jwt.sign(
         { userId: '123' },
         JWT_SECRET,
-        { expiresIn: '-1s' } // Already expired
+        { expiresIn: '-1s' }, // Already expired
       );
 
       expect(() => {
@@ -48,7 +48,7 @@ describe('Authentication Bypass Prevention', () => {
       const token = jwt.sign(
         { userId: '123' },
         JWT_SECRET,
-        { expiresIn: '1h' }
+        { expiresIn: '1h' },
       );
 
       const decoded = jwt.verify(token, JWT_SECRET);
@@ -103,7 +103,7 @@ describe('Authentication Bypass Prevention', () => {
       const validToken = jwt.sign(
         { userId: '123', type: 'password-reset' },
         JWT_SECRET,
-        { expiresIn: '1h' }
+        { expiresIn: '1h' },
       );
 
       const decoded = jwt.verify(validToken, JWT_SECRET) as any;
@@ -114,7 +114,7 @@ describe('Authentication Bypass Prevention', () => {
       const expiredToken = jwt.sign(
         { userId: '123', type: 'password-reset' },
         JWT_SECRET,
-        { expiresIn: '-1s' }
+        { expiresIn: '-1s' },
       );
 
       expect(() => {

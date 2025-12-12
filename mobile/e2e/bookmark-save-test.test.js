@@ -2,7 +2,7 @@ describe('Bookmark and SavedProfiles Flow', () => {
   beforeAll(async () => {
     await device.launchApp({
       newInstance: true,
-      permissions: { location: 'always' }
+      permissions: { location: 'always' },
     });
   });
 

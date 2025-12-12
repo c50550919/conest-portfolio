@@ -217,7 +217,7 @@ describe('CSRF Redis Security Tests', () => {
       expect(res.cookie).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(String),
-        expect.any(Object)
+        expect.any(Object),
       );
       expect(next).toHaveBeenCalledTimes(1);
     });
@@ -495,7 +495,7 @@ describe('CSRF Redis Security Tests', () => {
 
       // All tokens should be valid
       const validationPromises = tokens.map(token =>
-        validateCSRFToken(sessionId, token)
+        validateCSRFToken(sessionId, token),
       );
       const results = await Promise.all(validationPromises);
       expect(results.every(result => result === true)).toBe(true);

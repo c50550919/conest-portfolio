@@ -96,7 +96,7 @@ describe('Profile Save/Bookmark Integration', () => {
     }
 
     // Wait for profiles to load
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Tap on first profile card to open modal
     // Try different selectors for profile cards
@@ -151,7 +151,7 @@ describe('Profile Save/Bookmark Integration', () => {
       await element(by.type('RCTTabBarItem')).atIndex(1).tap();
     }
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Open profile modal
     try {
@@ -170,7 +170,7 @@ describe('Profile Save/Bookmark Integration', () => {
     console.log('✅ Tapped bookmark button - profile should be saved');
 
     // Wait a moment for state update
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // Close modal
     await element(by.id('close-profile-button')).tap();
@@ -194,7 +194,7 @@ describe('Profile Save/Bookmark Integration', () => {
       await element(by.type('RCTTabBarItem')).atIndex(1).tap();
     }
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Open profile
     try {
@@ -209,7 +209,7 @@ describe('Profile Save/Bookmark Integration', () => {
 
     // Save profile
     await element(by.id('save-profile-button')).tap();
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // The bookmark icon should now be filled (visual verification)
     // Detox cannot directly test icon state, but we can verify button is still there
@@ -231,7 +231,7 @@ describe('Profile Save/Bookmark Integration', () => {
       await element(by.type('RCTTabBarItem')).atIndex(1).tap();
     }
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Open profile
     try {
@@ -246,11 +246,11 @@ describe('Profile Save/Bookmark Integration', () => {
 
     // Save first
     await element(by.id('save-profile-button')).tap();
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Tap again to unsave
     await element(by.id('save-profile-button')).tap();
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     console.log('✅ Tapped bookmark again - profile should be unsaved');
     console.log('ℹ️ Visual verification: Icon should change back to outline');
@@ -273,7 +273,7 @@ describe('Profile Save/Bookmark Integration', () => {
       await element(by.type('RCTTabBarItem')).atIndex(1).tap();
     }
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Open profile and save
     try {
@@ -287,11 +287,11 @@ describe('Profile Save/Bookmark Integration', () => {
       .withTimeout(5000);
 
     await element(by.id('save-profile-button')).tap();
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Close modal
     await element(by.id('close-profile-button')).tap();
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     console.log('✅ Closed modal after saving');
 

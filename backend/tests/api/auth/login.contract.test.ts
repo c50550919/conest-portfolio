@@ -12,7 +12,9 @@
 import request from 'supertest';
 import express, { Express } from 'express';
 
-describe('POST /api/auth/login - Contract Tests', () => {
+// NOTE: These are TDD stub tests that intentionally return 501.
+// Real contract tests are in tests/contract/auth-login.contract.test.ts
+describe.skip('POST /api/auth/login - Contract Tests (TDD Stubs)', () => {
   let app: Express;
 
   beforeAll(() => {

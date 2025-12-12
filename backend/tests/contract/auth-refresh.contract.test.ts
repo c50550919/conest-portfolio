@@ -13,7 +13,8 @@ jest.mock('../../src/models/User');
 jest.mock('../../src/config/redis');
 
 describe('POST /api/auth/refresh - Contract Tests', () => {
-  const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'test-refresh-secret';
+  // App uses JWT_SECRET for both access and refresh tokens (see src/utils/jwt.ts)
+  const JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-testing-only';
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -24,14 +25,14 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       const userId = 'user-123';
       const refreshToken = jwt.sign(
         { userId, email: 'test@example.com' },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d' }
+        JWT_SECRET,
+        { expiresIn: '7d' },
       );
 
       const mockUser = {
         id: userId,
         email: 'test@example.com',
-        status: 'active',
+        account_status: 'active',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -61,14 +62,14 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       const userId = 'user-123';
       const oldRefreshToken = jwt.sign(
         { userId, email: 'test@example.com' },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d' }
+        JWT_SECRET,
+        { expiresIn: '7d' },
       );
 
       const mockUser = {
         id: userId,
         email: 'test@example.com',
-        status: 'active',
+        account_status: 'active',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -132,8 +133,8 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
     it('should return 401 for expired refresh token', async () => {
       const expiredToken = jwt.sign(
         { userId: 'user-123', email: 'test@example.com' },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '-1s' }
+        JWT_SECRET,
+        { expiresIn: '-1s' },
       );
 
       const response = await request(app)
@@ -151,7 +152,7 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       const invalidToken = jwt.sign(
         { userId: 'user-123', email: 'test@example.com' },
         'wrong-secret',
-        { expiresIn: '7d' }
+        { expiresIn: '7d' },
       );
 
       const response = await request(app)
@@ -167,8 +168,8 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
     it('should return 401 for token not found in Redis', async () => {
       const validToken = jwt.sign(
         { userId: 'user-123', email: 'test@example.com' },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d' }
+        JWT_SECRET,
+        { expiresIn: '7d' },
       );
 
       (redisClient.get as jest.Mock).mockResolvedValue(null);
@@ -185,16 +186,17 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
     });
 
     it('should return 401 for token mismatch in Redis', async () => {
+      // Create two clearly different tokens by using different timestamps
       const clientToken = jwt.sign(
-        { userId: 'user-123', email: 'test@example.com' },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d' }
+        { userId: 'user-123', email: 'test@example.com', iat: Math.floor(Date.now() / 1000) },
+        JWT_SECRET,
+        { expiresIn: '7d' },
       );
 
       const differentToken = jwt.sign(
-        { userId: 'user-123', email: 'test@example.com' },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d' }
+        { userId: 'user-123', email: 'test@example.com', iat: Math.floor(Date.now() / 1000) - 100 },
+        JWT_SECRET,
+        { expiresIn: '7d' },
       );
 
       (redisClient.get as jest.Mock).mockResolvedValue(differentToken);
@@ -212,8 +214,8 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
     it('should return 401 for non-existent user', async () => {
       const validToken = jwt.sign(
         { userId: 'user-nonexistent', email: 'test@example.com' },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d' }
+        JWT_SECRET,
+        { expiresIn: '7d' },
       );
 
       (redisClient.get as jest.Mock).mockResolvedValue(validToken);
@@ -233,14 +235,14 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
     it('should return 401 for inactive user', async () => {
       const validToken = jwt.sign(
         { userId: 'user-123', email: 'test@example.com' },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d' }
+        JWT_SECRET,
+        { expiresIn: '7d' },
       );
 
       const inactiveUser = {
         id: 'user-123',
         email: 'test@example.com',
-        status: 'suspended',
+        account_status: 'suspended',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -265,14 +267,14 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       const userId = 'user-123';
       const refreshToken = jwt.sign(
         { userId, email: 'test@example.com' },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d' }
+        JWT_SECRET,
+        { expiresIn: '7d' },
       );
 
       const mockUser = {
         id: userId,
         email: 'test@example.com',
-        status: 'active',
+        account_status: 'active',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -304,15 +306,15 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       const userId = 'user-123';
       const refreshToken = jwt.sign(
         { userId, email: 'test@example.com' },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d' }
+        JWT_SECRET,
+        { expiresIn: '7d' },
       );
 
       const mockUser = {
         id: userId,
         email: 'test@example.com',
         password_hash: 'should_not_appear',
-        status: 'active',
+        account_status: 'active',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -340,14 +342,14 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       const userId = 'user-123';
       const oldRefreshToken = jwt.sign(
         { userId, email: 'test@example.com' },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d' }
+        JWT_SECRET,
+        { expiresIn: '7d' },
       );
 
       const mockUser = {
         id: userId,
         email: 'test@example.com',
-        status: 'active',
+        account_status: 'active',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -379,14 +381,14 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       const userId = 'user-123';
       const refreshToken = jwt.sign(
         { userId, email: 'test@example.com' },
-        JWT_REFRESH_SECRET,
-        { expiresIn: '7d' }
+        JWT_SECRET,
+        { expiresIn: '7d' },
       );
 
       const mockUser = {
         id: userId,
         email: 'test@example.com',
-        status: 'active',
+        account_status: 'active',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,

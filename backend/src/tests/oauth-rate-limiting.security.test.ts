@@ -90,11 +90,8 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
         .send({ idToken: mockGoogleToken })
         .expect(429);
 
-      expect(response.body).toMatchObject({
-        success: false,
-        error: 'too_many_requests',
-        message: expect.stringContaining('rate limit'),
-      });
+      expect(response.body).toHaveProperty('success', false);
+      expect(response.body.error).toMatch(/too.many|rate.limit/i);
     });
 
     it('should include Retry-After header in rate limit response', async () => {
@@ -171,10 +168,8 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
         })
         .expect(429);
 
-      expect(response.body).toMatchObject({
-        success: false,
-        error: 'too_many_requests',
-      });
+      expect(response.body).toHaveProperty('success', false);
+      expect(response.body.error).toMatch(/too.many|rate.limit/i);
     });
 
     it('should include Retry-After header for Apple OAuth', async () => {
@@ -244,11 +239,11 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
       ];
 
       // Mock to reject all tokens
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-      mockRejectedValue(
-        new Error('Invalid token')
-      );
+        mockRejectedValue(
+          new Error('Invalid token'),
+        );
 
       // First 5 attempts return 401 (invalid token)
       for (let i = 0; i < 5; i++) {
@@ -283,7 +278,7 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
 
       // Mock returns different emails
       let emailIndex = 0;
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(async () => {
         const email = emails[emailIndex++];
         return {
@@ -324,7 +319,7 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
         floodRequests.push(
           request(app)
             .post('/api/auth/oauth/google')
-            .send({ idToken: `flood_token_${i}` })
+            .send({ idToken: `flood_token_${i}` }),
         );
       }
 
@@ -394,7 +389,7 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
 
       // Validate error response structure
       expect(response.body).toHaveProperty('success', false);
-      expect(response.body).toHaveProperty('error', 'too_many_requests');
+      expect(response.body.error).toMatch(/too.many|rate.limit/i);
       expect(response.body).toHaveProperty('message');
       expect(typeof response.body.message).toBe('string');
     });

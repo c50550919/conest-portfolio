@@ -141,7 +141,7 @@ describe('COMPLIANCE TEST: Child Safety (Constitution Principle I)', () => {
       profiles.forEach((profile: any) => {
         // Get all keys that contain 'child' or 'kid'
         const childRelatedKeys = Object.keys(profile).filter(key =>
-          key.toLowerCase().includes('child') || key.toLowerCase().includes('kid')
+          key.toLowerCase().includes('child') || key.toLowerCase().includes('kid'),
         );
 
         // ONLY these two keys are allowed

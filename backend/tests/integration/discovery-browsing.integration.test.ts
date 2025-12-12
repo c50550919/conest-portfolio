@@ -15,7 +15,7 @@ import redis from '../../src/config/redis';
 describe('Discovery Profile Browsing - Integration Tests', () => {
   let authToken: string;
   let currentUserId: string;
-  let testUsers: any[] = [];
+  const testUsers: any[] = [];
 
   beforeAll(async () => {
     // Run migrations
@@ -211,7 +211,7 @@ describe('Discovery Profile Browsing - Integration Tests', () => {
       response.body.profiles.forEach((profile: any) => {
         // Filter child-related keys
         const childKeys = Object.keys(profile).filter(key =>
-          key.toLowerCase().includes('child')
+          key.toLowerCase().includes('child'),
         );
 
         // ONLY childrenCount and childrenAgeGroups allowed

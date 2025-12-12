@@ -129,7 +129,9 @@ describe('Validation Error Reproduction', () => {
       .withTimeout(5000);
 
     // Check if error dialog appears
-    const errorVisible = await element(by.text('Validation failed')).isVisible().catch(() => false);
+    const errorVisible = await element(by.text('Validation failed'))
+      .isVisible()
+      .catch(() => false);
 
     if (errorVisible) {
       console.log('❌ Validation error on Saved tab load');

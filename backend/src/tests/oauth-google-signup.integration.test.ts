@@ -239,9 +239,9 @@ describe('T015: OAuth Google Signup - Integration Test', () => {
     it('should reject invalid Google token', async () => {
     // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-      mockRejectedValue(
-        new Error('Invalid token signature')
-      );
+        mockRejectedValue(
+          new Error('Invalid token signature'),
+        );
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -258,9 +258,9 @@ describe('T015: OAuth Google Signup - Integration Test', () => {
     it('should reject expired Google token', async () => {
     // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-      mockRejectedValue(
-        new Error('Token used too late')
-      );
+        mockRejectedValue(
+          new Error('Token used too late'),
+        );
 
       const response = await request(app)
         .post('/api/auth/oauth/google')

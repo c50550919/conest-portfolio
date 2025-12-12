@@ -61,7 +61,7 @@ describe('ProfileDetailsModal E2E Tests', () => {
       await element(by.id('photo-gallery')).swipe('left', 'fast');
 
       // Small delay for animation
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Verify pagination indicator changed (second dot should be active)
       // Note: This is a visual test, actual verification depends on test ID implementation
@@ -82,7 +82,7 @@ describe('ProfileDetailsModal E2E Tests', () => {
       await expect(element(by.id('profile-details-modal'))).not.toBeVisible();
     });
 
-    it('should trigger right swipe when I\'m Interested button is tapped', async () => {
+    it("should trigger right swipe when I'm Interested button is tapped", async () => {
       // Open modal
       await element(by.id('info-button')).tap();
       await expect(element(by.id('profile-details-modal'))).toBeVisible();
@@ -178,7 +178,6 @@ describe('ProfileDetailsModal E2E Tests', () => {
     it('should open ProfileDetailsModal from profile card tap', async () => {
       // Navigate to Browse tab (if available)
       // This test assumes there's a browse/filter mode accessible from nav
-
       // For now, we'll skip this as the Browse screen may not be in main tab navigator
       // Implementation depends on app navigation structure
     });
@@ -256,7 +255,7 @@ describe('ProfileDetailsModal E2E Tests', () => {
       // Perform multiple rapid swipes
       for (let i = 0; i < 3; i++) {
         await element(by.id('photo-gallery')).swipe('left', 'fast');
-        await new Promise(resolve => setTimeout(resolve, 200));
+        await new Promise((resolve) => setTimeout(resolve, 200));
       }
 
       // If app didn't crash or freeze, test passes
@@ -295,7 +294,7 @@ describe('ProfileDetailsModal E2E Tests', () => {
         await element(by.id('continue-browsing-button')).tap();
         await expect(element(by.id('profile-details-modal'))).not.toBeVisible();
 
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
     });
   });

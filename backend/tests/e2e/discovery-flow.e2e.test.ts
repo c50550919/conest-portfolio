@@ -267,7 +267,7 @@ describe('E2E Test: Discovery Screen Workflow', () => {
       // Validate empty state
       await expect(page.locator('[data-testid="empty-state"]')).toBeVisible();
       await expect(page.locator('[data-testid="empty-state-message"]')).toHaveText(
-        'No more profiles available. Check back later or adjust your preferences.'
+        'No more profiles available. Check back later or adjust your preferences.',
       );
       await expect(page.locator('[data-testid="adjust-preferences-btn"]')).toBeVisible();
     });
@@ -332,7 +332,7 @@ describe('E2E Test: Discovery Screen Workflow', () => {
       await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
       await page.touchscreen.swipe(
         { x: box.x + 50, y: box.y + box.height / 2 },
-        { x: box.x + box.width + 100, y: box.y + box.height / 2 }
+        { x: box.x + box.width + 100, y: box.y + box.height / 2 },
       );
 
       // Profile should disappear
@@ -351,7 +351,7 @@ describe('E2E Test: Discovery Screen Workflow', () => {
       await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
       await page.touchscreen.swipe(
         { x: box.x + box.width - 50, y: box.y + box.height / 2 },
-        { x: box.x - 100, y: box.y + box.height / 2 }
+        { x: box.x - 100, y: box.y + box.height / 2 },
       );
 
       await expect(profileCard).not.toBeVisible({ timeout: 1000 });
@@ -454,11 +454,11 @@ describe('E2E Test: Discovery Screen Workflow', () => {
       await expect(profileCard).toHaveAttribute('role', 'article');
       await expect(profileCard.locator('[data-testid="swipe-right-btn"]')).toHaveAttribute(
         'aria-label',
-        'Express interest in this profile'
+        'Express interest in this profile',
       );
       await expect(profileCard.locator('[data-testid="swipe-left-btn"]')).toHaveAttribute(
         'aria-label',
-        'Pass on this profile'
+        'Pass on this profile',
       );
     });
   });

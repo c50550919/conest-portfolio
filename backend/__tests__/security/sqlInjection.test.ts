@@ -14,7 +14,7 @@ describe('SQL Injection Prevention', () => {
         "1' UNION SELECT * FROM users--",
         "admin'--",
         "' OR '1'='1",
-        "1; DELETE FROM users",
+        '1; DELETE FROM users',
       ];
 
       injectionAttempts.forEach(attempt => {

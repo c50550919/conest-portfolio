@@ -96,7 +96,7 @@ describe('PERFORMANCE TEST: GET /api/discovery/profiles', () => {
             budget: 1500 + (i % 10) * 100,
             moveInDate: new Date(Date.now() + (30 + i) * 24 * 60 * 60 * 1000),
           },
-        })
+        }),
       );
     }
 
@@ -210,9 +210,7 @@ describe('PERFORMANCE TEST: GET /api/discovery/profiles', () => {
       const stats = calculateStats(responseTimes);
 
       // Calculate variance
-      const variance = responseTimes.reduce((sum, time) => {
-        return sum + Math.pow(time - stats.mean, 2);
-      }, 0) / responseTimes.length;
+      const variance = responseTimes.reduce((sum, time) => sum + Math.pow(time - stats.mean, 2), 0) / responseTimes.length;
 
       const standardDeviation = Math.sqrt(variance);
 
@@ -296,7 +294,7 @@ describe('PERFORMANCE TEST: GET /api/discovery/profiles', () => {
         request(app)
           .get('/api/discovery/profiles?limit=10')
           .set('Authorization', `Bearer ${authToken}`)
-          .expect(200)
+          .expect(200),
       );
 
       const results = await Promise.all(promises);

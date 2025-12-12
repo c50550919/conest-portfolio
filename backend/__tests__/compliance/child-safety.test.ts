@@ -74,7 +74,7 @@ describe('Child Safety Compliance', () => {
           first_name: 'Test',
           last_name: 'Parent',
           children_details: [
-            { name: 'Tommy', age: 8 } // MUST BE REJECTED
+            { name: 'Tommy', age: 8 }, // MUST BE REJECTED
           ],
         })
         .expect(400);
@@ -223,7 +223,7 @@ describe('Child Safety Compliance', () => {
         .post('/api/messages/moderate')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          content: "My son Tommy goes to Lincoln Elementary",
+          content: 'My son Tommy goes to Lincoln Elementary',
         })
         .expect(200);
 
@@ -236,7 +236,7 @@ describe('Child Safety Compliance', () => {
         .post('/api/messages/moderate')
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          content: "My children are ages 5 and 8, both in elementary school",
+          content: 'My children are ages 5 and 8, both in elementary school',
         })
         .expect(200);
 
@@ -298,7 +298,7 @@ describe('Child Safety Compliance', () => {
       // Verify messages are encrypted
       const message = await db('messages').first();
 
-      if (message && message.content_encrypted) {
+      if (message?.content_encrypted) {
         expect(message.content_encrypted).not.toBe(message.content);
       }
     });

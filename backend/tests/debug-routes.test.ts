@@ -13,14 +13,14 @@ describe('Route Registration Debug', () => {
       if (middleware.route) {
         routes.push({
           path: middleware.route.path,
-          methods: Object.keys(middleware.route.methods)
+          methods: Object.keys(middleware.route.methods),
         });
       } else if (middleware.name === 'router') {
         middleware.handle.stack.forEach((handler: any) => {
           if (handler.route) {
             routes.push({
               path: handler.route.path,
-              methods: Object.keys(handler.route.methods)
+              methods: Object.keys(handler.route.methods),
             });
           }
         });

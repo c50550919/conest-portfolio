@@ -112,7 +112,7 @@ describe('Integration Test: Mutual Match Creation', () => {
 
       // UUID validation
       expect(match.id).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
       );
 
       // Validate compatibility score range
@@ -375,7 +375,7 @@ describe('Integration Test: Mutual Match Creation', () => {
             userA: { id: userA.id, token: getAuthToken(userA.id) },
             userB: { id: userB.id, token: getAuthToken(userB.id) },
           };
-        })
+        }),
       );
 
       // Each pair: userA swipes right on userB first
@@ -384,8 +384,8 @@ describe('Integration Test: Mutual Match Creation', () => {
           request(app)
             .post('/api/discovery/swipe')
             .set('Authorization', `Bearer ${pair.userA.token}`)
-            .send({ targetUserId: pair.userB.id, direction: 'right' })
-        )
+            .send({ targetUserId: pair.userB.id, direction: 'right' }),
+        ),
       );
 
       // All userB swipe right simultaneously (creates 10 matches)
@@ -394,8 +394,8 @@ describe('Integration Test: Mutual Match Creation', () => {
           request(app)
             .post('/api/discovery/swipe')
             .set('Authorization', `Bearer ${pair.userB.token}`)
-            .send({ targetUserId: pair.userA.id, direction: 'right' })
-        )
+            .send({ targetUserId: pair.userA.id, direction: 'right' }),
+        ),
       );
 
       // All matches should succeed

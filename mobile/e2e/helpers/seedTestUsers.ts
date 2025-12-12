@@ -152,7 +152,7 @@ export async function seedTestUsers(
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
 
-  console.log(`\n📊 Seeding Summary:`);
+  console.log('\n📊 Seeding Summary:');
   console.log(`   ✅ Created: ${created}`);
   console.log(`   ⏭️  Skipped: ${skipped}`);
   console.log(`   ❌ Errors: ${errors}\n`);

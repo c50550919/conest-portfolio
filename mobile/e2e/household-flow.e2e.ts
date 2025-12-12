@@ -86,9 +86,7 @@ describe('Household Flow (Child Safety Critical)', () => {
 
       // CRITICAL VERIFICATION: Profile should NOT contain:
       // - Child names
-      await detoxExpect(
-        element(by.text(/Emma|Liam|Olivia|Noah/i))
-      ).not.toExist();
+      await detoxExpect(element(by.text(/Emma|Liam|Olivia|Noah/i))).not.toExist();
 
       // - Child photos
       await detoxExpect(element(by.id('child-photo'))).not.toExist();
@@ -106,9 +104,7 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('should display member verification status', async () => {
       // Verify verification badges on member cards
       await detoxExpect(element(by.text('ID Verified'))).toBeVisible();
-      await detoxExpect(
-        element(by.text('Background Check'))
-      ).toBeVisible();
+      await detoxExpect(element(by.text('Background Check'))).toBeVisible();
     });
 
     it('should display member rent share', async () => {
@@ -133,7 +129,6 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('should display list of household expenses', async () => {
       // Verify expense list is visible
       // await detoxExpect(element(by.id('expense-list'))).toBeVisible();
-
       // Verify at least one expense card
       // await detoxExpect(element(by.id('expense-card-0'))).toBeVisible();
     });
@@ -150,7 +145,6 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('should display upcoming expenses', async () => {
       // Verify upcoming expenses section
       // await detoxExpect(element(by.text('Upcoming'))).toBeVisible();
-
       // Verify at least one upcoming expense
       // await detoxExpect(element(by.id('upcoming-expense-0'))).toBeVisible();
     });
@@ -158,7 +152,6 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('should display expense payment status', async () => {
       // Verify paid status (green check)
       // await detoxExpect(element(by.id('expense-status-paid'))).toBeVisible();
-
       // Verify pending status (yellow warning)
       // await detoxExpect(element(by.id('expense-status-pending'))).toBeVisible();
     });
@@ -166,16 +159,13 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('should create new expense', async () => {
       // Tap "Add Expense" button
       // await element(by.id('add-expense-button')).tap();
-
       // Fill expense form
       // await element(by.id('expense-name-input')).typeText('Groceries');
       // await element(by.id('expense-amount-input')).typeText('150');
       // await element(by.id('expense-split-method')).tap();
       // await element(by.text('Split Equally')).tap();
-
       // Submit expense
       // await element(by.id('create-expense-button')).tap();
-
       // Verify expense appears in list
       // await waitFor(element(by.text('Groceries')))
       //   .toBeVisible()
@@ -185,17 +175,13 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('should split rent among household members', async () => {
       // Tap "Split Rent" button
       // await element(by.id('split-rent-button')).tap();
-
       // Fill rent amount
       // await element(by.id('rent-amount-input')).typeText('2400');
-
       // Verify auto-calculation for each member
       // 2 members = $1200 each
       // await detoxExpect(element(by.text('$1,200'))).toBeVisible();
-
       // Submit rent split
       // await element(by.id('confirm-rent-split')).tap();
-
       // Verify rent expense created
       // await waitFor(element(by.text('Rent')))
       //   .toBeVisible()
@@ -207,21 +193,16 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('should process payment for an expense', async () => {
       // Tap on an unpaid expense
       // await element(by.id('expense-card-pending')).tap();
-
       // Tap "Pay Now" button
       // await element(by.id('pay-expense-button')).tap();
-
       // Select payment method (Stripe integration)
       // await element(by.id('payment-method-card')).tap();
-
       // Confirm payment
       // await element(by.id('confirm-payment-button')).tap();
-
       // Wait for payment processing
       // await waitFor(element(by.text('Payment Successful')))
       //   .toBeVisible()
       //   .withTimeout(5000);
-
       // Verify expense status updated to "Paid"
       // await detoxExpect(element(by.id('expense-status-paid'))).toBeVisible();
     });
@@ -229,16 +210,12 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('should mark expense as paid (cash/check)', async () => {
       // Tap on an unpaid expense
       // await element(by.id('expense-card-pending')).tap();
-
       // Tap "Mark as Paid" button
       // await element(by.id('mark-paid-button')).tap();
-
       // Add payment notes (optional)
       // await element(by.id('payment-notes-input')).typeText('Paid via check');
-
       // Confirm
       // await element(by.id('confirm-mark-paid')).tap();
-
       // Verify expense status updated
       // await waitFor(element(by.id('expense-status-paid')))
       //   .toBeVisible()
@@ -250,10 +227,8 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('should display transaction history', async () => {
       // Navigate to transactions screen
       // await element(by.text('Transactions')).tap();
-
       // Verify transaction list
       // await detoxExpect(element(by.id('transaction-list'))).toBeVisible();
-
       // Verify at least one transaction
       // await detoxExpect(element(by.id('transaction-0'))).toBeVisible();
     });
@@ -261,10 +236,8 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('should filter transactions by date range', async () => {
       // Tap date filter
       // await element(by.id('date-filter-button')).tap();
-
       // Select date range (e.g., Last 30 days)
       // await element(by.text('Last 30 Days')).tap();
-
       // Verify filtered results
       // await waitFor(element(by.id('transaction-0')))
       //   .toBeVisible()
@@ -274,10 +247,8 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('should filter transactions by member', async () => {
       // Tap member filter
       // await element(by.id('member-filter-button')).tap();
-
       // Select member
       // await element(by.text('Jane Doe')).tap();
-
       // Verify filtered results show only Jane's transactions
       // await waitFor(element(by.text('Jane Doe')))
       //   .toBeVisible()
@@ -349,15 +320,12 @@ describe('Household Flow (Child Safety Critical)', () => {
       await element(by.text('Expenses')).swipe('up', 'fast', 0.3);
 
       // VERIFY: Expense names do NOT contain child names
-      await detoxExpect(
-        element(by.text(/Emma's|Liam's|Olivia's|Noah's/i))
-      ).not.toExist();
+      await detoxExpect(element(by.text(/Emma's|Liam's|Olivia's|Noah's/i))).not.toExist();
     });
 
     it('CRITICAL: household calendar should NOT list child events', async () => {
       // Navigate to calendar (if exists)
       // await element(by.text('Calendar')).tap();
-
       // VERIFY: Calendar events do NOT include child-specific events
       // await detoxExpect(
       //   element(by.text(/school pickup|soccer practice/i))
@@ -367,7 +335,6 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('CRITICAL: chore assignments should NOT include child names', async () => {
       // Navigate to chores (if exists)
       // await element(by.text('Chores')).tap();
-
       // VERIFY: Chore assignments do NOT include child names
       // await detoxExpect(
       //   element(by.text(/Emma|Liam|Olivia|Noah/i))
@@ -377,11 +344,9 @@ describe('Household Flow (Child Safety Critical)', () => {
     it('CRITICAL: house rules should NOT reference child-specific policies', async () => {
       // Navigate to house rules (if exists)
       // await element(by.text('House Rules')).tap();
-
       // VERIFY: House rules do NOT include child PII
       // Generic policies like "quiet hours" are OK
       // Child-specific rules like "Emma's bedtime" are NOT OK
-
       // await detoxExpect(
       //   element(by.text(/bedtime for \w+|curfew for \w+/i))
       // ).not.toExist();

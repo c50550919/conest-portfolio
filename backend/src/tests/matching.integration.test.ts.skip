@@ -407,7 +407,7 @@ describe('End-to-End Match Flow', () => {
         budget_min: 1200,
         budget_max: 1600,
         city: 'Austin',
-      }
+      },
     );
 
     expect(discoveryScore).toBeGreaterThan(50); // Good match

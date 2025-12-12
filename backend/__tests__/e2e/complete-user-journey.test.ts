@@ -176,7 +176,7 @@ describe('Complete User Journey - E2E', () => {
       expect(Array.isArray(response.body)).toBe(true);
 
       const matchWithUser2 = response.body.find(
-        (m: any) => m.profile_id === profile2Id
+        (m: any) => m.profile_id === profile2Id,
       );
 
       expect(matchWithUser2).toBeDefined();
@@ -190,7 +190,7 @@ describe('Complete User Journey - E2E', () => {
         .expect(200);
 
       const matchWithUser1 = response.body.find(
-        (m: any) => m.profile_id === profile1Id
+        (m: any) => m.profile_id === profile1Id,
       );
 
       expect(matchWithUser1).toBeDefined();
@@ -239,7 +239,7 @@ describe('Complete User Journey - E2E', () => {
         .post(`/api/conversations/${conversationId}/messages`)
         .set('Authorization', `Bearer ${user1Token}`)
         .send({
-          content: "Hi Michelle! I saw your profile and we seem like a great match. Would you like to discuss housing options?",
+          content: 'Hi Michelle! I saw your profile and we seem like a great match. Would you like to discuss housing options?',
         })
         .expect(201);
 

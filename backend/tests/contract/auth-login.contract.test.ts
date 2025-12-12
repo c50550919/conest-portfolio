@@ -28,7 +28,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
-        status: 'active',
+        account_status: 'active',
         last_login_at: new Date(),
         created_at: new Date(),
         updated_at: new Date(),
@@ -62,7 +62,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
         id: 'user-123',
         email: 'test@example.com',
         password_hash: 'hashed_password',
-        status: 'active',
+        account_status: 'active',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -155,7 +155,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
         id: 'user-123',
         email: 'test@example.com',
         password_hash: 'hashed_password',
-        status: 'active',
+        account_status: 'active',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -190,7 +190,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
         id: 'user-123',
         email: 'test@example.com',
         password_hash: 'hashed_password',
-        status: 'active',
+        account_status: 'active',
       };
 
       (UserModel.findByEmail as jest.Mock).mockResolvedValue(mockUser);
@@ -214,7 +214,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
         id: 'user-123',
         email: 'test@example.com',
         password_hash: 'hashed_password',
-        status: 'suspended',
+        account_status: 'suspended',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -232,7 +232,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
 
       expect(response.status).toBe(403);
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toContain('not active');
+      expect(response.body.error).toContain('not active'); // Normalized for security - doesn't reveal specific status
     });
 
     it('should return 403 for deactivated account', async () => {
@@ -240,7 +240,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
         id: 'user-123',
         email: 'test@example.com',
         password_hash: 'hashed_password',
-        status: 'deactivated',
+        account_status: 'deactivated',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -258,7 +258,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
 
       expect(response.status).toBe(403);
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toContain('not active');
+      expect(response.body.error).toContain('not active'); // Normalized for security - doesn't reveal specific status
     });
   });
 
@@ -269,7 +269,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
         email: 'test@example.com',
         password_hash: 'hashed_password',
         phone: '+12345678901',
-        status: 'active',
+        account_status: 'active',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -296,7 +296,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
           user: {
             id: expect.any(String),
             email: expect.any(String),
-            status: expect.any(String),
+            account_status: expect.any(String),
           },
           tokens: {
             accessToken: expect.any(String),
@@ -312,7 +312,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
         id: 'user-123',
         email: 'test@example.com',
         password_hash: 'secret_hashed_password_should_not_appear',
-        status: 'active',
+        account_status: 'active',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -344,7 +344,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
         id: 'user-123',
         email: 'test@example.com',
         password_hash: 'hashed_password',
-        status: 'active',
+        account_status: 'active',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,
@@ -367,7 +367,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
       expect(response.body.data.tokens.accessToken).toBeTruthy();
       expect(response.body.data.tokens.refreshToken).toBeTruthy();
       expect(response.body.data.tokens.accessToken).not.toBe(
-        response.body.data.tokens.refreshToken
+        response.body.data.tokens.refreshToken,
       );
     });
 
@@ -376,7 +376,7 @@ describe('POST /api/auth/login - Contract Tests', () => {
         id: 'user-123',
         email: 'test@example.com',
         password_hash: 'hashed_password',
-        status: 'active',
+        account_status: 'active',
         phone_verified: true,
         email_verified: true,
         two_factor_enabled: false,

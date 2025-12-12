@@ -163,7 +163,7 @@ describe('Integration Test: Successful Profile Browsing', () => {
 
         // Validate cursor is UUID
         expect(nextCursor).toMatch(
-          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
         );
 
         // Request second page using cursor
@@ -196,7 +196,7 @@ describe('Integration Test: Successful Profile Browsing', () => {
       // Validate descending order
       for (let i = 0; i < profiles.length - 1; i++) {
         expect(profiles[i].compatibilityScore).toBeGreaterThanOrEqual(
-          profiles[i + 1].compatibilityScore
+          profiles[i + 1].compatibilityScore,
         );
       }
     });
@@ -325,7 +325,7 @@ describe('Integration Test: Successful Profile Browsing', () => {
           .then(response => ({
             status: response.status,
             duration: response.header['x-response-time'],
-          }))
+          })),
       );
 
       const results = await Promise.all(requests);

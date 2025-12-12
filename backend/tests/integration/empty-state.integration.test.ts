@@ -109,7 +109,7 @@ describe('Integration Test: No More Profiles Available', () => {
             },
           });
           return profile.id;
-        })
+        }),
       );
 
       // Swipe on all 3 profiles
@@ -154,7 +154,7 @@ describe('Integration Test: No More Profiles Available', () => {
               moveInDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             },
           });
-        })
+        }),
       );
 
       // Queue should be empty (unverified users excluded)
@@ -187,7 +187,7 @@ describe('Integration Test: No More Profiles Available', () => {
               moveInDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             },
           });
-        })
+        }),
       );
 
       // If budget filter is strict, queue may be empty
@@ -241,7 +241,7 @@ describe('Integration Test: No More Profiles Available', () => {
               moveInDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
             },
           });
-        })
+        }),
       );
 
       const updatedResponse = await request(app)
@@ -321,7 +321,7 @@ describe('Integration Test: No More Profiles Available', () => {
       const requests = Array.from({ length: 10 }, () =>
         request(app)
           .get('/api/discovery/profiles')
-          .set('Authorization', `Bearer ${authToken}`)
+          .set('Authorization', `Bearer ${authToken}`),
       );
 
       const results = await Promise.all(requests);

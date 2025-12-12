@@ -98,30 +98,26 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
 
     // Mock OAuth verification for Google
     // @ts-expect-error - Mocking Google OAuth2Client for testing
-    jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(async () => {
-      return {
-        getPayload: () => ({
-          sub: '888999000111222333444', // Different Google ID
-          email: sharedEmail, // Same email as existing account
-          email_verified: true,
-          given_name: 'Conflict',
-          family_name: 'Test',
-          picture: 'https://lh3.googleusercontent.com/a/different',
-        }),
-      } as any;
-    });
+    jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(async () => ({
+      getPayload: () => ({
+        sub: '888999000111222333444', // Different Google ID
+        email: sharedEmail, // Same email as existing account
+        email_verified: true,
+        given_name: 'Conflict',
+        family_name: 'Test',
+        picture: 'https://lh3.googleusercontent.com/a/different',
+      }),
+    } as any));
 
     // Mock OAuth verification for Apple
     // @ts-expect-error - Mocking Apple signin for testing
-    jest.spyOn(appleSignin, 'verifyIdToken').mockImplementation(async () => {
-      return {
-        sub: '008901.different.apple.5678', // Different Apple ID
-        email: sharedEmail, // Same email as existing Google account
-        email_verified: 'true',
-        is_private_email: 'false',
-        nonce: mockAppleNonce,
-      } as any;
-    });
+    jest.spyOn(appleSignin, 'verifyIdToken').mockImplementation(async () => ({
+      sub: '008901.different.apple.5678', // Different Apple ID
+      email: sharedEmail, // Same email as existing Google account
+      email_verified: 'true',
+      is_private_email: 'false',
+      nonce: mockAppleNonce,
+    } as any));
   });
 
   afterEach(async () => {
@@ -485,7 +481,7 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
         .expect(409);
 
       // User realizes they should use Google
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
         getPayload: () => ({
           sub: googleProviderId, // Correct Google provider_id

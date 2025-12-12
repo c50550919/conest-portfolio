@@ -61,7 +61,7 @@ describe('Compatibility Calculator', () => {
       expect(score).toBeLessThan(20);
     });
 
-    it('should score age group overlap correctly (20 points per overlap)', () => {
+    it('should not score age group overlap (FHA compliance - removed discriminatory scoring)', () => {
       const user: ParentProfile = {
         user_id: 'user1',
         children_age_groups: ['toddler', 'elementary'],
@@ -79,10 +79,10 @@ describe('Compatibility Calculator', () => {
       };
 
       const score = calculateCompatibilityScore(user, target);
-      expect(score).toBe(40); // 2 overlaps * 20 = 40
+      expect(score).toBe(0); // Age group scoring removed for FHA compliance
     });
 
-    it('should score location match correctly (30 points for same city)', () => {
+    it('should score location match correctly (50 points for same city)', () => {
       const user: ParentProfile = {
         user_id: 'user1',
         children_age_groups: [],
@@ -100,7 +100,7 @@ describe('Compatibility Calculator', () => {
       };
 
       const score = calculateCompatibilityScore(user, target);
-      expect(score).toBe(30); // Same city = 30 points
+      expect(score).toBe(50); // Same city = 50 points
     });
 
     it('should score budget compatibility correctly', () => {
@@ -121,7 +121,7 @@ describe('Compatibility Calculator', () => {
       };
 
       const score = calculateCompatibilityScore(user, target);
-      expect(score).toBe(30); // $0 difference = 30 points
+      expect(score).toBe(50); // $0 difference = 50 points (max budget score)
     });
 
     it('should decrease budget score with increasing budget difference', () => {
@@ -207,7 +207,7 @@ describe('Compatibility Calculator', () => {
       expect(breakdown.breakdown).toHaveProperty('sameCity');
     });
 
-    it('should correctly calculate age group overlap', () => {
+    it('should return zero for age group overlap (FHA compliance)', () => {
       const user: ParentProfile = {
         user_id: 'user1',
         children_age_groups: ['toddler', 'elementary'],
@@ -226,8 +226,8 @@ describe('Compatibility Calculator', () => {
 
       const breakdown = calculateCompatibilityBreakdown(user, target);
 
-      expect(breakdown.breakdown.ageGroupOverlap).toBe(1); // Only 'elementary' overlaps
-      expect(breakdown.ageGroupScore).toBe(20); // 1 overlap * 20
+      expect(breakdown.breakdown.ageGroupOverlap).toBe(0); // Removed for FHA compliance
+      expect(breakdown.ageGroupScore).toBe(0); // Age group scoring removed
     });
 
     it('should handle null budget values', () => {
@@ -296,7 +296,7 @@ describe('Compatibility Calculator', () => {
       const breakdown = calculateCompatibilityBreakdown(user, target);
 
       expect(breakdown.breakdown.sameCity).toBe(true);
-      expect(breakdown.locationScore).toBe(30);
+      expect(breakdown.locationScore).toBe(50);
     });
 
     it('should return 0 location score for different cities', () => {
@@ -368,7 +368,7 @@ describe('Compatibility Calculator', () => {
       expect(breakdown.locationScore).toBe(0);
     });
 
-    it('should handle maximum age group overlap (3 groups)', () => {
+    it('should handle maximum age group overlap - returns zero (FHA compliance)', () => {
       const user: ParentProfile = {
         user_id: 'user1',
         children_age_groups: ['toddler', 'elementary', 'teen'],
@@ -386,8 +386,8 @@ describe('Compatibility Calculator', () => {
       };
 
       const breakdown = calculateCompatibilityBreakdown(user, target);
-      expect(breakdown.breakdown.ageGroupOverlap).toBe(3);
-      expect(breakdown.ageGroupScore).toBe(60); // 3 * 20, capped at 60
+      expect(breakdown.breakdown.ageGroupOverlap).toBe(0); // Removed for FHA compliance
+      expect(breakdown.ageGroupScore).toBe(0); // Age group scoring removed
     });
   });
 

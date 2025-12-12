@@ -364,9 +364,9 @@ describe('T016: OAuth Apple Signup - Integration Test', () => {
     it('should reject invalid Apple identity token', async () => {
     // @ts-expect-error - Mocking Apple signin for testing
       jest.spyOn(appleSignin, 'verifyIdToken').// @ts-expect-error - Mocking error
-      mockRejectedValue(
-        new Error('Invalid token signature')
-      );
+        mockRejectedValue(
+          new Error('Invalid token signature'),
+        );
 
       const response = await request(app)
         .post('/api/auth/oauth/apple')
@@ -390,9 +390,9 @@ describe('T016: OAuth Apple Signup - Integration Test', () => {
     it('should reject expired Apple token', async () => {
     // @ts-expect-error - Mocking Apple signin for testing
       jest.spyOn(appleSignin, 'verifyIdToken').// @ts-expect-error - Mocking error
-      mockRejectedValue(
-        new Error('Token expired')
-      );
+        mockRejectedValue(
+          new Error('Token expired'),
+        );
 
       const response = await request(app)
         .post('/api/auth/oauth/apple')

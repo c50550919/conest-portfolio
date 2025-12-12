@@ -35,7 +35,7 @@ describe('Authentication Integration', () => {
       const token = jwt.sign(
         { userId, role: 'user' },
         JWT_SECRET,
-        { expiresIn: '15m' }
+        { expiresIn: '15m' },
       );
 
       const decoded = jwt.verify(token, JWT_SECRET) as any;
@@ -63,13 +63,13 @@ describe('Authentication Integration', () => {
       const accessToken = jwt.sign(
         { userId, type: 'access' },
         JWT_SECRET,
-        { expiresIn: '15m' }
+        { expiresIn: '15m' },
       );
 
       const refreshToken = jwt.sign(
         { userId, type: 'refresh' },
         JWT_SECRET,
-        { expiresIn: '7d' }
+        { expiresIn: '7d' },
       );
 
       const accessDecoded = jwt.verify(accessToken, JWT_SECRET) as any;
@@ -106,7 +106,7 @@ describe('Authentication Integration', () => {
       const refreshToken = jwt.sign(
         { userId: 'user-123', type: 'refresh' },
         JWT_SECRET,
-        { expiresIn: '7d' }
+        { expiresIn: '7d' },
       );
 
       const decoded = jwt.verify(refreshToken, JWT_SECRET) as any;
@@ -119,7 +119,7 @@ describe('Authentication Integration', () => {
       const newAccessToken = jwt.sign(
         { userId: 'user-123', type: 'access' },
         JWT_SECRET,
-        { expiresIn: '15m' }
+        { expiresIn: '15m' },
       );
 
       const decoded = jwt.verify(newAccessToken, JWT_SECRET) as any;
@@ -154,7 +154,7 @@ describe('Authentication Integration', () => {
       const resetToken = jwt.sign(
         { userId: 'user-123', type: 'password-reset' },
         JWT_SECRET,
-        { expiresIn: '1h' }
+        { expiresIn: '1h' },
       );
 
       const decoded = jwt.verify(resetToken, JWT_SECRET) as any;

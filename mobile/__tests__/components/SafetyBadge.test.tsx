@@ -1,88 +1,116 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
-import SafetyBadge from '../../src/components/SafetyBadge';
+import SafetyBadge from '../../src/components/common/SafetyBadge';
 
 /**
  * SafetyBadge Component Tests
  * Tests verification badge display and status indicators
+ * Updated to match current component API
  */
 describe('SafetyBadge Component', () => {
-  it('should render fully verified badge', () => {
-    const { getByText, getByTestId } = render(
-      <SafetyBadge
-        verified_id={true}
-        verified_background={true}
-        verified_income={true}
-      />
-    );
+  describe('verified status', () => {
+    it('should render verified ID badge', () => {
+      const { getByText } = render(
+        <SafetyBadge status="verified" type="id" />
+      );
 
-    expect(getByText('Fully Verified')).toBeTruthy();
-    expect(getByTestId('verification-badge')).toBeTruthy();
+      expect(getByText('ID Verified')).toBeTruthy();
+    });
+
+    it('should render verified background badge', () => {
+      const { getByText } = render(
+        <SafetyBadge status="verified" type="background" />
+      );
+
+      expect(getByText('Background Check')).toBeTruthy();
+    });
+
+    it('should render verified phone badge', () => {
+      const { getByText } = render(
+        <SafetyBadge status="verified" type="phone" />
+      );
+
+      expect(getByText('Phone Verified')).toBeTruthy();
+    });
+
+    it('should render verified email badge', () => {
+      const { getByText } = render(
+        <SafetyBadge status="verified" type="email" />
+      );
+
+      expect(getByText('Email Verified')).toBeTruthy();
+    });
+
+    it('should render verified income badge', () => {
+      const { getByText } = render(
+        <SafetyBadge status="verified" type="income" />
+      );
+
+      expect(getByText('Income Verified')).toBeTruthy();
+    });
   });
 
-  it('should render partially verified badge', () => {
-    const { getByText } = render(
-      <SafetyBadge
-        verified_id={true}
-        verified_background={false}
-        verified_income={false}
-      />
-    );
+  describe('partial status', () => {
+    it('should render partial verification badge', () => {
+      const { getByText } = render(
+        <SafetyBadge status="partial" type="id" />
+      );
 
-    expect(getByText('Partially Verified')).toBeTruthy();
+      expect(getByText('ID Verified')).toBeTruthy();
+    });
   });
 
-  it('should render unverified state', () => {
-    const { getByText } = render(
-      <SafetyBadge
-        verified_id={false}
-        verified_background={false}
-        verified_income={false}
-      />
-    );
+  describe('unverified status', () => {
+    it('should render unverified badge', () => {
+      const { getByText } = render(
+        <SafetyBadge status="unverified" type="id" />
+      );
 
-    expect(getByText('Not Verified')).toBeTruthy();
+      expect(getByText('ID Verified')).toBeTruthy();
+    });
   });
 
-  it('should show verification details on press', () => {
-    const { getByTestId, getByText } = render(
-      <SafetyBadge
-        verified_id={true}
-        verified_background={true}
-        verified_income={true}
-      />
-    );
+  describe('size variations', () => {
+    it('should render small badge', () => {
+      const { getByText } = render(
+        <SafetyBadge status="verified" type="id" size="small" />
+      );
 
-    const badge = getByTestId('verification-badge');
-    // fireEvent.press(badge);
+      expect(getByText('ID Verified')).toBeTruthy();
+    });
 
-    // expect(getByText('ID Verified')).toBeTruthy();
-    // expect(getByText('Background Check Passed')).toBeTruthy();
-    // expect(getByText('Income Verified')).toBeTruthy();
+    it('should render medium badge (default)', () => {
+      const { getByText } = render(
+        <SafetyBadge status="verified" type="id" />
+      );
+
+      expect(getByText('ID Verified')).toBeTruthy();
+    });
+
+    it('should render large badge', () => {
+      const { getByText } = render(
+        <SafetyBadge status="verified" type="id" size="large" />
+      );
+
+      expect(getByText('ID Verified')).toBeTruthy();
+    });
   });
 
-  it('should display verification icon based on status', () => {
-    const { getByTestId } = render(
-      <SafetyBadge
-        verified_id={true}
-        verified_background={true}
-        verified_income={true}
-      />
-    );
+  describe('label visibility', () => {
+    it('should show label by default', () => {
+      const { getByText } = render(
+        <SafetyBadge status="verified" type="id" />
+      );
 
-    expect(getByTestId('verified-icon')).toBeTruthy();
-  });
+      expect(getByText('ID Verified')).toBeTruthy();
+    });
 
-  it('should not display unverified sections', () => {
-    const { queryByText } = render(
-      <SafetyBadge
-        verified_id={true}
-        verified_background={false}
-        verified_income={false}
-      />
-    );
+    it('should hide label when showLabel is false', () => {
+      const { queryByText } = render(
+        <SafetyBadge status="verified" type="id" showLabel={false} />
+      );
 
-    // Should only show ID verified
-    expect(queryByText('Background Check Pending')).toBeFalsy();
+      expect(queryByText('ID Verified')).toBeNull();
+    });
   });
 });

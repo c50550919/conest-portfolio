@@ -134,11 +134,7 @@ describe('Authentication Flow', () => {
 
       await element(by.id('signup-button')).tap();
 
-      await waitFor(
-        element(
-          by.text(/Password must be at least 8 characters/i)
-        )
-      )
+      await waitFor(element(by.text(/Password must be at least 8 characters/i)))
         .toBeVisible()
         .withTimeout(2000);
     });

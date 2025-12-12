@@ -351,7 +351,7 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
     it('should maintain verification badges after OAuth linking', async () => {
       // User has phone verification badge
       expect(
-        (await db('users').where({ id: existingUserId }).first()).phone_verified
+        (await db('users').where({ id: existingUserId }).first()).phone_verified,
       ).toBe(true);
 
       // Link Google account

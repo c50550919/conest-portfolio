@@ -152,7 +152,7 @@ describe('Matching Algorithm', () => {
       // Verify sorting by compatibility score (highest first)
       for (let i = 0; i < response.body.length - 1; i++) {
         expect(response.body[i].compatibility_score).toBeGreaterThanOrEqual(
-          response.body[i + 1].compatibility_score
+          response.body[i + 1].compatibility_score,
         );
       }
     });
@@ -165,7 +165,7 @@ describe('Matching Algorithm', () => {
 
       // User1 and User2 should have high compatibility (similar values, location)
       const matchWithUser2 = response.body.find(
-        (m: any) => m.profile_id === profile2Id
+        (m: any) => m.profile_id === profile2Id,
       );
 
       expect(matchWithUser2).toBeDefined();
@@ -180,7 +180,7 @@ describe('Matching Algorithm', () => {
 
       // User1 (Austin) and User3 (Houston) should have lower location compatibility
       const matchWithUser3 = response.body.find(
-        (m: any) => m.profile_id === profile3Id
+        (m: any) => m.profile_id === profile3Id,
       );
 
       if (matchWithUser3) {
@@ -237,7 +237,7 @@ describe('Matching Algorithm', () => {
         .expect(200);
 
       const matchWithUser2 = response.body.find(
-        (m: any) => m.profile_id === profile2Id
+        (m: any) => m.profile_id === profile2Id,
       );
 
       expect(matchWithUser2).toBeUndefined();
@@ -416,7 +416,7 @@ describe('Matching Algorithm', () => {
         .expect(200);
 
       const matchWithUser2 = response.body.find(
-        (m: any) => m.profile_id === profile2Id
+        (m: any) => m.profile_id === profile2Id,
       );
 
       expect(matchWithUser2.score_breakdown.budget).toBeGreaterThan(0.5);
@@ -430,7 +430,7 @@ describe('Matching Algorithm', () => {
         .expect(200);
 
       const matchWithUser2 = response.body.find(
-        (m: any) => m.profile_id === profile2Id
+        (m: any) => m.profile_id === profile2Id,
       );
 
       // Should still match but with lower house_rules score

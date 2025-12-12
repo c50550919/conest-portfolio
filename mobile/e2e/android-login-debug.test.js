@@ -7,7 +7,7 @@ describe('Android Login Debug', () => {
   beforeAll(async () => {
     await device.launchApp({
       newInstance: true,
-      permissions: { notifications: 'YES' }
+      permissions: { notifications: 'YES' },
     });
   });
 
@@ -54,7 +54,7 @@ describe('Android Login Debug', () => {
     await element(by.id('password-input')).tapReturnKey();
 
     // Wait a moment for keyboard to hide
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Tap login button
     console.log('[TEST] Tapping login button...');
@@ -98,7 +98,7 @@ describe('Android Login Debug', () => {
     await element(by.id('password-input')).replaceText('Test1234');
     await element(by.id('password-input')).tapReturnKey();
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Tap login
     await element(by.id('login-button')).tap();
