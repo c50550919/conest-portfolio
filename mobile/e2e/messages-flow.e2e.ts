@@ -73,7 +73,6 @@ describe('Messages Flow', () => {
     it('should navigate to conversation when match card is tapped', async () => {
       // Tap on first match card
       // await element(by.id('match-card-0')).tap();
-
       // Verify conversation screen appears
       // await waitFor(element(by.id('message-input')))
       //   .toBeVisible()
@@ -93,7 +92,6 @@ describe('Messages Flow', () => {
     it('should load message history', async () => {
       // Verify messages are displayed
       // await detoxExpect(element(by.id('message-0'))).toBeVisible();
-
       // Verify message structure:
       // - Message content
       // - Timestamp
@@ -104,7 +102,6 @@ describe('Messages Flow', () => {
     it('should scroll to load more messages (pagination)', async () => {
       // Scroll to top to trigger pagination
       // await element(by.id('message-list')).scroll(200, 'up');
-
       // Wait for older messages to load
       // await waitFor(element(by.id('message-20')))
       //   .toBeVisible()
@@ -114,7 +111,6 @@ describe('Messages Flow', () => {
     it('should display correct sender/receiver indicators', async () => {
       // Verify sent messages are aligned right
       // await detoxExpect(element(by.id('sent-message-0'))).toBeVisible();
-
       // Verify received messages are aligned left
       // await detoxExpect(element(by.id('received-message-0'))).toBeVisible();
     });
@@ -196,12 +192,10 @@ describe('Messages Flow', () => {
     it('should receive messages in real-time', async () => {
       // This test requires a test backend that sends a message via Socket.io
       // For now, this is a placeholder
-
       // Wait for real-time message to arrive (simulated by backend)
       // await waitFor(element(by.text('Incoming real-time message')))
       //   .toBeVisible()
       //   .withTimeout(5000);
-
       // Verify message appears without page refresh
     });
 
@@ -210,7 +204,6 @@ describe('Messages Flow', () => {
       // await waitFor(element(by.text(/is typing/i)))
       //   .toBeVisible()
       //   .withTimeout(3000);
-
       // Verify typing indicator disappears when user stops typing
       // await waitFor(element(by.text(/is typing/i)))
       //   .not.toBeVisible()
@@ -220,18 +213,14 @@ describe('Messages Flow', () => {
     it('should show online/offline status indicator', async () => {
       // Verify Socket.io connection status
       // await detoxExpect(element(by.id('online-indicator'))).toBeVisible();
-
       // Simulate network disconnect
       // await device.setNetworkCondition('offline');
-
       // Verify offline indicator appears
       // await waitFor(element(by.id('offline-indicator')))
       //   .toBeVisible()
       //   .withTimeout(2000);
-
       // Restore network
       // await device.setNetworkCondition('online');
-
       // Verify online indicator returns
       // await waitFor(element(by.id('online-indicator')))
       //   .toBeVisible()
@@ -243,12 +232,10 @@ describe('Messages Flow', () => {
     it('should mark messages as read when conversation is viewed', async () => {
       // Open conversation
       // await element(by.id('match-card-0')).tap();
-
       // Wait for messages to load
       // await waitFor(element(by.id('message-0')))
       //   .toBeVisible()
       //   .withTimeout(2000);
-
       // Verify unread count is cleared
       // await waitFor(element(by.id('unread-badge')))
       //   .not.toBeVisible()
@@ -271,17 +258,13 @@ describe('Messages Flow', () => {
     it('should queue messages when offline', async () => {
       // Disconnect network
       // await device.setNetworkCondition('offline');
-
       // Try to send a message
       // await element(by.id('message-input')).typeText('Offline message');
       // await element(by.id('send-button')).tap();
-
       // Verify message has "sending" or "pending" status
       // await detoxExpect(element(by.id('message-status-pending'))).toBeVisible();
-
       // Restore network
       // await device.setNetworkCondition('online');
-
       // Wait for message to be sent
       // await waitFor(element(by.id('message-status-sent')))
       //   .toBeVisible()
@@ -291,13 +274,10 @@ describe('Messages Flow', () => {
     it('should retry failed messages', async () => {
       // Simulate network error during send
       // This requires backend mock or test environment
-
       // Verify retry indicator appears
       // await detoxExpect(element(by.id('message-status-failed'))).toBeVisible();
-
       // Tap retry button
       // await element(by.id('retry-button')).tap();
-
       // Verify message is resent
       // await waitFor(element(by.id('message-status-sent')))
       //   .toBeVisible()
@@ -329,11 +309,9 @@ describe('Messages Flow', () => {
 
     it('should scroll smoothly with 100+ messages', async () => {
       // This test assumes a conversation with 100+ messages
-
       // Scroll rapidly through messages
       // await element(by.id('message-list')).scroll(500, 'down', 0.5);
       // await element(by.id('message-list')).scroll(500, 'up', 0.5);
-
       // Verify no UI lag or crashes
       // await detoxExpect(element(by.id('message-input'))).toBeVisible();
     });

@@ -73,7 +73,7 @@ export class MessagesService {
    */
   private async verifyMatchParticipant(
     matchId: string,
-    userId: string
+    userId: string,
   ): Promise<{ match: Match; otherUserId: string }> {
     const match = await MatchModel.findById(matchId);
 
@@ -101,7 +101,7 @@ export class MessagesService {
    */
   private async getOrCreateConversation(
     userId: string,
-    otherUserId: string
+    otherUserId: string,
   ): Promise<Conversation> {
     let conversation = await MessageModel.findConversation(userId, otherUserId);
 
@@ -221,7 +221,7 @@ export class MessagesService {
       // Fetch limit * 2 to account for cursor filtering
       const allMessages = await MessageModel.getConversationMessages(
         conversation.id,
-        limit * 2
+        limit * 2,
       );
 
       let messages = allMessages;
@@ -260,7 +260,7 @@ export class MessagesService {
 
       const duration = Date.now() - startTime;
       logger.info(
-        `Message history retrieved in ${duration}ms for match ${matchId} (${messages.length} messages)`
+        `Message history retrieved in ${duration}ms for match ${matchId} (${messages.length} messages)`,
       );
 
       return {
@@ -375,7 +375,7 @@ export class MessagesService {
       }
 
       logger.debug(
-        `Typing indicator ${isTyping ? 'started' : 'stopped'} for user ${userId} in match ${matchId}`
+        `Typing indicator ${isTyping ? 'started' : 'stopped'} for user ${userId} in match ${matchId}`,
       );
     } catch (error) {
       logger.error('Error emitting typing indicator:', error);
@@ -416,19 +416,19 @@ export class MessagesService {
           const lastMessage = messages[0];
 
           const otherParticipantId =
-            conv.participant_1_id === userId ? conv.participant_2_id : conv.participant_1_id;
+            conv.participant1_id === userId ? conv.participant2_id : conv.participant1_id;
 
           return {
             ...conv,
             otherParticipantId,
             lastMessage: lastMessage
               ? {
-                  ...lastMessage,
-                  content: decrypt(lastMessage.content),
-                }
+                ...lastMessage,
+                content: decrypt(lastMessage.content),
+              }
               : null,
           };
-        })
+        }),
       );
 
       return conversationsWithMessages;

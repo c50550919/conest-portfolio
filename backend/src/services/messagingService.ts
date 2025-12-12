@@ -3,16 +3,16 @@ import { MatchModel } from '../models/Match';
 import logger from '../config/logger';
 
 // Placeholder for encryption - in production use crypto library
-const encryptMessage = (content: string): string => {
+const encryptMessage = (content: string): string => 
   // PLACEHOLDER: In production, implement proper end-to-end encryption
   // For now, just return the content as-is
-  return Buffer.from(content).toString('base64');
-};
+  Buffer.from(content).toString('base64')
+;
 
-const decryptMessage = (encrypted: string): string => {
+const decryptMessage = (encrypted: string): string => 
   // PLACEHOLDER: In production, implement proper decryption
-  return Buffer.from(encrypted, 'base64').toString('utf-8');
-};
+  Buffer.from(encrypted, 'base64').toString('utf-8')
+;
 
 export const MessagingService = {
   // Send a message
@@ -21,7 +21,7 @@ export const MessagingService = {
     recipientId: string,
     content: string,
     messageType: 'text' | 'image' | 'file' = 'text',
-    fileUrl?: string
+    fileUrl?: string,
   ): Promise<any> {
     // Verify users have an active match
     const match = await MatchModel.findExistingMatch(senderId, recipientId);
@@ -93,7 +93,7 @@ export const MessagingService = {
 
         // Get other participant ID
         const otherParticipantId =
-          conv.participant_1_id === userId ? conv.participant_2_id : conv.participant_1_id;
+          conv.participant1_id === userId ? conv.participant2_id : conv.participant1_id;
 
         return {
           ...conv,
@@ -103,7 +103,7 @@ export const MessagingService = {
             content: decryptMessage(lastMessage.content),
           } : null,
         };
-      })
+      }),
     );
 
     return conversationsWithMessages;

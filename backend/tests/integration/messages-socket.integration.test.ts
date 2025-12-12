@@ -464,7 +464,7 @@ describe('Socket.io Message Delivery Integration Tests', () => {
             matchId,
             content: `Concurrent message ${i}`,
           })
-          .expect(201)
+          .expect(201),
       );
 
       await Promise.all(promises);

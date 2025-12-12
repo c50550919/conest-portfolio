@@ -177,7 +177,7 @@ export const messageController = {
     const conversation = await MessagingService.getConversation(
       req.userId,
       userId,
-      limit ? Number(limit) : undefined
+      limit ? Number(limit) : undefined,
     );
 
     res.json({

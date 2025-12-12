@@ -16,8 +16,8 @@ export interface Message {
 
 export interface Conversation {
   id: string;
-  participant_1_id: string;
-  participant_2_id: string;
+  participant1_id: string;
+  participant2_id: string;
   last_message_at?: Date;
   created_at: Date;
   updated_at: Date;
@@ -37,8 +37,8 @@ export const MessageModel = {
     const existing = await db('conversations')
       .where((builder) => {
         builder
-          .where({ participant_1_id: participant1Id, participant_2_id: participant2Id })
-          .orWhere({ participant_1_id: participant2Id, participant_2_id: participant1Id });
+          .where({ participant1_id: participant1Id, participant2_id: participant2Id })
+          .orWhere({ participant1_id: participant2Id, participant2_id: participant1Id });
       })
       .first();
 
@@ -46,8 +46,8 @@ export const MessageModel = {
 
     const [conversation] = await db('conversations')
       .insert({
-        participant_1_id: participant1Id,
-        participant_2_id: participant2Id,
+        participant1_id: participant1Id,
+        participant2_id: participant2Id,
       })
       .returning('*');
 
@@ -58,16 +58,16 @@ export const MessageModel = {
     return await db('conversations')
       .where((builder) => {
         builder
-          .where({ participant_1_id: participant1Id, participant_2_id: participant2Id })
-          .orWhere({ participant_1_id: participant2Id, participant_2_id: participant1Id });
+          .where({ participant1_id: participant1Id, participant2_id: participant2Id })
+          .orWhere({ participant1_id: participant2Id, participant2_id: participant1Id });
       })
       .first();
   },
 
   async getUserConversations(userId: string): Promise<Conversation[]> {
     return await db('conversations')
-      .where({ participant_1_id: userId })
-      .orWhere({ participant_2_id: userId })
+      .where({ participant1_id: userId })
+      .orWhere({ participant2_id: userId })
       .orderBy('last_message_at', 'desc');
   },
 

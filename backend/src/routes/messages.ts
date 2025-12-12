@@ -13,7 +13,7 @@ import { Router } from 'express';
 import { messageController } from '../controllers/messageController';
 import { authenticateJWT } from '../middleware/auth.middleware';
 import { validate, schemas } from '../middleware/validation';
-import { messageLimiter } from '../middleware/rateLimiter';
+import { messageLimiter } from '../middleware/rateLimit';
 
 const router = Router();
 

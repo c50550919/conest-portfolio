@@ -123,10 +123,7 @@ class MessagesAPI {
    * @param limit - Number of matches to fetch (1-50, default 20)
    * @returns Match list with latest messages
    */
-  async getMatches(
-    cursor?: string,
-    limit: number = 20
-  ): Promise<MatchListResponse> {
+  async getMatches(cursor?: string, limit: number = 20): Promise<MatchListResponse> {
     const params: Record<string, string | number> = { limit };
     if (cursor) {
       params.cursor = cursor;
@@ -156,10 +153,9 @@ class MessagesAPI {
       params.cursor = cursor;
     }
 
-    const response = await this.client.get<MessagesResponse>(
-      `/messages/history/${matchId}`,
-      { params }
-    );
+    const response = await this.client.get<MessagesResponse>(`/messages/history/${matchId}`, {
+      params,
+    });
 
     return response.data;
   }
@@ -184,10 +180,7 @@ class MessagesAPI {
     };
 
     try {
-      const response = await this.client.post<SendMessageResponse>(
-        `/messages/${matchId}`,
-        payload
-      );
+      const response = await this.client.post<SendMessageResponse>(`/messages/${matchId}`, payload);
       return response.data;
     } catch (error) {
       // Add to retry queue on failure
@@ -205,9 +198,7 @@ class MessagesAPI {
    * @returns Read receipt with timestamp
    */
   async markAsRead(messageId: string): Promise<ReadReceiptResponse> {
-    const response = await this.client.patch<ReadReceiptResponse>(
-      `/messages/${messageId}/read`
-    );
+    const response = await this.client.patch<ReadReceiptResponse>(`/messages/${messageId}/read`);
 
     return response.data;
   }

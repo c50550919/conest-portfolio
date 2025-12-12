@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VerificationBadge Component accessibility should render consistent structure 1`] = `
+<View
+  style={
+    {
+      "alignItems": "center",
+      "backgroundColor": "#A9DFBF",
+      "borderColor": "#2ECC71",
+      "borderRadius": 9999,
+      "borderWidth": 1,
+      "flexDirection": "row",
+      "paddingHorizontal": 8,
+      "paddingVertical": 4,
+    }
+  }
+>
+  <View
+    style={
+      [
+        {
+          "alignItems": "center",
+          "backgroundColor": "#2ECC71",
+          "borderRadius": 9999,
+          "justifyContent": "center",
+          "marginRight": 4,
+        },
+        {
+          "height": 24,
+          "width": 24,
+        },
+      ]
+    }
+  >
+    <Icon
+      color="#FFFFFF"
+      name="check-decagram"
+      size={18}
+    />
+  </View>
+  <Text
+    style={
+      [
+        {
+          "color": "#2ECC71",
+          "fontSize": 12,
+          "fontWeight": "600",
+          "lineHeight": 16,
+        },
+        false,
+      ]
+    }
+  >
+    Verified
+  </Text>
+</View>
+`;
