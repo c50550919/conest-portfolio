@@ -29,7 +29,7 @@ export class EnhancedPairingService {
   async calculateCompatibility(
     profile1: Profile,
     profile2: Profile,
-    requestContext?: { ipAddress?: string; userAgent?: string }
+    requestContext?: { ipAddress?: string; userAgent?: string },
   ): Promise<CompatibilityBreakdown> {
     const scores = {
       location: this.calculateLocationScore(profile1, profile2),
@@ -48,7 +48,7 @@ export class EnhancedPairingService {
     // Calculate weighted total score
     const totalScore = Object.entries(scores).reduce(
       (sum, [key, score]) => sum + score * SCORING_WEIGHTS[key as keyof typeof SCORING_WEIGHTS],
-      0
+      0,
     );
 
     const result: CompatibilityBreakdown = {
@@ -65,7 +65,7 @@ export class EnhancedPairingService {
           profile2.user_id,
           result,
           requestContext.ipAddress || 'unknown',
-          requestContext.userAgent || 'unknown'
+          requestContext.userAgent || 'unknown',
         );
       } catch (auditError) {
         // Log audit errors but don't fail the compatibility calculation
@@ -80,55 +80,68 @@ export class EnhancedPairingService {
   // 1. LOCATION SCORE (20%)
   // ============================================
   private calculateLocationScore(profile1: Profile, profile2: Profile): number {
-    let score = 0;
+    const geoScore = this.calculateGeoProximityScore(profile1, profile2);
+    const neighborhoodScore = this.calculateNeighborhoodScore(profile1, profile2);
+    const transportScore = this.calculateTransportScore(profile1, profile2);
 
-    // Same city (40 points)
-    if (profile1.city === profile2.city && profile1.state === profile2.state) {
-      score += 40;
+    return Math.min(geoScore + neighborhoodScore + transportScore, 100);
+  }
 
-      // Same zip code bonus (10 points)
-      if (profile1.zip_code === profile2.zip_code) {
-        score += 10;
-      }
-    } else if (profile1.state === profile2.state) {
-      // Same state but different city (10 points)
-      score += 10;
-    }
+  /**
+   * Calculate geographic proximity score (up to 50 points)
+   */
+  private calculateGeoProximityScore(profile1: Profile, profile2: Profile): number {
+    const sameCity = profile1.city === profile2.city && profile1.state === profile2.state;
+    const sameState = profile1.state === profile2.state;
 
-    // Neighborhood type compatibility (25 points)
-    if (profile1.neighborhood_type && profile2.neighborhood_type) {
-      if (profile1.neighborhood_type === profile2.neighborhood_type) {
-        score += 25;
-      } else if (this.areNeighborhoodTypesCompatible(profile1, profile2)) {
-        score += 12;
-      }
-    }
+    if (!sameCity && !sameState) return 0;
+    if (!sameCity && sameState) return 10;
 
-    // Transportation preferences (25 points)
-    let transportScore = 0;
-    let transportFactors = 0;
+    // Same city - check zip code
+    return profile1.zip_code === profile2.zip_code ? 50 : 40;
+  }
 
-    if (profile1.public_transit_important !== undefined && profile2.public_transit_important !== undefined) {
-      transportFactors++;
-      if (profile1.public_transit_important === profile2.public_transit_important) {
-        transportScore += 12;
-      }
-    }
+  /**
+   * Calculate neighborhood type compatibility score (up to 25 points)
+   */
+  private calculateNeighborhoodScore(profile1: Profile, profile2: Profile): number {
+    if (!profile1.neighborhood_type || !profile2.neighborhood_type) return 0;
+    if (profile1.neighborhood_type === profile2.neighborhood_type) return 25;
+    if (this.areNeighborhoodTypesCompatible(profile1, profile2)) return 12;
+    return 0;
+  }
 
-    if (profile1.walkability_important !== undefined && profile2.walkability_important !== undefined) {
-      transportFactors++;
-      if (profile1.walkability_important === profile2.walkability_important) {
-        transportScore += 13;
-      }
-    }
+  /**
+   * Calculate transportation preferences score (up to 25 points)
+   */
+  private calculateTransportScore(profile1: Profile, profile2: Profile): number {
+    const transitMatch = this.checkPreferenceMatch(
+      profile1.public_transit_important,
+      profile2.public_transit_important,
+      12,
+    );
+    const walkMatch = this.checkPreferenceMatch(
+      profile1.walkability_important,
+      profile2.walkability_important,
+      13,
+    );
 
-    if (transportFactors > 0) {
-      score += transportScore;
-    } else {
-      score += 12; // Default bonus if no preferences set
-    }
+    // If no preferences set, give default bonus
+    if (transitMatch.defined === 0 && walkMatch.defined === 0) return 12;
 
-    return Math.min(score, 100);
+    return transitMatch.score + walkMatch.score;
+  }
+
+  /**
+   * Check if two boolean preferences match
+   */
+  private checkPreferenceMatch(
+    pref1: boolean | undefined,
+    pref2: boolean | undefined,
+    points: number,
+  ): { score: number; defined: number } {
+    if (pref1 === undefined || pref2 === undefined) return { score: 0, defined: 0 };
+    return { score: pref1 === pref2 ? points : 0, defined: 1 };
   }
 
   private areNeighborhoodTypesCompatible(profile1: Profile, profile2: Profile): boolean {
@@ -140,7 +153,7 @@ export class EnhancedPairingService {
     return compatiblePairs.some(
       ([type1, type2]) =>
         (profile1.neighborhood_type === type1 && profile2.neighborhood_type === type2) ||
-        (profile1.neighborhood_type === type2 && profile2.neighborhood_type === type1)
+        (profile1.neighborhood_type === type2 && profile2.neighborhood_type === type1),
     );
   }
 
@@ -155,7 +168,7 @@ export class EnhancedPairingService {
       const cleanlinessMatch = this.getOrdinalMatch(
         profile1.cleanliness_level,
         profile2.cleanliness_level,
-        ['minimal', 'relaxed', 'moderately_clean', 'very_clean']
+        ['minimal', 'relaxed', 'moderately_clean', 'very_clean'],
       );
       score += cleanlinessMatch * 25;
     }
@@ -165,7 +178,7 @@ export class EnhancedPairingService {
       const noiseMatch = this.getOrdinalMatch(
         profile1.noise_tolerance,
         profile2.noise_tolerance,
-        ['very_quiet', 'moderate', 'okay_with_noise', 'lively']
+        ['very_quiet', 'moderate', 'okay_with_noise', 'lively'],
       );
       score += noiseMatch * 25;
     }
@@ -228,9 +241,9 @@ export class EnhancedPairingService {
     ];
 
     lifestyleFactors.forEach(({ key, weight }) => {
-      if (profile1[key] !== undefined && profile2[key] !== undefined) {
+      if ((profile1 as any)[key] !== undefined && (profile2 as any)[key] !== undefined) {
         factorsCompared++;
-        if (profile1[key] === profile2[key]) {
+        if ((profile1 as any)[key] === (profile2 as any)[key]) {
           factorsMatched++;
           score += weight;
         }
@@ -272,7 +285,7 @@ export class EnhancedPairingService {
       const socialMatch = this.getOrdinalMatch(
         profile1.social_frequency,
         profile2.social_frequency,
-        ['very_private', 'prefer_quiet', 'somewhat_social', 'very_social']
+        ['very_private', 'prefer_quiet', 'somewhat_social', 'very_social'],
       );
       score += socialMatch * 20;
     }
@@ -313,7 +326,7 @@ export class EnhancedPairingService {
 
     const daysDiff = Math.abs(
       (new Date(profile1.move_in_date).getTime() - new Date(profile2.move_in_date).getTime()) /
-        (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24),
     );
 
     // Same week = 100 points, decreasing by ~3 points per week
@@ -345,7 +358,7 @@ export class EnhancedPairingService {
       const commitmentMatch = this.getOrdinalMatch(
         profile1.lease_commitment_level,
         profile2.lease_commitment_level,
-        ['very_flexible', 'somewhat_flexible', 'committed', 'very_committed']
+        ['very_flexible', 'somewhat_flexible', 'committed', 'very_committed'],
       );
       score += commitmentMatch * 50;
     }
@@ -418,7 +431,7 @@ export class EnhancedPairingService {
     return compatiblePairs.some(
       ([style1, style2]) =>
         (profile1.communication_style === style1 && profile2.communication_style === style2) ||
-        (profile1.communication_style === style2 && profile2.communication_style === style1)
+        (profile1.communication_style === style2 && profile2.communication_style === style1),
     );
   }
 
@@ -428,7 +441,7 @@ export class EnhancedPairingService {
   private checkDealbreakers(
     profile1: Profile,
     profile2: Profile,
-    scores: Record<string, number>
+    scores: Record<string, number>,
   ): string[] {
     const dealbreakers: string[] = [];
 

@@ -42,7 +42,7 @@ export async function initializeSessionRedis(): Promise<void> {
 export function generateDeviceFingerprint(
   userAgent: string,
   ipAddress: string,
-  acceptLanguage?: string
+  acceptLanguage?: string,
 ): string {
   const data = `${userAgent}|${ipAddress}|${acceptLanguage || ''}`;
   return crypto.createHash('sha256').update(data).digest('hex');
@@ -62,7 +62,7 @@ export async function createSession(
   userId: string,
   deviceFingerprint: string,
   ipAddress: string,
-  userAgent: string
+  userAgent: string,
 ): Promise<string> {
   if (!redisClient) {
     throw new Error('Redis client not initialized');
@@ -86,7 +86,7 @@ export async function createSession(
   await redisClient.setEx(
     `session:${sessionId}`,
     ttl,
-    JSON.stringify(sessionData)
+    JSON.stringify(sessionData),
   );
 
   // Track user sessions
@@ -142,7 +142,7 @@ export async function extendSession(sessionId: string): Promise<void> {
   await redisClient.setEx(
     `session:${sessionId}`,
     ttl,
-    JSON.stringify(session)
+    JSON.stringify(session),
   );
 }
 
@@ -224,7 +224,7 @@ async function enforceMaxSessions(userId: string): Promise<void> {
  */
 export async function validateSession(
   sessionId: string,
-  deviceFingerprint: string
+  deviceFingerprint: string,
 ): Promise<boolean> {
   const session = await getSession(sessionId);
 
@@ -246,7 +246,7 @@ export async function validateSession(
 export async function detectSuspiciousActivity(
   sessionId: string,
   currentIp: string,
-  currentUserAgent: string
+  currentUserAgent: string,
 ): Promise<{
   suspicious: boolean;
   reasons: string[];
@@ -287,7 +287,7 @@ export async function cleanupExpiredSessions(): Promise<number> {
   if (!redisClient) return 0;
 
   // Redis automatically removes expired keys, but we need to clean up user session sets
-  let cleaned = 0;
+  const cleaned = 0;
 
   // This would need to iterate through all user session sets
   // For production, consider using Redis keyspace notifications

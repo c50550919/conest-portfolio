@@ -62,7 +62,7 @@ export const HouseholdMemberModel = {
 
   async findByHouseholdAndUser(
     householdId: string,
-    userId: string
+    userId: string,
   ): Promise<HouseholdMember | undefined> {
     return await db('household_members')
       .where({ household_id: householdId, user_id: userId, status: 'active' })
@@ -148,7 +148,7 @@ export const HouseholdMemberModel = {
   async updateRentShare(
     householdId: string,
     userId: string,
-    rentShare: number
+    rentShare: number,
   ): Promise<HouseholdMember> {
     const member = await this.findByHouseholdAndUser(householdId, userId);
     if (!member) {

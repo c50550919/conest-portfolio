@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { matchController } from '../controllers/matchController';
-import { authenticateToken, requireFullVerification } from '../middleware/auth';
+import { authenticateToken, requireFullVerification } from '../middleware/auth.middleware';
 
 const router = Router();
 

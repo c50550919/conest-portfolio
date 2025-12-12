@@ -33,8 +33,8 @@
 
 import { Router } from 'express';
 import { PaymentController, paymentController } from '../controllers/paymentController';
-import { authenticateToken } from '../middleware/auth';
-import { paymentLimiter } from '../middleware/rateLimiter';
+import { authenticateToken } from '../middleware/auth.middleware';
+import { paymentLimiter } from '../middleware/rateLimit';
 
 const router = Router();
 
@@ -72,7 +72,7 @@ router.post(
   '/stripe/connect',
   authenticateToken,
   paymentLimiter,
-  PaymentController.createStripeAccount
+  PaymentController.createStripeAccount,
 );
 
 /**
@@ -87,7 +87,7 @@ router.post(
   '/intents',
   authenticateToken,
   paymentLimiter,
-  PaymentController.createPaymentIntent
+  PaymentController.createPaymentIntent,
 );
 
 /**
@@ -102,7 +102,7 @@ router.post(
   '/split-rent',
   authenticateToken,
   paymentLimiter,
-  PaymentController.splitRent
+  PaymentController.splitRent,
 );
 
 /**
@@ -117,7 +117,7 @@ router.post(
   '/refund',
   authenticateToken,
   paymentLimiter,
-  PaymentController.processRefund
+  PaymentController.processRefund,
 );
 
 /**
@@ -130,7 +130,7 @@ router.post(
 router.get(
   '/history',
   authenticateToken,
-  PaymentController.getPaymentHistory
+  PaymentController.getPaymentHistory,
 );
 
 // ========================================

@@ -47,7 +47,7 @@ export const initializeWebSocket = (server: HTTPServer): Server => {
           recipientId,
           content,
           messageType,
-          fileUrl
+          fileUrl,
         );
 
         // Emit to recipient via MessagingService

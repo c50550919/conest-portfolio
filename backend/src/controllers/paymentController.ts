@@ -23,7 +23,7 @@
 import { Request, Response } from 'express';
 import { PaymentService } from '../services/paymentService';
 import { asyncHandler } from '../middleware/errorHandler';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../middleware/auth.middleware';
 import stripe from '../config/stripe';
 import {
   CreateStripeAccountSchema,
@@ -348,7 +348,7 @@ export const PaymentController = {
       event = stripe.webhooks.constructEvent(
         req.body,
         sig,
-        webhookSecret
+        webhookSecret,
       );
     } catch (err: any) {
       res.status(400).json({
@@ -397,7 +397,7 @@ export const PaymentController = {
       req.userId,
       amount,
       type,
-      description
+      description,
     );
 
     res.status(201).json({

@@ -84,12 +84,12 @@ export async function up(knex: Knex): Promise<void> {
         'proof_of_address'
       )`,
       [],
-      'chk_housing_documents_type'
+      'chk_housing_documents_type',
     );
     table.check(
-      `verification_status IN ('pending', 'approved', 'rejected', 'needs_more_info')`,
+      'verification_status IN (\'pending\', \'approved\', \'rejected\', \'needs_more_info\')',
       [],
-      'chk_housing_documents_verification_status'
+      'chk_housing_documents_verification_status',
     );
     table.check('file_size > 0', [], 'chk_housing_documents_file_size');
   });
@@ -116,7 +116,7 @@ export async function up(knex: Knex): Promise<void> {
     table.uuid('connection_request_id').nullable().references('id').inTable('connection_requests').onDelete('SET NULL');
 
     // Tier determination
-    table.integer('tier').notNullable().check('tier IN (1, 2, 3)', [], 'chk_success_fees_tier');
+    table.integer('tier').notNullable();
     table.string('tier_determination_method', 50).notNullable();
 
     // Amount calculation (in cents)
@@ -124,7 +124,7 @@ export async function up(knex: Knex): Promise<void> {
     table.integer('total_amount').notNullable();
 
     // Confidence scoring (fraud detection)
-    table.integer('confidence_score').notNullable().check('confidence_score >= 0 AND confidence_score <= 100', [], 'chk_success_fees_confidence');
+    table.integer('confidence_score').notNullable();
     table.jsonb('fraud_signals').defaultTo('[]');
 
     // Payment status
@@ -132,9 +132,15 @@ export async function up(knex: Knex): Promise<void> {
 
     // User confirmations (bilateral)
     table.timestamp('user_a_confirmed_at').nullable();
-    table.integer('user_a_claimed_tier').nullable().check('user_a_claimed_tier IN (1, 2, 3)', [], 'chk_user_a_tier');
+    table.integer('user_a_claimed_tier').nullable();
     table.timestamp('user_b_confirmed_at').nullable();
-    table.integer('user_b_claimed_tier').nullable().check('user_b_claimed_tier IN (1, 2, 3)', [], 'chk_user_b_tier');
+    table.integer('user_b_claimed_tier').nullable();
+
+    // Add check constraints using raw SQL
+    table.check('tier IN (1, 2, 3)', [], 'chk_success_fees_tier');
+    table.check('confidence_score >= 0 AND confidence_score <= 100', [], 'chk_success_fees_confidence');
+    table.check('user_a_claimed_tier IS NULL OR user_a_claimed_tier IN (1, 2, 3)', [], 'chk_user_a_tier');
+    table.check('user_b_claimed_tier IS NULL OR user_b_claimed_tier IN (1, 2, 3)', [], 'chk_user_b_tier');
 
     // Document evidence
     table.uuid('document_user_a_id').nullable(); // References housing_documents
@@ -162,7 +168,7 @@ export async function up(knex: Knex): Promise<void> {
         'default_tier_3'
       )`,
       [],
-      'chk_success_fees_tier_method'
+      'chk_success_fees_tier_method',
     );
     table.check(
       `status IN (
@@ -175,7 +181,7 @@ export async function up(knex: Knex): Promise<void> {
         'refunded'
       )`,
       [],
-      'chk_success_fees_status'
+      'chk_success_fees_status',
     );
     table.check('amount_per_user >= 0', [], 'chk_success_fees_amount');
     table.check('total_amount >= 0', [], 'chk_success_fees_total');

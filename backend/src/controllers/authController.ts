@@ -14,7 +14,7 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/authService';
 import { asyncHandler } from '../middleware/errorHandler';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../middleware/auth.middleware';
 
 export const AuthController = {
   /**
@@ -135,18 +135,27 @@ export const AuthController = {
    */
   verifyPhone: asyncHandler(async (req: Request, res: Response) => {
     try {
-      // Destructure for future use when phone verification is implemented
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      // @ts-ignore - Planned for future implementation
       const { phone, code } = req.body;
 
-      // TODO: Find user by phone number (for now, this is a simplified implementation)
-      // In production, you would need to pass userId from authenticated session
-      // For now, we'll just validate the code format and return success
+      // Find user by phone number
+      const user = await AuthService.findUserByPhone(phone);
+      if (!user) {
+        res.status(404).json({
+          success: false,
+          error: 'User not found',
+        });
+        return;
+      }
 
-      // Placeholder: Should find user by phone and verify code
-      // const userId = await findUserIdByPhone(phone);
-      // const isValid = await AuthService.verifyPhone(userId, code);
+      // Verify the code
+      const isValid = await AuthService.verifyPhoneCode(user.id, code);
+      if (!isValid) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid verification code',
+        });
+        return;
+      }
 
       res.status(200).json({
         success: true,

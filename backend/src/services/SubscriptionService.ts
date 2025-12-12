@@ -72,12 +72,12 @@ export const SubscriptionService = {
       if (purchaseType === 'subscription') {
         validationResult = await GooglePlayValidationService.validateSubscription(
           purchaseToken,
-          productId
+          productId,
         );
       } else {
         validationResult = await GooglePlayValidationService.validatePurchase(
           purchaseToken,
-          productId
+          productId,
         );
       }
 
@@ -96,8 +96,8 @@ export const SubscriptionService = {
         platform: 'google_play',
         receipt_data: receiptData,
         validation_data: validationResult.validationData,
-        expires_at: validationResult.expiresAt,
-        auto_renewing: validationResult.autoRenewing,
+        expires_at: 'expiresAt' in validationResult ? validationResult.expiresAt : undefined,
+        auto_renewing: 'autoRenewing' in validationResult ? validationResult.autoRenewing : undefined,
       };
 
       const subscription = await SubscriptionModel.createSubscription(subscriptionData);
@@ -185,13 +185,13 @@ export const SubscriptionService = {
   async renewSubscription(
     userId: string,
     expiresAt: Date,
-    validationData?: any
+    validationData?: any,
   ): Promise<Subscription | null> {
     try {
       const subscription = await SubscriptionModel.renewSubscription(
         userId,
         expiresAt,
-        validationData
+        validationData,
       );
 
       if (!subscription) {
@@ -260,7 +260,7 @@ export const SubscriptionService = {
       // Re-validate with Google Play
       const validationResult = await GooglePlayValidationService.validateSubscription(
         activeSubscription.purchase_token,
-        activeSubscription.product_id
+        activeSubscription.product_id,
       );
 
       if (!validationResult.valid) {

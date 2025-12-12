@@ -53,7 +53,7 @@ export const PreQualificationResponseModel = {
    * @throws Error if sex_offender response is 'yes' (auto-disqualify)
    */
   async upsertResponse(
-    data: CreatePreQualificationResponseData
+    data: CreatePreQualificationResponseData,
   ): Promise<PreQualificationResponse> {
     // Auto-disqualify sex offenders
     if (data.question_id === 'sex_offender' && data.response === 'yes') {
@@ -110,7 +110,7 @@ export const PreQualificationResponseModel = {
    */
   async findByUserAndQuestion(
     userId: string,
-    questionId: 'felony_conviction' | 'sex_offender' | 'pending_charges'
+    questionId: 'felony_conviction' | 'sex_offender' | 'pending_charges',
   ): Promise<PreQualificationResponse | undefined> {
     return await db('pre_qualification_responses')
       .where({ user_id: userId, question_id: questionId })
@@ -160,7 +160,7 @@ export const PreQualificationResponseModel = {
       const latestResponse = responses.reduce((latest, current) =>
         new Date(current.answered_at) > new Date(latest.answered_at)
           ? current
-          : latest
+          : latest,
       );
       summary.completed_at = latestResponse.answered_at;
     }

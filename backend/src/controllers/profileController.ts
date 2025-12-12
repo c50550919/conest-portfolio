@@ -1,7 +1,9 @@
 import { Response } from 'express';
 import { ProfileModel } from '../models/Profile';
 import { asyncHandler } from '../middleware/errorHandler';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../middleware/auth.middleware';
+import s3Service from '../services/s3Service';
+import logger from '../config/logger';
 
 export const profileController = {
   createProfile: asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -143,5 +145,153 @@ export const profileController = {
       success: true,
       message: 'Profile deleted successfully',
     });
+  }),
+
+  /**
+   * Upload profile photo
+   * Uploads to S3 and updates profile with new photo URL
+   *
+   * Security:
+   * - File validated by multer middleware before reaching here
+   * - S3 service performs additional validation
+   * - Old photo deleted from S3 to prevent storage exhaustion
+   */
+  uploadPhoto: asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    // Multer puts the file in req.file
+    const file = req.file;
+    if (!file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    // Find user's profile
+    const profile = await ProfileModel.findByUserId(req.userId);
+    if (!profile) {
+      res.status(404).json({ error: 'Profile not found. Create a profile first.' });
+      return;
+    }
+
+    try {
+      // Upload new photo to S3
+      const uploadResult = await s3Service.uploadFile({
+        buffer: file.buffer,
+        mimeType: file.mimetype,
+        originalName: file.originalname,
+        userId: req.userId,
+        category: 'profile-photos',
+      });
+
+      // If user had a previous photo, delete it from S3
+      if (profile.profile_image_url) {
+        try {
+          // Extract key from old URL (stored as S3 key or full URL)
+          const oldKey = profile.profile_image_url.includes('/')
+            ? profile.profile_image_url.split('/').slice(-3).join('/')
+            : profile.profile_image_url;
+
+          if (oldKey.startsWith('profile-photos/')) {
+            await s3Service.deleteFile(oldKey);
+            logger.info('Deleted old profile photo', { key: oldKey, userId: req.userId });
+          }
+        } catch (deleteError) {
+          // Log but don't fail - orphaned files can be cleaned up later
+          logger.warn('Failed to delete old profile photo', {
+            error: deleteError instanceof Error ? deleteError.message : 'Unknown error',
+            userId: req.userId,
+          });
+        }
+      }
+
+      // Update profile with new photo URL
+      const updatedProfile = await ProfileModel.update(profile.id, {
+        profile_image_url: uploadResult.url,
+      });
+
+      logger.info('Profile photo uploaded successfully', {
+        userId: req.userId,
+        profileId: profile.id,
+        key: uploadResult.key,
+        size: uploadResult.size,
+      });
+
+      res.json({
+        success: true,
+        message: 'Profile photo uploaded successfully',
+        data: {
+          profile_image_url: uploadResult.url,
+          profile: updatedProfile,
+        },
+      });
+    } catch (error) {
+      logger.error('Profile photo upload failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: req.userId,
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to upload photo. Please try again.',
+      });
+    }
+  }),
+
+  /**
+   * Delete profile photo
+   * Removes photo from S3 and clears profile photo URL
+   */
+  deletePhoto: asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const profile = await ProfileModel.findByUserId(req.userId);
+    if (!profile) {
+      res.status(404).json({ error: 'Profile not found' });
+      return;
+    }
+
+    if (!profile.profile_image_url) {
+      res.status(400).json({ error: 'No profile photo to delete' });
+      return;
+    }
+
+    try {
+      // Extract key from URL
+      const key = profile.profile_image_url.includes('/')
+        ? profile.profile_image_url.split('/').slice(-3).join('/')
+        : profile.profile_image_url;
+
+      if (key.startsWith('profile-photos/')) {
+        await s3Service.deleteFile(key);
+      }
+
+      // Clear photo URL from profile
+      await ProfileModel.update(profile.id, {
+        profile_image_url: undefined,
+      });
+
+      logger.info('Profile photo deleted', { userId: req.userId, key });
+
+      res.json({
+        success: true,
+        message: 'Profile photo deleted successfully',
+      });
+    } catch (error) {
+      logger.error('Profile photo deletion failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: req.userId,
+      });
+
+      res.status(500).json({
+        success: false,
+        error: 'Failed to delete photo. Please try again.',
+      });
+    }
   }),
 };

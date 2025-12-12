@@ -150,8 +150,8 @@ export const PairingService = {
     let score = 50; // Base score
 
     // Parse house rules (if stored as JSON)
-    const rules1 = profile1.house_rules ? JSON.parse(profile1.house_rules) : {};
-    const rules2 = profile2.house_rules ? JSON.parse(profile2.house_rules) : {};
+    const rules1 = (profile1 as any).house_rules ? JSON.parse((profile1 as any).house_rules) : {};
+    const rules2 = (profile2 as any).house_rules ? JSON.parse((profile2 as any).house_rules) : {};
 
     // Compare key house rules
     const ruleKeys = ['quiet_hours', 'guest_policy', 'cleaning_schedule', 'shared_expenses'];
@@ -191,7 +191,7 @@ export const PairingService = {
           profile1.latitude,
           profile1.longitude,
           profile2.latitude,
-          profile2.longitude
+          profile2.longitude,
         );
 
         // Closer is better
@@ -257,9 +257,9 @@ export const PairingService = {
     }
 
     // Dietary preferences similarity
-    if (profile1.dietary_preferences && profile2.dietary_preferences) {
+    if ((profile1 as any).dietary_preferences && (profile2 as any).dietary_preferences) {
       factors++;
-      if (profile1.dietary_preferences === profile2.dietary_preferences) {
+      if ((profile1 as any).dietary_preferences === (profile2 as any).dietary_preferences) {
         matches++;
       }
     }
@@ -298,11 +298,11 @@ export const PairingService = {
    */
   async findPairings(
     userId: string,
-    preferences: MatchingPreferences = {}
+    preferences: MatchingPreferences = {},
   ): Promise<any[]> {
     const {
       minCompatibilityScore = 60,
-      limit = 20
+      limit = 20,
     } = preferences;
 
     // Get user's profile
@@ -348,7 +348,7 @@ export const PairingService = {
    */
   async findMatches(
     userId: string,
-    preferences: MatchingPreferences = {}
+    preferences: MatchingPreferences = {},
   ): Promise<any[]> {
     return this.findPairings(userId, preferences);
   },
@@ -357,7 +357,7 @@ export const PairingService = {
   async createMatch(
     userId1: string,
     userId2: string,
-    requestContext?: { ipAddress?: string; userAgent?: string }
+    requestContext?: { ipAddress?: string; userAgent?: string },
   ): Promise<any> {
     // Check if match already exists
     const existingMatch = await MatchModel.findExistingMatch(userId1, userId2);
@@ -396,15 +396,15 @@ export const PairingService = {
 
     // FHA COMPLIANCE: Audit log pairing creation with preference-based scoring proof
     try {
-      await logPairingCreated(
+      await logPairingCreated({
         userId1,
         userId2,
-        match.id,
-        compatibility.totalScore,
-        requestContext?.ipAddress || 'unknown',
-        requestContext?.userAgent || 'unknown',
-        compatibility.breakdown
-      );
+        matchId: match.id,
+        compatibilityScore: compatibility.totalScore,
+        ipAddress: requestContext?.ipAddress || 'unknown',
+        userAgent: requestContext?.userAgent || 'unknown',
+        breakdown: compatibility.breakdown,
+      });
     } catch (auditError) {
       // Log audit errors but don't fail the match creation
       logger.error('Failed to create audit log for pairing:', auditError);
@@ -429,7 +429,7 @@ export const PairingService = {
     userId1: string,
     userId2: string,
     matchId: string,
-    compatibilityScore: number
+    compatibilityScore: number,
   ): void {
     const matchData = {
       id: matchId,
@@ -445,7 +445,7 @@ export const PairingService = {
 
   /**
    * Emit match created event (alias for notifyMatch)
-   * Used by SwipeService for consistency
+   * Used by ConnectionRequestService when a request is accepted
    */
   emitMatchCreated(
     userId: string,
@@ -454,7 +454,7 @@ export const PairingService = {
       matchedUserId: string;
       compatibilityScore: number;
       createdAt: string;
-    }
+    },
   ): void {
     // This is handled by SocketService.emitMatchCreated
     // Called from notifyMatch above

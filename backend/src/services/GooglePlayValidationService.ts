@@ -106,7 +106,7 @@ class GooglePlayValidationService {
    */
   async validateSubscription(
     purchaseToken: string,
-    subscriptionId: string
+    subscriptionId: string,
   ): Promise<SubscriptionValidationResult> {
     try {
       if (!this.isInitialized) {
@@ -197,7 +197,7 @@ class GooglePlayValidationService {
    */
   async validatePurchase(
     purchaseToken: string,
-    productId: string
+    productId: string,
   ): Promise<PurchaseValidationResult> {
     try {
       if (!this.isInitialized) {

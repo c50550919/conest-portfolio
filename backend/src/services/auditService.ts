@@ -31,7 +31,7 @@ const auditLogger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
     winston.format.timestamp(),
-    winston.format.json()
+    winston.format.json(),
   ),
   transports: [
     new winston.transports.File({
@@ -110,7 +110,7 @@ export async function createAuditLog(entry: Omit<AuditLogEntry, 'id' | 'timestam
         await redisClient.zRemRangeByScore(
           `audit:user:${auditEntry.userId}`,
           0,
-          cutoff
+          cutoff,
         );
       }
 
@@ -135,7 +135,7 @@ export async function logAuthAttempt(
   success: boolean,
   ipAddress: string,
   userAgent: string,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
 ): Promise<void> {
   await createAuditLog({
     userId,
@@ -155,7 +155,7 @@ export async function logPasswordChange(
   userId: string,
   ipAddress: string,
   userAgent: string,
-  success: boolean
+  success: boolean,
 ): Promise<void> {
   await createAuditLog({
     userId,
@@ -168,16 +168,22 @@ export async function logPasswordChange(
 }
 
 /**
+ * Options for logging verification completion
+ */
+export interface LogVerificationOptions {
+  userId: string;
+  verificationType: string;
+  status: 'success' | 'failure';
+  ipAddress: string;
+  userAgent: string;
+  metadata?: Record<string, any>;
+}
+
+/**
  * Log verification completion
  */
-export async function logVerification(
-  userId: string,
-  verificationType: string,
-  status: 'success' | 'failure',
-  ipAddress: string,
-  userAgent: string,
-  metadata?: Record<string, any>
-): Promise<void> {
+export async function logVerification(options: LogVerificationOptions): Promise<void> {
+  const { userId, verificationType, status, ipAddress, userAgent, metadata } = options;
   await createAuditLog({
     userId,
     operation: 'verification.complete',
@@ -194,16 +200,22 @@ export async function logVerification(
 }
 
 /**
+ * Options for logging payment transaction
+ */
+export interface LogPaymentOptions {
+  userId: string;
+  amount: number;
+  status: 'success' | 'failure';
+  ipAddress: string;
+  userAgent: string;
+  metadata?: Record<string, any>;
+}
+
+/**
  * Log payment transaction
  */
-export async function logPayment(
-  userId: string,
-  amount: number,
-  status: 'success' | 'failure',
-  ipAddress: string,
-  userAgent: string,
-  metadata?: Record<string, any>
-): Promise<void> {
+export async function logPayment(options: LogPaymentOptions): Promise<void> {
+  const { userId, amount, status, ipAddress, userAgent, metadata } = options;
   await createAuditLog({
     userId,
     operation: 'payment.processed',
@@ -220,17 +232,23 @@ export async function logPayment(
 }
 
 /**
+ * Options for logging resource access
+ */
+export interface LogResourceAccessOptions {
+  userId: string | undefined;
+  resource: string;
+  resourceId: string;
+  action: AuditLogEntry['action'];
+  status: 'success' | 'failure';
+  ipAddress: string;
+  userAgent: string;
+}
+
+/**
  * Log resource access
  */
-export async function logResourceAccess(
-  userId: string | undefined,
-  resource: string,
-  resourceId: string,
-  action: AuditLogEntry['action'],
-  status: 'success' | 'failure',
-  ipAddress: string,
-  userAgent: string
-): Promise<void> {
+export async function logResourceAccess(options: LogResourceAccessOptions): Promise<void> {
+  const { userId, resource, resourceId, action, status, ipAddress, userAgent } = options;
   await createAuditLog({
     userId,
     operation: `${resource}.${action}`,
@@ -249,7 +267,7 @@ export async function logResourceAccess(
 export async function getUserAuditLogs(
   userId: string,
   limit: number = 100,
-  offset: number = 0
+  offset: number = 0,
 ): Promise<AuditLogEntry[]> {
   if (!redisClient) return [];
 
@@ -259,7 +277,7 @@ export async function getUserAuditLogs(
       `audit:user:${userId}`,
       offset,
       offset + limit - 1,
-      { REV: true } // Most recent first
+      { REV: true }, // Most recent first
     );
 
     // Fetch full log entries
@@ -283,7 +301,7 @@ export async function getUserAuditLogs(
  */
 export async function getOperationAuditLogs(
   operation: string,
-  limit: number = 100
+  limit: number = 100,
 ): Promise<AuditLogEntry[]> {
   if (!redisClient) return [];
 
@@ -292,7 +310,7 @@ export async function getOperationAuditLogs(
       `audit:operation:${operation}`,
       0,
       limit - 1,
-      { REV: true }
+      { REV: true },
     );
 
     const logs: AuditLogEntry[] = [];
@@ -315,7 +333,7 @@ export async function getOperationAuditLogs(
  */
 export async function detectSuspiciousPatterns(
   userId: string,
-  windowMinutes: number = 60
+  windowMinutes: number = 60,
 ): Promise<{
   suspicious: boolean;
   patterns: string[];
@@ -328,7 +346,7 @@ export async function detectSuspiciousPatterns(
 
   // Multiple failed login attempts
   const failedLogins = recentLogs.filter(
-    log => log.operation === 'user.login' && log.status === 'failure'
+    log => log.operation === 'user.login' && log.status === 'failure',
   );
   if (failedLogins.length >= securityConfig.suspiciousActivity.multipleFailedLogins) {
     patterns.push(`${failedLogins.length} failed login attempts`);
@@ -336,7 +354,7 @@ export async function detectSuspiciousPatterns(
 
   // Rapid account changes
   const accountChanges = recentLogs.filter(
-    log => log.operation.includes('user.') && log.action === 'update'
+    log => log.operation.includes('user.') && log.action === 'update',
   );
   if (accountChanges.length >= securityConfig.suspiciousActivity.rapidAccountChanges) {
     patterns.push(`${accountChanges.length} rapid account changes`);
@@ -366,7 +384,7 @@ export async function detectSuspiciousPatterns(
 export async function exportAuditLogs(
   startDate: Date,
   endDate: Date,
-  userId?: string
+  userId?: string,
 ): Promise<AuditLogEntry[]> {
   // TODO: Implement database query for long-term storage
   // For now, return recent logs from Redis
@@ -402,7 +420,7 @@ export async function logCompatibilityCalculation(
     dealbreakers?: string[];
   },
   ipAddress: string,
-  userAgent: string
+  userAgent: string,
 ): Promise<void> {
   await createAuditLog({
     userId,
@@ -426,20 +444,26 @@ export async function logCompatibilityCalculation(
 }
 
 /**
+ * Options for logging pairing creation (FHA COMPLIANCE)
+ */
+export interface LogPairingCreatedOptions {
+  userId1: string;
+  userId2: string;
+  matchId: string;
+  compatibilityScore: number;
+  ipAddress: string;
+  userAgent: string;
+  breakdown?: Record<string, number>;
+}
+
+/**
  * Log pairing/match creation (FHA COMPLIANCE)
  *
  * Purpose: Track when mutual pairings are created and the compatibility score
  * that led to the pairing. Essential for demonstrating preference-based matching.
  */
-export async function logPairingCreated(
-  userId1: string,
-  userId2: string,
-  matchId: string,
-  compatibilityScore: number,
-  ipAddress: string,
-  userAgent: string,
-  breakdown?: Record<string, number>
-): Promise<void> {
+export async function logPairingCreated(options: LogPairingCreatedOptions): Promise<void> {
+  const { userId1, userId2, matchId, compatibilityScore, ipAddress, userAgent, breakdown } = options;
   await createAuditLog({
     userId: userId1,
     operation: 'pairing.created',
@@ -472,7 +496,7 @@ export async function logProfileView(
   viewedProfileUserId: string,
   compatibilityScore: number,
   ipAddress: string,
-  userAgent: string
+  userAgent: string,
 ): Promise<void> {
   await createAuditLog({
     userId,
@@ -493,6 +517,18 @@ export async function logProfileView(
 }
 
 /**
+ * Options for logging algorithm changes (FHA COMPLIANCE)
+ */
+export interface LogAlgorithmChangeOptions {
+  adminUserId: string;
+  changeType: 'weights' | 'factors' | 'logic' | 'configuration';
+  changeDescription: string;
+  ipAddress: string;
+  userAgent: string;
+  metadata?: Record<string, any>;
+}
+
+/**
  * Log algorithm changes (FHA COMPLIANCE)
  *
  * Purpose: Track when administrators modify algorithm logic, weights, or scoring factors.
@@ -503,14 +539,8 @@ export async function logProfileView(
  * - New preference factors are added
  * - Algorithm logic is updated
  */
-export async function logAlgorithmChange(
-  adminUserId: string,
-  changeType: 'weights' | 'factors' | 'logic' | 'configuration',
-  changeDescription: string,
-  ipAddress: string,
-  userAgent: string,
-  metadata?: Record<string, any>
-): Promise<void> {
+export async function logAlgorithmChange(options: LogAlgorithmChangeOptions): Promise<void> {
+  const { adminUserId, changeType, changeDescription, ipAddress, userAgent, metadata } = options;
   await createAuditLog({
     userId: adminUserId,
     operation: 'algorithm.modified',

@@ -154,7 +154,7 @@ export const SubscriptionModel = {
    */
   async updateByPurchaseToken(
     purchaseToken: string,
-    data: Partial<Subscription>
+    data: Partial<Subscription>,
   ): Promise<Subscription> {
     const [subscription] = await db('subscriptions')
       .where({ purchase_token: purchaseToken })
@@ -210,7 +210,7 @@ export const SubscriptionModel = {
   async renewSubscription(
     userId: string,
     expiresAt: Date,
-    validationData?: any
+    validationData?: any,
   ): Promise<Subscription | null> {
     const activeSubscription = await this.findActiveSubscription(userId);
     if (!activeSubscription) {
@@ -272,7 +272,7 @@ export const SubscriptionModel = {
         db.raw('COUNT(*) as total_subscriptions'),
         db.raw("COUNT(CASE WHEN status = 'active' AND purchase_type = 'subscription' THEN 1 END) as active_subscriptions"),
         db.raw("COUNT(CASE WHEN status = 'expired' THEN 1 END) as expired_subscriptions"),
-        db.raw("COUNT(CASE WHEN purchase_type = 'one_time' THEN 1 END) as total_purchases")
+        db.raw("COUNT(CASE WHEN purchase_type = 'one_time' THEN 1 END) as total_purchases"),
       )
       .first();
 

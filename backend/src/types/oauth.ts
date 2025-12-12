@@ -405,7 +405,7 @@ export const OAuthSuggestedActions = {
  * Type guard for AuthSuccessResponse
  */
 export function isAuthSuccess(
-  response: AuthSuccessResponse | OAuthErrorResponse
+  response: AuthSuccessResponse | OAuthErrorResponse,
 ): response is AuthSuccessResponse {
   return (response as AuthSuccessResponse).success === true;
 }
@@ -414,7 +414,7 @@ export function isAuthSuccess(
  * Type guard for ErrorResponse
  */
 export function isErrorResponse(
-  response: AuthSuccessResponse | OAuthErrorResponse
+  response: AuthSuccessResponse | OAuthErrorResponse,
 ): response is ErrorResponse {
   return (
     'error' in response &&
@@ -426,7 +426,7 @@ export function isErrorResponse(
  * Type guard for AccountConflictResponse
  */
 export function isAccountConflict(
-  response: OAuthErrorResponse
+  response: OAuthErrorResponse,
 ): response is AccountConflictResponse {
   return (response as AccountConflictResponse).error === 'account_exists';
 }
@@ -435,7 +435,7 @@ export function isAccountConflict(
  * Type guard for RateLimitResponse
  */
 export function isRateLimitError(
-  response: OAuthErrorResponse
+  response: OAuthErrorResponse,
 ): response is RateLimitResponse {
   return (response as RateLimitResponse).error === 'rate_limit_exceeded';
 }
@@ -444,7 +444,7 @@ export function isRateLimitError(
  * Type guard for Google auth request
  */
 export function isGoogleAuthRequest(
-  request: GoogleAuthRequest | AppleAuthRequest
+  request: GoogleAuthRequest | AppleAuthRequest,
 ): request is GoogleAuthRequest {
   return 'idToken' in request;
 }
@@ -453,7 +453,7 @@ export function isGoogleAuthRequest(
  * Type guard for Apple auth request
  */
 export function isAppleAuthRequest(
-  request: GoogleAuthRequest | AppleAuthRequest
+  request: GoogleAuthRequest | AppleAuthRequest,
 ): request is AppleAuthRequest {
   return 'identityToken' in request && 'user' in request;
 }

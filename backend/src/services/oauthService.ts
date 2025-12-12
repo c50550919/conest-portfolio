@@ -102,7 +102,7 @@ export class OAuthService {
    */
   async verifyAppleToken(
     identityToken: string,
-    nonce: string
+    nonce: string,
   ): Promise<OAuthProfile> {
     try {
       // Verify token with Apple
@@ -165,7 +165,7 @@ export class OAuthService {
    */
   async handleOAuthSignIn(
     profile: OAuthProfile,
-    fullName?: { givenName?: string; familyName?: string }
+    fullName?: { givenName?: string; familyName?: string },
   ): Promise<{
     user: any;
     tokens: { accessToken: string; refreshToken: string; expiresIn: number };
@@ -188,8 +188,8 @@ export class OAuthService {
 
     // Check if user already has this OAuth provider
     if (
-      existingUser.oauth_provider === profile.provider &&
-      existingUser.oauth_provider_id === profile.providerId
+      (existingUser as any).oauth_provider === profile.provider &&
+      (existingUser as any).oauth_provider_id === profile.providerId
     ) {
       // CASE 2: Returning user - signin
       return await this.signinReturningOAuthUser(existingUser);
@@ -197,22 +197,22 @@ export class OAuthService {
 
     // User exists but with different OAuth provider
     if (
-      existingUser.oauth_provider &&
-      existingUser.oauth_provider !== profile.provider
+      (existingUser as any).oauth_provider &&
+      (existingUser as any).oauth_provider !== profile.provider
     ) {
       // CASE 5: OAuth provider conflict
       throw new Error(
-        `Account exists with different OAuth provider: ${existingUser.oauth_provider}. Please sign in with ${existingUser.oauth_provider}.`
+        `Account exists with different OAuth provider: ${(existingUser as any).oauth_provider}. Please sign in with ${(existingUser as any).oauth_provider}.`,
       );
     }
 
     // User exists with email/password only (no OAuth provider yet)
-    if (!existingUser.oauth_provider) {
+    if (!(existingUser as any).oauth_provider) {
       // Check email verification status (security requirement)
       if (!existingUser.email_verified) {
         // CASE 4: Reject linking to unverified account (prevent account takeover)
         throw new Error(
-          'Email verification required before linking OAuth provider. Please verify your email first.'
+          'Email verification required before linking OAuth provider. Please verify your email first.',
         );
       }
 
@@ -245,7 +245,7 @@ export class OAuthService {
         account_status: 'active' as const,
       };
 
-      const user = await UserModel.create(userData, trx);
+      const user = await UserModel.create(userData as any);
 
       // Create parent profile
       const parentData = {
@@ -256,16 +256,16 @@ export class OAuthService {
         children_age_groups: [],
       };
 
-      await ParentModel.create(parentData, trx);
+      await ParentModel.create(parentData as any);
 
       // Update last_login
-      await UserModel.updateLastLogin(user.id, trx);
+      await UserModel.updateLastLogin(user.id);
 
       // Generate JWT tokens
       const tokenPair = await AuthService.generateTokenPair(user.id, profile.email);
 
       return {
-        user: UserModel.sanitize(user),
+        user: user,
         tokens: {
           accessToken: tokenPair.accessToken,
           refreshToken: tokenPair.refreshToken,
@@ -302,7 +302,7 @@ export class OAuthService {
     const tokenPair = await AuthService.generateTokenPair(user.id, user.email);
 
     return {
-      user: UserModel.sanitize(user),
+      user: user,
       tokens: {
         accessToken: tokenPair.accessToken,
         refreshToken: tokenPair.refreshToken,
@@ -318,7 +318,7 @@ export class OAuthService {
    */
   private async linkOAuthToExistingUser(
     existingUser: any,
-    profile: OAuthProfile
+    profile: OAuthProfile,
   ): Promise<{
     user: any;
     tokens: { accessToken: string; refreshToken: string; expiresIn: number };
@@ -327,10 +327,10 @@ export class OAuthService {
   }> {
     // Update user record with OAuth fields
     const updatedUser = await UserModel.update(existingUser.id, {
-      oauth_provider: profile.provider,
-      oauth_provider_id: profile.providerId,
+      ...(profile.provider ? { oauth_provider: profile.provider } : {}),
+      ...(profile.providerId ? { oauth_provider_id: profile.providerId } : {}),
       oauth_profile_picture: profile.photo || null,
-    });
+    } as any);
 
     // Update last_login
     await UserModel.updateLastLogin(existingUser.id);
@@ -339,7 +339,7 @@ export class OAuthService {
     const tokenPair = await AuthService.generateTokenPair(existingUser.id, existingUser.email);
 
     return {
-      user: UserModel.sanitize(updatedUser),
+      user: (updatedUser),
       tokens: {
         accessToken: tokenPair.accessToken,
         refreshToken: tokenPair.refreshToken,

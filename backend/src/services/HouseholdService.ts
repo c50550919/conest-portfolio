@@ -21,7 +21,7 @@ export class HouseholdService {
    */
   static async createHousehold(
     data: CreateHouseholdData,
-    creatorUserId: string
+    creatorUserId: string,
   ): Promise<{ household: any; member: any }> {
     // Verify creator user exists
     const user = await UserModel.findById(creatorUserId);
@@ -77,7 +77,7 @@ export class HouseholdService {
           joinedAt: member.joined_at,
           status: member.status,
         };
-      })
+      }),
     );
 
     return { members: enrichedMembers };
@@ -88,7 +88,7 @@ export class HouseholdService {
    */
   static async getExpenses(
     householdId: string,
-    filters?: { status?: string; type?: string }
+    filters?: { status?: string; type?: string },
   ) {
     let expenses;
 
@@ -121,7 +121,7 @@ export class HouseholdService {
           paidAt: expense.paid_at,
           createdAt: expense.created_at,
         };
-      })
+      }),
     );
 
     // Get summary
@@ -141,7 +141,7 @@ export class HouseholdService {
   static async addMember(
     householdId: string,
     requestingUserId: string,
-    data: { userId: string; rentShare: number; role?: 'admin' | 'member' }
+    data: { userId: string; rentShare: number; role?: 'admin' | 'member' },
   ) {
     // Verify requesting user is admin
     const isAdmin = await HouseholdMemberModel.isAdmin(householdId, requestingUserId);
@@ -187,7 +187,7 @@ export class HouseholdService {
   static async removeMember(
     householdId: string,
     requestingUserId: string,
-    userIdToRemove: string
+    userIdToRemove: string,
   ) {
     // Verify requesting user is admin
     const isAdmin = await HouseholdMemberModel.isAdmin(householdId, requestingUserId);
@@ -199,7 +199,7 @@ export class HouseholdService {
     const admins = await HouseholdMemberModel.getAdmins(householdId);
     const memberToRemove = await HouseholdMemberModel.findByHouseholdAndUser(
       householdId,
-      userIdToRemove
+      userIdToRemove,
     );
 
     if (memberToRemove?.role === 'admin' && admins.length <= 1) {
@@ -216,7 +216,7 @@ export class HouseholdService {
     householdId: string,
     requestingUserId: string,
     userIdToUpdate: string,
-    newRentShare: number
+    newRentShare: number,
   ) {
     // Verify requesting user is admin
     const isAdmin = await HouseholdMemberModel.isAdmin(householdId, requestingUserId);
@@ -227,7 +227,7 @@ export class HouseholdService {
     return await HouseholdMemberModel.updateRentShare(
       householdId,
       userIdToUpdate,
-      newRentShare
+      newRentShare,
     );
   }
 
@@ -251,7 +251,7 @@ export class HouseholdService {
   static async updateHousehold(
     householdId: string,
     requestingUserId: string,
-    data: Partial<CreateHouseholdData>
+    data: Partial<CreateHouseholdData>,
   ) {
     // Verify requesting user is admin
     const isAdmin = await HouseholdMemberModel.isAdmin(householdId, requestingUserId);

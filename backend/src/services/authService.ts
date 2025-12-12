@@ -40,6 +40,7 @@ export interface RegisterData {
   firstName: string;
   lastName: string;
   phoneNumber?: string;
+  phone?: string; // API uses 'phone', accept both
   // Allow additional fields but will validate against child PII
   [key: string]: any;
 }
@@ -80,8 +81,10 @@ export const AuthService = {
       throw new Error('User with this email already exists');
     }
 
-    if (data.phoneNumber) {
-      const existingPhone = await UserModel.findByPhone(data.phoneNumber);
+    // Accept both 'phone' and 'phoneNumber' for API compatibility
+    const phoneToCheck = data.phoneNumber || data.phone;
+    if (phoneToCheck) {
+      const existingPhone = await UserModel.findByPhone(phoneToCheck);
       if (existingPhone) {
         throw new Error('User with this phone number already exists');
       }
@@ -94,7 +97,7 @@ export const AuthService = {
     const user = await UserModel.create({
       email: data.email,
       password_hash,
-      phone: data.phoneNumber,
+      phone: phoneToCheck,
     });
 
     // Create verification record
@@ -170,6 +173,20 @@ export const AuthService = {
     } catch (error) {
       throw new Error('Invalid or expired refresh token');
     }
+  },
+
+  /**
+   * Find user by phone number
+   */
+  async findUserByPhone(phone: string): Promise<any | null> {
+    return await UserModel.findByPhone(phone);
+  },
+
+  /**
+   * Verify phone verification code
+   */
+  async verifyPhoneCode(userId: string, code: string): Promise<boolean> {
+    return await this.verifyPhone(userId, code);
   },
 
   /**
@@ -260,14 +277,14 @@ export const AuthService = {
     const providedFields = Object.keys(data);
     const foundProhibitedFields = providedFields.filter(field =>
       PROHIBITED_CHILD_FIELDS.some(prohibited =>
-        field.toLowerCase().includes(prohibited.toLowerCase())
-      )
+        field.toLowerCase().includes(prohibited.toLowerCase()),
+      ),
     );
 
     if (foundProhibitedFields.length > 0) {
       throw new Error(
         `Child PII is prohibited: ${foundProhibitedFields.join(', ')}. ` +
-        'This platform stores NO child data for safety reasons.'
+        'This platform stores NO child data for safety reasons.',
       );
     }
   },

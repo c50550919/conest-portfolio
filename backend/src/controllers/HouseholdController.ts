@@ -16,7 +16,7 @@
 import { Response } from 'express';
 import { HouseholdService } from '../services/HouseholdService';
 import { asyncHandler } from '../middleware/errorHandler';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../middleware/auth.middleware';
 
 export const HouseholdController = {
   /**
@@ -295,7 +295,7 @@ export const HouseholdController = {
       const household = await HouseholdService.updateHousehold(
         householdId,
         requestingUserId,
-        req.body
+        req.body,
       );
 
       res.status(200).json(household);
@@ -395,7 +395,7 @@ export const HouseholdController = {
         householdId,
         requestingUserId,
         userIdToUpdate,
-        rentShare
+        rentShare,
       );
 
       res.status(200).json(member);

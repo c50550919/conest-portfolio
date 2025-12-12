@@ -82,7 +82,7 @@ export const UserModel = {
    * Clear refresh token (for logout)
    */
   async clearRefreshToken(userId: string): Promise<User> {
-    return await this.update(userId, { refresh_token_hash: null });
+    return await this.update(userId, { refresh_token_hash: undefined });
   },
 
   /**

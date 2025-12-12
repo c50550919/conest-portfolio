@@ -1,6 +1,6 @@
 import express from 'express';
 import { HouseholdController } from '../controllers/HouseholdController';
-import { authMiddleware } from '../middleware/auth';
+import { authMiddleware } from '../middleware/auth.middleware';
 
 /**
  * Household Routes
@@ -152,7 +152,7 @@ router.post('/:id/members', HouseholdController.addMember);
  */
 router.delete(
   '/:id/members/:userId',
-  HouseholdController.removeMember
+  HouseholdController.removeMember,
 );
 
 /**

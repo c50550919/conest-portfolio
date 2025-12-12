@@ -77,7 +77,7 @@ export const queueNotification = async (
   userId: string,
   type: 'email' | 'sms' | 'push',
   message: string,
-  options?: { title?: string; data?: any }
+  options?: { title?: string; data?: any },
 ) => {
   await notificationQueue.add(type, {
     userId,

@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { MatchingService } from '../services/matchingService';
 import { MatchModel } from '../models/Match';
 import { asyncHandler } from '../middleware/errorHandler';
-import { AuthRequest } from '../middleware/auth';
+import { AuthRequest } from '../middleware/auth.middleware';
 import { logCompatibilityCalculation } from '../services/auditService';
 
 export const matchController = {
@@ -48,8 +48,8 @@ export const matchController = {
       targetUserId,
       {
         ipAddress: req.ip || 'unknown',
-        userAgent: req.headers['user-agent'] || 'unknown'
-      }
+        userAgent: req.headers['user-agent'] || 'unknown',
+      },
     );
 
     res.status(201).json({
@@ -169,7 +169,7 @@ export const matchController = {
         targetUserId,
         compatibility,
         req.ip || 'unknown',
-        req.headers['user-agent'] || 'unknown'
+        req.headers['user-agent'] || 'unknown',
       );
     } catch (auditError) {
       // Log audit errors but don't fail the compatibility calculation

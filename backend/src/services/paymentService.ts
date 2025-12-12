@@ -72,7 +72,7 @@ export const PaymentService = {
       const accountLink = await createAccountLink(
         account.id,
         `${process.env.API_URL}/api/payments/stripe/refresh`,
-        `${process.env.API_URL}/api/payments/stripe/return`
+        `${process.env.API_URL}/api/payments/stripe/return`,
       );
 
       logger.info(`Created Stripe account ${account.id} for user ${userId}`);
@@ -120,14 +120,14 @@ export const PaymentService = {
    */
   async getOnboardingLink(householdId: string): Promise<string> {
     const household = await HouseholdModel.findById(householdId);
-    if (!household || !household.stripe_account_id) {
+    if (!household?.stripe_account_id) {
       throw new Error('Household Stripe account not found');
     }
 
     const accountLink = await createAccountLink(
       household.stripe_account_id,
       `${process.env.API_URL}/stripe/refresh`,
-      `${process.env.API_URL}/stripe/return`
+      `${process.env.API_URL}/stripe/return`,
     );
 
     return accountLink.url;
@@ -187,7 +187,7 @@ export const PaymentService = {
 
       const paymentIntent = await stripe.paymentIntents.create(
         createParams,
-        idempotencyKey ? { idempotencyKey } : undefined
+        idempotencyKey ? { idempotencyKey } : undefined,
       );
 
       logger.info(`Created payment intent ${paymentIntent.id} for household ${householdId}`);
@@ -212,7 +212,7 @@ export const PaymentService = {
     payerId: string,
     amount: number,
     type: 'rent' | 'utilities' | 'deposit' | 'other',
-    description?: string
+    description?: string,
   ): Promise<any> {
     const household = await HouseholdModel.findById(householdId);
     if (!household) {
@@ -377,8 +377,8 @@ export const PaymentService = {
           type: 'rent',
           description: `Rent for ${dueDate.toLocaleString('default', { month: 'long', year: 'numeric' })}`,
           due_date: dueDate,
-        })
-      )
+        }),
+      ),
     );
 
     logger.info(`Created ${payments.length} rent payments for household ${householdId}`);
@@ -424,7 +424,7 @@ export const PaymentService = {
       return {
         refundId: refund.id,
         amount: refund.amount,
-        status: refund.status,
+        status: refund.status as string,
       };
     } catch (error: any) {
       logger.error('Error processing refund:', error);
@@ -525,7 +525,7 @@ export const PaymentService = {
           break;
 
         case 'payment_intent.payment_failed':
-          const paymentIntentFailed = event.data.object as Stripe.PaymentIntent;
+          const paymentIntentFailed = event.data.object;
           const paymentId = paymentIntentFailed.metadata.payment_id;
           if (paymentId) {
             await PaymentModel.updatePayment(paymentId, { status: 'failed' });
@@ -534,7 +534,7 @@ export const PaymentService = {
           break;
 
         case 'payment_intent.canceled':
-          const paymentIntentCanceled = event.data.object as Stripe.PaymentIntent;
+          const paymentIntentCanceled = event.data.object;
           const canceledPaymentId = paymentIntentCanceled.metadata.payment_id;
           if (canceledPaymentId) {
             await PaymentModel.updatePayment(canceledPaymentId, { status: 'failed' });
@@ -543,13 +543,13 @@ export const PaymentService = {
           break;
 
         case 'charge.refunded':
-          const chargeRefunded = event.data.object as Stripe.Charge;
+          const chargeRefunded = event.data.object;
           logger.info(`Charge refunded: ${chargeRefunded.id}`);
           break;
 
         case 'account.updated':
           // Handle connected account updates
-          const account = event.data.object as Stripe.Account;
+          const account = event.data.object;
           logger.info(`Connected account updated: ${account.id}`, {
             chargesEnabled: account.charges_enabled,
             payoutsEnabled: account.payouts_enabled,
@@ -558,8 +558,8 @@ export const PaymentService = {
 
         case 'account.application.deauthorized':
           // Handle when a user deauthorizes the connected account
-          const deauthorizedAccount = event.data.object as Stripe.Account;
-          logger.warn(`Account deauthorized: ${deauthorizedAccount.id}`);
+          const deauthorizedApp = event.data.object;
+          logger.warn(`Account application deauthorized: ${deauthorizedApp.id}`);
           break;
 
         default:
