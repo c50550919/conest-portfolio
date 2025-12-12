@@ -71,7 +71,10 @@ class DiscoveryAPI {
     this.client.interceptors.request.use(
       async (config) => {
         const token = await tokenStorage.getAccessToken();
-        console.log('[DiscoveryAPI] Token from storage:', token ? `${token.substring(0, 20)}...` : 'NOT FOUND');
+        console.log(
+          '[DiscoveryAPI] Token from storage:',
+          token ? `${token.substring(0, 20)}...` : 'NOT FOUND',
+        );
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
           console.log('[DiscoveryAPI] Request:', config.method?.toUpperCase(), config.url);
@@ -97,11 +100,14 @@ class DiscoveryAPI {
           status: error.response?.status,
           message: error.message,
           url: error.config?.url,
-          data: error.response?.data
+          data: error.response?.data,
         });
         // Note: 401/403 token refresh is handled by authAPI interceptor
         // Only clear tokens if it's a true authentication failure (not token expiry)
-        if (error.response?.status === 401 && error.response?.data?.error === 'Access token required') {
+        if (
+          error.response?.status === 401 &&
+          error.response?.data?.error === 'Access token required'
+        ) {
           console.warn('[DiscoveryAPI] 401 No token - clearing tokens');
           await tokenStorage.clearTokens();
         }
@@ -116,18 +122,18 @@ class DiscoveryAPI {
    * @param limit - Number of profiles to fetch (1-50, default 10)
    * @returns Discovery profiles and next cursor
    */
-  async getProfiles(
-    cursor?: string,
-    limit: number = 10
-  ): Promise<DiscoveryResponse> {
+  async getProfiles(cursor?: string, limit: number = 10): Promise<DiscoveryResponse> {
     const params: Record<string, string | number> = { limit };
     if (cursor) {
       params.cursor = cursor;
     }
 
-    const response = await this.client.get<{success: boolean; data: DiscoveryResponse}>('/discovery/profiles', {
-      params,
-    });
+    const response = await this.client.get<{ success: boolean; data: DiscoveryResponse }>(
+      '/discovery/profiles',
+      {
+        params,
+      },
+    );
 
     return response.data.data; // Backend wraps response in {success, data}
   }
@@ -140,12 +146,9 @@ class DiscoveryAPI {
    * @returns Success status
    */
   async reportScreenshot(targetUserId: string): Promise<ScreenshotResponse> {
-    const response = await this.client.post<ScreenshotResponse>(
-      '/discovery/screenshot',
-      {
-        targetUserId,
-      }
-    );
+    const response = await this.client.post<ScreenshotResponse>('/discovery/screenshot', {
+      targetUserId,
+    });
 
     return response.data;
   }

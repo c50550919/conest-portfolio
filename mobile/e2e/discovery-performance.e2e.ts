@@ -60,7 +60,7 @@ describe('Discovery Screen Performance E2E', () => {
       await card.swipe('right', 'slow', 0.8);
 
       // Wait for animation to complete
-      await new Promise(resolve => setTimeout(resolve, PERF_CONFIG.swipeDuration));
+      await new Promise((resolve) => setTimeout(resolve, PERF_CONFIG.swipeDuration));
 
       // Verify card moved off screen
       await waitFor(element(by.id('swipeable-card-1')))
@@ -79,7 +79,7 @@ describe('Discovery Screen Performance E2E', () => {
       await card.swipe('left', 'slow', 0.8);
 
       // Wait for animation
-      await new Promise(resolve => setTimeout(resolve, PERF_CONFIG.swipeDuration));
+      await new Promise((resolve) => setTimeout(resolve, PERF_CONFIG.swipeDuration));
 
       // Verify next card visible
       await waitFor(element(by.id('swipeable-card-1')))
@@ -96,7 +96,7 @@ describe('Discovery Screen Performance E2E', () => {
         await card.swipe(direction, 'fast', 0.9);
 
         // Small delay between swipes
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Verify UI is still responsive
@@ -122,7 +122,7 @@ describe('Discovery Screen Performance E2E', () => {
       await card.swipe('right', 'slow', 0.3);
 
       // Wait for snap-back animation
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       // Card should still be visible (not dismissed)
       await detoxExpect(element(by.id('swipeable-card-0'))).toBeVisible();
@@ -135,7 +135,7 @@ describe('Discovery Screen Performance E2E', () => {
       await card.swipe('right', 'slow', 0.8);
 
       // Wait for dismiss animation
-      await new Promise(resolve => setTimeout(resolve, PERF_CONFIG.swipeDuration));
+      await new Promise((resolve) => setTimeout(resolve, PERF_CONFIG.swipeDuration));
 
       // Next card should be visible
       await waitFor(element(by.id('swipeable-card-1')))
@@ -170,7 +170,7 @@ describe('Discovery Screen Performance E2E', () => {
       await topCard.swipe('right', 'slow', 0.8);
 
       // Wait for animation
-      await new Promise(resolve => setTimeout(resolve, PERF_CONFIG.swipeDuration));
+      await new Promise((resolve) => setTimeout(resolve, PERF_CONFIG.swipeDuration));
 
       // Only top card should have moved
       await waitFor(element(by.id('swipeable-card-1')))
@@ -189,7 +189,7 @@ describe('Discovery Screen Performance E2E', () => {
       await element(by.id('swipeable-card-0')).swipe('right', 'slow', 0.8);
 
       // Wait for animation
-      await new Promise(resolve => setTimeout(resolve, PERF_CONFIG.swipeDuration));
+      await new Promise((resolve) => setTimeout(resolve, PERF_CONFIG.swipeDuration));
 
       // Now card-1 should be the new top card
       await detoxExpect(element(by.id('swipeable-card-1'))).toBeVisible();
@@ -209,15 +209,13 @@ describe('Discovery Screen Performance E2E', () => {
       // Profile cards should have images loaded
       const profileImage = element(by.id('profile-image-0'));
 
-      await waitFor(profileImage)
-        .toBeVisible()
-        .withTimeout(3000);
+      await waitFor(profileImage).toBeVisible().withTimeout(3000);
 
       // Swipe should still be smooth with images
       const card = element(by.id('swipeable-card-0'));
       await card.swipe('right', 'slow', 0.8);
 
-      await new Promise(resolve => setTimeout(resolve, PERF_CONFIG.swipeDuration));
+      await new Promise((resolve) => setTimeout(resolve, PERF_CONFIG.swipeDuration));
 
       // Next card image should load quickly
       await waitFor(element(by.id('profile-image-1')))
@@ -235,7 +233,7 @@ describe('Discovery Screen Performance E2E', () => {
           await card.swipe(i % 2 === 0 ? 'right' : 'left', 'fast', 0.9);
 
           // Small delay
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
         } catch (error) {
           // May run out of profiles - that's OK
           break;
@@ -251,7 +249,7 @@ describe('Discovery Screen Performance E2E', () => {
       for (let i = 0; i < 5; i++) {
         const card = element(by.id('swipeable-card-0'));
         await card.swipe('right', 'fast', 0.9);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // App should not crash or freeze
@@ -266,7 +264,7 @@ describe('Discovery Screen Performance E2E', () => {
         try {
           const card = element(by.id('swipeable-card-0'));
           await card.swipe('right', 'fast', 0.9);
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
         } catch (error) {
           break;
         }
@@ -286,7 +284,7 @@ describe('Discovery Screen Performance E2E', () => {
         try {
           const card = element(by.id('swipeable-card-0'));
           await card.swipe('right', 'fast', 0.9);
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
           swipeCount++;
         } catch (error) {
           // No more cards - empty state should appear
@@ -346,7 +344,7 @@ describe('Discovery Screen Performance E2E', () => {
       await card.swipe('right', 'slow', 0.8);
 
       // Wait for animation
-      await new Promise(resolve => setTimeout(resolve, PERF_CONFIG.swipeDuration));
+      await new Promise((resolve) => setTimeout(resolve, PERF_CONFIG.swipeDuration));
 
       // Next card should be visible
       await waitFor(element(by.id('swipeable-card-1')))
@@ -368,7 +366,7 @@ describe('Discovery Screen Performance E2E', () => {
       await card.swipe('right', 'slow', 0.8);
 
       // Animation should complete even if JS thread is busy
-      await new Promise(resolve => setTimeout(resolve, PERF_CONFIG.swipeDuration));
+      await new Promise((resolve) => setTimeout(resolve, PERF_CONFIG.swipeDuration));
 
       // Next card should be visible
       await waitFor(element(by.id('swipeable-card-1')))
@@ -392,7 +390,7 @@ describe('Discovery Screen Performance E2E', () => {
         swipeTimes.push(endTime - startTime);
 
         // Wait for animation to complete
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       const avgSwipeTime = swipeTimes.reduce((sum, time) => sum + time, 0) / swipeTimes.length;

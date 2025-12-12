@@ -87,7 +87,7 @@ describe('🔍 Troubleshoot Profile Comparison Flow', () => {
     console.log('✅ Browse Connections screen loaded - DISCOVER TAB ACTIVE!\n');
 
     // Wait a bit for profiles to actually load from API
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
     console.log('✅ Waited for profiles to load from API');
 
     // Take screenshot
@@ -110,7 +110,7 @@ describe('🔍 Troubleshoot Profile Comparison Flow', () => {
       'bookmark-button-0',
       'bookmark-icon-0',
       'save-profile-0',
-      'bookmark-0'
+      'bookmark-0',
     ];
 
     for (const selector of bookmarkSelectors) {
@@ -228,7 +228,7 @@ describe('🔍 Troubleshoot Profile Comparison Flow', () => {
       'comparison-toggle-0',
       'comparison-checkbox-0',
       'compare-checkbox-0',
-      'add-to-comparison-0'
+      'add-to-comparison-0',
     ];
 
     let comparisonFound = false;
@@ -255,7 +255,9 @@ describe('🔍 Troubleshoot Profile Comparison Flow', () => {
     }
 
     if (!comparisonFound) {
-      console.log('⚠️  Comparison toggles not found - profiles might already be in comparison from bookmarking');
+      console.log(
+        '⚠️  Comparison toggles not found - profiles might already be in comparison from bookmarking',
+      );
     }
 
     await device.takeScreenshot('04-profiles-added-to-comparison');
@@ -304,7 +306,7 @@ describe('🔍 Troubleshoot Profile Comparison Flow', () => {
     const compareButtonSelectors = [
       'compare-button',
       'comparison-compare-button',
-      'start-comparison-button'
+      'start-comparison-button',
     ];
 
     let compareButtonFound = false;
@@ -370,8 +372,9 @@ describe('🔍 Troubleshoot Profile Comparison Flow', () => {
       // If we reach here, the error appeared - TEST FAILED
       console.log('❌❌❌ FAILURE: "No Profiles Selected" alert appeared!');
       await device.takeScreenshot('FAILURE-no-profiles-selected-alert');
-      throw new Error('TEST FAILED: "No Profiles Selected" alert appeared - profiles were not saved to backend!');
-
+      throw new Error(
+        'TEST FAILED: "No Profiles Selected" alert appeared - profiles were not saved to backend!',
+      );
     } catch (e) {
       if (e.message.includes('TEST FAILED')) {
         throw e; // Re-throw test failure

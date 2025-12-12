@@ -43,7 +43,7 @@ describe('Discovery Screen - Manual Test Suite', () => {
 
       // Verify like indicator appeared during swipe (check via screenshot or animation)
       // Wait for animation to complete
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
       // Verify next card is now visible
       await detoxExpect(element(by.id('swipeable-card-1'))).toBeVisible();
@@ -57,7 +57,7 @@ describe('Discovery Screen - Manual Test Suite', () => {
 
       await detoxExpect(card).toBeVisible();
       await card.swipe('left', 'slow', 0.75);
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
       // Verify next card visible
       await detoxExpect(element(by.id('swipeable-card-1'))).toBeVisible();
@@ -68,7 +68,7 @@ describe('Discovery Screen - Manual Test Suite', () => {
 
       // Swipe only 30% (below threshold)
       await card.swipe('right', 'slow', 0.3);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Card should still be visible (same card, not advanced)
       await detoxExpect(card).toBeVisible();
@@ -82,7 +82,7 @@ describe('Discovery Screen - Manual Test Suite', () => {
 
       // Swipe exactly at threshold (0.5 normalized = 50%)
       await card.swipe('right', 'slow', 0.5);
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
       // Should complete the swipe
       await detoxExpect(element(by.id('swipeable-card-1'))).toBeVisible();
@@ -93,15 +93,15 @@ describe('Discovery Screen - Manual Test Suite', () => {
     it('Test #5: Smooth 60fps Animation - Multiple Speeds', async () => {
       const slowCard = element(by.id('swipeable-card-0'));
       await slowCard.swipe('right', 'slow', 0.8);
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
       const mediumCard = element(by.id('swipeable-card-1'));
       await mediumCard.swipe('left', 'normal', 0.8);
-      await new Promise(resolve => setTimeout(resolve, 600));
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
       const fastCard = element(by.id('swipeable-card-2'));
       await fastCard.swipe('right', 'fast', 0.8);
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await new Promise((resolve) => setTimeout(resolve, 400));
 
       // All animations should complete smoothly
       // Performance monitoring requires additional tooling
@@ -113,7 +113,7 @@ describe('Discovery Screen - Manual Test Suite', () => {
         const direction = i % 2 === 0 ? 'right' : 'left';
 
         await card.swipe(direction, 'fast', 0.9);
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
       }
 
       // Verify we've advanced through 5 cards
@@ -141,13 +141,11 @@ describe('Discovery Screen - Manual Test Suite', () => {
 
       const card = element(by.id('swipeable-card-0'));
       await card.swipe('right', 'slow', 0.8);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Check if match modal appeared
       const matchModal = element(by.id('match-modal'));
-      await waitFor(matchModal)
-        .toBeVisible()
-        .withTimeout(2000);
+      await waitFor(matchModal).toBeVisible().withTimeout(2000);
 
       // Verify modal content
       await detoxExpect(element(by.text("It's a Match!"))).toBeVisible();
@@ -236,7 +234,7 @@ describe('Discovery Screen - Manual Test Suite', () => {
         const card = element(by.id(`swipeable-card-${i}`));
         try {
           await card.swipe('right', 'fast', 0.8);
-          await new Promise(resolve => setTimeout(resolve, 300));
+          await new Promise((resolve) => setTimeout(resolve, 300));
         } catch (e) {
           // Card might not exist
           break;
@@ -286,7 +284,7 @@ describe('Discovery Screen - Manual Test Suite', () => {
 
       // Verify card is still swipeable
       await profileCard.swipe('right', 'slow', 0.8);
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 800));
     });
   });
 
@@ -325,7 +323,7 @@ describe('Discovery Screen - Manual Test Suite', () => {
         const card = element(by.id(`swipeable-card-${i}`));
         try {
           await card.swipe('right', 'fast', 0.9);
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise((resolve) => setTimeout(resolve, 200));
         } catch (e) {
           break;
         }
@@ -347,7 +345,7 @@ describe('Discovery Screen - Manual Test Suite', () => {
 
       // Indicators should be visible during swipe
       // Screenshot testing recommended for visual verification
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     });
 
     it('Test #21: Gesture Conflicts - Only Top Card Responds', async () => {
@@ -356,7 +354,7 @@ describe('Discovery Screen - Manual Test Suite', () => {
 
       // Swipe top card
       await topCard.swipe('right', 'slow', 0.8);
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
       // Second card should now be top (index 0)
       await detoxExpect(element(by.id('swipeable-card-1'))).toBeVisible();
@@ -367,14 +365,14 @@ describe('Discovery Screen - Manual Test Suite', () => {
     it('Test #22: Screen Rotation Handling', async () => {
       if (device.getPlatform() === 'ios') {
         await device.setOrientation('landscape');
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         // Verify layout still correct
         await detoxExpect(element(by.id('discovery-screen'))).toBeVisible();
         await detoxExpect(element(by.id('swipeable-card-0'))).toBeVisible();
 
         await device.setOrientation('portrait');
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     });
   });
@@ -397,7 +395,7 @@ describe('Discovery Screen - Manual Test Suite', () => {
       for (let i = 0; i < 5; i++) {
         const card = element(by.id(`swipeable-card-${i}`));
         await card.swipe('right', 'slow', 0.8);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
 
       // Verify backend recorded all swipes (requires API integration test)
@@ -409,7 +407,6 @@ describe('Discovery Screen - Manual Test Suite', () => {
       // User A swipes right on User B
       // User B swipes right on User A
       // Match should be created
-
       // This is best tested as backend integration test
       // E2E can verify UI shows match modal
     });

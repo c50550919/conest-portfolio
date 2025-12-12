@@ -31,29 +31,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import { compareProfiles } from '../../store/slices/savedProfilesSlice';
 import { colors, typography, spacing, borderRadius } from '../../theme';
-import { UnifiedComparisonProfile } from '../../types/comparison';
+import { CompareProfile } from '../../services/api/savedProfilesAPI';
 import CompatibilityBreakdownModal from '../../components/compatibility/CompatibilityBreakdownModal';
 import compatibilityAPI, { CompatibilityBreakdown } from '../../services/api/compatibilityAPI';
 
 /**
- * Render source type badge
+ * Render source type badge (all comparison profiles are saved)
  */
-const renderSourceBadge = (profile: UnifiedComparisonProfile) => {
-  const isDiscovery = profile.sourceType === 'discovery';
-
+const renderSourceBadge = () => {
   return (
-    <View style={[
-      localStyles.sourceBadge,
-      { backgroundColor: isDiscovery ? colors.info : colors.success }
-    ]}>
-      <Icon
-        name={isDiscovery ? 'compass' : 'bookmark'}
-        size={12}
-        color="#FFFFFF"
-      />
-      <Text style={localStyles.sourceBadgeText}>
-        {isDiscovery ? 'Discovery' : 'Saved'}
-      </Text>
+    <View style={[localStyles.sourceBadge, { backgroundColor: colors.success }]}>
+      <Icon name="bookmark" size={12} color="#FFFFFF" />
+      <Text style={localStyles.sourceBadgeText}>Saved</Text>
     </View>
   );
 };
@@ -72,50 +61,52 @@ const COMPARISON_ATTRIBUTES: ComparisonAttribute[] = [
   {
     label: 'Location',
     icon: 'map-marker',
-    getValue: (p) => `${p.profile.city}, ${p.profile.state}`,
+    getValue: (p: CompareProfile) => (p.city ? `${p.city}` : 'Not specified'),
   },
   {
     label: 'Housing Budget',
     icon: 'currency-usd',
-    getValue: (p) => p.profile.housingBudget || 'Not specified',
-    format: (v) => typeof v === 'number' ? `$${v.toLocaleString()}/mo` : v,
+    getValue: (p: CompareProfile) => p.budget || 'Not specified',
+    format: (v) => (typeof v === 'number' ? `$${v.toLocaleString()}/mo` : v),
   },
   {
     label: 'Children',
     icon: 'account-child',
-    getValue: (p) => p.profile.childrenCount || 0,
+    getValue: (p: CompareProfile) => p.childrenCount || 0,
     format: (v) => `${v} child${v !== 1 ? 'ren' : ''}`,
   },
   {
-    label: 'Work Schedule',
-    icon: 'calendar-clock',
-    getValue: (p) => {
-      const schedule = p.profile.workSchedule;
-      if (!schedule) return 'Not specified';
-      if (typeof schedule === 'string') return schedule;
-      // Handle object format {type, hours}
-      return `${schedule.type || 'Unknown'}${schedule.hours ? ` (${schedule.hours})` : ''}`;
+    label: 'Age Groups',
+    icon: 'account-group',
+    getValue: (p: CompareProfile) => {
+      const groups = p.childrenAgeGroups;
+      if (!groups || groups.length === 0) {
+        return 'Not specified';
+      }
+      return groups.join(', ');
     },
   },
   {
     label: 'Move-in Date',
     icon: 'calendar',
-    getValue: (p) => p.profile.moveInDate || 'Flexible',
+    getValue: (p: CompareProfile) => p.moveInDate || 'Flexible',
   },
   {
-    label: 'Pets',
-    icon: 'paw',
-    getValue: (p) => p.profile.hasPets ? 'Yes' : 'No',
+    label: 'Compatibility',
+    icon: 'heart',
+    getValue: (p: CompareProfile) => p.compatibilityScore || 0,
+    format: (v) => (typeof v === 'number' ? `${v}%` : v),
   },
   {
-    label: 'Smoking',
-    icon: 'smoking-off',
-    getValue: (p) => p.profile.smoking === 'no' ? 'Non-smoker' : 'Smoker',
+    label: 'Age',
+    icon: 'account',
+    getValue: (p: CompareProfile) => p.age || 'Not specified',
+    format: (v) => (typeof v === 'number' ? `${v} years` : v),
   },
   {
-    label: 'Verification',
-    icon: 'shield-check',
-    getValue: (p) => p.profile.isVerified ? 'Verified' : 'Not verified',
+    label: 'Folder',
+    icon: 'folder',
+    getValue: (p: CompareProfile) => p.folder || 'Uncategorized',
   },
 ];
 
@@ -131,9 +122,7 @@ const CompareProfilesScreen: React.FC = () => {
   );
 
   // Get saved profiles from state to look up saved IDs
-  const savedProfiles = useSelector(
-    (state: RootState) => state.savedProfiles.profiles
-  );
+  const savedProfiles = useSelector((state: RootState) => state.savedProfiles.savedProfiles);
 
   // Track if we've already triggered the comparison
   const [hasTriggered, setHasTriggered] = useState(false);
@@ -141,44 +130,60 @@ const CompareProfilesScreen: React.FC = () => {
   // Compatibility breakdown modal state
   const [showBreakdownModal, setShowBreakdownModal] = useState(false);
   const [selectedBreakdown, setSelectedBreakdown] = useState<CompatibilityBreakdown | null>(null);
-  const [selectedPairNames, setSelectedPairNames] = useState<{profile1: string; profile2: string} | null>(null);
+  const [selectedPairNames, setSelectedPairNames] = useState<{
+    profile1: string;
+    profile2: string;
+  } | null>(null);
   const [loadingBreakdown, setLoadingBreakdown] = useState(false);
 
   useEffect(() => {
     // Auto-trigger comparison if profiles are selected but not yet compared
-    if (!comparing && !hasTriggered && comparisonProfiles.length === 0 && selectedDiscoveryProfiles.length >= 2) {
-      console.log('[CompareProfilesScreen] Auto-triggering comparison for', selectedDiscoveryProfiles.length, 'profiles');
+    if (
+      !comparing &&
+      !hasTriggered &&
+      comparisonProfiles.length === 0 &&
+      selectedDiscoveryProfiles.length >= 2
+    ) {
+      console.log(
+        '[CompareProfilesScreen] Auto-triggering comparison for',
+        selectedDiscoveryProfiles.length,
+        'profiles',
+      );
 
       // Map discovery profiles to saved profile IDs
-      const savedProfileIds = savedProfiles && Array.isArray(savedProfiles)
-        ? selectedDiscoveryProfiles
-            .map(cp => {
-              // Find the saved profile entry by matching profileId
-              const saved = savedProfiles.find(sp => sp.profileId === cp.profile.userId);
-              console.log('[CompareProfilesScreen] Mapping profile:', cp.profile.userId, '→ saved ID:', saved?.id);
-              return saved?.id; // Return the saved_profiles table ID
-            })
-            .filter(id => id !== undefined) as string[]
-        : [];
+      const savedProfileIds =
+        savedProfiles && Array.isArray(savedProfiles)
+          ? selectedDiscoveryProfiles
+              .map((cp) => {
+                // Find the saved profile entry by matching profileId
+                const saved = savedProfiles.find(
+                  (sp) => sp.profile_id === (cp as any).profile?.userId,
+                );
+                console.log(
+                  '[CompareProfilesScreen] Mapping profile:',
+                  (cp as any).profile?.userId,
+                  '→ saved ID:',
+                  saved?.id,
+                );
+                return saved?.id; // Return the saved_profiles table ID
+              })
+              .filter((id): id is string => id !== undefined)
+          : [];
 
       console.log('[CompareProfilesScreen] Found saved profile IDs:', savedProfileIds);
 
       if (savedProfileIds.length >= 2) {
-        // Use saved profile IDs for comparison
-        const requests = savedProfileIds.map(id => ({
-          type: 'saved' as const,
-          id, // Use saved profile ID from saved_profiles table
-        }));
-        console.log('[CompareProfilesScreen] Comparison requests:', requests);
-        dispatch(compareProfiles(requests));
+        // Use saved profile IDs for comparison - compareProfiles expects string[]
+        console.log('[CompareProfilesScreen] Comparison IDs:', savedProfileIds);
+        dispatch(compareProfiles(savedProfileIds));
         setHasTriggered(true); // Mark as triggered to prevent loop
       } else {
-        console.warn('[CompareProfilesScreen] Not enough saved profiles found. Discovery profiles must be saved first.');
-        Alert.alert(
-          'Profiles Not Saved',
-          'Please save the profiles you want to compare first.',
-          [{ text: 'OK' }]
+        console.warn(
+          '[CompareProfilesScreen] Not enough saved profiles found. Discovery profiles must be saved first.',
         );
+        Alert.alert('Profiles Not Saved', 'Please save the profiles you want to compare first.', [
+          { text: 'OK' },
+        ]);
         setHasTriggered(true); // Prevent repeated alerts
       }
     }
@@ -187,7 +192,12 @@ const CompareProfilesScreen: React.FC = () => {
       setHasTriggered(false);
     }
     // Show alert only if no profiles selected anywhere and we haven't shown it yet
-    else if (!comparing && !hasTriggered && comparisonProfiles.length === 0 && selectedDiscoveryProfiles.length === 0) {
+    else if (
+      !comparing &&
+      !hasTriggered &&
+      comparisonProfiles.length === 0 &&
+      selectedDiscoveryProfiles.length === 0
+    ) {
       Alert.alert(
         'No Profiles Selected',
         'Please select 2-4 profiles from the Discover or Saved Profiles screens to compare.',
@@ -195,31 +205,36 @@ const CompareProfilesScreen: React.FC = () => {
       );
       setHasTriggered(true); // Prevent repeated alerts
     }
-  }, [comparing, comparisonProfiles.length, selectedDiscoveryProfiles.length, savedProfiles?.length || 0, hasTriggered, dispatch]);
+  }, [
+    comparing,
+    comparisonProfiles.length,
+    selectedDiscoveryProfiles.length,
+    savedProfiles?.length,
+    hasTriggered,
+    dispatch,
+  ]);
 
   /**
    * Show compatibility breakdown for two profiles
    */
-  const handleShowBreakdown = async (profile1: UnifiedComparisonProfile, profile2: UnifiedComparisonProfile) => {
+  const handleShowBreakdown = async (profile1: CompareProfile, profile2: CompareProfile) => {
     try {
       setLoadingBreakdown(true);
       const breakdown = await compatibilityAPI.calculateCompatibility(
-        profile1.userId,
-        profile2.userId
+        profile1.profile_id,
+        profile2.profile_id
       );
       setSelectedBreakdown(breakdown);
       setSelectedPairNames({
-        profile1: profile1.profile.firstName,
-        profile2: profile2.profile.firstName,
+        profile1: profile1.firstName,
+        profile2: profile2.firstName,
       });
       setShowBreakdownModal(true);
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        'Failed to calculate compatibility breakdown. Please try again.',
-        [{ text: 'OK' }]
-      );
-      console.error('Compatibility calculation error:', error);
+    } catch (err) {
+      Alert.alert('Error', 'Failed to calculate compatibility breakdown. Please try again.', [
+        { text: 'OK' },
+      ]);
+      console.error('Compatibility calculation error:', err);
     } finally {
       setLoadingBreakdown(false);
     }
@@ -228,26 +243,25 @@ const CompareProfilesScreen: React.FC = () => {
   /**
    * Remove profile from comparison
    */
-  const handleRemoveProfile = useCallback((userId: string) => {
-    const remainingProfiles = comparisonProfiles.filter(p => p.userId !== userId);
+  const handleRemoveProfile = useCallback(
+    (profileId: string) => {
+      const remainingProfiles = comparisonProfiles.filter((p) => p.id !== profileId);
 
-    if (remainingProfiles.length < 2) {
-      Alert.alert(
-        'Minimum Profiles Required',
-        'You need at least 2 profiles to compare. Returning to previous screen.',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
+      if (remainingProfiles.length < 2) {
+        Alert.alert(
+          'Minimum Profiles Required',
+          'You need at least 2 profiles to compare. Returning to previous screen.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
 
-    // Convert remaining profiles to comparison requests
-    const requests = remainingProfiles.map(p => ({
-      type: p.sourceType,
-      id: p.profileId,
-    }));
-
-    dispatch(compareProfiles(requests));
-  }, [dispatch, comparisonProfiles]);
+      // Convert remaining profiles to IDs for comparison
+      const ids = remainingProfiles.map((p) => p.id);
+      dispatch(compareProfiles(ids));
+    },
+    [dispatch, comparisonProfiles],
+  );
 
   /**
    * Render loading state
@@ -309,11 +323,6 @@ const CompareProfilesScreen: React.FC = () => {
         </Text>
       </View>
 
-      {/* Debug logging */}
-      {console.log('[CompareProfilesScreen] DEBUG - comparisonProfiles:', comparisonProfiles)}
-      {console.log('[CompareProfilesScreen] DEBUG - comparisonProfiles.length:', comparisonProfiles.length)}
-      {console.log('[CompareProfilesScreen] DEBUG - Should render compatibility section:', comparisonProfiles.length === 2)}
-
       {/* Compatibility Scores (only for 2 profiles) */}
       {comparisonProfiles.length === 2 && (
         <View style={styles.compatibilitySection}>
@@ -327,7 +336,7 @@ const CompareProfilesScreen: React.FC = () => {
             <View style={styles.compatibilityHeader}>
               <Icon name="chart-donut" size={24} color={colors.primary} />
               <Text style={styles.compatibilityTitle}>
-                {comparisonProfiles[0].profile.firstName} & {comparisonProfiles[1].profile.firstName}
+                {comparisonProfiles[0].firstName} & {comparisonProfiles[1].firstName}
               </Text>
             </View>
             <Text style={styles.compatibilitySubtitle}>
@@ -358,26 +367,21 @@ const CompareProfilesScreen: React.FC = () => {
         </View>
 
         {/* Profile Columns */}
-        {comparisonProfiles.map((compareProfile, profileIndex) => (
-          <View key={compareProfile.profileId} style={styles.profileColumn}>
+        {comparisonProfiles.map((compareProfile) => (
+          <View key={compareProfile.id} style={styles.profileColumn}>
             {/* Profile Header */}
             <View style={styles.profileHeader}>
               <View style={styles.profileHeaderContent}>
-                {renderSourceBadge(compareProfile)}
+                {renderSourceBadge()}
                 <View style={styles.profileAvatar}>
-                  <Text style={styles.profileAvatarText}>
-                    {compareProfile.profile.firstName?.[0]}
-                  </Text>
+                  <Text style={styles.profileAvatarText}>{compareProfile.firstName?.[0]}</Text>
                 </View>
                 <Text style={styles.profileName} numberOfLines={1}>
-                  {compareProfile.profile.firstName}
+                  {compareProfile.firstName}
                 </Text>
-                {compareProfile.profile.isVerified && (
-                  <Icon name="check-decagram" size={16} color={colors.primary} />
-                )}
               </View>
               <TouchableOpacity
-                onPress={() => handleRemoveProfile(compareProfile.userId)}
+                onPress={() => handleRemoveProfile(compareProfile.id)}
                 style={styles.removeButton}
               >
                 <Icon name="close" size={20} color={colors.error} />
@@ -398,23 +402,13 @@ const CompareProfilesScreen: React.FC = () => {
               );
             })}
 
-            {/* Saved Profile Metadata (only for saved profiles) */}
-            {compareProfile.sourceType === 'saved' && (
+            {/* Saved Profile Metadata */}
+            {compareProfile.folder && (
               <View style={localStyles.savedMetadata}>
-                {compareProfile.profile.folder && (
-                  <View style={localStyles.metadataRow}>
-                    <Icon name="folder" size={16} color={colors.text.secondary} />
-                    <Text style={localStyles.metadataText}>{compareProfile.profile.folder}</Text>
-                  </View>
-                )}
-                {compareProfile.profile.savedAt && (
-                  <View style={localStyles.metadataRow}>
-                    <Icon name="calendar" size={16} color={colors.text.secondary} />
-                    <Text style={localStyles.metadataText}>
-                      Saved {new Date(compareProfile.profile.savedAt).toLocaleDateString()}
-                    </Text>
-                  </View>
-                )}
+                <View style={localStyles.metadataRow}>
+                  <Icon name="folder" size={16} color={colors.text.secondary} />
+                  <Text style={localStyles.metadataText}>{compareProfile.folder}</Text>
+                </View>
               </View>
             )}
           </View>
@@ -424,9 +418,7 @@ const CompareProfilesScreen: React.FC = () => {
       {/* Footer Help Text */}
       <View style={styles.footer}>
         <Icon name="information" size={16} color={colors.text.secondary} />
-        <Text style={styles.footerText}>
-          Scroll horizontally to compare profiles side-by-side
-        </Text>
+        <Text style={styles.footerText}>Scroll horizontally to compare profiles side-by-side</Text>
       </View>
 
       {/* Compatibility Breakdown Modal */}

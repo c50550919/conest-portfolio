@@ -85,7 +85,7 @@ export default function ProfileDetailsModal({
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gestureState) => {
         // Only enable pull-to-close at the top of scroll
-        return gestureState.dy > 10 && scrollY._value === 0;
+        return gestureState.dy > 10 && (scrollY as any)._value === 0;
       },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
@@ -104,10 +104,10 @@ export default function ProfileDetailsModal({
           }).start();
         }
       },
-    })
+    }),
   ).current;
 
-  if (!profile) return null;
+  if (!profile) {return null;}
 
   const {
     firstName,
@@ -144,9 +144,9 @@ export default function ProfileDetailsModal({
 
   // Compatibility color
   const getCompatibilityColor = (score: number): string => {
-    if (score >= 80) return '#4CAF50';
-    if (score >= 60) return '#FFC107';
-    if (score >= 40) return '#FF9800';
+    if (score >= 80) {return '#4CAF50';}
+    if (score >= 60) {return '#FFC107';}
+    if (score >= 40) {return '#FF9800';}
     return '#F44336';
   };
 
@@ -179,10 +179,7 @@ export default function ProfileDetailsModal({
         <View style={styles.compatibilityBarTrack}>
           <View
             testID={`compatibility-bar-${label.toLowerCase().replace(' ', '-')}`}
-            style={[
-              styles.compatibilityBarFill,
-              { width: `${score}%`, backgroundColor: color },
-            ]}
+            style={[styles.compatibilityBarFill, { width: `${score}%`, backgroundColor: color }]}
           />
         </View>
       </View>
@@ -194,7 +191,7 @@ export default function ProfileDetailsModal({
     icon: string,
     title: string,
     content: React.ReactNode,
-    testId?: string
+    testId?: string,
   ) => (
     <View testID={testId} style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -215,12 +212,7 @@ export default function ProfileDetailsModal({
       statusBarTranslucent
     >
       <View style={styles.modalOverlay}>
-        <Animated.View
-          style={[
-            styles.modalContainer,
-            { transform: [{ translateY: slideAnim }] },
-          ]}
-        >
+        <Animated.View style={[styles.modalContainer, { transform: [{ translateY: slideAnim }] }]}>
           {/* Close button */}
           <TouchableOpacity
             style={styles.closeButton}
@@ -242,9 +234,7 @@ export default function ProfileDetailsModal({
                   pagingEnabled
                   showsHorizontalScrollIndicator={false}
                   onMomentumScrollEnd={(event) => {
-                    const index = Math.round(
-                      event.nativeEvent.contentOffset.x / SCREEN_WIDTH
-                    );
+                    const index = Math.round(event.nativeEvent.contentOffset.x / SCREEN_WIDTH);
                     setCurrentPhotoIndex(index);
                   }}
                 >
@@ -297,18 +287,12 @@ export default function ProfileDetailsModal({
                     { backgroundColor: getCompatibilityColor(compatibilityScore) },
                   ]}
                 >
-                  <Text style={styles.galleryCompatibilityText}>
-                    {compatibilityScore}% Match
-                  </Text>
+                  <Text style={styles.galleryCompatibilityText}>{compatibilityScore}% Match</Text>
                 </View>
               </>
             ) : (
               <View style={styles.noPhotoContainer}>
-                <MaterialCommunityIcons
-                  name="account-circle"
-                  size={120}
-                  color="#ccc"
-                />
+                <MaterialCommunityIcons name="account-circle" size={120} color="#ccc" />
                 <Text style={styles.noPhotoText}>No photos available</Text>
               </View>
             )}
@@ -319,41 +303,28 @@ export default function ProfileDetailsModal({
             testID="profile-details-scroll"
             style={styles.detailsScroll}
             showsVerticalScrollIndicator={false}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: false }
-            )}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+              useNativeDriver: false,
+            })}
             scrollEventThrottle={16}
           >
             {/* Verification Badges */}
             <View style={styles.badgesRow}>
               {verificationStatus.idVerified && (
                 <View style={styles.badge}>
-                  <MaterialCommunityIcons
-                    name="shield-check"
-                    size={16}
-                    color="#4CAF50"
-                  />
+                  <MaterialCommunityIcons name="shield-check" size={16} color="#4CAF50" />
                   <Text style={styles.badgeText}>ID Verified</Text>
                 </View>
               )}
               {verificationStatus.backgroundCheckComplete && (
                 <View style={styles.badge}>
-                  <MaterialCommunityIcons
-                    name="certificate"
-                    size={16}
-                    color="#4CAF50"
-                  />
+                  <MaterialCommunityIcons name="certificate" size={16} color="#4CAF50" />
                   <Text style={styles.badgeText}>Background Check</Text>
                 </View>
               )}
               {verificationStatus.phoneVerified && (
                 <View style={styles.badge}>
-                  <MaterialCommunityIcons
-                    name="phone-check"
-                    size={16}
-                    color="#4CAF50"
-                  />
+                  <MaterialCommunityIcons name="phone-check" size={16} color="#4CAF50" />
                   <Text style={styles.badgeText}>Phone Verified</Text>
                 </View>
               )}
@@ -367,34 +338,52 @@ export default function ProfileDetailsModal({
                   <Text style={styles.sectionTitle}>Compatibility Breakdown</Text>
                 </View>
                 <View style={styles.sectionContent}>
-                  {renderCompatibilityBar('Schedule', compatibilityBreakdown.schedule, 'schedule-compatibility')}
-                  {renderCompatibilityBar('Parenting', compatibilityBreakdown.parenting, 'parenting-compatibility')}
-                  {renderCompatibilityBar('Location', compatibilityBreakdown.location, 'location-compatibility')}
-                  {renderCompatibilityBar('Budget', compatibilityBreakdown.budget, 'budget-compatibility')}
-                  {renderCompatibilityBar('Lifestyle', compatibilityBreakdown.lifestyle, 'lifestyle-compatibility')}
+                  {renderCompatibilityBar(
+                    'Schedule',
+                    compatibilityBreakdown.schedule,
+                    'schedule-compatibility'
+                  )}
+                  {renderCompatibilityBar(
+                    'Parenting',
+                    compatibilityBreakdown.parenting,
+                    'parenting-compatibility'
+                  )}
+                  {renderCompatibilityBar(
+                    'Location',
+                    compatibilityBreakdown.location,
+                    'location-compatibility'
+                  )}
+                  {renderCompatibilityBar(
+                    'Budget',
+                    compatibilityBreakdown.budget,
+                    'budget-compatibility'
+                  )}
+                  {renderCompatibilityBar(
+                    'Lifestyle',
+                    compatibilityBreakdown.lifestyle,
+                    'lifestyle-compatibility'
+                  )}
                 </View>
               </View>
             )}
 
             {/* About */}
-            {bio && (
+            {bio &&
               renderSection(
                 'text-box-outline',
                 'About',
                 <Text style={styles.bioText}>{bio}</Text>,
-                'about-section'
-              )
-            )}
+                'about-section',
+              )}
 
             {/* Looking For */}
-            {lookingFor && (
+            {lookingFor &&
               renderSection(
                 'magnify',
                 'Looking For',
                 <Text style={styles.bioText}>{lookingFor}</Text>,
-                'looking-for-section'
-              )
-            )}
+                'looking-for-section',
+              )}
 
             {/* Children Info - NO PII */}
             {renderSection(
@@ -408,7 +397,7 @@ export default function ProfileDetailsModal({
                   Age groups: {formattedAgeGroups}
                 </Text>
               </>,
-              'children-section'
+              'children-section',
             )}
 
             {/* Housing & Budget */}
@@ -448,11 +437,7 @@ export default function ProfileDetailsModal({
                       )}
                       {housingPreferences.smokeFree && (
                         <View style={styles.tag}>
-                          <MaterialCommunityIcons
-                            name="smoking-off"
-                            size={14}
-                            color="#666"
-                          />
+                          <MaterialCommunityIcons name="smoking-off" size={14} color="#666" />
                           <Text style={styles.tagText}>Smoke-free</Text>
                         </View>
                       )}
@@ -460,11 +445,11 @@ export default function ProfileDetailsModal({
                   </>
                 )}
               </>,
-              'housing-budget-section'
+              'housing-budget-section',
             )}
 
             {/* Schedule */}
-            {schedule && (
+            {schedule &&
               renderSection(
                 'clock-outline',
                 'Schedule',
@@ -491,12 +476,11 @@ export default function ProfileDetailsModal({
                     </Text>
                   </View>
                 </>,
-                'schedule-section'
-              )
-            )}
+                'schedule-section',
+              )}
 
             {/* Parenting Philosophy */}
-            {parenting && (
+            {parenting &&
               renderSection(
                 'heart-outline',
                 'Parenting Philosophy',
@@ -507,7 +491,7 @@ export default function ProfileDetailsModal({
                       <Text style={styles.detailValue}>
                         {parenting.philosophy
                           .split('-')
-                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                           .join(' ')}
                       </Text>
                     </View>
@@ -516,7 +500,7 @@ export default function ProfileDetailsModal({
                     <View style={styles.tagGroup}>
                       <Text style={styles.tagGroupLabel}>Philosophy:</Text>
                       <View style={styles.tagRow}>
-                        {parenting.parentingPhilosophy.map((item) => (
+                        {(parenting.parentingPhilosophy || []).map((item) => (
                           <View key={item} style={styles.tag}>
                             <Text style={styles.tagText}>{item}</Text>
                           </View>
@@ -528,7 +512,7 @@ export default function ProfileDetailsModal({
                     <View style={styles.tagGroup}>
                       <Text style={styles.tagGroupLabel}>Discipline:</Text>
                       <View style={styles.tagRow}>
-                        {parenting.disciplineStyle.map((item) => (
+                        {(parenting.disciplineStyle || []).map((item) => (
                           <View key={item} style={styles.tag}>
                             <Text style={styles.tagText}>{item}</Text>
                           </View>
@@ -540,7 +524,7 @@ export default function ProfileDetailsModal({
                     <View style={styles.tagGroup}>
                       <Text style={styles.tagGroupLabel}>Education priorities:</Text>
                       <View style={styles.tagRow}>
-                        {parenting.educationPriorities.map((item) => (
+                        {(parenting.educationPriorities || []).map((item) => (
                           <View key={item} style={styles.tag}>
                             <Text style={styles.tagText}>{item}</Text>
                           </View>
@@ -558,21 +542,20 @@ export default function ProfileDetailsModal({
                     </View>
                   )}
                 </>,
-                'parenting-section'
-              )
-            )}
+                'parenting-section',
+              )}
 
             {/* Personality & Interests */}
-            {(personalityTraits?.length > 0 || interests?.length > 0) && (
+            {((personalityTraits?.length ?? 0) > 0 || (interests?.length ?? 0) > 0) &&
               renderSection(
                 'star-outline',
                 'Personality & Interests',
                 <>
-                  {personalityTraits?.length > 0 && (
+                  {(personalityTraits?.length ?? 0) > 0 && (
                     <View style={styles.tagGroup}>
                       <Text style={styles.tagGroupLabel}>Personality:</Text>
                       <View style={styles.tagRow}>
-                        {personalityTraits.map((trait) => (
+                        {(personalityTraits || []).map((trait) => (
                           <View key={trait} style={styles.tag}>
                             <Text style={styles.tagText}>{trait}</Text>
                           </View>
@@ -580,11 +563,11 @@ export default function ProfileDetailsModal({
                       </View>
                     </View>
                   )}
-                  {interests?.length > 0 && (
+                  {(interests?.length ?? 0) > 0 && (
                     <View style={styles.tagGroup}>
                       <Text style={styles.tagGroupLabel}>Interests:</Text>
                       <View style={styles.tagRow}>
-                        {interests.map((interest) => (
+                        {(interests || []).map((interest) => (
                           <View key={interest} style={styles.tag}>
                             <Text style={styles.tagText}>{interest}</Text>
                           </View>
@@ -593,9 +576,8 @@ export default function ProfileDetailsModal({
                     </View>
                   )}
                 </>,
-                'personality-section'
-              )
-            )}
+                'personality-section',
+              )}
 
             {/* Bottom padding for action buttons */}
             <View style={{ height: 120 }} />

@@ -397,7 +397,7 @@ export async function seed(knex: Knex): Promise<void> {
         fully_verified: true,
       });
 
-      console.log(`   └─ Added verification ✓`);
+      console.log('   └─ Added verification ✓');
     } catch (error: any) {
       if (error.code === '23505') {
         // Unique constraint violation - user already exists

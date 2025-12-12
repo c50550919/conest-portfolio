@@ -15,24 +15,12 @@
  */
 
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  Switch,
-  Modal,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch, Modal } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 // Removed @react-native-community/slider dependency
 // Using simpler input approach for filters instead
 import { DiscoveryFilters } from '../../types/discovery';
-import {
-  FILTER_OPTIONS,
-  DEFAULT_FILTERS,
-  HELP_TEXT,
-} from '../../config/discoveryConfig';
+import { FILTER_OPTIONS, DEFAULT_FILTERS, HELP_TEXT } from '../../config/discoveryConfig';
 
 interface FilterPanelProps {
   visible: boolean;
@@ -75,11 +63,16 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
     let count = 0;
     Object.entries(filters).forEach(([key, value]) => {
       // Don't count safety filters (always on)
-      if (key === 'requireBackgroundCheck' || key === 'requireIdVerified') return;
+      if (key === 'requireBackgroundCheck' || key === 'requireIdVerified') {
+        return;
+      }
 
       if (value !== undefined && value !== null) {
-        if (Array.isArray(value) && value.length > 0) count++;
-        else if (!Array.isArray(value)) count++;
+        if (Array.isArray(value) && value.length > 0) {
+          count++;
+        } else if (!Array.isArray(value)) {
+          count++;
+        }
       }
     });
     return count;
@@ -105,10 +98,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
         </View>
 
         {/* Filter Content */}
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-        >
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {/* Safety Filters (Always Required) */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Safety (Required)</Text>
@@ -146,9 +136,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             <View style={styles.sliderContainer}>
               <Text style={styles.filterLabel}>
                 Maximum Distance:{' '}
-                {filters.maxDistance === -1
-                  ? 'Any distance'
-                  : `${filters.maxDistance} miles`}
+                {filters.maxDistance === -1 ? 'Any distance' : `${filters.maxDistance} miles`}
               </Text>
               <View style={styles.distanceOptions}>
                 {FILTER_OPTIONS.distance.options.map((opt) => (
@@ -196,7 +184,8 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
             <View style={styles.sliderContainer}>
               <Text style={styles.filterLabel}>
-                Minimum Match: {filters.minCompatibilityScore ?? FILTER_OPTIONS.compatibilityScore.default}%
+                Minimum Match:{' '}
+                {filters.minCompatibilityScore ?? FILTER_OPTIONS.compatibilityScore.default}%
               </Text>
               <Text style={styles.sliderSubLabel}>
                 Shows compatibility scores above this threshold
@@ -215,14 +204,16 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                   key={opt.value}
                   style={[
                     styles.chip,
-                    filters.childrenAgeGroups?.includes(opt.value) && styles.chipActive,
+                    (filters.childrenAgeGroups as string[] | undefined)?.includes(opt.value) &&
+                      styles.chipActive,
                   ]}
                   onPress={() => toggleArrayFilter('childrenAgeGroups', opt.value)}
                 >
                   <Text
                     style={[
                       styles.chipText,
-                      filters.childrenAgeGroups?.includes(opt.value) && styles.chipTextActive,
+                      (filters.childrenAgeGroups as string[] | undefined)?.includes(opt.value) &&
+                        styles.chipTextActive,
                     ]}
                   >
                     {opt.label}
@@ -240,10 +231,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
               {FILTER_OPTIONS.housingType.options.map((opt) => (
                 <TouchableOpacity
                   key={opt.value}
-                  style={[
-                    styles.chip,
-                    filters.housingType === opt.value && styles.chipActive,
-                  ]}
+                  style={[styles.chip, filters.housingType === opt.value && styles.chipActive]}
                   onPress={() => updateFilter('housingType', opt.value)}
                 >
                   <Text
@@ -262,7 +250,9 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
           {/* Gender Preference (Living Arrangement) */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Living Arrangement Preference</Text>
-            <Text style={styles.sectionSubtitle}>Optional - choose who you're comfortable living with</Text>
+            <Text style={styles.sectionSubtitle}>
+              Optional - choose who you're comfortable living with
+            </Text>
 
             <View style={styles.chipGrid}>
               {FILTER_OPTIONS.genderPreference.options.map((opt) => (
@@ -270,14 +260,18 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                   key={opt.value}
                   style={[
                     styles.chip,
-                    (filters.genderPreference === opt.value || (!filters.genderPreference && opt.default)) && styles.chipActive,
+                    (filters.genderPreference === opt.value ||
+                      (!filters.genderPreference && opt.default)) &&
+                      styles.chipActive,
                   ]}
                   onPress={() => updateFilter('genderPreference', opt.value)}
                 >
                   <Text
                     style={[
                       styles.chipText,
-                      (filters.genderPreference === opt.value || (!filters.genderPreference && opt.default)) && styles.chipTextActive,
+                      (filters.genderPreference === opt.value ||
+                        (!filters.genderPreference && opt.default)) &&
+                        styles.chipTextActive,
                     ]}
                   >
                     {opt.label}
@@ -297,14 +291,16 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                   key={opt.value}
                   style={[
                     styles.chip,
-                    filters.workSchedules?.includes(opt.value) && styles.chipActive,
+                    (filters.workSchedules as string[] | undefined)?.includes(opt.value) &&
+                      styles.chipActive,
                   ]}
                   onPress={() => toggleArrayFilter('workSchedules', opt.value)}
                 >
                   <Text
                     style={[
                       styles.chipText,
-                      filters.workSchedules?.includes(opt.value) && styles.chipTextActive,
+                      (filters.workSchedules as string[] | undefined)?.includes(opt.value) &&
+                        styles.chipTextActive,
                     ]}
                   >
                     {opt.label}
@@ -349,10 +345,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
               {FILTER_OPTIONS.moveInTimeline.options.map((opt) => (
                 <TouchableOpacity
                   key={opt.value}
-                  style={[
-                    styles.chip,
-                    filters.moveInDateDays === opt.value && styles.chipActive,
-                  ]}
+                  style={[styles.chip, filters.moveInDateDays === opt.value && styles.chipActive]}
                   onPress={() => updateFilter('moveInDateDays', opt.value)}
                 >
                   <Text
@@ -402,10 +395,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
         {/* Footer */}
         <View style={styles.footer}>
-          <TouchableOpacity
-            style={styles.applyButton}
-            onPress={handleApply}
-          >
+          <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
             <Text style={styles.applyButtonText}>
               Apply Filters
               {getActiveFilterCount() > 0 && ` (${getActiveFilterCount()})`}

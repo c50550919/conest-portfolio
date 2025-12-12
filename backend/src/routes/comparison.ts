@@ -24,9 +24,10 @@ const router = express.Router();
  *   ]
  * }
  *
- * TODO: AUTH DISABLED FOR TESTING - Re-enable authenticateJWT once core functionality works
+ * Auth: Required - JWT Bearer token
+ * Dev: Use GET /api/dev/test-token to obtain a test JWT
  */
-router.post('/compare', /* authenticateJWT, */ compareProfiles);
+router.post('/compare', authenticateJWT, compareProfiles);
 
 /**
  * POST /api/compatibility/calculate
@@ -37,8 +38,9 @@ router.post('/compare', /* authenticateJWT, */ compareProfiles);
  *   profile2Id: string
  * }
  *
- * TODO: AUTH DISABLED FOR TESTING - Re-enable authenticateJWT once core functionality works
+ * Auth: Required - JWT Bearer token
+ * Dev: Use GET /api/dev/test-token to obtain a test JWT
  */
-router.post('/calculate', /* authenticateJWT, */ calculateCompatibility);
+router.post('/calculate', authenticateJWT, calculateCompatibility);
 
 export default router;

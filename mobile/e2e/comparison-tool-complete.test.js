@@ -57,7 +57,9 @@ describe('Profile Comparison Tool - Complete Flow', () => {
       await element(by.id('email-input')).replaceText('sarah.johnson@test.com');
       await element(by.id('password-input')).replaceText('Test1234');
       await element(by.id('login-button')).tap();
-      await waitFor(element(by.id('main-tab-navigator'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('main-tab-navigator')))
+        .toBeVisible()
+        .withTimeout(5000);
 
       // Navigate to Profile tab
       await element(by.id('tab-profile')).tap();
@@ -82,7 +84,9 @@ describe('Profile Comparison Tool - Complete Flow', () => {
       await element(by.id('email-input')).replaceText('sarah.johnson@test.com');
       await element(by.id('password-input')).replaceText('Test1234');
       await element(by.id('login-button')).tap();
-      await waitFor(element(by.id('main-tab-navigator'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('main-tab-navigator')))
+        .toBeVisible()
+        .withTimeout(5000);
     });
 
     it('should display Compare tab in navigation bar', async () => {
@@ -98,7 +102,13 @@ describe('Profile Comparison Tool - Complete Flow', () => {
         .toBeVisible()
         .withTimeout(2000);
 
-      await expect(element(by.text('Please select 2-4 profiles from the Discover or Saved Profiles screens to compare.'))).toBeVisible();
+      await expect(
+        element(
+          by.text(
+            'Please select 2-4 profiles from the Discover or Saved Profiles screens to compare.',
+          ),
+        )
+      ).toBeVisible();
     });
   });
 
@@ -111,7 +121,9 @@ describe('Profile Comparison Tool - Complete Flow', () => {
       await element(by.id('email-input')).replaceText('sarah.johnson@test.com');
       await element(by.id('password-input')).replaceText('Test1234');
       await element(by.id('login-button')).tap();
-      await waitFor(element(by.id('main-tab-navigator'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('main-tab-navigator')))
+        .toBeVisible()
+        .withTimeout(5000);
     });
 
     it('should navigate to Discover tab and load profiles', async () => {
@@ -127,7 +139,9 @@ describe('Profile Comparison Tool - Complete Flow', () => {
     it('should add profiles to comparison by tapping compare icon', async () => {
       // Navigate to Discover tab
       await element(by.id('tab-discover')).tap();
-      await waitFor(element(by.id('profile-grid'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('profile-grid')))
+        .toBeVisible()
+        .withTimeout(5000);
 
       // Tap compare icon on first profile
       await element(by.id('compare-icon-0')).tap();
@@ -149,7 +163,9 @@ describe('Profile Comparison Tool - Complete Flow', () => {
     it('should show comparison bar with correct count', async () => {
       // Navigate to Discover tab
       await element(by.id('tab-discover')).tap();
-      await waitFor(element(by.id('profile-grid'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('profile-grid')))
+        .toBeVisible()
+        .withTimeout(5000);
 
       // Add 3 profiles to comparison
       await element(by.id('compare-icon-0')).tap();
@@ -166,7 +182,9 @@ describe('Profile Comparison Tool - Complete Flow', () => {
     it('should prevent adding more than 4 profiles to comparison', async () => {
       // Navigate to Discover tab
       await element(by.id('tab-discover')).tap();
-      await waitFor(element(by.id('profile-grid'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('profile-grid')))
+        .toBeVisible()
+        .withTimeout(5000);
 
       // Add 4 profiles to comparison
       await element(by.id('compare-icon-0')).tap();
@@ -192,11 +210,15 @@ describe('Profile Comparison Tool - Complete Flow', () => {
       await element(by.id('email-input')).replaceText('sarah.johnson@test.com');
       await element(by.id('password-input')).replaceText('Test1234');
       await element(by.id('login-button')).tap();
-      await waitFor(element(by.id('main-tab-navigator'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('main-tab-navigator')))
+        .toBeVisible()
+        .withTimeout(5000);
 
       // Navigate to Discover and add 2 profiles to comparison
       await element(by.id('tab-discover')).tap();
-      await waitFor(element(by.id('profile-grid'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('profile-grid')))
+        .toBeVisible()
+        .withTimeout(5000);
       await element(by.id('compare-icon-0')).tap();
       await element(by.id('compare-icon-1')).tap();
     });
@@ -213,7 +235,9 @@ describe('Profile Comparison Tool - Complete Flow', () => {
 
     it('should display comparison header with profile count', async () => {
       await element(by.text('Compare')).tap();
-      await waitFor(element(by.id('compare-profiles-screen'))).toBeVisible().withTimeout(3000);
+      await waitFor(element(by.id('compare-profiles-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
 
       // Verify header shows correct count
       await expect(element(by.text(/2 profiles selected/))).toBeVisible();
@@ -222,7 +246,9 @@ describe('Profile Comparison Tool - Complete Flow', () => {
 
     it('should display attribute labels column', async () => {
       await element(by.text('Compare')).tap();
-      await waitFor(element(by.id('compare-profiles-screen'))).toBeVisible().withTimeout(3000);
+      await waitFor(element(by.id('compare-profiles-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
 
       // Verify attribute labels are visible
       await expect(element(by.text('Location'))).toBeVisible();
@@ -234,7 +260,9 @@ describe('Profile Comparison Tool - Complete Flow', () => {
 
     it('should display profile cards with names and avatars', async () => {
       await element(by.text('Compare')).tap();
-      await waitFor(element(by.id('compare-profiles-screen'))).toBeVisible().withTimeout(3000);
+      await waitFor(element(by.id('compare-profiles-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
 
       // Verify profile cards are visible
       // Note: Actual profile names will depend on mock data
@@ -246,7 +274,9 @@ describe('Profile Comparison Tool - Complete Flow', () => {
       // Add 3 profiles to comparison
       await element(by.id('compare-icon-2')).tap();
       await element(by.text('Compare')).tap();
-      await waitFor(element(by.id('compare-profiles-screen'))).toBeVisible().withTimeout(3000);
+      await waitFor(element(by.id('compare-profiles-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
 
       // Scroll horizontally to view third profile
       await element(by.id('horizontal-scroll')).scroll(200, 'right');
@@ -265,15 +295,21 @@ describe('Profile Comparison Tool - Complete Flow', () => {
       await element(by.id('email-input')).replaceText('sarah.johnson@test.com');
       await element(by.id('password-input')).replaceText('Test1234');
       await element(by.id('login-button')).tap();
-      await waitFor(element(by.id('main-tab-navigator'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('main-tab-navigator')))
+        .toBeVisible()
+        .withTimeout(5000);
 
       await element(by.id('tab-discover')).tap();
-      await waitFor(element(by.id('profile-grid'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('profile-grid')))
+        .toBeVisible()
+        .withTimeout(5000);
       await element(by.id('compare-icon-0')).tap();
       await element(by.id('compare-icon-1')).tap();
       await element(by.id('compare-icon-2')).tap();
       await element(by.text('Compare')).tap();
-      await waitFor(element(by.id('compare-profiles-screen'))).toBeVisible().withTimeout(3000);
+      await waitFor(element(by.id('compare-profiles-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
     });
 
     it('should remove profile when remove button is tapped', async () => {
@@ -292,7 +328,9 @@ describe('Profile Comparison Tool - Complete Flow', () => {
     it('should show alert when trying to remove profile leaving less than 2', async () => {
       // Remove profiles until only 2 remain
       await element(by.id('remove-profile-0')).tap();
-      await waitFor(element(by.text('2 profiles selected'))).toBeVisible().withTimeout(2000);
+      await waitFor(element(by.text('2 profiles selected')))
+        .toBeVisible()
+        .withTimeout(2000);
 
       // Try to remove another profile
       await element(by.id('remove-profile-0')).tap();
@@ -317,11 +355,15 @@ describe('Profile Comparison Tool - Complete Flow', () => {
       await element(by.id('email-input')).replaceText('sarah.johnson@test.com');
       await element(by.id('password-input')).replaceText('Test1234');
       await element(by.id('login-button')).tap();
-      await waitFor(element(by.id('main-tab-navigator'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('main-tab-navigator')))
+        .toBeVisible()
+        .withTimeout(5000);
 
       // Add profiles and navigate to comparison
       await element(by.id('tab-discover')).tap();
-      await waitFor(element(by.id('profile-grid'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('profile-grid')))
+        .toBeVisible()
+        .withTimeout(5000);
       await element(by.id('compare-icon-0')).tap();
       await element(by.id('compare-icon-1')).tap();
       await element(by.text('Compare')).tap();
@@ -341,13 +383,17 @@ describe('Profile Comparison Tool - Complete Flow', () => {
       await element(by.id('email-input')).replaceText('sarah.johnson@test.com');
       await element(by.id('password-input')).replaceText('Test1234');
       await element(by.id('login-button')).tap();
-      await waitFor(element(by.id('main-tab-navigator'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('main-tab-navigator')))
+        .toBeVisible()
+        .withTimeout(5000);
     });
 
     it('should maintain comparison state when switching tabs', async () => {
       // Add profiles to comparison
       await element(by.id('tab-discover')).tap();
-      await waitFor(element(by.id('profile-grid'))).toBeVisible().withTimeout(5000);
+      await waitFor(element(by.id('profile-grid')))
+        .toBeVisible()
+        .withTimeout(5000);
       await element(by.id('compare-icon-0')).tap();
       await element(by.id('compare-icon-1')).tap();
 

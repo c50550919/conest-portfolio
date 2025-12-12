@@ -36,7 +36,7 @@ export class ConnectionRequestController {
    */
   async sendRequest(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const senderId = req.user?.id;
+      const senderId = req.userId;
       if (!senderId) {
         res.status(401).json({ error: 'Unauthorized' });
         return;
@@ -47,7 +47,7 @@ export class ConnectionRequestController {
       const request = await ConnectionRequestService.sendRequest(
         senderId,
         recipient_id,
-        message
+        message,
       );
 
       res.status(201).json({
@@ -96,7 +96,7 @@ export class ConnectionRequestController {
    */
   async getReceivedRequests(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = req.userId;
       if (!userId) {
         res.status(401).json({ error: 'Unauthorized' });
         return;
@@ -106,7 +106,7 @@ export class ConnectionRequestController {
 
       const requests = await ConnectionRequestService.getReceivedRequests(
         userId,
-        status as string
+        status as string,
       );
 
       res.status(200).json({
@@ -125,7 +125,7 @@ export class ConnectionRequestController {
    */
   async getSentRequests(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = req.userId;
       if (!userId) {
         res.status(401).json({ error: 'Unauthorized' });
         return;
@@ -135,7 +135,7 @@ export class ConnectionRequestController {
 
       const requests = await ConnectionRequestService.getSentRequests(
         userId,
-        status as string
+        status as string,
       );
 
       res.status(200).json({
@@ -154,7 +154,7 @@ export class ConnectionRequestController {
    */
   async getMessage(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = req.userId;
       if (!userId) {
         res.status(401).json({ error: 'Unauthorized' });
         return;
@@ -184,7 +184,7 @@ export class ConnectionRequestController {
    */
   async getResponseMessage(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = req.userId;
       if (!userId) {
         res.status(401).json({ error: 'Unauthorized' });
         return;
@@ -214,7 +214,7 @@ export class ConnectionRequestController {
    */
   async acceptRequest(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const recipientId = req.user?.id;
+      const recipientId = req.userId;
       if (!recipientId) {
         res.status(401).json({ error: 'Unauthorized' });
         return;
@@ -226,7 +226,7 @@ export class ConnectionRequestController {
       const request = await ConnectionRequestService.acceptRequest(
         id,
         recipientId,
-        response_message
+        response_message,
       );
 
       res.status(200).json({
@@ -253,7 +253,7 @@ export class ConnectionRequestController {
    */
   async declineRequest(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const recipientId = req.user?.id;
+      const recipientId = req.userId;
       if (!recipientId) {
         res.status(401).json({ error: 'Unauthorized' });
         return;
@@ -265,7 +265,7 @@ export class ConnectionRequestController {
       const request = await ConnectionRequestService.declineRequest(
         id,
         recipientId,
-        response_message
+        response_message,
       );
 
       res.status(200).json({
@@ -292,7 +292,7 @@ export class ConnectionRequestController {
    */
   async cancelRequest(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const senderId = req.user?.id;
+      const senderId = req.userId;
       if (!senderId) {
         res.status(401).json({ error: 'Unauthorized' });
         return;
@@ -322,7 +322,7 @@ export class ConnectionRequestController {
    */
   async getRateLimitStatus(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = req.userId;
       if (!userId) {
         res.status(401).json({ error: 'Unauthorized' });
         return;
@@ -345,7 +345,7 @@ export class ConnectionRequestController {
    */
   async getStatistics(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const userId = req.user?.id;
+      const userId = req.userId;
       if (!userId) {
         res.status(401).json({ error: 'Unauthorized' });
         return;

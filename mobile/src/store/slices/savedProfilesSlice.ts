@@ -24,7 +24,12 @@
  */
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import savedProfilesAPI, { SavedProfile, LimitStatus, CompareProfile, SavedProfilesByFolder } from '../../services/api/savedProfilesAPI';
+import savedProfilesAPI, {
+  SavedProfile,
+  LimitStatus,
+  CompareProfile,
+  SavedProfilesByFolder,
+} from '../../services/api/savedProfilesAPI';
 
 export interface SavedProfilesState {
   // Data
@@ -146,13 +151,10 @@ export const compareProfiles = createAsyncThunk(
 /**
  * Fetch saved profile limit status
  */
-export const fetchLimitStatus = createAsyncThunk(
-  'savedProfiles/fetchLimitStatus',
-  async () => {
-    const status = await savedProfilesAPI.getLimitStatus();
-    return status;
-  }
-);
+export const fetchLimitStatus = createAsyncThunk('savedProfiles/fetchLimitStatus', async () => {
+  const status = await savedProfilesAPI.getLimitStatus();
+  return status;
+});
 
 /**
  * Check if a profile is already saved
@@ -168,13 +170,10 @@ export const checkIfSaved = createAsyncThunk(
 /**
  * Get decrypted notes for a saved profile
  */
-export const getNotes = createAsyncThunk(
-  'savedProfiles/getNotes',
-  async (id: string) => {
-    const notes = await savedProfilesAPI.getNotes(id);
-    return { id, notes };
-  }
-);
+export const getNotes = createAsyncThunk('savedProfiles/getNotes', async (id: string) => {
+  const notes = await savedProfilesAPI.getNotes(id);
+  return { id, notes };
+});
 
 // ========================================================================
 // Slice
@@ -325,15 +324,14 @@ const savedProfilesSlice = createSlice({
     // ========================================================================
     // Get Notes
     // ========================================================================
-    builder
-      .addCase(getNotes.fulfilled, (state, action) => {
-        const index = state.savedProfiles.findIndex((p) => p.id === action.payload.id);
-        if (index !== -1 && action.payload.notes) {
-          // Store decrypted notes temporarily in local state
-          // Note: In production, you may want to cache this separately
-          state.savedProfiles[index].notes_encrypted = action.payload.notes;
-        }
-      });
+    builder.addCase(getNotes.fulfilled, (state, action) => {
+      const index = state.savedProfiles.findIndex((p) => p.id === action.payload.id);
+      if (index !== -1 && action.payload.notes) {
+        // Store decrypted notes temporarily in local state
+        // Note: In production, you may want to cache this separately
+        state.savedProfiles[index].notes_encrypted = action.payload.notes;
+      }
+    });
   },
 });
 

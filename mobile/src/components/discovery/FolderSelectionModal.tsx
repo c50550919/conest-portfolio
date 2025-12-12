@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Pressable,
-} from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface FolderSelectionModalProps {
@@ -35,21 +28,14 @@ export const FolderSelectionModal: React.FC<FolderSelectionModalProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose}>
         <View style={styles.modalContainer} testID="folder-selection-modal">
           <Pressable>
             {/* Header */}
             <View style={styles.header}>
               <Text style={styles.title}>Save to Folder</Text>
-              <Text style={styles.subtitle}>
-                Where would you like to save {profileName}?
-              </Text>
+              <Text style={styles.subtitle}>Where would you like to save {profileName}?</Text>
             </View>
 
             {/* Folder Options */}
@@ -63,28 +49,16 @@ export const FolderSelectionModal: React.FC<FolderSelectionModalProps> = ({
                   activeOpacity={0.7}
                 >
                   <View style={styles.folderIconContainer}>
-                    <Icon
-                      name={folder.icon}
-                      size={24}
-                      color={folder.color}
-                    />
+                    <Icon name={folder.icon} size={24} color={folder.color} />
                   </View>
                   <Text style={styles.folderLabel}>{folder.label}</Text>
-                  <Icon
-                    name="chevron-right"
-                    size={24}
-                    color="#999"
-                  />
+                  <Icon name="chevron-right" size={24} color="#999" />
                 </TouchableOpacity>
               ))}
             </View>
 
             {/* Cancel Button */}
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={onClose}
-              activeOpacity={0.7}
-            >
+            <TouchableOpacity style={styles.cancelButton} onPress={onClose} activeOpacity={0.7}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
           </Pressable>

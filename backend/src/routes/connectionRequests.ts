@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import connectionRequestController from '../controllers/connectionRequestController';
 import { authenticate } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validator';
+import { validate } from '../middleware/validation';
 import {
   createConnectionRequestSchema,
   getReceivedRequestsSchema,
@@ -33,7 +33,7 @@ router.use(authenticate);
 router.post(
   '/',
   validate(createConnectionRequestSchema),
-  connectionRequestController.sendRequest
+  connectionRequestController.sendRequest,
 );
 
 /**
@@ -45,7 +45,7 @@ router.post(
 router.get(
   '/received',
   validate(getReceivedRequestsSchema),
-  connectionRequestController.getReceivedRequests
+  connectionRequestController.getReceivedRequests,
 );
 
 /**
@@ -57,7 +57,7 @@ router.get(
 router.get(
   '/sent',
   validate(getSentRequestsSchema),
-  connectionRequestController.getSentRequests
+  connectionRequestController.getSentRequests,
 );
 
 /**
@@ -67,7 +67,7 @@ router.get(
  */
 router.get(
   '/rate-limit-status',
-  connectionRequestController.getRateLimitStatus
+  connectionRequestController.getRateLimitStatus,
 );
 
 /**
@@ -77,7 +77,7 @@ router.get(
  */
 router.get(
   '/statistics',
-  connectionRequestController.getStatistics
+  connectionRequestController.getStatistics,
 );
 
 /**
@@ -87,7 +87,7 @@ router.get(
  */
 router.get(
   '/:id/message',
-  connectionRequestController.getMessage
+  connectionRequestController.getMessage,
 );
 
 /**
@@ -97,7 +97,7 @@ router.get(
  */
 router.get(
   '/:id/response-message',
-  connectionRequestController.getResponseMessage
+  connectionRequestController.getResponseMessage,
 );
 
 /**
@@ -108,7 +108,7 @@ router.get(
 router.patch(
   '/:id/accept',
   validate(acceptRequestSchema),
-  connectionRequestController.acceptRequest
+  connectionRequestController.acceptRequest,
 );
 
 /**
@@ -119,7 +119,7 @@ router.patch(
 router.patch(
   '/:id/decline',
   validate(declineRequestSchema),
-  connectionRequestController.declineRequest
+  connectionRequestController.declineRequest,
 );
 
 /**
@@ -130,7 +130,7 @@ router.patch(
 router.patch(
   '/:id/cancel',
   validate(cancelRequestSchema),
-  connectionRequestController.cancelRequest
+  connectionRequestController.cancelRequest,
 );
 
 export default router;

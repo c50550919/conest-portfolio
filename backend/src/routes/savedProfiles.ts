@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import savedProfileController from '../controllers/savedProfileController';
 import { authenticateJWT } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validator';
+import { validate } from '../middleware/validation';
 import {
   createSavedProfileSchema,
   updateSavedProfileSchema,
@@ -30,7 +30,7 @@ router.use(authenticateJWT);
 router.post(
   '/',
   validate(createSavedProfileSchema),
-  savedProfileController.saveProfile
+  savedProfileController.saveProfile,
 );
 
 /**
@@ -42,7 +42,7 @@ router.post(
 router.get(
   '/',
   validate(getSavedProfilesSchema),
-  savedProfileController.getSavedProfiles
+  savedProfileController.getSavedProfiles,
 );
 
 /**
@@ -52,7 +52,7 @@ router.get(
  */
 router.get(
   '/folders',
-  savedProfileController.getSavedProfilesByFolder
+  savedProfileController.getSavedProfilesByFolder,
 );
 
 /**
@@ -62,7 +62,7 @@ router.get(
  */
 router.get(
   '/limit-status',
-  savedProfileController.getLimitStatus
+  savedProfileController.getLimitStatus,
 );
 
 /**
@@ -74,7 +74,7 @@ router.get(
 router.get(
   '/compare',
   validate(compareProfilesSchema),
-  savedProfileController.compareProfiles
+  savedProfileController.compareProfiles,
 );
 
 /**
@@ -84,7 +84,7 @@ router.get(
  */
 router.get(
   '/check/:profileId',
-  savedProfileController.checkIfSaved
+  savedProfileController.checkIfSaved,
 );
 
 /**
@@ -94,7 +94,7 @@ router.get(
  */
 router.get(
   '/:id/notes',
-  savedProfileController.getNotes
+  savedProfileController.getNotes,
 );
 
 /**
@@ -105,7 +105,7 @@ router.get(
 router.patch(
   '/:id',
   validate(updateSavedProfileSchema),
-  savedProfileController.updateSavedProfile
+  savedProfileController.updateSavedProfile,
 );
 
 /**
@@ -116,7 +116,7 @@ router.patch(
 router.delete(
   '/:id',
   validate(deleteSavedProfileSchema),
-  savedProfileController.deleteSavedProfile
+  savedProfileController.deleteSavedProfile,
 );
 
 export default router;

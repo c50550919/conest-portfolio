@@ -61,9 +61,9 @@ const initialState: BrowseState = {
     byFolder: {
       'top-choice': 0,
       'strong-maybe': 0,
-      'considering': 0,
-      'backup': 0,
-      'archived': 0,
+      considering: 0,
+      backup: 0,
+      archived: 0,
     },
   },
 
@@ -219,9 +219,7 @@ const browseDiscoverySlice = createSlice({
         updates: Partial<SavedProfile>;
       }>
     ) => {
-      const index = state.savedProfiles.findIndex(
-        (p) => p.profileId === action.payload.profileId
-      );
+      const index = state.savedProfiles.findIndex((p) => p.profileId === action.payload.profileId);
       if (index !== -1) {
         state.savedProfiles[index] = {
           ...state.savedProfiles[index],
@@ -232,9 +230,7 @@ const browseDiscoverySlice = createSlice({
     },
 
     removeSavedProfile: (state, action: PayloadAction<string>) => {
-      state.savedProfiles = state.savedProfiles.filter(
-        (p) => p.profileId !== action.payload
-      );
+      state.savedProfiles = state.savedProfiles.filter((p) => p.profileId !== action.payload);
       updateBookmarkStats(state);
     },
 
@@ -245,9 +241,7 @@ const browseDiscoverySlice = createSlice({
         toFolder: BookmarkFolder;
       }>
     ) => {
-      const index = state.savedProfiles.findIndex(
-        (p) => p.profileId === action.payload.profileId
-      );
+      const index = state.savedProfiles.findIndex((p) => p.profileId === action.payload.profileId);
       if (index !== -1) {
         state.savedProfiles[index].folder = action.payload.toFolder;
         updateBookmarkStats(state);
@@ -255,9 +249,7 @@ const browseDiscoverySlice = createSlice({
     },
 
     incrementProfileViewCount: (state, action: PayloadAction<string>) => {
-      const index = state.savedProfiles.findIndex(
-        (p) => p.profileId === action.payload
-      );
+      const index = state.savedProfiles.findIndex((p) => p.profileId === action.payload);
       if (index !== -1) {
         state.savedProfiles[index].viewCount += 1;
         state.savedProfiles[index].lastViewedAt = new Date().toISOString();
@@ -294,9 +286,7 @@ const browseDiscoverySlice = createSlice({
     },
 
     deleteComparisonSet: (state, action: PayloadAction<string>) => {
-      state.comparisonSets = state.comparisonSets.filter(
-        (set) => set.id !== action.payload
-      );
+      state.comparisonSets = state.comparisonSets.filter((set) => set.id !== action.payload);
     },
 
     loadComparisonSet: (state, action: PayloadAction<string>) => {
@@ -321,9 +311,7 @@ const browseDiscoverySlice = createSlice({
         updates: Partial<ConnectionRequest>;
       }>
     ) => {
-      const index = state.sentRequests.findIndex(
-        (r) => r.id === action.payload.requestId
-      );
+      const index = state.sentRequests.findIndex((r) => r.id === action.payload.requestId);
       if (index !== -1) {
         state.sentRequests[index] = {
           ...state.sentRequests[index],
@@ -343,9 +331,7 @@ const browseDiscoverySlice = createSlice({
         updates: Partial<ConnectionRequest>;
       }>
     ) => {
-      const index = state.receivedRequests.findIndex(
-        (r) => r.id === action.payload.requestId
-      );
+      const index = state.receivedRequests.findIndex((r) => r.id === action.payload.requestId);
       if (index !== -1) {
         state.receivedRequests[index] = {
           ...state.receivedRequests[index],
@@ -377,11 +363,10 @@ function updateBookmarkStats(state: BrowseState) {
     total: state.savedProfiles.length,
     byFolder: {
       'top-choice': state.savedProfiles.filter((p) => p.folder === 'top-choice').length,
-      'strong-maybe': state.savedProfiles.filter((p) => p.folder === 'strong-maybe')
-        .length,
-      'considering': state.savedProfiles.filter((p) => p.folder === 'considering').length,
-      'backup': state.savedProfiles.filter((p) => p.folder === 'backup').length,
-      'archived': state.savedProfiles.filter((p) => p.folder === 'archived').length,
+      'strong-maybe': state.savedProfiles.filter((p) => p.folder === 'strong-maybe').length,
+      considering: state.savedProfiles.filter((p) => p.folder === 'considering').length,
+      backup: state.savedProfiles.filter((p) => p.folder === 'backup').length,
+      archived: state.savedProfiles.filter((p) => p.folder === 'archived').length,
     },
   };
 }

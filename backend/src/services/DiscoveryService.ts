@@ -1,5 +1,4 @@
 import db from '../config/database';
-import SwipeModel from '../models/Swipe';
 import { ProfileCard, DiscoveryResponse } from '../types/ProfileCard';
 import { calculateAge } from '../utils/ageCalculator';
 import DiscoveryCacheService from './cache/DiscoveryCacheService';
@@ -9,24 +8,68 @@ import logger from '../config/logger';
 /**
  * DiscoveryService
  *
- * Fixed to use correct database schema:
+ * Browse-based discovery using connection requests (not swipes).
+ * Users can see profiles multiple times until they send a connection request.
+ *
+ * Filters out:
+ * - Users with existing connection_requests (pending/accepted/declined)
+ * - Users already matched with current user
+ *
+ * Does NOT filter:
+ * - Saved profiles (users should still see them for comparison)
+ *
+ * Schema notes:
  * - date_of_birth → calculate age
  * - budget_min/budget_max → average budget
  * - children_age_groups is text[] not JSON
  * - profile_photo_url not profile_photo
+ *
+ * Updated: 2025-11-29 - Removed swipe-based filtering, using connection requests
  */
 
 export class DiscoveryService {
+  /**
+   * Get user IDs to exclude from discovery feed
+   * Based on existing connection requests and matches
+   */
+  private async getExcludedUserIds(userId: string): Promise<string[]> {
+    // Get users with connection requests (as sender or recipient)
+    const connectionRequests = await db('connection_requests')
+      .where('sender_id', userId)
+      .orWhere('recipient_id', userId)
+      .select('sender_id', 'recipient_id');
+
+    const connectionUserIds = connectionRequests.map(cr =>
+      cr.sender_id === userId ? cr.recipient_id : cr.sender_id,
+    );
+
+    // Get users already matched with current user
+    const matches = await db('matches')
+      .where('user_id_1', userId)
+      .orWhere('user_id_2', userId)
+      .select('user_id_1', 'user_id_2');
+
+    const matchedUserIds = matches.map(m =>
+      m.user_id_1 === userId ? m.user_id_2 : m.user_id_1,
+    );
+
+    // Combine and deduplicate
+    const excludedIds = [...new Set([...connectionUserIds, ...matchedUserIds])];
+
+    return excludedIds;
+  }
+
   async getProfiles(
     userId: string,
     limit: number = 10,
     cursor?: string,
-    requestContext?: { ipAddress?: string; userAgent?: string }
+    requestContext?: { ipAddress?: string; userAgent?: string },
   ): Promise<DiscoveryResponse> {
-    const swipedUserIds = await SwipeModel.getSwipedUserIds(userId);
+    // Get users to exclude (connection requests + matches)
+    const excludedUserIds = await this.getExcludedUserIds(userId);
 
     let query = db('users as u')
-      .join('profiles as p', 'u.id', 'p.user_id')
+      .join('parents as p', 'u.id', 'p.user_id')
       .join('verifications as v', 'u.id', 'v.user_id')
       .where('u.id', '!=', userId)
       .where('v.fully_verified', true)
@@ -41,14 +84,15 @@ export class DiscoveryService {
         'p.budget_max as budgetMax',
         'p.move_in_date as moveInDate',
         'p.bio',
-        'p.profile_image_url as profilePhoto',
+        'p.profile_photo_url as profilePhoto',
         'v.id_verification_status',
         'v.background_check_status',
-        'v.phone_verified'
+        'v.phone_verified',
       );
 
-    if (swipedUserIds.length > 0) {
-      query = query.whereNotIn('u.id', swipedUserIds);
+    // Exclude users with existing connections or matches
+    if (excludedUserIds.length > 0) {
+      query = query.whereNotIn('u.id', excludedUserIds);
     }
 
     if (cursor) {
@@ -134,7 +178,7 @@ export class DiscoveryService {
     if (cached) return cached;
 
     // Fetch from database
-    const profile = await db('profiles').where('user_id', userId).first();
+    const profile = await db('parents').where('user_id', userId).first();
     if (!profile) throw new Error('User profile not found');
 
     const enrichedProfile = {
@@ -187,7 +231,7 @@ export class DiscoveryService {
     if (userProfile.move_in_date && targetProfile.moveInDate) {
       const daysDiff = Math.abs(
         (new Date(userProfile.move_in_date).getTime() - new Date(targetProfile.moveInDate).getTime())
-        / (1000 * 60 * 60 * 24)
+        / (1000 * 60 * 60 * 24),
       );
       // Same week = 20 points, decreasing by ~3 points per week
       score += Math.min(Math.max(0, 20 - daysDiff / 7), 20);

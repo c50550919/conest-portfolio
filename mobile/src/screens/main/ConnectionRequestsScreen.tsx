@@ -123,42 +123,51 @@ export const ConnectionRequestsScreen: React.FC = () => {
     loadStatistics();
   }, [loadRequests, loadRateLimitStatus, loadStatistics]);
 
-  const handleViewMessage = useCallback(async (request: ConnectionRequest, isResponse: boolean = false) => {
-    try {
-      let message: string | null;
-      if (isResponse) {
-        const result = await dispatch(getResponseMessage(request.id) as any);
-        message = result.payload.responseMessage;
-      } else {
-        const result = await dispatch(getMessage(request.id) as any);
-        message = result.payload.message;
-      }
+  const handleViewMessage = useCallback(
+    async (request: ConnectionRequest, isResponse: boolean = false) => {
+      try {
+        let message: string | null;
+        if (isResponse) {
+          const result = await dispatch(getResponseMessage(request.id) as any);
+          message = result.payload.responseMessage;
+        } else {
+          const result = await dispatch(getMessage(request.id) as any);
+          message = result.payload.message;
+        }
 
-      if (message) {
-        setViewingMessage(message);
-        setSelectedRequest(request);
-        setMessageModalVisible(true);
-      } else {
-        Alert.alert('Message', 'No message available');
+        if (message) {
+          setViewingMessage(message);
+          setSelectedRequest(request);
+          setMessageModalVisible(true);
+        } else {
+          Alert.alert('Message', 'No message available');
+        }
+      } catch (err) {
+        Alert.alert('Error', 'Failed to load message');
       }
-    } catch (err) {
-      Alert.alert('Error', 'Failed to load message');
-    }
-  }, [dispatch]);
+    },
+    [dispatch],
+  );
 
-  const handleRespondToRequest = useCallback((request: ConnectionRequest, type: 'accept' | 'decline') => {
-    setSelectedRequest(request);
-    setResponseType(type);
-    setResponseMessage('');
-    setResponseModalVisible(true);
-  }, []);
+  const handleRespondToRequest = useCallback(
+    (request: ConnectionRequest, type: 'accept' | 'decline') => {
+      setSelectedRequest(request);
+      setResponseType(type);
+      setResponseMessage('');
+      setResponseModalVisible(true);
+    },
+    [],
+  );
 
   const handleSubmitResponse = useCallback(() => {
-    if (!selectedRequest) return;
+    if (!selectedRequest) {
+      return;
+    }
 
-    const action = responseType === 'accept'
-      ? acceptConnectionRequest({ id: selectedRequest.id, responseMessage })
-      : declineConnectionRequest({ id: selectedRequest.id, reason: responseMessage });
+    const action =
+      responseType === 'accept'
+        ? acceptConnectionRequest({ id: selectedRequest.id, responseMessage })
+        : declineConnectionRequest({ id: selectedRequest.id, reason: responseMessage });
 
     dispatch(action as any).then(() => {
       setResponseModalVisible(false);
@@ -173,195 +182,208 @@ export const ConnectionRequestsScreen: React.FC = () => {
     });
   }, [selectedRequest, responseType, responseMessage, dispatch]);
 
-  const handleCancelRequest = useCallback((request: ConnectionRequest) => {
-    Alert.alert(
-      'Cancel Request',
-      `Are you sure you want to cancel your connection request to ${request.recipientProfile?.firstName}?`,
-      [
-        { text: 'No', style: 'cancel' },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: () => {
-            dispatch(cancelConnectionRequest(request.id) as any);
+  const handleCancelRequest = useCallback(
+    (request: ConnectionRequest) => {
+      Alert.alert(
+        'Cancel Request',
+        `Are you sure you want to cancel your connection request to ${request.recipientProfile?.firstName}?`,
+        [
+          { text: 'No', style: 'cancel' },
+          {
+            text: 'Yes, Cancel',
+            style: 'destructive',
+            onPress: () => {
+              dispatch(cancelConnectionRequest(request.id) as any);
+            },
           },
-        },
-      ]
-    );
-  }, [dispatch]);
+        ],
+      );
+    },
+    [dispatch],
+  );
 
-  const renderReceivedRequestCard = useCallback(({ item }: { item: ConnectionRequest }) => {
-    const isExpired = new Date(item.expires_at) < new Date();
-    const canRespond = item.status === 'pending' && !isExpired;
+  const renderReceivedRequestCard = useCallback(
+    ({ item }: { item: ConnectionRequest }) => {
+      const isExpired = new Date(item.expires_at) < new Date();
+      const canRespond = item.status === 'pending' && !isExpired;
 
-    return (
-      <View style={styles.requestCard}>
-        <View style={styles.requestHeader}>
-          <View style={styles.requestInfo}>
-            <Text style={styles.requestName}>
-              {item.senderProfile?.firstName || 'Unknown'}, {item.senderProfile?.age || '?'}
-            </Text>
-            <Text style={styles.requestLocation}>{item.senderProfile?.city || 'Unknown'}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[item.status] }]}>
-              <Text style={styles.statusText}>{STATUS_LABELS[item.status]}</Text>
+      return (
+        <View style={styles.requestCard}>
+          <View style={styles.requestHeader}>
+            <View style={styles.requestInfo}>
+              <Text style={styles.requestName}>
+                {item.senderProfile?.firstName || 'Unknown'}, {item.senderProfile?.age || '?'}
+              </Text>
+              <Text style={styles.requestLocation}>{item.senderProfile?.city || 'Unknown'}</Text>
+              <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[item.status] }]}>
+                <Text style={styles.statusText}>{STATUS_LABELS[item.status]}</Text>
+              </View>
+            </View>
+            <MaterialCommunityIcons name="heart" size={16} color="#FF6B6B" />
+          </View>
+
+          <View style={styles.requestStats}>
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
+              <Text style={styles.statText}>
+                {item.senderProfile?.compatibilityScore || 0}% Match
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons name="account-group" size={16} color="#666" />
+              <Text style={styles.statText}>
+                {item.senderProfile?.childrenCount || 0}{' '}
+                {item.senderProfile?.childrenCount === 1 ? 'child' : 'children'}
+              </Text>
             </View>
           </View>
-          <MaterialCommunityIcons name="heart" size={16} color="#FF6B6B" />
-        </View>
 
-        <View style={styles.requestStats}>
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
-            <Text style={styles.statText}>{item.senderProfile?.compatibilityScore || 0}% Match</Text>
-          </View>
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons name="account-group" size={16} color="#666" />
-            <Text style={styles.statText}>{item.senderProfile?.childrenCount || 0} {item.senderProfile?.childrenCount === 1 ? 'child' : 'children'}</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.messagePreview}
-          onPress={() => handleViewMessage(item)}
-        >
-          <MaterialCommunityIcons name="message-text" size={16} color="#4ECDC4" />
-          <Text style={styles.messageText}>Tap to read message</Text>
-        </TouchableOpacity>
-
-        <View style={styles.requestMeta}>
-          <Text style={styles.requestDate}>
-            Received {new Date(item.sent_at).toLocaleDateString()}
-          </Text>
-          {isExpired && (
-            <Text style={styles.expiredText}>
-              Expired {new Date(item.expires_at).toLocaleDateString()}
-            </Text>
-          )}
-        </View>
-
-        {canRespond && (
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.acceptButton]}
-              onPress={() => handleRespondToRequest(item, 'accept')}
-              disabled={accepting}
-            >
-              {accepting && selectedRequest?.id === item.id ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />
-                  <Text style={styles.actionButtonText}>Accept</Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, styles.declineButton]}
-              onPress={() => handleRespondToRequest(item, 'decline')}
-              disabled={declining}
-            >
-              {declining && selectedRequest?.id === item.id ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="close" size={20} color="#FFFFFF" />
-                  <Text style={styles.actionButtonText}>Decline</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {item.response_message_encrypted && (
-          <TouchableOpacity
-            style={styles.responsePreview}
-            onPress={() => handleViewMessage(item, true)}
-          >
-            <MaterialCommunityIcons name="message-reply-text" size={16} color="#666" />
-            <Text style={styles.responseText}>View your response</Text>
+          <TouchableOpacity style={styles.messagePreview} onPress={() => handleViewMessage(item)}>
+            <MaterialCommunityIcons name="message-text" size={16} color="#4ECDC4" />
+            <Text style={styles.messageText}>Tap to read message</Text>
           </TouchableOpacity>
-        )}
-      </View>
-    );
-  }, [handleViewMessage, handleRespondToRequest, accepting, declining, selectedRequest]);
 
-  const renderSentRequestCard = useCallback(({ item }: { item: ConnectionRequest }) => {
-    const canCancel = item.status === 'pending';
-
-    return (
-      <View style={styles.requestCard}>
-        <View style={styles.requestHeader}>
-          <View style={styles.requestInfo}>
-            <Text style={styles.requestName}>
-              {item.recipientProfile?.firstName || 'Unknown'}, {item.recipientProfile?.age || '?'}
+          <View style={styles.requestMeta}>
+            <Text style={styles.requestDate}>
+              Received {new Date(item.sent_at).toLocaleDateString()}
             </Text>
-            <Text style={styles.requestLocation}>{item.recipientProfile?.city || 'Unknown'}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[item.status] }]}>
-              <Text style={styles.statusText}>{STATUS_LABELS[item.status]}</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.requestStats}>
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
-            <Text style={styles.statText}>{item.recipientProfile?.compatibilityScore || 0}% Match</Text>
-          </View>
-          <View style={styles.statItem}>
-            <MaterialCommunityIcons name="account-group" size={16} color="#666" />
-            <Text style={styles.statText}>{item.recipientProfile?.childrenCount || 0} {item.recipientProfile?.childrenCount === 1 ? 'child' : 'children'}</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.messagePreview}
-          onPress={() => handleViewMessage(item)}
-        >
-          <MaterialCommunityIcons name="message-text" size={16} color="#4ECDC4" />
-          <Text style={styles.messageText}>Tap to read your message</Text>
-        </TouchableOpacity>
-
-        <View style={styles.requestMeta}>
-          <Text style={styles.requestDate}>
-            Sent {new Date(item.sent_at).toLocaleDateString()}
-          </Text>
-          {item.responded_at && (
-            <Text style={styles.respondedText}>
-              Responded {new Date(item.responded_at).toLocaleDateString()}
-            </Text>
-          )}
-        </View>
-
-        {canCancel && (
-          <TouchableOpacity
-            style={[styles.actionButton, styles.cancelButton]}
-            onPress={() => handleCancelRequest(item)}
-            disabled={cancelling}
-          >
-            {cancelling && selectedRequest?.id === item.id ? (
-              <ActivityIndicator color="#666" size="small" />
-            ) : (
-              <>
-                <MaterialCommunityIcons name="cancel" size={20} color="#666" />
-                <Text style={styles.cancelButtonText}>Cancel Request</Text>
-              </>
+            {isExpired && (
+              <Text style={styles.expiredText}>
+                Expired {new Date(item.expires_at).toLocaleDateString()}
+              </Text>
             )}
-          </TouchableOpacity>
-        )}
+          </View>
 
-        {item.response_message_encrypted && (
-          <TouchableOpacity
-            style={styles.responsePreview}
-            onPress={() => handleViewMessage(item, true)}
-          >
-            <MaterialCommunityIcons name="message-reply-text" size={16} color="#4ECDC4" />
-            <Text style={styles.responseText}>View their response</Text>
+          {canRespond && (
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.acceptButton]}
+                onPress={() => handleRespondToRequest(item, 'accept')}
+                disabled={accepting}
+              >
+                {accepting && selectedRequest?.id === item.id ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="check" size={20} color="#FFFFFF" />
+                    <Text style={styles.actionButtonText}>Accept</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.actionButton, styles.declineButton]}
+                onPress={() => handleRespondToRequest(item, 'decline')}
+                disabled={declining}
+              >
+                {declining && selectedRequest?.id === item.id ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <>
+                    <MaterialCommunityIcons name="close" size={20} color="#FFFFFF" />
+                    <Text style={styles.actionButtonText}>Decline</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {item.response_message_encrypted && (
+            <TouchableOpacity
+              style={styles.responsePreview}
+              onPress={() => handleViewMessage(item, true)}
+            >
+              <MaterialCommunityIcons name="message-reply-text" size={16} color="#666" />
+              <Text style={styles.responseText}>View your response</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      );
+    },
+    [handleViewMessage, handleRespondToRequest, accepting, declining, selectedRequest],
+  );
+
+  const renderSentRequestCard = useCallback(
+    ({ item }: { item: ConnectionRequest }) => {
+      const canCancel = item.status === 'pending';
+
+      return (
+        <View style={styles.requestCard}>
+          <View style={styles.requestHeader}>
+            <View style={styles.requestInfo}>
+              <Text style={styles.requestName}>
+                {item.recipientProfile?.firstName || 'Unknown'}, {item.recipientProfile?.age || '?'}
+              </Text>
+              <Text style={styles.requestLocation}>{item.recipientProfile?.city || 'Unknown'}</Text>
+              <View style={[styles.statusBadge, { backgroundColor: STATUS_COLORS[item.status] }]}>
+                <Text style={styles.statusText}>{STATUS_LABELS[item.status]}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.requestStats}>
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
+              <Text style={styles.statText}>
+                {item.recipientProfile?.compatibilityScore || 0}% Match
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <MaterialCommunityIcons name="account-group" size={16} color="#666" />
+              <Text style={styles.statText}>
+                {item.recipientProfile?.childrenCount || 0}{' '}
+                {item.recipientProfile?.childrenCount === 1 ? 'child' : 'children'}
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity style={styles.messagePreview} onPress={() => handleViewMessage(item)}>
+            <MaterialCommunityIcons name="message-text" size={16} color="#4ECDC4" />
+            <Text style={styles.messageText}>Tap to read your message</Text>
           </TouchableOpacity>
-        )}
-      </View>
-    );
-  }, [handleViewMessage, handleCancelRequest, cancelling, selectedRequest]);
+
+          <View style={styles.requestMeta}>
+            <Text style={styles.requestDate}>
+              Sent {new Date(item.sent_at).toLocaleDateString()}
+            </Text>
+            {item.responded_at && (
+              <Text style={styles.respondedText}>
+                Responded {new Date(item.responded_at).toLocaleDateString()}
+              </Text>
+            )}
+          </View>
+
+          {canCancel && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.cancelButton]}
+              onPress={() => handleCancelRequest(item)}
+              disabled={cancelling}
+            >
+              {cancelling && selectedRequest?.id === item.id ? (
+                <ActivityIndicator color="#666" size="small" />
+              ) : (
+                <>
+                  <MaterialCommunityIcons name="cancel" size={20} color="#666" />
+                  <Text style={styles.cancelButtonText}>Cancel Request</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+
+          {item.response_message_encrypted && (
+            <TouchableOpacity
+              style={styles.responsePreview}
+              onPress={() => handleViewMessage(item, true)}
+            >
+              <MaterialCommunityIcons name="message-reply-text" size={16} color="#4ECDC4" />
+              <Text style={styles.responseText}>View their response</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      );
+    },
+    [handleViewMessage, handleCancelRequest, cancelling, selectedRequest],
+  );
 
   const activeRequests = activeTab === 'received' ? receivedRequests : sentRequests;
   const renderCard = activeTab === 'received' ? renderReceivedRequestCard : renderSentRequestCard;
@@ -500,7 +522,11 @@ export const ConnectionRequestsScreen: React.FC = () => {
               style={styles.responseInput}
               multiline
               numberOfLines={4}
-              placeholder={responseType === 'accept' ? "Thanks! I'd love to connect..." : "Thanks for reaching out..."}
+              placeholder={
+                responseType === 'accept'
+                  ? "Thanks! I'd love to connect..."
+                  : 'Thanks for reaching out...'
+              }
               value={responseMessage}
               onChangeText={setResponseMessage}
               maxLength={500}

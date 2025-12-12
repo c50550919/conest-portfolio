@@ -47,9 +47,9 @@ export interface SavedProfile {
 export interface SavedProfilesByFolder {
   'Top Choice': SavedProfile[];
   'Strong Maybe': SavedProfile[];
-  'Considering': SavedProfile[];
-  'Backup': SavedProfile[];
-  'Uncategorized': SavedProfile[];
+  Considering: SavedProfile[];
+  Backup: SavedProfile[];
+  Uncategorized: SavedProfile[];
 }
 
 export interface LimitStatus {
@@ -125,7 +125,9 @@ class SavedProfilesAPI {
         } else if (error.response?.status === 400) {
           const errorMessage = error.response?.data?.error || 'Invalid request';
           if (errorMessage.includes('limit')) {
-            throw new Error('You have reached the maximum of 50 saved profiles. Please remove some profiles to save new ones.');
+            throw new Error(
+              'You have reached the maximum of 50 saved profiles. Please remove some profiles to save new ones.',
+            );
           }
           throw new Error(errorMessage);
         } else if (error.response?.status === 404) {
@@ -179,7 +181,9 @@ class SavedProfilesAPI {
    * @returns Profiles organized by folder
    */
   async getSavedProfilesByFolder(): Promise<SavedProfilesByFolder> {
-    const response = await this.client.get<{ success: boolean; data: SavedProfilesByFolder }>('/folders');
+    const response = await this.client.get<{ success: boolean; data: SavedProfilesByFolder }>(
+      '/folders',
+    );
     return response.data.data;
   }
 
@@ -188,7 +192,9 @@ class SavedProfilesAPI {
    * @returns Current count and remaining slots
    */
   async getLimitStatus(): Promise<LimitStatus> {
-    const response = await this.client.get<{ success: boolean; data: LimitStatus }>('/limit-status');
+    const response = await this.client.get<{ success: boolean; data: LimitStatus }>(
+      '/limit-status',
+    );
     return response.data.data;
   }
 
@@ -202,9 +208,12 @@ class SavedProfilesAPI {
       throw new Error('You can compare 2-4 profiles at a time');
     }
 
-    const response = await this.client.get<{ success: boolean; data: CompareProfile[] }>('/compare', {
-      params: { ids: ids.join(',') },
-    });
+    const response = await this.client.get<{ success: boolean; data: CompareProfile[] }>(
+      '/compare',
+      {
+        params: { ids: ids.join(',') },
+      },
+    );
 
     return response.data.data;
   }
@@ -215,7 +224,9 @@ class SavedProfilesAPI {
    * @returns Decrypted notes string
    */
   async getNotes(id: string): Promise<string | null> {
-    const response = await this.client.get<{ success: boolean; data: { notes: string | null } }>(`/${id}/notes`);
+    const response = await this.client.get<{ success: boolean; data: { notes: string | null } }>(
+      `/${id}/notes`,
+    );
     return response.data.data.notes;
   }
 
@@ -254,7 +265,9 @@ class SavedProfilesAPI {
    * @param profileId - Profile ID to check
    * @returns Saved status and folder if saved
    */
-  async checkIfSaved(profileId: string): Promise<{ isSaved: boolean; folder: string | null; savedProfileId: string | null }> {
+  async checkIfSaved(
+    profileId: string,
+  ): Promise<{ isSaved: boolean; folder: string | null; savedProfileId: string | null }> {
     const response = await this.client.get<{
       success: boolean;
       data: { isSaved: boolean; folder: string | null; savedProfileId: string | null };

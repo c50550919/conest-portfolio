@@ -5,6 +5,7 @@ import type {
   ConnectionRequestWithProfiles,
 } from '../models/ConnectionRequest';
 import { getSocketIO } from '../config/socket';
+import SocketService from './SocketService';
 
 /**
  * ConnectionRequestService
@@ -26,7 +27,7 @@ export class ConnectionRequestService {
   async sendRequest(
     senderId: string,
     recipientId: string,
-    message: string
+    message: string,
   ): Promise<ConnectionRequest> {
     // Validate message length (max 500 chars)
     if (!message || message.trim().length === 0) {
@@ -65,7 +66,7 @@ export class ConnectionRequestService {
    */
   async getReceivedRequests(
     userId: string,
-    status?: string
+    status?: string,
   ): Promise<ConnectionRequestWithProfiles[]> {
     return await ConnectionRequestModel.findByRecipientId(userId, status);
   }
@@ -75,7 +76,7 @@ export class ConnectionRequestService {
    */
   async getSentRequests(
     userId: string,
-    status?: string
+    status?: string,
   ): Promise<ConnectionRequestWithProfiles[]> {
     return await ConnectionRequestModel.findBySenderId(userId, status);
   }
@@ -102,7 +103,7 @@ export class ConnectionRequestService {
   async acceptRequest(
     id: string,
     recipientId: string,
-    responseMessage?: string
+    responseMessage?: string,
   ): Promise<ConnectionRequest> {
     // Validate response message length if provided
     if (responseMessage && responseMessage.length > 500) {
@@ -112,7 +113,7 @@ export class ConnectionRequestService {
     const request = await ConnectionRequestModel.accept(
       id,
       recipientId,
-      responseMessage
+      responseMessage,
     );
 
     // Send real-time notification to sender
@@ -122,6 +123,12 @@ export class ConnectionRequestService {
         id: request.id,
         recipient_id: request.recipient_id,
         responded_at: request.responded_at,
+      });
+
+      // Notify both users that they're now matched and can message
+      SocketService.emitMatchCreated(request.sender_id, request.recipient_id, {
+        id: request.id,
+        createdAt: new Date().toISOString(),
       });
     } catch (err) {
       console.warn('Socket.io not available for real-time notification:', err);
@@ -138,7 +145,7 @@ export class ConnectionRequestService {
   async declineRequest(
     id: string,
     recipientId: string,
-    responseMessage?: string
+    responseMessage?: string,
   ): Promise<ConnectionRequest> {
     // Validate response message length if provided
     if (responseMessage && responseMessage.length > 500) {
@@ -148,7 +155,7 @@ export class ConnectionRequestService {
     const request = await ConnectionRequestModel.decline(
       id,
       recipientId,
-      responseMessage
+      responseMessage,
     );
 
     // Send real-time notification to sender
@@ -191,7 +198,7 @@ export class ConnectionRequestService {
    * Returns remaining requests for today and this week
    */
   async getRateLimitStatus(
-    userId: string
+    userId: string,
   ): Promise<{ daily: number; weekly: number }> {
     return await ConnectionRequestModel.getRateLimitStatus(userId);
   }

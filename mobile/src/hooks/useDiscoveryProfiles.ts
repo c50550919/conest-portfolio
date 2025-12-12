@@ -14,10 +14,7 @@
  */
 
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import discoveryAPI, {
-  DiscoveryResponse,
-  ProfileCard,
-} from '../services/api/discoveryAPI';
+import discoveryAPI, { DiscoveryResponse, ProfileCard } from '../services/api/discoveryAPI';
 
 /**
  * Discovery Profiles Query Hook
@@ -38,7 +35,12 @@ export function useDiscoveryProfiles(limit: number = 10) {
       console.log('[useDiscoveryProfiles] Fetching profiles, cursor:', pageParam || 'initial');
       try {
         const result = await discoveryAPI.getProfiles(pageParam as string | undefined, limit);
-        console.log('[useDiscoveryProfiles] Success:', result.profiles.length, 'profiles, nextCursor:', result.nextCursor);
+        console.log(
+          '[useDiscoveryProfiles] Success:',
+          result.profiles.length,
+          'profiles, nextCursor:',
+          result.nextCursor,
+        );
         return result;
       } catch (error: any) {
         console.error('[useDiscoveryProfiles] Error:', error.message, error.response?.data);
@@ -68,11 +70,7 @@ export function useDiscoveryProfiles(limit: number = 10) {
  * @returns Mutation function and state
  */
 export function useReportScreenshot() {
-  return useMutation<
-    { success: boolean; message: string },
-    Error,
-    { targetUserId: string }
-  >({
+  return useMutation<{ success: boolean; message: string }, Error, { targetUserId: string }>({
     mutationFn: ({ targetUserId }) => discoveryAPI.reportScreenshot(targetUserId),
 
     onSuccess: () => {
@@ -95,7 +93,9 @@ export function useReportScreenshot() {
 export function getFlattenedProfiles(
   data: { pages: DiscoveryResponse[] } | undefined
 ): ProfileCard[] {
-  if (!data) return [];
+  if (!data) {
+    return [];
+  }
   return data.pages.flatMap((page) => page.profiles);
 }
 
@@ -104,10 +104,10 @@ export function getFlattenedProfiles(
  * @param data - Infinite query data
  * @returns True if there are more pages
  */
-export function hasMoreProfiles(
-  data: { pages: DiscoveryResponse[] } | undefined
-): boolean {
-  if (!data || data.pages.length === 0) return false;
+export function hasMoreProfiles(data: { pages: DiscoveryResponse[] } | undefined): boolean {
+  if (!data || data.pages.length === 0) {
+    return false;
+  }
   const lastPage = data.pages[data.pages.length - 1];
   return lastPage.nextCursor !== null;
 }

@@ -37,14 +37,14 @@ export async function up(knex: Knex): Promise<void> {
     table.check(
       "folder IN ('Top Choice', 'Strong Maybe', 'Considering', 'Backup')",
       [],
-      'chk_saved_profiles_folder'
+      'chk_saved_profiles_folder',
     );
 
     // Check: user cannot save own profile
     table.check(
       'user_id != profile_id',
       [],
-      'chk_saved_profiles_not_own'
+      'chk_saved_profiles_not_own',
     );
   });
 

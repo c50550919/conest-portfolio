@@ -51,14 +51,14 @@ export async function up(knex: Knex): Promise<void> {
     table.check(
       "status IN ('pending', 'accepted', 'declined', 'expired', 'cancelled')",
       [],
-      'chk_connection_requests_status'
+      'chk_connection_requests_status',
     );
 
     // Check: sender cannot send request to self
     table.check(
       'sender_id != recipient_id',
       [],
-      'chk_connection_requests_not_self'
+      'chk_connection_requests_not_self',
     );
   });
 

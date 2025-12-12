@@ -37,12 +37,7 @@ interface MatchModalProps {
   onSendMessage: () => void;
 }
 
-export default function MatchModal({
-  visible,
-  match,
-  onClose,
-  onSendMessage,
-}: MatchModalProps) {
+export default function MatchModal({ visible, match, onClose, onSendMessage }: MatchModalProps) {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const heartScaleAnim = useRef(new Animated.Value(0)).current;
 
@@ -75,15 +70,12 @@ export default function MatchModal({
     }
   }, [visible]);
 
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <LinearGradient
           colors={['#3498DB', '#2980B9']}
@@ -113,16 +105,12 @@ export default function MatchModal({
           </Animated.View>
 
           <Text style={styles.title}>Household Match!</Text>
-          <Text style={styles.subtitle}>
-            You both expressed interest in connecting!
-          </Text>
+          <Text style={styles.subtitle}>You both expressed interest in connecting!</Text>
 
           {/* Compatibility Score */}
           <View style={styles.scoreContainer}>
             <View style={styles.scoreBadge}>
-              <Text style={styles.scoreText}>
-                {match.compatibilityScore}%
-              </Text>
+              <Text style={styles.scoreText}>{match.compatibilityScore}%</Text>
               <Text style={styles.scoreLabel}>Household Fit</Text>
             </View>
           </View>
@@ -130,9 +118,7 @@ export default function MatchModal({
           {/* Profile Placeholder - In real app, fetch matched user profile */}
           <View style={styles.profilesContainer}>
             <Text style={styles.matchIdText}>Match ID: {match.matchId}</Text>
-            <Text style={styles.dateText}>
-              {new Date(match.createdAt).toLocaleDateString()}
-            </Text>
+            <Text style={styles.dateText}>{new Date(match.createdAt).toLocaleDateString()}</Text>
           </View>
 
           {/* Action Buttons */}
@@ -142,11 +128,7 @@ export default function MatchModal({
               onPress={onSendMessage}
               activeOpacity={0.8}
             >
-              <MaterialCommunityIcons
-                name="message-text"
-                size={24}
-                color="#fff"
-              />
+              <MaterialCommunityIcons name="message-text" size={24} color="#fff" />
               <Text style={styles.buttonText}>Start Chatting</Text>
             </TouchableOpacity>
 

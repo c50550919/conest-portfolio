@@ -226,9 +226,9 @@ export const SAVED_PROFILE_LIMITS = {
   folders: {
     'top-choice': -1, // Unlimited within total
     'strong-maybe': -1,
-    'considering': -1,
-    'backup': -1,
-    'archived': -1,
+    considering: -1,
+    backup: -1,
+    archived: -1,
   },
 } as const;
 
@@ -337,15 +337,20 @@ export const FEATURE_FLAGS = {
 // ============================================================================
 
 export const HELP_TEXT = {
-  compatibilityScore: 'Compatibility score is calculated based on schedule alignment, parenting philosophy, location, budget, and lifestyle factors.',
+  compatibilityScore:
+    'Compatibility score is calculated based on schedule alignment, parenting philosophy, location, budget, and lifestyle factors.',
 
-  backgroundCheck: 'Background checks verify criminal history and sex offender registry status for child safety.',
+  backgroundCheck:
+    'Background checks verify criminal history and sex offender registry status for child safety.',
 
-  connectionRequest: 'Connection requests expire after 14 days. Include a personalized message (50-500 characters) to introduce yourself.',
+  connectionRequest:
+    'Connection requests expire after 14 days. Include a personalized message (50-500 characters) to introduce yourself.',
 
-  savedProfiles: 'Save profiles to review later. Organize them into folders: Top Choice, Strong Maybe, Considering, Backup, or Archived.',
+  savedProfiles:
+    'Save profiles to review later. Organize them into folders: Top Choice, Strong Maybe, Considering, Backup, or Archived.',
 
-  filters: 'Filters help you find compatible housing partners. Background check and ID verification are enabled by default for safety.',
+  filters:
+    'Filters help you find compatible housing partners. Background check and ID verification are enabled by default for safety.',
 } as const;
 
 // ============================================================================
@@ -353,20 +358,24 @@ export const HELP_TEXT = {
 // ============================================================================
 
 export const ERROR_MESSAGES = {
-  CONNECTION_LIMIT_DAILY: 'You\'ve sent 5 connection requests today. You can send more tomorrow.',
-  CONNECTION_LIMIT_WEEKLY: 'You\'ve reached your weekly limit of 15 connection requests.',
-  CONNECTION_LIMIT_PENDING: 'You have 10 pending requests. Please wait for responses before sending more.',
+  CONNECTION_LIMIT_DAILY: "You've sent 5 connection requests today. You can send more tomorrow.",
+  CONNECTION_LIMIT_WEEKLY: "You've reached your weekly limit of 15 connection requests.",
+  CONNECTION_LIMIT_PENDING:
+    'You have 10 pending requests. Please wait for responses before sending more.',
   CONNECTION_COOLDOWN: 'You recently sent a request to this person. Please wait {days} more days.',
 
-  SAVED_PROFILE_LIMIT: 'You\'ve reached the maximum of 100 saved profiles. Archive or remove profiles to save more.',
-  SAVED_PROFILE_WARNING: 'You have {count} saved profiles (limit: 100). Consider archiving profiles you\'re no longer interested in.',
+  SAVED_PROFILE_LIMIT:
+    "You've reached the maximum of 100 saved profiles. Archive or remove profiles to save more.",
+  SAVED_PROFILE_WARNING:
+    "You have {count} saved profiles (limit: 100). Consider archiving profiles you're no longer interested in.",
 
-  MESSAGE_TOO_SHORT: 'Your message must be at least 50 characters. Share why you\'d like to connect!',
+  MESSAGE_TOO_SHORT:
+    "Your message must be at least 50 characters. Share why you'd like to connect!",
   MESSAGE_TOO_LONG: 'Your message must be 500 characters or less.',
 
   COMPARISON_LIMIT: 'You can compare up to 4 profiles at once. Remove a profile to add another.',
 
-  VIEWING_LIMIT: 'You\'ve viewed many profiles recently. Please take a break and come back later.',
+  VIEWING_LIMIT: "You've viewed many profiles recently. Please take a break and come back later.",
 } as const;
 
 // ============================================================================

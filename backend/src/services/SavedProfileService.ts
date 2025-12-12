@@ -25,7 +25,7 @@ export class SavedProfileService {
     userId: string,
     profileId: string,
     folder: 'Top Choice' | 'Strong Maybe' | 'Considering' | 'Backup',
-    notes?: string
+    notes?: string,
   ): Promise<SavedProfile> {
     // Validate notes length if provided
     if (notes && notes.length > 500) {
@@ -53,7 +53,7 @@ export class SavedProfileService {
    */
   async getSavedProfiles(
     userId: string,
-    folder?: string
+    folder?: string,
   ): Promise<SavedProfileWithProfile[]> {
     return await SavedProfileModel.findByUserId(userId, folder);
   }
@@ -95,7 +95,7 @@ export class SavedProfileService {
   async moveToFolder(
     id: string,
     userId: string,
-    folder: 'Top Choice' | 'Strong Maybe' | 'Considering' | 'Backup'
+    folder: 'Top Choice' | 'Strong Maybe' | 'Considering' | 'Backup',
   ): Promise<SavedProfile> {
     return await SavedProfileModel.update(id, userId, { folder });
   }
@@ -106,14 +106,14 @@ export class SavedProfileService {
   async updateNotes(
     id: string,
     userId: string,
-    notes: string | null
+    notes: string | null,
   ): Promise<SavedProfile> {
     // Validate notes length if provided
     if (notes && notes.length > 500) {
       throw new Error('NOTES_TOO_LONG');
     }
 
-    return await SavedProfileModel.update(id, userId, { notes });
+    return await SavedProfileModel.update(id, userId, { notes: notes ?? undefined });
   }
 
   /**
@@ -128,7 +128,7 @@ export class SavedProfileService {
    */
   async compareProfiles(
     userId: string,
-    ids: string[]
+    ids: string[],
   ): Promise<SavedProfileWithProfile[]> {
     if (ids.length < 2 || ids.length > 4) {
       throw new Error('INVALID_COMPARISON_COUNT');

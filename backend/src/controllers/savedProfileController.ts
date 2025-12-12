@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middleware/auth.middleware';
 import SavedProfileService from '../services/SavedProfileService';
-import { validate } from '../middleware/validator';
+import { validate } from '../middleware/validation';
 import {
   createSavedProfileSchema,
   updateSavedProfileSchema,
@@ -46,7 +46,7 @@ export class SavedProfileController {
         userId,
         profile_id,
         folder,
-        notes
+        notes,
       );
 
       res.status(201).json({
@@ -90,7 +90,7 @@ export class SavedProfileController {
 
       const savedProfiles = await SavedProfileService.getSavedProfiles(
         userId,
-        folder as string
+        folder as string,
       );
 
       res.status(200).json({

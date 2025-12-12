@@ -17,14 +17,7 @@
  */
 
 import React from 'react';
-import {
-  View,
-  Text,
-  Image,
-  StyleSheet,
-  Dimensions,
-  ScrollView,
-} from 'react-native';
+import { View, Text, Image, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -66,9 +59,15 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
 
   // Compatibility color based on score
   const getCompatibilityColor = (score: number): string => {
-    if (score >= 80) return '#4CAF50'; // Green
-    if (score >= 60) return '#FFC107'; // Yellow
-    if (score >= 40) return '#FF9800'; // Orange
+    if (score >= 80) {
+      return '#4CAF50';
+    } // Green
+    if (score >= 60) {
+      return '#FFC107';
+    } // Yellow
+    if (score >= 40) {
+      return '#FF9800';
+    } // Orange
     return '#F44336'; // Red
   };
 
@@ -88,20 +87,13 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
       {/* Profile Photo with Gradient Overlay */}
       <View style={styles.photoContainer}>
         {profilePhoto ? (
-          <Image
-            source={{ uri: profilePhoto }}
-            style={styles.photo}
-            resizeMode="cover"
-          />
+          <Image source={{ uri: profilePhoto }} style={styles.photo} resizeMode="cover" />
         ) : (
           <View style={[styles.photo, styles.defaultAvatar]}>
             <Text style={styles.defaultAvatarText}>No Photo</Text>
           </View>
         )}
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.8)']}
-          style={styles.gradient}
-        />
+        <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.gradient} />
 
         {/* Compatibility Score Badge */}
         <View
@@ -132,31 +124,19 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
         <View style={styles.badgesRow}>
           {verificationStatus.idVerified && (
             <View style={styles.badge}>
-              <MaterialCommunityIcons
-                name="shield-check"
-                size={16}
-                color="#4CAF50"
-              />
+              <MaterialCommunityIcons name="shield-check" size={16} color="#4CAF50" />
               <Text style={styles.badgeText}>ID Verified</Text>
             </View>
           )}
           {verificationStatus.backgroundCheckComplete && (
             <View style={styles.badge}>
-              <MaterialCommunityIcons
-                name="certificate"
-                size={16}
-                color="#4CAF50"
-              />
+              <MaterialCommunityIcons name="certificate" size={16} color="#4CAF50" />
               <Text style={styles.badgeText}>Background Check</Text>
             </View>
           )}
           {verificationStatus.phoneVerified && (
             <View style={styles.badge}>
-              <MaterialCommunityIcons
-                name="phone-check"
-                size={16}
-                color="#4CAF50"
-              />
+              <MaterialCommunityIcons name="phone-check" size={16} color="#4CAF50" />
               <Text style={styles.badgeText}>Phone Verified</Text>
             </View>
           )}
@@ -165,29 +145,19 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
         {/* Children Info - ONLY count and age groups (NO PII) */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <MaterialCommunityIcons
-              name="human-male-child"
-              size={20}
-              color="#333"
-            />
+            <MaterialCommunityIcons name="human-male-child" size={20} color="#333" />
             <Text style={styles.sectionTitle}>Children</Text>
           </View>
           <Text style={styles.sectionText}>
             {childrenCount} {childrenCount === 1 ? 'child' : 'children'}
           </Text>
-          <Text style={styles.sectionSubtext}>
-            Age groups: {formattedAgeGroups}
-          </Text>
+          <Text style={styles.sectionSubtext}>Age groups: {formattedAgeGroups}</Text>
         </View>
 
         {/* Budget */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <MaterialCommunityIcons
-              name="currency-usd"
-              size={20}
-              color="#333"
-            />
+            <MaterialCommunityIcons name="currency-usd" size={20} color="#333" />
             <Text style={styles.sectionTitle}>Budget</Text>
           </View>
           <Text style={styles.sectionText}>{budgetText}</Text>
@@ -206,11 +176,7 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
         {bio && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <MaterialCommunityIcons
-                name="text-box-outline"
-                size={20}
-                color="#333"
-              />
+              <MaterialCommunityIcons name="text-box-outline" size={20} color="#333" />
               <Text style={styles.sectionTitle}>About</Text>
             </View>
             <Text style={styles.bioText}>{bio}</Text>

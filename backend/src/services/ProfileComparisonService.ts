@@ -36,7 +36,7 @@ export class ProfileComparisonService {
    */
   async compareProfiles(
     requestingUserId: string,
-    requests: ComparisonRequest[]
+    requests: ComparisonRequest[],
   ): Promise<ComparisonResponse> {
     // Validate request count
     this.validateRequestCount(requests);
@@ -44,17 +44,17 @@ export class ProfileComparisonService {
     // Validate and enrich requests
     const validatedRequests = await this.validateRequests(
       requestingUserId,
-      requests
+      requests,
     );
 
     // Fetch profiles based on type
     const profiles = await Promise.all(
-      validatedRequests.map((req) => this.fetchProfileByType(req))
+      validatedRequests.map((req) => this.fetchProfileByType(req)),
     );
 
     // Filter out nulls (not found profiles)
     const validProfiles = profiles.filter(
-      (p): p is ComparisonProfile => p !== null
+      (p): p is ComparisonProfile => p !== null,
     );
 
     if (validProfiles.length < COMPARISON_LIMITS.minProfiles) {
@@ -91,7 +91,7 @@ export class ProfileComparisonService {
    */
   private async validateRequests(
     requestingUserId: string,
-    requests: ComparisonRequest[]
+    requests: ComparisonRequest[],
   ): Promise<ValidatedComparisonRequest[]> {
     const validated: ValidatedComparisonRequest[] = [];
 
@@ -134,7 +134,7 @@ export class ProfileComparisonService {
    * Fetch profile data based on source type
    */
   private async fetchProfileByType(
-    request: ValidatedComparisonRequest
+    request: ValidatedComparisonRequest,
   ): Promise<ComparisonProfile | null> {
     if (request.type === 'discovery') {
       return this.fetchDiscoveryProfile(request.userId);
@@ -147,7 +147,7 @@ export class ProfileComparisonService {
    * Fetch discovery profile (from users + parents tables)
    */
   private async fetchDiscoveryProfile(
-    userId: string
+    userId: string,
   ): Promise<ComparisonProfile | null> {
     const result = await this.db('users as u')
       .join('parents as p', 'u.id', 'p.user_id')
@@ -166,7 +166,7 @@ export class ProfileComparisonService {
         'p.household_preferences',
         'p.dietary_restrictions',
         'p.allergies',
-        'u.email_verified as is_verified'
+        'u.email_verified as is_verified',
       )
       .first();
 
@@ -208,7 +208,7 @@ export class ProfileComparisonService {
    */
   private async fetchSavedProfile(
     savedProfileId: string,
-    userId: string
+    userId: string,
   ): Promise<ComparisonProfile | null> {
     const result = await this.db('saved_profiles as sp')
       .join('users as u', 'sp.profile_id', 'u.id')
@@ -232,7 +232,7 @@ export class ProfileComparisonService {
         'p.household_preferences',
         'p.dietary_restrictions',
         'p.allergies',
-        'u.email_verified as is_verified'
+        'u.email_verified as is_verified',
       )
       .first();
 

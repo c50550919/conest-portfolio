@@ -31,7 +31,7 @@ describe('Wave 4: SavedProfiles and ConnectionRequests', () => {
       await element(by.id('password-input')).typeText('TestPassword123!');
 
       // Wait a bit and ensure keyboard is dismissed before tapping
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Scroll to bottom to ensure login button is fully visible
       try {
@@ -88,7 +88,9 @@ describe('Wave 4: SavedProfiles and ConnectionRequests', () => {
       }
 
       if (!found) {
-        console.warn('⚠️ SavedProfiles tab not found in navigation - screen may not be integrated yet');
+        console.warn(
+          '⚠️ SavedProfiles tab not found in navigation - screen may not be integrated yet',
+        );
         // This is expected if T037/T041 aren't complete yet
       }
     });
@@ -148,7 +150,9 @@ describe('Wave 4: SavedProfiles and ConnectionRequests', () => {
       }
 
       if (!found) {
-        console.warn('⚠️ ConnectionRequests tab not found in navigation - screen may not be integrated yet');
+        console.warn(
+          '⚠️ ConnectionRequests tab not found in navigation - screen may not be integrated yet',
+        );
       }
     });
 
@@ -226,7 +230,6 @@ describe('Wave 4: SavedProfiles and ConnectionRequests', () => {
         } catch (e) {
           console.log('⚠️ Connection request button not found (T041 not complete yet)');
         }
-
       } catch (e) {
         console.log('ℹ️ Could not test ProfileDetailsModal integration:', e.message);
       }

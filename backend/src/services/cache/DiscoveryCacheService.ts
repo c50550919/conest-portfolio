@@ -99,7 +99,7 @@ export class DiscoveryCacheService {
   async cacheSwipeState(
     userId: string,
     targetUserId: string,
-    direction: 'left' | 'right'
+    direction: 'left' | 'right',
   ): Promise<void> {
     try {
       const key = CACHE_KEYS.SWIPE_STATE(userId, targetUserId);

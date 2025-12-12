@@ -101,7 +101,7 @@ describe('Saved Profiles Comparison Flow', () => {
     console.log('📍 Step 4: Checking for comparison screen or errors...');
 
     // Wait a moment for navigation or error
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     await device.takeScreenshot('comparison-result');
 
@@ -139,7 +139,6 @@ describe('Saved Profiles Comparison Flow', () => {
       console.log('✅ Comparison screen visible with data');
 
       await device.takeScreenshot('comparison-screen-final');
-
     } catch (e) {
       console.log('⚠️  Comparison screen not visible or data missing');
       console.log('Error:', e.message);

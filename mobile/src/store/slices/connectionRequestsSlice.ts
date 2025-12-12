@@ -152,24 +152,18 @@ export const fetchRateLimitStatus = createAsyncThunk(
 /**
  * Fetch connection request statistics for the current user
  */
-export const fetchStatistics = createAsyncThunk(
-  'connectionRequests/fetchStatistics',
-  async () => {
-    const stats = await connectionRequestsAPI.getStatistics();
-    return stats;
-  }
-);
+export const fetchStatistics = createAsyncThunk('connectionRequests/fetchStatistics', async () => {
+  const stats = await connectionRequestsAPI.getStatistics();
+  return stats;
+});
 
 /**
  * Get decrypted message for a connection request
  */
-export const getMessage = createAsyncThunk(
-  'connectionRequests/getMessage',
-  async (id: string) => {
-    const message = await connectionRequestsAPI.getMessage(id);
-    return { id, message };
-  }
-);
+export const getMessage = createAsyncThunk('connectionRequests/getMessage', async (id: string) => {
+  const message = await connectionRequestsAPI.getMessage(id);
+  return { id, message };
+});
 
 /**
  * Get decrypted response message for a connection request
@@ -399,7 +393,8 @@ const connectionRequestsSlice = createSlice({
         // Store decrypted response message temporarily
         const receivedIndex = state.receivedRequests.findIndex((r) => r.id === action.payload.id);
         if (receivedIndex !== -1) {
-          state.receivedRequests[receivedIndex].response_message_encrypted = action.payload.responseMessage;
+          state.receivedRequests[receivedIndex].response_message_encrypted =
+            action.payload.responseMessage;
         }
 
         const sentIndex = state.sentRequests.findIndex((r) => r.id === action.payload.id);

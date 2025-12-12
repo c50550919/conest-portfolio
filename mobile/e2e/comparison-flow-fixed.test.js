@@ -44,11 +44,11 @@ describe('Comparison Flow (Fixed)', () => {
 
   it('should select first profile for comparison', async () => {
     // Find and tap the bookmark icon on first profile
-    const firstProfileBookmark = element(by.id('profile-card-0').withDescendant(by.id('bookmark-icon')));
+    const firstProfileBookmark = element(
+      by.id('profile-card-0').withDescendant(by.id('bookmark-icon')),
+    );
 
-    await waitFor(firstProfileBookmark)
-      .toBeVisible()
-      .withTimeout(5000);
+    await waitFor(firstProfileBookmark).toBeVisible().withTimeout(5000);
 
     await firstProfileBookmark.tap();
 
@@ -57,11 +57,11 @@ describe('Comparison Flow (Fixed)', () => {
 
   it('should select second profile for comparison', async () => {
     // Find and tap the bookmark icon on second profile
-    const secondProfileBookmark = element(by.id('profile-card-1').withDescendant(by.id('bookmark-icon')));
+    const secondProfileBookmark = element(
+      by.id('profile-card-1').withDescendant(by.id('bookmark-icon')),
+    );
 
-    await waitFor(secondProfileBookmark)
-      .toBeVisible()
-      .withTimeout(5000);
+    await waitFor(secondProfileBookmark).toBeVisible().withTimeout(5000);
 
     await secondProfileBookmark.tap();
 

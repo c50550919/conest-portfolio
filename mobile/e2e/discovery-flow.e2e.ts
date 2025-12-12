@@ -40,14 +40,10 @@ describe('Discovery Flow (Child Safety Critical)', () => {
     it('should display discovery screen with profiles', async () => {
       // Verify discovery screen elements
       await detoxExpect(element(by.text('Discover'))).toBeVisible();
-      await detoxExpect(
-        element(by.text(/Swipe right to connect/i))
-      ).toBeVisible();
+      await detoxExpect(element(by.text(/Swipe right to connect/i))).toBeVisible();
 
       // Verify action buttons are visible
-      await detoxExpect(
-        element(by.label('Continue to next profile'))
-      ).toBeVisible();
+      await detoxExpect(element(by.label('Continue to next profile'))).toBeVisible();
       await detoxExpect(
         element(by.label('Express interest in this housing partner'))
       ).toBeVisible();
@@ -62,9 +58,7 @@ describe('Discovery Flow (Child Safety Critical)', () => {
 
       // VERIFY: Age groups are displayed (generic ranges: toddler, elementary, teen)
       await detoxExpect(element(by.text(/Age groups:/))).toBeVisible();
-      await detoxExpect(
-        element(by.text(/(0-5|6-12|13-18)/))
-      ).toBeVisible();
+      await detoxExpect(element(by.text(/(0-5|6-12|13-18)/))).toBeVisible();
 
       // CRITICAL VERIFICATION: NO child PII should be present
       // These elements should NOT exist anywhere on the screen:
@@ -82,9 +76,7 @@ describe('Discovery Flow (Child Safety Critical)', () => {
       await detoxExpect(element(by.text('ID Verified'))).toBeVisible();
 
       // Verify background check badge
-      await detoxExpect(
-        element(by.text('Background Check'))
-      ).toBeVisible();
+      await detoxExpect(element(by.text('Background Check'))).toBeVisible();
 
       // Verify phone verification badge
       await detoxExpect(element(by.text('Phone Verified'))).toBeVisible();
@@ -99,9 +91,7 @@ describe('Discovery Flow (Child Safety Critical)', () => {
 
   describe('Swipe Gestures (60fps Performance)', () => {
     it('should swipe left (pass) on profile', async () => {
-      const initialProfileName = await element(
-        by.id('profile-name')
-      ).getAttributes();
+      const initialProfileName = await element(by.id('profile-name')).getAttributes();
 
       // Swipe left gesture
       await element(by.label('Continue to next profile')).tap();
@@ -118,9 +108,7 @@ describe('Discovery Flow (Child Safety Critical)', () => {
 
       // Verify swipe was recorded (next profile appears)
       // OR match modal appears if mutual match
-      await waitFor(
-        element(by.text(/Discover|It's a Household Match!/i))
-      )
+      await waitFor(element(by.text(/Discover|It's a Household Match!/i)))
         .toBeVisible()
         .withTimeout(2000);
     });
@@ -199,11 +187,9 @@ describe('Discovery Flow (Child Safety Critical)', () => {
       // Swipe through all profiles (assuming limited test data)
       // This test assumes you have a way to reach the empty state
       // For example, swipe left 20 times to exhaust profiles
-
       // await waitFor(element(by.text('No More Profiles Right Now')))
       //   .toBeVisible()
       //   .withTimeout(10000);
-
       // await detoxExpect(
       //   element(
       //     by.text(
@@ -254,9 +240,7 @@ describe('Discovery Flow (Child Safety Critical)', () => {
       // Scan entire profile card for child names
       // This is a negative test - we expect these elements NOT to exist
 
-      await detoxExpect(
-        element(by.text(/Emma|Liam|Olivia|Noah/i))
-      ).not.toExist();
+      await detoxExpect(element(by.text(/Emma|Liam|Olivia|Noah/i))).not.toExist();
       await detoxExpect(element(by.text(/child's name/i))).not.toExist();
       await detoxExpect(element(by.id('child-name-input'))).not.toExist();
     });

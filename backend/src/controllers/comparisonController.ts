@@ -7,10 +7,11 @@
  * Created: 2025-10-20
  */
 
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { ProfileComparisonService } from '../services/ProfileComparisonService';
 import { compareProfilesSchema } from '../validators/comparisonValidator';
 import { z } from 'zod';
+import { AuthRequest } from '../middleware/auth.middleware';
 
 const comparisonService = new ProfileComparisonService();
 
@@ -19,17 +20,15 @@ const comparisonService = new ProfileComparisonService();
  * Compare 2-4 profiles from mixed sources (discovery + saved)
  */
 export const compareProfiles = async (
-  req: Request,
-  res: Response
+  req: AuthRequest,
+  res: Response,
 ): Promise<void> => {
   try {
     // Validate request body
     const validatedData = compareProfilesSchema.parse(req.body);
 
-    // TODO: AUTH DISABLED FOR TESTING - Using hardcoded test user
-    // Get requesting user ID from auth middleware (disabled for now)
-    // const userId = (req as any).userId;
-    const userId = '64c3133d-4e0f-4a41-b537-db546f26ffee'; // sarah.johnson@test.com
+    // Get requesting user ID from auth middleware
+    const userId = req.userId;
 
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -39,7 +38,7 @@ export const compareProfiles = async (
     // Call comparison service
     const result = await comparisonService.compareProfiles(
       userId,
-      validatedData.profiles
+      validatedData.profiles,
     );
 
     res.status(200).json(result);
@@ -83,8 +82,8 @@ export const compareProfiles = async (
  * Calculate detailed 6-dimension compatibility breakdown between two profiles
  */
 export const calculateCompatibility = async (
-  req: Request,
-  res: Response
+  req: AuthRequest,
+  res: Response,
 ): Promise<void> => {
   try {
     const { profile1Id, profile2Id } = req.body;
@@ -97,9 +96,13 @@ export const calculateCompatibility = async (
       return;
     }
 
-    // TODO: AUTH DISABLED FOR TESTING - Using hardcoded test user
-    // const userId = (req as any).userId;
-    const userId = '64c3133d-4e0f-4a41-b537-db546f26ffee'; // sarah.johnson@test.com
+    // Get requesting user ID from auth middleware
+    const userId = req.userId;
+
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
 
     // Fetch profiles using comparison service (reuses existing data fetching logic)
     const comparisonResult = await comparisonService.compareProfiles(userId, [
@@ -166,7 +169,7 @@ export const calculateCompatibility = async (
     // Calculate overall weighted score
     const overallScore = dimensions.reduce(
       (sum, dim) => sum + dim.score * dim.weight,
-      0
+      0,
     );
 
     res.status(200).json({
@@ -183,7 +186,7 @@ export const calculateCompatibility = async (
   } catch (error) {
     console.error(
       '[ComparisonController] Error calculating compatibility:',
-      error
+      error,
     );
     res.status(500).json({ error: 'Failed to calculate compatibility' });
   }

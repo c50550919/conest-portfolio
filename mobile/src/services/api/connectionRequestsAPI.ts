@@ -100,12 +100,25 @@ class ConnectionRequestsAPI {
   }
 
   private setupInterceptors() {
-    // Request interceptor for adding auth token
+    // Request interceptor for adding auth token with retry logic
     this.client.interceptors.request.use(
       async (config) => {
-        const token = await tokenStorage.getAccessToken();
+        let token = await tokenStorage.getAccessToken();
+
+        // If token not found, retry once after a small delay (handles race conditions)
+        if (!token) {
+          console.log('[ConnectionRequestsAPI] Token not found, retrying in 100ms...');
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          token = await tokenStorage.getAccessToken();
+        }
+
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
+          // Mark that we sent a token (for response interceptor)
+          (config as any)._tokenSent = true;
+        } else {
+          console.warn('[ConnectionRequestsAPI] No token available for request:', config.url);
+          (config as any)._tokenSent = false;
         }
         return config;
       },
@@ -119,16 +132,28 @@ class ConnectionRequestsAPI {
     this.client.interceptors.response.use(
       (response) => response,
       async (error) => {
+        const tokenWasSent = error.config?._tokenSent;
+
         console.error('[ConnectionRequestsAPI] Response error:', {
           status: error.response?.status,
           message: error.message,
           data: error.response?.data,
+          tokenWasSent,
         });
 
         // Map backend error codes to user-friendly messages
         if (error.response?.status === 401) {
-          await tokenStorage.clearTokens();
-          throw new Error('Authentication required. Please log in again.');
+          // Only clear tokens if we actually sent a token and it was rejected
+          // Don't clear if we couldn't retrieve the token in the first place
+          if (tokenWasSent) {
+            console.log('[ConnectionRequestsAPI] Token was rejected by server, clearing tokens');
+            await tokenStorage.clearTokens();
+            throw new Error('Authentication required. Please log in again.');
+          } else {
+            // Token wasn't sent - don't clear, just report the error
+            console.log('[ConnectionRequestsAPI] No token was sent, not clearing tokens');
+            throw new Error('Unable to authenticate. Please try logging in again.');
+          }
         } else if (error.response?.status === 400) {
           const errorMessage = error.response?.data?.error || 'Invalid request';
           if (errorMessage.includes('MESSAGE_REQUIRED')) {
@@ -146,9 +171,13 @@ class ConnectionRequestsAPI {
         } else if (error.response?.status === 429) {
           const errorMessage = error.response?.data?.error || '';
           if (errorMessage.includes('daily')) {
-            throw new Error('You have reached your daily limit of 5 connection requests. Try again tomorrow.');
+            throw new Error(
+              'You have reached your daily limit of 5 connection requests. Try again tomorrow.',
+            );
           } else if (errorMessage.includes('weekly')) {
-            throw new Error('You have reached your weekly limit of 15 connection requests. Try again next week.');
+            throw new Error(
+              'You have reached your weekly limit of 15 connection requests. Try again next week.',
+            );
           }
           throw new Error('Rate limit exceeded. Please try again later.');
         }
@@ -188,11 +217,34 @@ class ConnectionRequestsAPI {
    */
   async listReceivedRequests(status?: string): Promise<ConnectionRequest[]> {
     const params = status ? { status } : {};
-    const response = await this.client.get<{ success: boolean; data: ConnectionRequest[] }>('/received', {
+    const response = await this.client.get<{ success: boolean; data: any[] }>('/received', {
       params,
     });
 
-    return response.data.data;
+    // Transform backend response to mobile format
+    return response.data.data.map((item: any) => ({
+      ...item,
+      senderProfile: item.sender
+        ? {
+            firstName: item.sender.first_name,
+            age: item.sender.age,
+            city: item.sender.city,
+            childrenCount: item.sender.children_count || 0,
+            compatibilityScore: item.sender.verification_score || 0,
+            profilePhoto: item.sender.profile_photo,
+          }
+        : undefined,
+      recipientProfile: item.recipient
+        ? {
+            firstName: item.recipient.first_name,
+            age: item.recipient.age,
+            city: item.recipient.city,
+            childrenCount: item.recipient.children_count || 0,
+            compatibilityScore: item.recipient.verification_score || 0,
+            profilePhoto: item.recipient.profile_photo,
+          }
+        : undefined,
+    }));
   }
 
   /**
@@ -202,11 +254,34 @@ class ConnectionRequestsAPI {
    */
   async listSentRequests(status?: string): Promise<ConnectionRequest[]> {
     const params = status ? { status } : {};
-    const response = await this.client.get<{ success: boolean; data: ConnectionRequest[] }>('/sent', {
+    const response = await this.client.get<{ success: boolean; data: any[] }>('/sent', {
       params,
     });
 
-    return response.data.data;
+    // Transform backend response to mobile format
+    return response.data.data.map((item: any) => ({
+      ...item,
+      senderProfile: item.sender
+        ? {
+            firstName: item.sender.first_name,
+            age: item.sender.age,
+            city: item.sender.city,
+            childrenCount: item.sender.children_count || 0,
+            compatibilityScore: item.sender.verification_score || 0,
+            profilePhoto: item.sender.profile_photo,
+          }
+        : undefined,
+      recipientProfile: item.recipient
+        ? {
+            firstName: item.recipient.first_name,
+            age: item.recipient.age,
+            city: item.recipient.city,
+            childrenCount: item.recipient.children_count || 0,
+            compatibilityScore: item.recipient.verification_score || 0,
+            profilePhoto: item.recipient.profile_photo,
+          }
+        : undefined,
+    }));
   }
 
   /**
@@ -215,7 +290,9 @@ class ConnectionRequestsAPI {
    * @returns Decrypted message string
    */
   async getMessage(id: string): Promise<string | null> {
-    const response = await this.client.get<{ success: boolean; data: { message: string | null } }>(`/${id}/message`);
+    const response = await this.client.get<{ success: boolean; data: { message: string | null } }>(
+      `/${id}/message`,
+    );
     return response.data.data.message;
   }
 
@@ -225,7 +302,10 @@ class ConnectionRequestsAPI {
    * @returns Decrypted response message string
    */
   async getResponseMessage(id: string): Promise<string | null> {
-    const response = await this.client.get<{ success: boolean; data: { responseMessage: string | null } }>(`/${id}/response-message`);
+    const response = await this.client.get<{
+      success: boolean;
+      data: { responseMessage: string | null };
+    }>(`/${id}/response-message`);
     return response.data.data.responseMessage;
   }
 
@@ -240,9 +320,12 @@ class ConnectionRequestsAPI {
       throw new Error('Response message is too long. Please keep it under 500 characters.');
     }
 
-    const response = await this.client.patch<{ success: boolean; data: ConnectionRequest }>(`/${id}/accept`, {
-      response_message: responseMessage,
-    });
+    const response = await this.client.patch<{ success: boolean; data: ConnectionRequest }>(
+      `/${id}/accept`,
+      {
+        response_message: responseMessage,
+      },
+    );
 
     return response.data.data;
   }
@@ -258,9 +341,12 @@ class ConnectionRequestsAPI {
       throw new Error('Decline reason is too long. Please keep it under 500 characters.');
     }
 
-    const response = await this.client.patch<{ success: boolean; data: ConnectionRequest }>(`/${id}/decline`, {
-      response_message: reason,
-    });
+    const response = await this.client.patch<{ success: boolean; data: ConnectionRequest }>(
+      `/${id}/decline`,
+      {
+        response_message: reason,
+      },
+    );
 
     return response.data.data;
   }
@@ -271,7 +357,9 @@ class ConnectionRequestsAPI {
    * @returns Updated connection request
    */
   async cancelConnectionRequest(id: string): Promise<ConnectionRequest> {
-    const response = await this.client.patch<{ success: boolean; data: ConnectionRequest }>(`/${id}/cancel`);
+    const response = await this.client.patch<{ success: boolean; data: ConnectionRequest }>(
+      `/${id}/cancel`,
+    );
     return response.data.data;
   }
 
@@ -280,7 +368,9 @@ class ConnectionRequestsAPI {
    * @returns Remaining requests for today and this week
    */
   async getRateLimitStatus(): Promise<RateLimitStatus> {
-    const response = await this.client.get<{ success: boolean; data: RateLimitStatus }>('/rate-limit-status');
+    const response = await this.client.get<{ success: boolean; data: RateLimitStatus }>(
+      '/rate-limit-status',
+    );
     return response.data.data;
   }
 
@@ -289,7 +379,9 @@ class ConnectionRequestsAPI {
    * @returns Statistics for sent and received requests
    */
   async getStatistics(): Promise<ConnectionRequestStatistics> {
-    const response = await this.client.get<{ success: boolean; data: ConnectionRequestStatistics }>('/statistics');
+    const response = await this.client.get<{ success: boolean; data: ConnectionRequestStatistics }>(
+      '/statistics',
+    );
     return response.data.data;
   }
 }

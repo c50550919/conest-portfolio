@@ -15,14 +15,7 @@
  */
 
 import React from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-} from 'react-native';
+import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { ExtendedProfileCard } from '../../types/discovery';
 
@@ -62,7 +55,9 @@ export const ProfileGridCard: React.FC<ProfileGridCardProps> = ({
 
   // Format age groups for display (child-safe)
   const formatAgeGroups = (groups: string[]): string => {
-    if (!groups || groups.length === 0) return '';
+    if (!groups || groups.length === 0) {
+      return '';
+    }
 
     const labels: Record<string, string> = {
       infant: '0-2',
@@ -71,48 +66,36 @@ export const ProfileGridCard: React.FC<ProfileGridCardProps> = ({
       teen: '13-18',
     };
 
-    return groups.map(g => labels[g] || g).join(', ');
+    return groups.map((g) => labels[g] || g).join(', ');
   };
 
   // Compatibility score color
   const getScoreColor = (score: number): string => {
-    if (score >= 80) return '#2ECC71'; // Green
-    if (score >= 60) return '#F39C12'; // Orange
+    if (score >= 80) {
+      return '#2ECC71';
+    } // Green
+    if (score >= 60) {
+      return '#F39C12';
+    } // Orange
     return '#95A5A6'; // Gray
   };
 
   return (
-    <TouchableOpacity
-      style={styles.card}
-      onPress={onPress}
-      activeOpacity={0.9}
-    >
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.9}>
       {/* Profile Photo */}
       <View style={styles.photoContainer}>
-        <Image
-          source={{ uri: profilePhoto }}
-          style={styles.photo}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: profilePhoto }} style={styles.photo} resizeMode="cover" />
 
         {/* Verification Badges */}
         <View style={styles.badgeContainer}>
           {verificationStatus.idVerified && (
             <View style={styles.badge}>
-              <MaterialCommunityIcons
-                name="shield-check"
-                size={14}
-                color="#2ECC71"
-              />
+              <MaterialCommunityIcons name="shield-check" size={14} color="#2ECC71" />
             </View>
           )}
           {verificationStatus.backgroundCheckComplete && (
             <View style={styles.badge}>
-              <MaterialCommunityIcons
-                name="security"
-                size={14}
-                color="#3498DB"
-              />
+              <MaterialCommunityIcons name="security" size={14} color="#3498DB" />
             </View>
           )}
         </View>
@@ -181,7 +164,8 @@ export const ProfileGridCard: React.FC<ProfileGridCardProps> = ({
         <View style={styles.childrenRow}>
           <MaterialCommunityIcons name="account-group" size={12} color="#95A5A6" />
           <Text style={styles.childrenText} numberOfLines={1}>
-            {childrenCount} {childrenCount === 1 ? 'child' : 'children'} ({formatAgeGroups(childrenAgeGroups)})
+            {childrenCount} {childrenCount === 1 ? 'child' : 'children'} (
+            {formatAgeGroups(childrenAgeGroups)})
           </Text>
         </View>
 

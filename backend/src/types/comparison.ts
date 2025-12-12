@@ -60,6 +60,10 @@ export interface ComparisonProfile {
     guestPolicy?: string;
     sharingPreferences?: string;
 
+    // Additional profile fields
+    dietaryRestrictions?: string;
+    allergies?: string;
+
     // Optional saved profile metadata
     folder?: string; // Only for saved profiles
     notes?: string; // Only for saved profiles

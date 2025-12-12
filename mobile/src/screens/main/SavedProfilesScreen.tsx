@@ -62,22 +62,15 @@ const FOLDER_TABS = [
 const FOLDER_COLORS = {
   'Top Choice': '#FFD700',
   'Strong Maybe': '#FF6B6B',
-  'Considering': '#4ECDC4',
-  'Backup': '#95E1D3',
-  'Uncategorized': '#A0A0A0',
+  Considering: '#4ECDC4',
+  Backup: '#95E1D3',
+  Uncategorized: '#A0A0A0',
 };
 
 export const SavedProfilesScreen: React.FC = () => {
   const dispatch = useDispatch();
-  const {
-    savedProfiles,
-    savedProfilesByFolder,
-    limitStatus,
-    loading,
-    error,
-    updating,
-    removing,
-  } = useSelector((state: RootState) => state.savedProfiles);
+  const { savedProfiles, savedProfilesByFolder, limitStatus, loading, error, updating, removing } =
+    useSelector((state: RootState) => state.savedProfiles);
 
   const [activeTab, setActiveTab] = useState<FolderTab>('all');
   const [editingProfile, setEditingProfile] = useState<SavedProfile | null>(null);
@@ -87,18 +80,6 @@ export const SavedProfilesScreen: React.FC = () => {
   const [selectedProfiles, setSelectedProfiles] = useState<string[]>([]);
   const [comparisonMode, setComparisonMode] = useState(false);
 
-  useEffect(() => {
-    loadProfiles();
-    loadLimitStatus();
-  }, [loadProfiles]);
-
-  useEffect(() => {
-    if (error) {
-      Alert.alert('Error', error);
-      dispatch(clearError());
-    }
-  }, [error]);
-
   const loadProfiles = useCallback(() => {
     // Always fetch all profiles, filtering happens client-side
     dispatch(fetchSavedProfiles() as any);
@@ -107,6 +88,18 @@ export const SavedProfilesScreen: React.FC = () => {
   const loadLimitStatus = useCallback(() => {
     dispatch(fetchLimitStatus() as any);
   }, [dispatch]);
+
+  useEffect(() => {
+    loadProfiles();
+    loadLimitStatus();
+  }, [loadProfiles, loadLimitStatus]);
+
+  useEffect(() => {
+    if (error) {
+      Alert.alert('Error', error);
+      dispatch(clearError());
+    }
+  }, [error, dispatch]);
 
   const handleRefresh = useCallback(() => {
     loadProfiles();
@@ -119,26 +112,32 @@ export const SavedProfilesScreen: React.FC = () => {
     setSelectedProfiles([]);
   }, []);
 
-  const handleRemoveProfile = useCallback((id: string, firstName: string) => {
-    Alert.alert(
-      'Remove Saved Profile',
-      `Are you sure you want to remove ${firstName} from your saved profiles?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => {
-            dispatch(removeSavedProfile(id) as any);
+  const handleRemoveProfile = useCallback(
+    (id: string, firstName: string) => {
+      Alert.alert(
+        'Remove Saved Profile',
+        `Are you sure you want to remove ${firstName} from your saved profiles?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Remove',
+            style: 'destructive',
+            onPress: () => {
+              dispatch(removeSavedProfile(id) as any);
+            },
           },
-        },
-      ]
-    );
-  }, [dispatch]);
+        ],
+      );
+    },
+    [dispatch],
+  );
 
-  const handleUpdateFolder = useCallback((id: string, folder: string | null) => {
-    dispatch(updateSavedProfile({ id, folder: folder as any }) as any);
-  }, [dispatch]);
+  const handleUpdateFolder = useCallback(
+    (id: string, folder: string | null) => {
+      dispatch(updateSavedProfile({ id, folder: folder as any }) as any);
+    },
+    [dispatch],
+  );
 
   const handleEditNotes = useCallback((profile: SavedProfile) => {
     setEditingProfile(profile);
@@ -193,13 +192,16 @@ export const SavedProfilesScreen: React.FC = () => {
       return savedProfiles;
     } else {
       // Filter savedProfiles by the selected folder (client-side)
-      return savedProfiles.filter(profile => profile.folder === activeTab);
+      return savedProfiles.filter((profile) => profile.folder === activeTab);
     }
   }, [activeTab, savedProfiles]);
 
   const renderFolderBadge = (folder: string | null) => {
-    if (!folder) return null;
-    const color = FOLDER_COLORS[folder as keyof typeof FOLDER_COLORS] || FOLDER_COLORS.uncategorized;
+    if (!folder) {
+      return null;
+    }
+    const color =
+      FOLDER_COLORS[folder as keyof typeof FOLDER_COLORS] || FOLDER_COLORS.Uncategorized;
     const label = folder.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 
     return (
@@ -209,90 +211,100 @@ export const SavedProfilesScreen: React.FC = () => {
     );
   };
 
-  const renderProfileCard = useCallback(({ item }: { item: SavedProfile }) => {
-    const isSelected = selectedProfiles.includes(item.id);
+  const renderProfileCard = useCallback(
+    ({ item }: { item: SavedProfile }) => {
+      const isSelected = selectedProfiles.includes(item.id);
 
-    return (
-      <TouchableOpacity
-        style={[styles.profileCard, isSelected && styles.profileCardSelected]}
-        onPress={() => {
-          if (comparisonMode) {
-            handleSelectProfile(item.id);
-          } else {
-            // Navigate to profile details
-            Alert.alert('Profile Details', `View ${item.profile?.first_name || 'profile'}'s profile`);
-          }
-        }}
-        onLongPress={() => handleEditNotes(item)}
-      >
-        <View style={styles.profileCardContent}>
-          {/* Profile Image - Note: profilePhoto not returned by backend yet */}
-          {/* TODO: Add profile photo support in backend */}
+      return (
+        <TouchableOpacity
+          style={[styles.profileCard, isSelected && styles.profileCardSelected]}
+          onPress={() => {
+            if (comparisonMode) {
+              handleSelectProfile(item.id);
+            } else {
+              // Navigate to profile details
+              Alert.alert(
+                'Profile Details',
+                `View ${item.profile?.first_name || 'profile'}'s profile`,
+              );
+            }
+          }}
+          onLongPress={() => handleEditNotes(item)}
+        >
+          <View style={styles.profileCardContent}>
+            {/* Profile Image - Note: profilePhoto not returned by backend yet */}
+            {/* TODO: Add profile photo support in backend */}
 
-          {/* Profile Details */}
-          <View style={styles.profileDetails}>
-            <View style={styles.profileHeader}>
-              <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>
-                  {item.profile?.first_name || 'Unknown'}, {item.profile?.age || '?'}
-                </Text>
-                <Text style={styles.profileLocation}>
-                  {item.profile?.city && item.profile?.state
-                    ? `${item.profile.city}, ${item.profile.state}`
-                    : 'Unknown'}
-                </Text>
-                {renderFolderBadge(item.folder)}
+            {/* Profile Details */}
+            <View style={styles.profileDetails}>
+              <View style={styles.profileHeader}>
+                <View style={styles.profileInfo}>
+                  <Text style={styles.profileName}>
+                    {item.profile?.first_name || 'Unknown'}, {item.profile?.age || '?'}
+                  </Text>
+                  <Text style={styles.profileLocation}>
+                    {item.profile?.city && item.profile?.state
+                      ? `${item.profile.city}, ${item.profile.state}`
+                      : 'Unknown'}
+                  </Text>
+                  {renderFolderBadge(item.folder)}
+                </View>
+                <View style={styles.profileActions}>
+                  {comparisonMode && (
+                    <MaterialCommunityIcons
+                      name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
+                      size={24}
+                      color={isSelected ? '#4ECDC4' : '#666'}
+                    />
+                  )}
+                  {!comparisonMode && (
+                    <>
+                      <TouchableOpacity onPress={() => handleEditNotes(item)}>
+                        <MaterialCommunityIcons name="note-edit" size={20} color="#666" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.removeButton}
+                        onPress={() =>
+                          handleRemoveProfile(item.id, item.profile?.first_name || 'profile')
+                        }
+                      >
+                        <MaterialCommunityIcons name="delete" size={20} color="#FF6B6B" />
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
               </View>
-              <View style={styles.profileActions}>
-                {comparisonMode && (
-                  <MaterialCommunityIcons
-                    name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
-                    size={24}
-                    color={isSelected ? '#4ECDC4' : '#666'}
-                  />
-                )}
-                {!comparisonMode && (
-                  <>
-                    <TouchableOpacity onPress={() => handleEditNotes(item)}>
-                      <MaterialCommunityIcons name="note-edit" size={20} color="#666" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      onPress={() => handleRemoveProfile(item.id, item.profile?.first_name || 'profile')}
-                    >
-                      <MaterialCommunityIcons name="delete" size={20} color="#FF6B6B" />
-                    </TouchableOpacity>
-                  </>
-                )}
+
+              <View style={styles.profileStats}>
+                <View style={styles.statItem}>
+                  <MaterialCommunityIcons name="shield-check" size={16} color="#4CAF50" />
+                  <Text style={styles.statText}>
+                    {item.profile?.verification_score
+                      ? `${item.profile.verification_score}% Verified`
+                      : 'Unverified'}
+                  </Text>
+                </View>
               </View>
+
+              {item.notes_encrypted && (
+                <View style={styles.notesPreview}>
+                  <MaterialCommunityIcons name="note-text" size={14} color="#666" />
+                  <Text style={styles.notesText} numberOfLines={2}>
+                    {item.notes_encrypted}
+                  </Text>
+                </View>
+              )}
+
+              <Text style={styles.savedDate}>
+                Saved {new Date(item.saved_at).toLocaleDateString()}
+              </Text>
             </View>
-
-            <View style={styles.profileStats}>
-              <View style={styles.statItem}>
-                <MaterialCommunityIcons name="shield-check" size={16} color="#4CAF50" />
-                <Text style={styles.statText}>
-                  {item.profile?.verification_score ? `${item.profile.verification_score}% Verified` : 'Unverified'}
-                </Text>
-              </View>
-            </View>
-
-            {item.notes_encrypted && (
-              <View style={styles.notesPreview}>
-                <MaterialCommunityIcons name="note-text" size={14} color="#666" />
-                <Text style={styles.notesText} numberOfLines={2}>
-                  {item.notes_encrypted}
-                </Text>
-              </View>
-            )}
-
-            <Text style={styles.savedDate}>
-              Saved {new Date(item.saved_at).toLocaleDateString()}
-            </Text>
           </View>
-        </View>
-      </TouchableOpacity>
-    );
-  }, [comparisonMode, selectedProfiles, handleSelectProfile, handleEditNotes, handleRemoveProfile]);
+        </TouchableOpacity>
+      );
+    },
+    [comparisonMode, selectedProfiles, handleSelectProfile, handleEditNotes, handleRemoveProfile],
+  );
 
   const filteredProfiles = getFilteredProfiles();
 
@@ -353,9 +365,7 @@ export const SavedProfilesScreen: React.FC = () => {
 
         {comparisonMode && selectedProfiles.length >= 2 && (
           <TouchableOpacity style={styles.compareButton} onPress={handleCompare}>
-            <Text style={styles.compareButtonText}>
-              Compare ({selectedProfiles.length})
-            </Text>
+            <Text style={styles.compareButtonText}>Compare ({selectedProfiles.length})</Text>
           </TouchableOpacity>
         )}
       </View>

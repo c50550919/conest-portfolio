@@ -89,7 +89,7 @@ export const SavedProfileModel = {
    */
   async findByUserId(
     userId: string,
-    folder?: string
+    folder?: string,
   ): Promise<SavedProfileWithProfile[]> {
     const query = db('saved_profiles as sp')
       .join('users as u', 'sp.profile_id', 'u.id')
@@ -100,7 +100,7 @@ export const SavedProfileModel = {
         'p.first_name',
         'p.date_of_birth',
         'p.city',
-        'p.state'
+        'p.state',
       )
       .orderBy('sp.saved_at', 'desc');
 
@@ -164,7 +164,7 @@ export const SavedProfileModel = {
   async update(
     id: string,
     userId: string,
-    data: { folder?: string; notes?: string }
+    data: { folder?: string; notes?: string },
   ): Promise<SavedProfile> {
     const updateData: any = {};
 
@@ -215,7 +215,7 @@ export const SavedProfileModel = {
    */
   async compareProfiles(
     userId: string,
-    ids: string[]
+    ids: string[],
   ): Promise<SavedProfileWithProfile[]> {
     if (ids.length < 2 || ids.length > 4) {
       throw new Error('INVALID_COMPARISON_COUNT');
@@ -236,7 +236,7 @@ export const SavedProfileModel = {
         'p.parenting_style',
         'p.household_preferences',
         'p.budget_min',
-        'p.budget_max'
+        'p.budget_max',
       )
       .orderBy('sp.saved_at', 'desc');
 

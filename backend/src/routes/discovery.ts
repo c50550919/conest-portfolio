@@ -1,16 +1,19 @@
 import express from 'express';
 import DiscoveryController from '../controllers/DiscoveryController';
-import { authenticateToken } from '../middleware/auth';
-import { swipeRateLimit } from '../middleware/rateLimit';
+import { authenticateToken } from '../middleware/auth.middleware';
 
 /**
  * Discovery Routes
  *
- * Purpose: Route definitions for Discovery Screen feature
+ * Purpose: Route definitions for Browse Discovery feature
  * Constitution: Principle I (Child Safety), Principle IV (Performance)
  *
  * All routes require authentication
- * Swipe endpoint has additional rate limiting (100 req/hour)
+ *
+ * Note: This is a browse-based discovery system. Users express interest
+ * via connection requests (/api/connection-requests), not swipes.
+ *
+ * Updated: 2025-11-29 - Removed swipe endpoint (using connection requests instead)
  */
 
 const router = express.Router();
@@ -29,26 +32,16 @@ router.use(authenticateToken);
  * Response:
  * - profiles: Array of ProfileCard objects
  * - nextCursor: Cursor for next page (null if no more)
+ *
+ * Filtering:
+ * - Excludes users with existing connection requests (any status)
+ * - Excludes already matched users
+ * - Does NOT exclude saved profiles (users can still browse saved)
  */
 router.get('/profiles', DiscoveryController.getProfiles.bind(DiscoveryController));
 
-/**
- * POST /api/discovery/swipe
- * Record a swipe action (left or right)
- *
- * Body:
- * - targetUserId: UUID of user being swiped on
- * - direction: "left" or "right"
- *
- * Response:
- * - swipeId: UUID of created swipe
- * - matchCreated: boolean
- * - match (optional): Match object if mutual match created
- *
- * Rate Limit: 100 swipes per hour per user
- * Note: Swipes are FINAL (no undo in MVP - clarification 2025-10-06)
- */
-router.post('/swipe', swipeRateLimit, DiscoveryController.swipe.bind(DiscoveryController));
+// NOTE: Swipe endpoint removed (2025-11-29)
+// Users express interest via POST /api/connection-requests instead
 
 /**
  * POST /api/discovery/screenshot

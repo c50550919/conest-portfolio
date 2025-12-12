@@ -159,7 +159,7 @@ export const ConnectionRequestModel = {
    */
   async getDecryptedMessage(
     id: string,
-    userId: string
+    userId: string,
   ): Promise<string | null> {
     const request = await db('connection_requests')
       .where({ id })
@@ -181,7 +181,7 @@ export const ConnectionRequestModel = {
    */
   async getDecryptedResponseMessage(
     id: string,
-    userId: string
+    userId: string,
   ): Promise<string | null> {
     const request = await db('connection_requests')
       .where({ id })
@@ -191,8 +191,7 @@ export const ConnectionRequestModel = {
       .first();
 
     if (
-      !request ||
-      !request.response_message_encrypted ||
+      !request?.response_message_encrypted ||
       !request.response_message_iv
     ) {
       return null;
@@ -200,7 +199,7 @@ export const ConnectionRequestModel = {
 
     return decryptNote(
       request.response_message_encrypted,
-      request.response_message_iv
+      request.response_message_iv,
     );
   },
 
@@ -210,41 +209,41 @@ export const ConnectionRequestModel = {
    */
   async findByRecipientId(
     recipientId: string,
-    status?: string
+    status?: string,
   ): Promise<ConnectionRequestWithProfiles[]> {
     const query = db('connection_requests as cr')
       .join('users as sender_user', 'cr.sender_id', 'sender_user.id')
-      .join('profiles as sender_profile', 'sender_user.id', 'sender_profile.user_id')
+      .join('parents as sender_parent', 'sender_user.id', 'sender_parent.user_id')
       .leftJoin(
         'verifications as sender_verification',
         'sender_user.id',
-        'sender_verification.user_id'
+        'sender_verification.user_id',
       )
       .join('users as recipient_user', 'cr.recipient_id', 'recipient_user.id')
       .join(
-        'profiles as recipient_profile',
+        'parents as recipient_parent',
         'recipient_user.id',
-        'recipient_profile.user_id'
+        'recipient_parent.user_id',
       )
       .leftJoin(
         'verifications as recipient_verification',
         'recipient_user.id',
-        'recipient_verification.user_id'
+        'recipient_verification.user_id',
       )
       .where('cr.recipient_id', recipientId)
       .whereNull('cr.archived_at')
       .select(
         'cr.*',
-        'sender_user.first_name as sender_first_name',
-        'sender_profile.age as sender_age',
-        'sender_profile.city as sender_city',
-        'sender_profile.state as sender_state',
+        'sender_parent.first_name as sender_first_name',
+        db.raw('EXTRACT(YEAR FROM age(sender_parent.date_of_birth))::int as sender_age'),
+        'sender_parent.city as sender_city',
+        'sender_parent.state as sender_state',
         'sender_verification.verification_score as sender_verification_score',
-        'recipient_user.first_name as recipient_first_name',
-        'recipient_profile.age as recipient_age',
-        'recipient_profile.city as recipient_city',
-        'recipient_profile.state as recipient_state',
-        'recipient_verification.verification_score as recipient_verification_score'
+        'recipient_parent.first_name as recipient_first_name',
+        db.raw('EXTRACT(YEAR FROM age(recipient_parent.date_of_birth))::int as recipient_age'),
+        'recipient_parent.city as recipient_city',
+        'recipient_parent.state as recipient_state',
+        'recipient_verification.verification_score as recipient_verification_score',
       )
       .orderBy('cr.sent_at', 'desc');
 
@@ -294,41 +293,41 @@ export const ConnectionRequestModel = {
    */
   async findBySenderId(
     senderId: string,
-    status?: string
+    status?: string,
   ): Promise<ConnectionRequestWithProfiles[]> {
     const query = db('connection_requests as cr')
       .join('users as sender_user', 'cr.sender_id', 'sender_user.id')
-      .join('profiles as sender_profile', 'sender_user.id', 'sender_profile.user_id')
+      .join('parents as sender_parent', 'sender_user.id', 'sender_parent.user_id')
       .leftJoin(
         'verifications as sender_verification',
         'sender_user.id',
-        'sender_verification.user_id'
+        'sender_verification.user_id',
       )
       .join('users as recipient_user', 'cr.recipient_id', 'recipient_user.id')
       .join(
-        'profiles as recipient_profile',
+        'parents as recipient_parent',
         'recipient_user.id',
-        'recipient_profile.user_id'
+        'recipient_parent.user_id',
       )
       .leftJoin(
         'verifications as recipient_verification',
         'recipient_user.id',
-        'recipient_verification.user_id'
+        'recipient_verification.user_id',
       )
       .where('cr.sender_id', senderId)
       .whereNull('cr.archived_at')
       .select(
         'cr.*',
-        'sender_user.first_name as sender_first_name',
-        'sender_profile.age as sender_age',
-        'sender_profile.city as sender_city',
-        'sender_profile.state as sender_state',
+        'sender_parent.first_name as sender_first_name',
+        db.raw('EXTRACT(YEAR FROM age(sender_parent.date_of_birth))::int as sender_age'),
+        'sender_parent.city as sender_city',
+        'sender_parent.state as sender_state',
         'sender_verification.verification_score as sender_verification_score',
-        'recipient_user.first_name as recipient_first_name',
-        'recipient_profile.age as recipient_age',
-        'recipient_profile.city as recipient_city',
-        'recipient_profile.state as recipient_state',
-        'recipient_verification.verification_score as recipient_verification_score'
+        'recipient_parent.first_name as recipient_first_name',
+        db.raw('EXTRACT(YEAR FROM age(recipient_parent.date_of_birth))::int as recipient_age'),
+        'recipient_parent.city as recipient_city',
+        'recipient_parent.state as recipient_state',
+        'recipient_verification.verification_score as recipient_verification_score',
       )
       .orderBy('cr.sent_at', 'desc');
 
@@ -387,7 +386,7 @@ export const ConnectionRequestModel = {
   async accept(
     id: string,
     recipientId: string,
-    responseMessage?: string
+    responseMessage?: string,
   ): Promise<ConnectionRequest> {
     const request = await this.findById(id);
 
@@ -433,13 +432,63 @@ export const ConnectionRequestModel = {
       throw new Error('CONNECTION_REQUEST_NOT_FOUND');
     }
 
-    // Create a match in the matches table
-    await db('matches').insert({
-      user_id_1: request.sender_id,
-      user_id_2: request.recipient_id,
-      matched_at: db.fn.now(),
-      status: 'active',
-    });
+    // Get parent IDs for both users
+    const senderParent = await db('parents').where({ user_id: request.sender_id }).first();
+    const recipientParent = await db('parents').where({ user_id: request.recipient_id }).first();
+
+    if (senderParent && recipientParent) {
+      // Ensure parent1_id < parent2_id to satisfy CHECK constraint
+      const [parent1_id, parent2_id] = senderParent.id < recipientParent.id
+        ? [senderParent.id, recipientParent.id]
+        : [recipientParent.id, senderParent.id];
+
+      // Create a match in the matches table
+      await db('matches').insert({
+        parent1_id,
+        parent2_id,
+        compatibility_score: 85.00, // Default score for connection request matches
+        score_breakdown: JSON.stringify({
+          source: 'connection_request',
+          request_id: id,
+          note: 'Match created from accepted connection request',
+        }),
+        parent1_status: 'liked',
+        parent2_status: 'liked',
+        matched: true,
+        matched_at: db.fn.now(),
+      });
+
+      // Create a conversation for messaging (uses parent IDs)
+      const [conversation] = await db('conversations').insert({
+        participant1_id: senderParent.id,
+        participant2_id: recipientParent.id,
+        both_verified: true, // Both users verified since they can send connection requests
+        created_at: db.fn.now(),
+      }).returning('*');
+
+      // If there's a response message, insert it as the first message in the conversation
+      if (responseMessage?.trim()) {
+        // Encrypt the message for storage
+        const encryptedMsg = encryptNote(responseMessage);
+
+        await db('messages').insert({
+          conversation_id: conversation.id,
+          sender_id: recipientParent.id, // Use parent ID
+          message_encrypted: encryptedMsg.encrypted,
+          encryption_iv: encryptedMsg.iv,
+          message_type: 'text',
+          created_at: db.fn.now(),
+        });
+
+        // Update conversation with last message info
+        await db('conversations')
+          .where({ id: conversation.id })
+          .update({
+            last_message_at: db.fn.now(),
+            last_message_preview: responseMessage.substring(0, 100),
+          });
+      }
+    }
 
     return updatedRequest;
   },
@@ -452,7 +501,7 @@ export const ConnectionRequestModel = {
   async decline(
     id: string,
     recipientId: string,
-    responseMessage?: string
+    responseMessage?: string,
   ): Promise<ConnectionRequest> {
     const request = await this.findById(id);
 
@@ -559,7 +608,7 @@ export const ConnectionRequestModel = {
         this.where(
           'responded_at',
           '<=',
-          db.raw("NOW() - INTERVAL '90 days'")
+          db.raw("NOW() - INTERVAL '90 days'"),
         ).orWhere('updated_at', '<=', db.raw("NOW() - INTERVAL '90 days'"));
       })
       .update({
@@ -575,7 +624,7 @@ export const ConnectionRequestModel = {
    * Returns remaining requests for today and this week
    */
   async getRateLimitStatus(
-    userId: string
+    userId: string,
   ): Promise<{ daily: number; weekly: number }> {
     const dailyKey = `connection_requests:daily:${userId}`;
     const weeklyKey = `connection_requests:weekly:${userId}`;
