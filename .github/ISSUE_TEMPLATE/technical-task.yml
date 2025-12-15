@@ -1,0 +1,149 @@
+name: 🔧 Technical Task
+description: Internal technical work, refactoring, or infrastructure changes
+title: "[TECH] "
+labels: ["type:technical-debt", "status:triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Technical Task
+        Use this for technical debt, refactoring, infrastructure, DevOps, and internal improvements.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: Clear description of the technical work needed
+      placeholder: Describe the technical task...
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation / Business Value
+      description: Why is this work necessary?
+      placeholder: |
+        - What problem does this solve?
+        - What risks does it mitigate?
+        - How does it improve the codebase?
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation-plan
+    attributes:
+      label: Implementation Plan
+      description: Technical approach and steps
+      placeholder: |
+        1. Step one
+        2. Step two
+        3. Step three
+
+        **Files affected:**
+        - `backend/src/...`
+        - `mobile/src/...`
+
+        **Database changes:**
+        - New migration required: Yes/No
+
+        **Breaking changes:**
+        - API changes: Yes/No
+        - Schema changes: Yes/No
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Definition of Done
+      description: Specific criteria for task completion
+      placeholder: |
+        - [ ] Code changes implemented
+        - [ ] Tests added/updated
+        - [ ] Documentation updated
+        - [ ] Performance benchmarks pass
+        - [ ] No regressions in existing functionality
+    validations:
+      required: true
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks & Mitigation
+      description: Potential risks and how to address them
+      placeholder: |
+        **Risk:** Database migration could be slow on large tables
+        **Mitigation:** Test on production-sized dataset, plan maintenance window
+    validations:
+      required: false
+
+  - type: dropdown
+    id: task-type
+    attributes:
+      label: Task Type
+      description: Category of technical work
+      options:
+        - Refactoring
+        - Performance Optimization
+        - Security Hardening
+        - Infrastructure / DevOps
+        - Database Migration
+        - Dependency Update
+        - Code Quality / Linting
+        - Testing Infrastructure
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Urgency of this technical work
+      options:
+        - "High - Blocking other work or critical fix"
+        - "Medium - Should be done soon"
+        - "Low - Can be scheduled for later"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Primary Component
+      description: Main area affected
+      options:
+        - Frontend - Mobile App
+        - Backend - API
+        - Backend - Database
+        - Infrastructure / CI-CD
+        - Testing Framework
+        - Documentation
+        - Multiple Components
+    validations:
+      required: true
+
+  - type: input
+    id: story-points
+    attributes:
+      label: Story Points
+      description: Estimated complexity (1=2-4h, 2=half day, 3=day, 5=2-3 days, 8=week)
+      placeholder: "3"
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Related issues or external dependencies
+      placeholder: |
+        - Blocked by #123
+        - Blocks #456
+        - Requires coordination with DevOps team
+    validations:
+      required: false

@@ -1,0 +1,141 @@
+name: Auto Label
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  issues: write
+  pull-requests: write
+  contents: read
+
+jobs:
+  label-issues:
+    name: Label Issues
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
+
+    steps:
+      - name: Label based on title
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = context.payload.issue;
+            const title = issue.title.toLowerCase();
+            const body = (issue.body || '').toLowerCase();
+            const labels = [];
+
+            // Type labels from title prefix
+            if (title.startsWith('[bug]')) labels.push('type:bug');
+            if (title.startsWith('[story]')) labels.push('type:feature');
+            if (title.startsWith('[tech]')) labels.push('type:technical-debt');
+            if (title.startsWith('[spike]')) labels.push('type:spike');
+
+            // Component labels from content
+            if (body.includes('frontend') || body.includes('mobile app')) {
+              labels.push('component:frontend');
+            }
+            if (body.includes('backend') || body.includes('api')) {
+              labels.push('component:backend');
+            }
+            if (body.includes('database') || body.includes('migration')) {
+              labels.push('component:database');
+            }
+            if (body.includes('infrastructure') || body.includes('docker') || body.includes('ci/cd')) {
+              labels.push('component:infrastructure');
+            }
+
+            // Priority labels
+            if (body.includes('priority: high') || body.includes('critical')) {
+              labels.push('priority:high');
+            }
+            if (body.includes('priority: medium')) {
+              labels.push('priority:medium');
+            }
+            if (body.includes('priority: low')) {
+              labels.push('priority:low');
+            }
+
+            // Security label
+            if (body.includes('security') || body.includes('authentication') || body.includes('vulnerability')) {
+              labels.push('security');
+            }
+
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: labels
+              });
+              console.log(`Added labels: ${labels.join(', ')}`);
+            }
+
+  label-prs:
+    name: Label PRs by Files Changed
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v40
+
+      - name: Add labels based on changed files
+        uses: actions/github-script@v6
+        env:
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const changedFiles = process.env.CHANGED_FILES.split(' ');
+            const labels = new Set();
+
+            for (const file of changedFiles) {
+              // Backend labels
+              if (file.startsWith('backend/')) {
+                labels.add('component:backend');
+
+                if (file.includes('/controllers/')) labels.add('scope:api');
+                if (file.includes('/migrations/')) labels.add('scope:database');
+                if (file.includes('/services/') && file.includes('Auth')) labels.add('security');
+                if (file.includes('test') || file.includes('spec')) labels.add('scope:tests');
+              }
+
+              // Mobile labels
+              if (file.startsWith('mobile/')) {
+                labels.add('component:frontend');
+
+                if (file.includes('/ios/')) labels.add('platform:ios');
+                if (file.includes('/android/')) labels.add('platform:android');
+                if (file.includes('/components/')) labels.add('scope:ui');
+                if (file.includes('/screens/')) labels.add('scope:ui');
+                if (file.includes('/store/')) labels.add('scope:state');
+                if (file.includes('e2e/')) labels.add('scope:tests');
+              }
+
+              // Infrastructure labels
+              if (file.startsWith('.github/')) labels.add('component:infrastructure');
+              if (file.includes('Dockerfile') || file.includes('docker-compose')) {
+                labels.add('component:infrastructure');
+              }
+
+              // Documentation labels
+              if (file.endsWith('.md')) labels.add('documentation');
+            }
+
+            if (labels.size > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                labels: [...labels]
+              });
+              console.log(`Added labels: ${[...labels].join(', ')}`);
+            }

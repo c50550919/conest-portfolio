@@ -1,0 +1,177 @@
+name: Project Automation
+
+on:
+  issues:
+    types: [opened, labeled, unlabeled, closed, reopened]
+  pull_request:
+    types: [opened, closed, converted_to_draft, ready_for_review]
+
+permissions:
+  issues: write
+  pull-requests: write
+  repository-projects: write
+
+env:
+  # Configure your GitHub Project number here
+  # Find it in your project URL: github.com/users/ghostmac/projects/NUMBER
+  PROJECT_NUMBER: 1
+
+jobs:
+  add-to-project:
+    name: Add Issue/PR to Project
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+
+    steps:
+      - name: Add to project
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Note: This requires a PAT with project permissions
+            // or organization-level project access
+
+            const itemType = context.eventName === 'issues' ? 'Issue' : 'PullRequest';
+            const itemId = context.eventName === 'issues'
+              ? context.payload.issue.node_id
+              : context.payload.pull_request.node_id;
+
+            console.log(`Would add ${itemType} to project`);
+            console.log('To enable project automation:');
+            console.log('1. Create a GitHub Project');
+            console.log('2. Add a PAT secret with project:write scope');
+            console.log('3. Update PROJECT_NUMBER in this workflow');
+            console.log('4. Use the GitHub CLI or GraphQL API to add items');
+
+  update-status-on-label:
+    name: Update Status on Label Change
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues' && (github.event.action == 'labeled' || github.event.action == 'unlabeled')
+
+    steps:
+      - name: Handle label changes
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = context.payload.issue;
+            const label = context.payload.label;
+            const action = context.payload.action;
+
+            console.log(`Label ${action}: ${label.name} on issue #${issue.number}`);
+
+            // Auto-assign when moved to in-progress
+            if (action === 'labeled' && label.name === 'status:in-progress') {
+              if (!issue.assignee) {
+                // Could auto-assign to the person who added the label
+                // Requires additional context or convention
+                console.log('Issue moved to in-progress but has no assignee');
+              }
+            }
+
+            // Notify on high priority
+            if (action === 'labeled' && label.name === 'priority:high') {
+              console.log(`High priority issue: #${issue.number} - ${issue.title}`);
+              // Could add a comment or send notification
+            }
+
+            // Security label handling
+            if (action === 'labeled' && label.name === 'security') {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: '🔒 **Security Label Added**\n\nThis issue has been flagged as security-related. Please ensure:\n- Do not share sensitive details in public comments\n- Use private channels for vulnerability details\n- Follow responsible disclosure guidelines'
+              });
+            }
+
+  handle-pr-merge:
+    name: Handle PR Merge
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+
+    steps:
+      - name: Process merged PR
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const body = pr.body || '';
+
+            // Find linked issues
+            const issueRefs = body.match(/(?:closes?|fixes?|resolves?)\s+#(\d+)/gi) || [];
+
+            for (const ref of issueRefs) {
+              const issueNumber = ref.match(/#(\d+)/)[1];
+
+              // Add merged label to linked issues
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: parseInt(issueNumber),
+                  labels: ['status:merged']
+                });
+
+                // Remove in-progress label
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: parseInt(issueNumber),
+                  name: 'status:in-progress'
+                }).catch(() => {});
+
+                console.log(`Updated issue #${issueNumber}`);
+              } catch (e) {
+                console.log(`Could not update issue #${issueNumber}: ${e.message}`);
+              }
+            }
+
+            console.log(`Processed PR #${pr.number} merge`);
+
+  draft-pr-handling:
+    name: Handle Draft PR Status
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && (github.event.action == 'converted_to_draft' || github.event.action == 'ready_for_review')
+
+    steps:
+      - name: Update draft status labels
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+
+            if (context.payload.action === 'converted_to_draft') {
+              // Add work-in-progress label
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: ['work-in-progress']
+              });
+              console.log('Added work-in-progress label');
+            } else if (context.payload.action === 'ready_for_review') {
+              // Remove work-in-progress label
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  name: 'work-in-progress'
+                });
+                console.log('Removed work-in-progress label');
+              } catch (e) {
+                // Label might not exist
+              }
+
+              // Add ready-for-review label
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: ['status:ready-for-review']
+              });
+              console.log('Added ready-for-review label');
+            }

@@ -1,0 +1,117 @@
+name: 📋 User Story
+description: Describe a feature from the user's perspective
+title: "[STORY] "
+labels: ["type:feature", "status:triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## User Story Template
+        Use this template for new features and enhancements.
+
+  - type: textarea
+    id: user-story
+    attributes:
+      label: User Story
+      description: As a [type of user], I want [goal] so that [benefit]
+      placeholder: |
+        As a single parent using CoNest,
+        I want to [specific goal],
+        so that I can [benefit/outcome].
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Define specific, testable conditions for completion
+      placeholder: |
+        - [ ] Given [context], when [action], then [expected result]
+        - [ ] Given [context], when [action], then [expected result]
+        - [ ] Given [context], when [action], then [expected result]
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-approach
+    attributes:
+      label: Technical Approach
+      description: High-level implementation approach (optional for initial stories)
+      placeholder: |
+        **Frontend:**
+        - Component changes
+        - State management
+
+        **Backend:**
+        - API endpoints
+        - Database changes
+
+        **Testing:**
+        - Unit tests
+        - Integration tests
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: List any blocking issues or external dependencies
+      placeholder: |
+        - Blocked by #123
+        - Requires API key from vendor
+        - Needs design approval
+    validations:
+      required: false
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: Business priority level
+      options:
+        - "High - Critical path feature"
+        - "Medium - Important but not blocking"
+        - "Low - Nice to have"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Primary affected area
+      options:
+        - Frontend - Mobile App
+        - Backend - API
+        - Backend - Database
+        - Infrastructure
+        - Documentation
+        - Multiple Components
+    validations:
+      required: true
+
+  - type: input
+    id: story-points
+    attributes:
+      label: Story Points
+      description: Estimated complexity (1=2-4h, 2=half day, 3=day, 5=2-3 days, 8=week)
+      placeholder: "3"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: safety-checklist
+    attributes:
+      label: Child Safety Checklist
+      description: CoNest core safety requirements
+      options:
+        - label: This feature does NOT collect or store child data
+          required: true
+        - label: This feature maintains parent-only interaction model
+          required: true
+        - label: Security implications have been considered
+          required: true

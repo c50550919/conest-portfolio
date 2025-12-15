@@ -1,0 +1,212 @@
+# CoNest GitHub Labels Configuration
+#
+# This file defines all labels used in the project.
+# Use the GitHub CLI to sync: gh label import .github/labels.yml
+# Or use: https://github.com/Financial-Times/github-label-sync
+#
+# To apply labels:
+# npx github-label-sync --access-token YOUR_TOKEN --labels .github/labels.yml ghostmac/conest
+
+# ===========================================
+# TYPE LABELS - What kind of work is this?
+# ===========================================
+- name: "type:feature"
+  color: "0E8A16"
+  description: "New feature or enhancement"
+
+- name: "type:bug"
+  color: "D73A4A"
+  description: "Something isn't working"
+
+- name: "type:technical-debt"
+  color: "7057FF"
+  description: "Technical improvement or refactoring"
+
+- name: "type:spike"
+  color: "1D76DB"
+  description: "Research or investigation task"
+
+- name: "type:documentation"
+  color: "0075CA"
+  description: "Documentation only changes"
+
+# ===========================================
+# PRIORITY LABELS - How urgent is this?
+# ===========================================
+- name: "priority:high"
+  color: "B60205"
+  description: "Critical - needs immediate attention"
+
+- name: "priority:medium"
+  color: "FBCA04"
+  description: "Important but not urgent"
+
+- name: "priority:low"
+  color: "0E8A16"
+  description: "Nice to have, can wait"
+
+# ===========================================
+# STATUS LABELS - Where is this in workflow?
+# ===========================================
+- name: "status:triage"
+  color: "EDEDED"
+  description: "Needs initial review and prioritization"
+
+- name: "status:backlog"
+  color: "C5DEF5"
+  description: "Accepted and in backlog"
+
+- name: "status:ready"
+  color: "5319E7"
+  description: "Ready to be picked up"
+
+- name: "status:in-progress"
+  color: "0052CC"
+  description: "Currently being worked on"
+
+- name: "status:in-review"
+  color: "006B75"
+  description: "In code review"
+
+- name: "status:ready-for-review"
+  color: "1D76DB"
+  description: "PR ready for review"
+
+- name: "status:blocked"
+  color: "D93F0B"
+  description: "Blocked by external dependency"
+
+- name: "status:merged"
+  color: "6F42C1"
+  description: "Code merged to main"
+
+# ===========================================
+# COMPONENT LABELS - What part of the system?
+# ===========================================
+- name: "component:frontend"
+  color: "61DAFB"
+  description: "React Native mobile app"
+
+- name: "component:backend"
+  color: "68A063"
+  description: "Node.js API server"
+
+- name: "component:database"
+  color: "336791"
+  description: "PostgreSQL database"
+
+- name: "component:infrastructure"
+  color: "2496ED"
+  description: "Docker, CI/CD, deployment"
+
+# ===========================================
+# SCOPE LABELS - Specific areas affected
+# ===========================================
+- name: "scope:api"
+  color: "C2E0C6"
+  description: "API endpoints"
+
+- name: "scope:ui"
+  color: "FBCA04"
+  description: "User interface components"
+
+- name: "scope:state"
+  color: "7057FF"
+  description: "State management (Redux)"
+
+- name: "scope:tests"
+  color: "0E8A16"
+  description: "Test coverage"
+
+- name: "scope:auth"
+  color: "B60205"
+  description: "Authentication & authorization"
+
+- name: "scope:matching"
+  color: "E99695"
+  description: "Matching algorithm"
+
+- name: "scope:messaging"
+  color: "1D76DB"
+  description: "Real-time messaging"
+
+- name: "scope:payments"
+  color: "008672"
+  description: "Stripe payments integration"
+
+# ===========================================
+# PLATFORM LABELS - Platform-specific
+# ===========================================
+- name: "platform:ios"
+  color: "000000"
+  description: "iOS-specific issue"
+
+- name: "platform:android"
+  color: "3DDC84"
+  description: "Android-specific issue"
+
+# ===========================================
+# SIZE LABELS - PR complexity indicator
+# ===========================================
+- name: "size:XS"
+  color: "0E8A16"
+  description: "< 10 lines changed"
+
+- name: "size:S"
+  color: "7CFC00"
+  description: "10-50 lines changed"
+
+- name: "size:M"
+  color: "FBCA04"
+  description: "50-200 lines changed"
+
+- name: "size:L"
+  color: "FFA500"
+  description: "200-500 lines changed"
+
+- name: "size:XL"
+  color: "D73A4A"
+  description: "> 500 lines changed - consider splitting"
+
+# ===========================================
+# SPECIAL LABELS
+# ===========================================
+- name: "security"
+  color: "D73A4A"
+  description: "Security-related issue"
+
+- name: "documentation"
+  color: "0075CA"
+  description: "Documentation updates needed"
+
+- name: "good-first-issue"
+  color: "7057FF"
+  description: "Good for newcomers"
+
+- name: "help-wanted"
+  color: "008672"
+  description: "Extra attention needed"
+
+- name: "stale"
+  color: "EDEDED"
+  description: "No recent activity"
+
+- name: "blocked"
+  color: "D93F0B"
+  description: "Blocked by external dependency"
+
+- name: "work-in-progress"
+  color: "FEF2C0"
+  description: "Work in progress - not ready for review"
+
+- name: "duplicate"
+  color: "CFD3D7"
+  description: "This issue or PR already exists"
+
+- name: "wontfix"
+  color: "FFFFFF"
+  description: "This will not be worked on"
+
+- name: "invalid"
+  color: "E4E669"
+  description: "This doesn't seem right"

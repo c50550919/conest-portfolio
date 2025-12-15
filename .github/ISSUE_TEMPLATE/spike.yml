@@ -1,0 +1,119 @@
+name: 🔬 Spike / Research
+description: Time-boxed research or investigation task
+title: "[SPIKE] "
+labels: ["type:spike", "status:triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Spike / Research Task
+        Time-boxed investigation to reduce uncertainty and inform future decisions.
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Research Objective
+      description: What question(s) are we trying to answer?
+      placeholder: |
+        **Primary Question:**
+        Can we integrate [technology/approach] to solve [problem]?
+
+        **Secondary Questions:**
+        - What are the performance implications?
+        - What's the learning curve for the team?
+        - Are there licensing concerns?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / Background
+      description: Why is this research needed?
+      placeholder: |
+        We're considering [option] for [feature/problem] because...
+        Current approach limitations:
+        - ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: approach
+    attributes:
+      label: Research Approach
+      description: How will you investigate this?
+      placeholder: |
+        1. Review documentation for [technology]
+        2. Create proof-of-concept implementation
+        3. Benchmark against current approach
+        4. Document findings and recommendations
+
+        **Resources to consult:**
+        - Official docs: [URL]
+        - Comparison articles: [URL]
+    validations:
+      required: true
+
+  - type: textarea
+    id: deliverables
+    attributes:
+      label: Expected Deliverables
+      description: What outputs should this spike produce?
+      placeholder: |
+        - [ ] Written summary of findings (in issue comments or doc)
+        - [ ] Proof-of-concept code (if applicable)
+        - [ ] Recommendation: proceed / don't proceed / needs more research
+        - [ ] List of follow-up tasks (if recommending to proceed)
+    validations:
+      required: true
+
+  - type: input
+    id: timebox
+    attributes:
+      label: Time Box
+      description: Maximum time allocated for this research
+      placeholder: "4 hours / 1 day / 2 days"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Research Area
+      description: Domain of investigation
+      options:
+        - Technology Evaluation
+        - Architecture Decision
+        - Performance Investigation
+        - Security Assessment
+        - Third-party Integration
+        - User Experience Research
+        - Process Improvement
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How urgent is this investigation?
+      options:
+        - "High - Blocking upcoming work"
+        - "Medium - Needed for planning"
+        - "Low - Nice to know"
+    validations:
+      required: true
+
+  - type: textarea
+    id: related-issues
+    attributes:
+      label: Related Issues
+      description: What work depends on this spike's outcome?
+      placeholder: |
+        - Will inform #123
+        - May unblock #456
+    validations:
+      required: false

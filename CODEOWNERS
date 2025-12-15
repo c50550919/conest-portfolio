@@ -1,0 +1,145 @@
+# CoNest CODEOWNERS File
+#
+# These owners will be requested for review when someone opens a PR
+# that modifies code matching the defined patterns.
+#
+# Order matters - the last matching pattern takes precedence.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+* @ghostmac
+
+# ============================================
+# BACKEND
+# ============================================
+
+# Backend - General
+/backend/ @ghostmac
+
+# Backend - Core API & Controllers
+/backend/src/controllers/ @ghostmac
+/backend/src/routes/ @ghostmac
+/backend/src/middleware/ @ghostmac
+
+# Backend - Services & Business Logic
+/backend/src/services/ @ghostmac
+
+# Backend - Database & Models
+/backend/src/models/ @ghostmac
+/backend/src/migrations/ @ghostmac
+
+# Backend - Security (Requires extra review)
+/backend/src/middleware/auth* @ghostmac
+/backend/src/services/*Auth* @ghostmac
+/backend/src/services/*Security* @ghostmac
+/backend/src/services/*Encryption* @ghostmac
+/backend/src/services/*Verification* @ghostmac
+
+# Backend - Tests
+/backend/tests/ @ghostmac
+/backend/__tests__/ @ghostmac
+/backend/src/tests/ @ghostmac
+
+# ============================================
+# MOBILE (React Native)
+# ============================================
+
+# Mobile - General
+/mobile/ @ghostmac
+
+# Mobile - Components
+/mobile/src/components/ @ghostmac
+
+# Mobile - Navigation
+/mobile/src/navigation/ @ghostmac
+
+# Mobile - Screens
+/mobile/src/screens/ @ghostmac
+
+# Mobile - State Management
+/mobile/src/store/ @ghostmac
+
+# Mobile - Services & API
+/mobile/src/services/ @ghostmac
+
+# Mobile - iOS Native
+/mobile/ios/ @ghostmac
+
+# Mobile - Android Native
+/mobile/android/ @ghostmac
+
+# Mobile - E2E Tests
+/mobile/e2e/ @ghostmac
+
+# ============================================
+# INFRASTRUCTURE & DEVOPS
+# ============================================
+
+# Docker & Container Configuration
+Dockerfile @ghostmac
+docker-compose*.yml @ghostmac
+/docker/ @ghostmac
+
+# GitHub Actions & CI/CD
+/.github/workflows/ @ghostmac
+/.github/actions/ @ghostmac
+
+# GitHub Project Configuration
+/.github/ISSUE_TEMPLATE/ @ghostmac
+/.github/pull_request_template.md @ghostmac
+
+# ============================================
+# SECURITY-CRITICAL FILES
+# Require multiple reviewers
+# ============================================
+
+# Authentication & Authorization
+**/auth* @ghostmac
+**/Auth* @ghostmac
+**/*auth*.ts @ghostmac
+**/*Auth*.ts @ghostmac
+
+# Encryption & Security
+**/encryption* @ghostmac
+**/Encryption* @ghostmac
+**/security* @ghostmac
+**/Security* @ghostmac
+
+# Environment & Secrets (should never be committed, but just in case)
+.env* @ghostmac
+**/secrets* @ghostmac
+
+# ============================================
+# DOCUMENTATION
+# ============================================
+
+# Root Documentation
+README.md @ghostmac
+CONTRIBUTING.md @ghostmac
+CLAUDE.md @ghostmac
+CHANGELOG.md @ghostmac
+
+# Documentation Directories
+/docs/ @ghostmac
+/specs/ @ghostmac
+
+# ============================================
+# CONFIGURATION FILES
+# ============================================
+
+# Package Management
+package.json @ghostmac
+package-lock.json @ghostmac
+/backend/package.json @ghostmac
+/mobile/package.json @ghostmac
+
+# TypeScript Configuration
+tsconfig*.json @ghostmac
+
+# ESLint & Prettier
+.eslintrc* @ghostmac
+.prettierrc* @ghostmac
+
+# Git Configuration
+.gitignore @ghostmac
+.gitattributes @ghostmac

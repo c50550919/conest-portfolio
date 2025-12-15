@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 Documentation
+    url: https://github.com/ghostmac/conest/wiki
+    about: Check our wiki for guides and documentation
+  - name: 💬 Discussions
+    url: https://github.com/ghostmac/conest/discussions
+    about: Ask questions and discuss ideas
