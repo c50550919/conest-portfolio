@@ -9,20 +9,33 @@ import storageService from './services/s3Service';
 import { setupSwagger } from './config/swagger';
 
 // Import routes
-import authRoutes from './routes/auth';
-import profileRoutes from './routes/profile';
-import verificationRoutes from './routes/verification';
-import matchRoutes from './routes/matches';
-import messageRoutes from './routes/messages';
-import enhancedMessageRoutes from './routes/enhancedMessages';
-import paymentRoutes, { stripeWebhookRouter } from './routes/payments';
-import discoveryRoutes from './routes/discovery';
-import householdRoutes from './routes/household';
-import savedProfileRoutes from './routes/savedProfiles';
-import connectionRequestRoutes from './routes/connectionRequests';
-import comparisonRoutes from './routes/comparison';
-import webhookRoutes from './routes/webhooks';
-import adminRoutes from './routes/admin';
+// Auth feature (migrated to feature-based structure)
+import authRoutes from './features/auth/auth.routes';
+// Profile feature (migrated to feature-based structure)
+import profileRoutes from './features/profile/profile.routes';
+// Verification feature (migrated to feature-based structure)
+import verificationRoutes from './features/verification/verification.routes';
+// Matching feature (migrated to feature-based structure)
+import matchRoutes from './features/matching/matching.routes';
+// Messages feature (migrated to feature-based structure)
+import messageRoutes from './features/messages/messages.routes';
+import enhancedMessageRoutes from './features/messages/enhanced-messages.routes';
+// Payments feature (migrated to feature-based structure)
+import { paymentRoutes, stripeWebhookRouter } from './features/payments';
+// Discovery feature (migrated to feature-based structure)
+import discoveryRoutes from './features/discovery/discovery.routes';
+// Household feature (migrated to feature-based structure)
+import householdRoutes from './features/household/household.routes';
+// Saved Profiles feature (migrated to feature-based structure)
+import savedProfileRoutes from './features/saved-profiles/saved-profile.routes';
+// Connections feature (migrated to feature-based structure)
+import connectionRequestRoutes from './features/connections/connection-request.routes';
+// Comparison feature (migrated to feature-based structure)
+import comparisonRoutes from './features/comparison/comparison.routes';
+// Verification webhooks (migrated to verification feature)
+import { verificationWebhookRoutes } from './features/verification';
+// Admin feature (migrated to feature-based structure)
+import { adminRoutes } from './features/admin';
 
 // Load environment variables
 dotenv.config();
@@ -35,7 +48,7 @@ setupSecurity(app);
 // Webhook endpoints (require raw body for signature verification)
 // MUST be before body parsing middleware
 app.use('/api/stripe', express.raw({ type: 'application/json' }), stripeWebhookRouter);
-app.use('/api/webhooks', webhookRoutes);
+app.use('/api/webhooks', verificationWebhookRoutes);
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));

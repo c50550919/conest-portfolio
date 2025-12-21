@@ -335,7 +335,7 @@ export async function seed(knex: Knex): Promise<void> {
     },
   ];
 
-  console.log(`\n🌱 Seeding ${testProfiles.length} test profiles...\n`);
+  console.log('\n🌱 Seeding', testProfiles.length, 'test profiles...\n');
 
   const passwordHash = await bcrypt.hash('Test1234!', 10);
 
@@ -352,7 +352,7 @@ export async function seed(knex: Knex): Promise<void> {
         })
         .returning('*');
 
-      console.log(`✅ Created user: ${user.email}`);
+      console.log('✅ Created user:', user.email);
 
       // Create profile
       const birthYear = 1985 + Math.floor(Math.random() * 15); // Age 30-45
@@ -380,7 +380,7 @@ export async function seed(knex: Knex): Promise<void> {
         })
         .returning('*');
 
-      console.log(`   └─ Created profile for ${profile.first_name} ${profile.last_name}`);
+      console.log('   └─ Created profile for', profile.first_name, profile.last_name);
 
       // Create verification record for ID and background check
       await knex('verifications').insert({
@@ -401,17 +401,17 @@ export async function seed(knex: Knex): Promise<void> {
     } catch (error: any) {
       if (error.code === '23505') {
         // Unique constraint violation - user already exists
-        console.log(`⏭️  Skipped ${profile.email} (already exists)`);
+        console.log('⏭️  Skipped', profile.email, '(already exists)');
       } else {
-        console.error(`❌ Error creating profile for ${profile.email}:`, error.message);
+        console.error('❌ Error creating profile for', profile.email + ':', error.message);
       }
     }
   }
 
-  console.log(`\n✅ Seed completed! Created ${testProfiles.length} discovery profiles.\n`);
+  console.log('\n✅ Seed completed! Created', testProfiles.length, 'discovery profiles.\n');
   console.log('📊 Summary:');
   console.log('   - Test user: test@conest.com (for E2E tests)');
-  console.log(`   - Discovery profiles: ${testProfiles.length} verified parents`);
+  console.log('   - Discovery profiles:', testProfiles.length, 'verified parents');
   console.log('   - All profiles: verified, background checked, ready for discovery');
   console.log('\n🎯 Next: Run app and navigate to Discover screen to see profiles!');
 }

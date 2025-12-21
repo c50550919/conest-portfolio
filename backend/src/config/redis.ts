@@ -138,7 +138,7 @@ export async function getJSON<T>(key: string): Promise<T | null> {
   try {
     return JSON.parse(value) as T;
   } catch (err) {
-    console.error(`❌ Failed to parse JSON from Redis key ${key}:`, err);
+    console.error('❌ Failed to parse JSON from Redis key:', key, err);
     return null;
   }
 }
@@ -166,7 +166,7 @@ export async function deleteByPattern(pattern: string): Promise<number> {
     }
   } while (cursor !== '0');
 
-  console.log(`✅ Deleted ${deletedCount} keys matching pattern: ${pattern}`);
+  console.log('✅ Deleted', deletedCount, 'keys matching pattern:', pattern);
   return deletedCount;
 }
 

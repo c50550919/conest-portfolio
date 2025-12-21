@@ -87,7 +87,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
       socket.userId = decoded.userId;
       socket.email = decoded.email;
 
-      console.log(`✅ Socket authenticated: ${decoded.email} (${decoded.userId})`);
+      console.log('✅ Socket authenticated:', decoded.email, '(' + decoded.userId + ')');
       next();
     } catch (err) {
       console.error('❌ Socket authentication failed:', err);
@@ -98,7 +98,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
   // Connection handler
   io.on('connection', (socket: AuthenticatedSocket) => {
     const { userId, email } = socket;
-    console.log(`🔌 Client connected: ${email} (${userId})`);
+    console.log('🔌 Client connected:', email, '(' + userId + ')');
 
     // Join user-specific room for targeted notifications
     socket.join(`user:${userId}`);
@@ -170,7 +170,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
      */
     socket.on('conversation:join', (data: { conversationId: string }) => {
       socket.join(`conversation:${data.conversationId}`);
-      console.log(`✅ User ${userId} joined conversation ${data.conversationId}`);
+      console.log('✅ User', userId, 'joined conversation', data.conversationId);
     });
 
     /**
@@ -178,7 +178,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
      */
     socket.on('conversation:leave', (data: { conversationId: string }) => {
       socket.leave(`conversation:${data.conversationId}`);
-      console.log(`✅ User ${userId} left conversation ${data.conversationId}`);
+      console.log('✅ User', userId, 'left conversation', data.conversationId);
     });
 
     /**
@@ -196,7 +196,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
      */
     socket.on('household:join', (data: { householdId: string }) => {
       socket.join(`household:${data.householdId}`);
-      console.log(`✅ User ${userId} joined household ${data.householdId}`);
+      console.log('✅ User', userId, 'joined household', data.householdId);
     });
 
     /**
@@ -210,13 +210,13 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
     // ========================================
 
     socket.on('disconnect', () => {
-      console.log(`🔌 Client disconnected: ${email} (${userId})`);
+      console.log('🔌 Client disconnected:', email, '(' + userId + ')');
       socket.broadcast.emit('user:offline', { userId });
     });
 
     // Error handler
     socket.on('error', (err: Error) => {
-      console.error(`❌ Socket error for user ${userId}:`, err);
+      console.error('❌ Socket error for user', userId + ':', err);
     });
   });
 

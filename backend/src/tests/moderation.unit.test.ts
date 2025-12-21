@@ -13,7 +13,7 @@ import {
   ModerationSignals,
   DEFAULT_THRESHOLDS,
   ESCALATION_LADDER,
-} from '../types/moderation';
+} from '../features/moderation/moderation.types';
 
 // Mock the database
 jest.mock('../config/database', () => ({

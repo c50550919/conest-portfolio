@@ -205,6 +205,79 @@ export const verificationLimiter = rateLimit({
   skip: () => isTestEnv,
 });
 
+/**
+ * Phone verification rate limiter
+ * 3 attempts per phone per hour + 10 per IP per hour
+ * Protects against SMS bombing and abuse
+ */
+export const phoneVerificationRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // 10 requests per IP per hour
+  message: {
+    error: 'Too many verification code requests',
+    message: 'You have exceeded the verification request limit. Please try again later.',
+    retryAfter: 'Please wait before requesting another code',
+    code: 'PHONE_VERIFY_RATE_LIMIT',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('rl:phone-verify:'),
+  skip: () => isTestEnv,
+  keyGenerator: (req) => req.ip || req.headers['x-forwarded-for'] as string || 'unknown',
+});
+
+/**
+ * Phone-specific rate limiter (keyed by phone number)
+ * 3 OTP requests per phone number per hour
+ * This prevents SMS bombing to a specific number
+ */
+export const phoneNumberRateLimit = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // 3 requests per phone per hour (matches Telnyx built-in limits)
+  message: {
+    error: 'Too many verification requests for this phone number',
+    message: 'Maximum 3 verification codes per hour. Please check your SMS or try again later.',
+    retryAfter: 'Please wait before requesting another code',
+    code: 'PHONE_NUMBER_RATE_LIMIT',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('rl:phone-number:'),
+  skip: () => isTestEnv,
+  // Key by phone number from request body
+  keyGenerator: (req: any) => {
+    const phone = req.body?.phone_number || req.body?.phoneNumber || req.body?.phone || 'unknown';
+    // Normalize to prevent bypass with different formats
+    return phone.replace(/[^\d+]/g, '');
+  },
+});
+
+/**
+ * OTP verification attempt rate limiter
+ * 5 wrong code attempts per phone per 15 minutes
+ * Prevents brute-force attacks on OTP codes
+ */
+export const otpAttemptRateLimit = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per 15 minutes
+  message: {
+    error: 'Too many incorrect verification attempts',
+    message: 'Maximum 5 attempts per 15 minutes. Please request a new code.',
+    retryAfter: 'Please wait before trying again',
+    code: 'OTP_ATTEMPT_RATE_LIMIT',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: getStore('rl:otp-attempt:'),
+  // Only count failed attempts (successful verifications don't count)
+  skipSuccessfulRequests: true,
+  skip: () => isTestEnv,
+  keyGenerator: (req: any) => {
+    const phone = req.body?.phone_number || req.body?.phoneNumber || req.body?.phone || 'unknown';
+    return phone.replace(/[^\d+]/g, '');
+  },
+});
+
 // Backward-compatible aliases (from old rateLimiter.ts)
 export const generalLimiter = generalRateLimit;
 export const authLimiter = authRateLimit;

@@ -6,7 +6,7 @@ import { initializeWebSocket } from './websockets/socketHandler';
 import logger from './config/logger';
 import SocketService from './services/SocketService';
 import { validateEnv, getEnv } from './config/env';
-import { moderationWorker } from './workers/moderationWorker';
+import { moderationWorker } from './features/moderation';
 
 // Validate environment variables (fail fast if misconfigured)
 let env;

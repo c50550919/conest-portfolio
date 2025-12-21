@@ -1,5 +1,5 @@
 import Queue from 'bull';
-import { VerificationService } from '../services/verificationService';
+import { VerificationService } from '../features/verification';
 import logger from '../config/logger';
 
 const redisConfig = {

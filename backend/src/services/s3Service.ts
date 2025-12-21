@@ -173,6 +173,33 @@ class StorageService {
   }
 
   /**
+   * Sanitize and validate a file key to prevent path traversal attacks
+   * Security: Ensures the resolved path stays within LOCAL_UPLOAD_DIR
+   */
+  private sanitizeKey(key: string): string {
+    // Remove any null bytes
+    const cleanKey = key.replace(/\0/g, '');
+
+    // Normalize path separators
+    const normalizedKey = cleanKey.replace(/\\/g, '/');
+
+    // Remove any leading slashes or dots
+    const trimmedKey = normalizedKey.replace(/^[./\\]+/, '');
+
+    // Resolve the full path and verify it's within LOCAL_UPLOAD_DIR
+    const fullPath = path.resolve(LOCAL_UPLOAD_DIR, trimmedKey);
+    const normalizedUploadDir = path.resolve(LOCAL_UPLOAD_DIR);
+
+    // Security check: ensure resolved path starts with upload directory
+    if (!fullPath.startsWith(normalizedUploadDir + path.sep) && fullPath !== normalizedUploadDir) {
+      logger.warn('Path traversal attempt detected', { key, resolvedPath: fullPath });
+      throw new Error('Invalid file path');
+    }
+
+    return trimmedKey;
+  }
+
+  /**
    * Generate a secure, unique file key
    */
   private generateKey(
@@ -275,7 +302,9 @@ class StorageService {
     mimeType: string,
     userId: string,
   ): Promise<UploadResult> {
-    const filePath = path.join(LOCAL_UPLOAD_DIR, key);
+    const sanitizedKey = this.sanitizeKey(key);
+    // nosemgrep: path-join-resolve-traversal - sanitizedKey is validated by sanitizeKey() to prevent path traversal
+    const filePath = path.join(LOCAL_UPLOAD_DIR, sanitizedKey);
     const fileDir = path.dirname(filePath);
 
     // Ensure directory exists
@@ -448,7 +477,9 @@ class StorageService {
     this.initialize();
 
     if (this.useLocalStorage) {
-      const filePath = path.join(LOCAL_UPLOAD_DIR, key);
+      const sanitizedKey = this.sanitizeKey(key);
+      // nosemgrep: path-join-resolve-traversal - sanitizedKey is validated by sanitizeKey() to prevent path traversal
+      const filePath = path.join(LOCAL_UPLOAD_DIR, sanitizedKey);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
         logger.info('File deleted from local storage', { key });
@@ -484,7 +515,9 @@ class StorageService {
     this.initialize();
 
     if (this.useLocalStorage) {
-      const filePath = path.join(LOCAL_UPLOAD_DIR, key);
+      const sanitizedKey = this.sanitizeKey(key);
+      // nosemgrep: path-join-resolve-traversal - sanitizedKey is validated by sanitizeKey() to prevent path traversal
+      const filePath = path.join(LOCAL_UPLOAD_DIR, sanitizedKey);
       return fs.existsSync(filePath);
     }
 
@@ -516,7 +549,9 @@ class StorageService {
     this.initialize();
 
     if (this.useLocalStorage) {
-      const filePath = path.join(LOCAL_UPLOAD_DIR, key);
+      const sanitizedKey = this.sanitizeKey(key);
+      // nosemgrep: path-join-resolve-traversal - sanitizedKey is validated by sanitizeKey() to prevent path traversal
+      const filePath = path.join(LOCAL_UPLOAD_DIR, sanitizedKey);
       if (fs.existsSync(filePath)) {
         const stats = fs.statSync(filePath);
         const ext = path.extname(key).toLowerCase();

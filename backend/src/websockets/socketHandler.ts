@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import jwt from 'jsonwebtoken';
-import { MessagingService } from '../services/messagingService';
+import { MessagingService } from '../features/messages/messaging.service';
 import logger from '../config/logger';
 
 export const initializeWebSocket = (server: HTTPServer): Server => {

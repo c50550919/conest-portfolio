@@ -28,8 +28,8 @@ notificationQueue.process('email', async (job) => {
 
   try {
     // MOCK: In production, integrate with SendGrid, Mailgun, etc.
-    logger.info(`[MOCK] Email sent to user ${userId}: ${message}`);
-    console.log(`\n📧 MOCK Email notification:\nTo: User ${userId}\nMessage: ${message}\nData:`, data, '\n');
+    logger.info('[MOCK] Email sent to user', { userId, message });
+    console.log('\n📧 MOCK Email notification:\nTo: User', userId, '\nMessage:', message, '\nData:', data, '\n');
 
     return { success: true };
   } catch (error) {
@@ -45,8 +45,8 @@ notificationQueue.process('sms', async (job) => {
 
   try {
     // MOCK: In production, integrate with Twilio
-    logger.info(`[MOCK] SMS sent to user ${userId}: ${message}`);
-    console.log(`\n📱 MOCK SMS notification:\nTo: User ${userId}\nMessage: ${message}\n`);
+    logger.info('[MOCK] SMS sent to user', { userId, message });
+    console.log('\n📱 MOCK SMS notification:\nTo: User', userId, '\nMessage:', message, '\n');
 
     return { success: true };
   } catch (error) {
@@ -62,8 +62,8 @@ notificationQueue.process('push', async (job) => {
 
   try {
     // MOCK: In production, integrate with Firebase Cloud Messaging
-    logger.info(`[MOCK] Push notification sent to user ${userId}: ${title} - ${message}`);
-    console.log(`\n🔔 MOCK Push notification:\nTo: User ${userId}\nTitle: ${title}\nMessage: ${message}\nData:`, data, '\n');
+    logger.info('[MOCK] Push notification sent to user', { userId, title, message });
+    console.log('\n🔔 MOCK Push notification:\nTo: User', userId, '\nTitle:', title, '\nMessage:', message, '\nData:', data, '\n');
 
     return { success: true };
   } catch (error) {
