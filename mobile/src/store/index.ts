@@ -13,6 +13,7 @@ import savedProfilesReducer from './slices/savedProfilesSlice';
 import connectionRequestsReducer from './slices/connectionRequestsSlice';
 import verificationReducer from './slices/verificationSlice';
 import moderationReducer from './slices/moderationSlice';
+import billingReducer from './slices/billingSlice';
 
 export const store = configureStore({
   reducer: {
@@ -25,6 +26,7 @@ export const store = configureStore({
     connectionRequests: connectionRequestsReducer,
     verification: verificationReducer,
     moderation: moderationReducer,
+    billing: billingReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
