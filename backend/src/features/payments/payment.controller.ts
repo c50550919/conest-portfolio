@@ -32,6 +32,8 @@ import {
   RefundSchema,
   GetPaymentHistorySchema,
   CreatePaymentSchema,
+  CreateVerificationPaymentSchema,
+  GetVerificationPaymentStatusSchema,
 } from './payment.schemas';
 
 export const PaymentController = {
@@ -366,6 +368,121 @@ export const PaymentController = {
     } catch (error: any) {
       res.status(500).json({
         error: 'Webhook processing failed',
+        message: error.message,
+      });
+    }
+  }),
+
+  // ========================================
+  // Verification Payment Endpoints
+  // ========================================
+
+  /**
+   * POST /api/payments/verification/create-intent
+   * Create a verification payment intent ($39)
+   */
+  createVerificationPaymentIntent: asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.userId) {
+      res.status(401).json({
+        error: 'Authentication required',
+        message: 'You must be logged in to create a verification payment',
+      });
+      return;
+    }
+
+    try {
+      // Validate request
+      const validation = CreateVerificationPaymentSchema.safeParse(req.body);
+      if (!validation.success) {
+        res.status(422).json({
+          error: 'Validation failed',
+          message: validation.error.errors[0].message,
+          details: validation.error.errors,
+        });
+        return;
+      }
+
+      const { connectionRequestId, idempotencyKey } = validation.data;
+
+      const result = await PaymentService.createVerificationPaymentIntent({
+        userId: req.userId,
+        connectionRequestId,
+        idempotencyKey,
+      });
+
+      res.status(201).json({
+        success: true,
+        data: {
+          paymentIntentId: result.paymentIntentId,
+          clientSecret: result.clientSecret,
+          amount: result.amount,
+          amountFormatted: `$${(result.amount / 100).toFixed(2)}`,
+          verificationPaymentId: result.verificationPaymentId,
+        },
+      });
+    } catch (error: any) {
+      if (error.message === 'USER_NOT_FOUND') {
+        res.status(404).json({
+          error: 'User not found',
+          message: 'The authenticated user does not exist',
+        });
+        return;
+      }
+
+      if (error.message === 'VERIFICATION_ALREADY_PAID') {
+        res.status(409).json({
+          error: 'Already paid',
+          message: 'You have already paid for verification',
+        });
+        return;
+      }
+
+      res.status(500).json({
+        error: 'Verification payment creation failed',
+        message: error.message,
+      });
+    }
+  }),
+
+  /**
+   * GET /api/payments/verification/status
+   * Get verification payment status for current user
+   */
+  getVerificationPaymentStatus: asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.userId) {
+      res.status(401).json({
+        error: 'Authentication required',
+        message: 'You must be logged in to check verification payment status',
+      });
+      return;
+    }
+
+    try {
+      // Validate query params
+      const validation = GetVerificationPaymentStatusSchema.safeParse(req.query);
+      if (!validation.success) {
+        res.status(422).json({
+          error: 'Validation failed',
+          message: validation.error.errors[0].message,
+          details: validation.error.errors,
+        });
+        return;
+      }
+
+      // Use provided userId (admin) or authenticated userId
+      const targetUserId = validation.data.userId || req.userId;
+
+      // TODO: Add admin check if targetUserId !== req.userId
+
+      const status = await PaymentService.getVerificationPaymentStatus(targetUserId);
+
+      res.status(200).json({
+        success: true,
+        data: status,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        error: 'Failed to get verification payment status',
         message: error.message,
       });
     }

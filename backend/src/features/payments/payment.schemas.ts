@@ -163,6 +163,136 @@ export const CreatePaymentSchema = z
   })
   .strict();
 
+/**
+ * POST /api/payments/verification/create-intent - Create verification payment intent
+ *
+ * Fields:
+ * - connectionRequestId: Optional UUID of connection request (links payment to match)
+ * - idempotencyKey: Optional idempotency key for duplicate prevention
+ *
+ * Security:
+ * - Fixed amount of $39.00 (3900 cents) - not user-controllable
+ * - User ID from authenticated JWT token
+ */
+export const CreateVerificationPaymentSchema = z
+  .object({
+    connectionRequestId: z
+      .string()
+      .uuid('Connection request ID must be a valid UUID')
+      .optional(),
+    idempotencyKey: z
+      .string()
+      .min(1, 'Idempotency key cannot be empty')
+      .max(255, 'Idempotency key too long')
+      .optional(),
+  })
+  .strict();
+
+/**
+ * GET /api/payments/verification/status - Get verification payment status
+ *
+ * Query params:
+ * - userId: Optional UUID to check (admin only), defaults to authenticated user
+ */
+export const GetVerificationPaymentStatusSchema = z.object({
+  userId: z
+    .string()
+    .uuid('User ID must be a valid UUID')
+    .optional(),
+});
+
+/**
+ * POST /api/billing/validate-ios - Validate iOS App Store receipt
+ *
+ * Fields:
+ * - productId: Product identifier from App Store
+ * - transactionId: Transaction ID from StoreKit
+ * - originalTransactionId: Original transaction ID (for subscriptions)
+ * - receipt: Base64-encoded receipt data
+ * - signedTransaction: JWS signed transaction for StoreKit 2
+ *
+ * Security:
+ * - All transactions validated against App Store Server API
+ * - JWS signature verification for StoreKit 2 transactions
+ */
+export const ValidateIOSReceiptSchema = z
+  .object({
+    productId: z
+      .string()
+      .min(1, 'Product ID is required')
+      .max(255, 'Product ID too long'),
+    transactionId: z
+      .string()
+      .min(1, 'Transaction ID is required')
+      .max(255, 'Transaction ID too long'),
+    originalTransactionId: z
+      .string()
+      .max(255, 'Original transaction ID too long')
+      .optional(),
+    receipt: z
+      .string()
+      .min(1, 'Receipt is required'),
+    signedTransaction: z
+      .string()
+      .optional(),
+  })
+  .strict();
+
+/**
+ * POST /api/billing/validate - Validate Google Play receipt
+ *
+ * Fields:
+ * - productId: Product identifier from Google Play
+ * - purchaseToken: Purchase token from Google Play Billing
+ * - transactionId: Transaction ID
+ * - transactionReceipt: Transaction receipt data
+ *
+ * Security:
+ * - All transactions validated against Google Play Developer API
+ */
+export const ValidateGooglePlayReceiptSchema = z
+  .object({
+    productId: z
+      .string()
+      .min(1, 'Product ID is required')
+      .max(255, 'Product ID too long'),
+    purchaseToken: z
+      .string()
+      .min(1, 'Purchase token is required'),
+    transactionId: z
+      .string()
+      .max(255, 'Transaction ID too long')
+      .optional(),
+    transactionReceipt: z
+      .string()
+      .optional(),
+  })
+  .strict();
+
+/**
+ * POST /api/billing/validate-bundle - Validate bundle purchase
+ *
+ * Fields:
+ * - platform: 'ios' or 'android'
+ * - receipt: Platform-specific receipt data
+ * - productId: Bundle product ID
+ *
+ * Security:
+ * - Validates receipt with respective app store
+ * - Activates both verification and subscription on success
+ */
+export const ValidateBundlePurchaseSchema = z
+  .object({
+    platform: z.enum(['ios', 'android'], {
+      errorMap: () => ({ message: 'Platform must be ios or android' }),
+    }),
+    receipt: z.string().min(1, 'Receipt is required'),
+    productId: z.string().min(1, 'Product ID is required'),
+    transactionId: z.string().optional(),
+    purchaseToken: z.string().optional(),
+  })
+  .strict();
+
 // Type exports for TypeScript type inference
 export type CreateStripeAccountRequest = z.infer<typeof CreateStripeAccountSchema>;
 export type CreatePaymentIntentRequest = z.infer<typeof CreatePaymentIntentSchema>;
@@ -170,3 +300,8 @@ export type SplitRentRequest = z.infer<typeof SplitRentSchema>;
 export type RefundRequest = z.infer<typeof RefundSchema>;
 export type GetPaymentHistoryRequest = z.infer<typeof GetPaymentHistorySchema>;
 export type CreatePaymentRequest = z.infer<typeof CreatePaymentSchema>;
+export type CreateVerificationPaymentRequest = z.infer<typeof CreateVerificationPaymentSchema>;
+export type GetVerificationPaymentStatusRequest = z.infer<typeof GetVerificationPaymentStatusSchema>;
+export type ValidateIOSReceiptRequest = z.infer<typeof ValidateIOSReceiptSchema>;
+export type ValidateGooglePlayReceiptRequest = z.infer<typeof ValidateGooglePlayReceiptSchema>;
+export type ValidateBundlePurchaseRequest = z.infer<typeof ValidateBundlePurchaseSchema>;

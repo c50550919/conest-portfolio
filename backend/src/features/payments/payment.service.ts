@@ -20,10 +20,17 @@
  */
 
 import Stripe from 'stripe';
+import { v4 as uuidv4 } from 'uuid';
 import stripe, { createConnectedAccount, createAccountLink } from '../../config/stripe';
 import { PaymentModel, HouseholdModel } from '../../models/Payment';
 import { UserModel } from '../../models/User';
+import { VerificationPaymentModel } from '../../models/VerificationPayment';
+import { VerificationService } from '../verification/verification.service';
+import { WebhookEventModel } from '../../models/WebhookEvent';
 import logger from '../../config/logger';
+
+// Constants for verification payments
+const VERIFICATION_PAYMENT_AMOUNT = 3900; // $39.00 in cents
 
 export interface CreatePaymentIntentParams {
   amount: number;
@@ -508,37 +515,314 @@ export const PaymentService = {
     return await PaymentModel.getOverduePayments(householdId);
   },
 
+  // ========================================
+  // Verification Payment Methods
+  // ========================================
+
+  /**
+   * Create Verification Payment Intent
+   * Creates a $39 payment intent for user verification
+   *
+   * Flow:
+   * 1. Check if user already has a pending/succeeded verification payment
+   * 2. Create Stripe PaymentIntent with verification metadata
+   * 3. Create VerificationPayment record in database
+   * 4. Return client secret for frontend payment flow
+   *
+   * @param userId - Authenticated user ID
+   * @param connectionRequestId - Optional connection request to link payment to
+   * @param idempotencyKey - Optional key for duplicate prevention
+   */
+  async createVerificationPaymentIntent(params: {
+    userId: string;
+    connectionRequestId?: string;
+    idempotencyKey?: string;
+  }): Promise<{
+    paymentIntentId: string;
+    clientSecret: string;
+    amount: number;
+    verificationPaymentId: string;
+  }> {
+    const { userId, connectionRequestId } = params;
+
+    // Auto-generate idempotency key if not provided
+    // Format: verification_payment_{userId}_{timestamp}_{random}
+    const idempotencyKey = params.idempotencyKey ||
+      `verification_payment_${userId}_${Date.now()}_${uuidv4().slice(0, 8)}`;
+
+    try {
+      // Check if user exists
+      const user = await UserModel.findById(userId);
+      if (!user) {
+        throw new Error('USER_NOT_FOUND');
+      }
+
+      // Check for existing successful verification payment
+      const hasExistingPayment = await VerificationPaymentModel.hasSuccessfulPayment(userId);
+      if (hasExistingPayment) {
+        throw new Error('VERIFICATION_ALREADY_PAID');
+      }
+
+      // Create Stripe PaymentIntent with verification metadata and mandatory idempotency key
+      const paymentIntent = await stripe.paymentIntents.create(
+        {
+          amount: VERIFICATION_PAYMENT_AMOUNT,
+          currency: 'usd',
+          description: 'CoNest Verification Fee - ID & Background Check',
+          metadata: {
+            type: 'verification',
+            user_id: userId,
+            idempotency_key: idempotencyKey,
+            ...(connectionRequestId && { connection_request_id: connectionRequestId }),
+          },
+        },
+        { idempotencyKey },
+      );
+
+      // Create verification payment record in database
+      const verificationPayment = await VerificationPaymentModel.create({
+        user_id: userId,
+        connection_request_id: connectionRequestId || null,
+        amount: VERIFICATION_PAYMENT_AMOUNT,
+        stripe_payment_intent_id: paymentIntent.id,
+      });
+
+      logger.info(`Created verification payment intent for user ${userId}`, {
+        paymentIntentId: paymentIntent.id,
+        verificationPaymentId: verificationPayment.id,
+        amount: VERIFICATION_PAYMENT_AMOUNT,
+      });
+
+      return {
+        paymentIntentId: paymentIntent.id,
+        clientSecret: paymentIntent.client_secret!,
+        amount: VERIFICATION_PAYMENT_AMOUNT,
+        verificationPaymentId: verificationPayment.id,
+      };
+    } catch (error: any) {
+      logger.error('Error creating verification payment intent:', error);
+
+      if (error.message === 'USER_NOT_FOUND') {
+        throw error;
+      }
+      if (error.message === 'VERIFICATION_ALREADY_PAID') {
+        throw error;
+      }
+
+      throw new Error(`VERIFICATION_PAYMENT_CREATION_FAILED: ${error.message}`);
+    }
+  },
+
+  /**
+   * Get Verification Payment Status
+   * Returns the current verification payment status for a user
+   *
+   * @param userId - User ID to check
+   */
+  async getVerificationPaymentStatus(userId: string): Promise<{
+    hasPaid: boolean;
+    status: 'none' | 'pending' | 'succeeded' | 'failed' | 'refunded';
+    payment?: {
+      id: string;
+      amount: number;
+      paidAt: Date | null;
+      refundAmount: number;
+      refundReason: string | null;
+    };
+  }> {
+    try {
+      const payments = await VerificationPaymentModel.findByUserId(userId, 1);
+      const latestPayment = payments[0];
+
+      if (!latestPayment) {
+        return { hasPaid: false, status: 'none' };
+      }
+
+      return {
+        hasPaid: latestPayment.status === 'succeeded',
+        status: latestPayment.status,
+        payment: {
+          id: latestPayment.id,
+          amount: latestPayment.amount,
+          paidAt: latestPayment.paid_at,
+          refundAmount: latestPayment.refund_amount,
+          refundReason: latestPayment.refund_reason,
+        },
+      };
+    } catch (error: any) {
+      logger.error('Error getting verification payment status:', error);
+      throw new Error(`VERIFICATION_STATUS_FAILED: ${error.message}`);
+    }
+  },
+
+  /**
+   * Handle Verification Payment Success
+   * Called when a verification payment succeeds via webhook
+   *
+   * Flow:
+   * 1. Find verification payment by Stripe PaymentIntent ID
+   * 2. Mark payment as succeeded
+   * 3. Trigger ID verification flow (user must complete ID first)
+   *
+   * @param paymentIntentId - Stripe PaymentIntent ID
+   */
+  async handleVerificationPaymentSuccess(paymentIntentId: string): Promise<void> {
+    try {
+      // Find verification payment record
+      const verificationPayment = await VerificationPaymentModel.findByStripePaymentIntentId(paymentIntentId);
+
+      if (!verificationPayment) {
+        logger.warn(`No verification payment found for PaymentIntent: ${paymentIntentId}`);
+        return;
+      }
+
+      // Mark payment as succeeded
+      await VerificationPaymentModel.markAsSucceeded(verificationPayment.id);
+
+      logger.info(`Verification payment succeeded for user ${verificationPayment.user_id}`, {
+        paymentId: verificationPayment.id,
+        paymentIntentId,
+      });
+
+      // Note: Background check is triggered AFTER ID verification completes
+      // The ID verification webhook will call initiateBackgroundCheck()
+      // This ensures we have verified identity before running background check
+
+    } catch (error: any) {
+      logger.error('Error handling verification payment success:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Handle Verification Payment Failure
+   * Called when a verification payment fails via webhook
+   *
+   * @param paymentIntentId - Stripe PaymentIntent ID
+   */
+  async handleVerificationPaymentFailure(paymentIntentId: string): Promise<void> {
+    try {
+      const verificationPayment = await VerificationPaymentModel.findByStripePaymentIntentId(paymentIntentId);
+
+      if (!verificationPayment) {
+        logger.warn(`No verification payment found for failed PaymentIntent: ${paymentIntentId}`);
+        return;
+      }
+
+      await VerificationPaymentModel.markAsFailed(verificationPayment.id);
+
+      logger.info(`Verification payment failed for user ${verificationPayment.user_id}`, {
+        paymentId: verificationPayment.id,
+        paymentIntentId,
+      });
+    } catch (error: any) {
+      logger.error('Error handling verification payment failure:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Trigger Background Check After Payment
+   * Called after successful verification payment AND ID verification
+   *
+   * @param userId - User ID to run background check for
+   */
+  async triggerVerificationAfterPayment(userId: string): Promise<void> {
+    try {
+      // Verify payment exists and is successful
+      const hasPayment = await VerificationPaymentModel.hasSuccessfulPayment(userId);
+      if (!hasPayment) {
+        throw new Error('VERIFICATION_PAYMENT_REQUIRED');
+      }
+
+      // Initiate background check via VerificationService
+      await VerificationService.initiateBackgroundCheck(userId);
+
+      logger.info(`Background check initiated after payment for user ${userId}`);
+    } catch (error: any) {
+      logger.error('Error triggering verification after payment:', error);
+      throw error;
+    }
+  },
+
   /**
    * Webhook Handler for Stripe Events
-   * Processes Stripe webhook events with signature validation
+   * Processes Stripe webhook events with signature validation and deduplication
+   *
+   * Deduplication:
+   * - Checks if event has already been processed
+   * - Tracks event processing status in database
+   * - Prevents duplicate processing of the same event
    *
    * @param event - Stripe webhook event
    */
   async handleStripeWebhook(event: Stripe.Event): Promise<void> {
-    logger.info(`Received Stripe webhook: ${event.type}`);
+    logger.info(`Received Stripe webhook: ${event.type}`, { eventId: event.id });
+
+    // Check for duplicate events using WebhookEventModel
+    const { event: webhookEvent, isNew } = await WebhookEventModel.createOrGet({
+      stripe_event_id: event.id,
+      event_type: event.type,
+      payload: event.data.object as Record<string, unknown>,
+    });
+
+    // Skip if event already processed
+    if (!isNew && ['completed', 'processing'].includes(webhookEvent.processing_status)) {
+      logger.info(`Skipping duplicate webhook event: ${event.id}`);
+      await WebhookEventModel.markAsSkipped(webhookEvent.id);
+      return;
+    }
+
+    // Mark event as processing
+    await WebhookEventModel.markAsProcessing(webhookEvent.id);
 
     try {
       switch (event.type) {
         case 'payment_intent.succeeded':
-          await this.processPayment(event.data.object.id);
-          logger.info(`Payment intent succeeded: ${event.data.object.id}`);
+          const succeededIntent = event.data.object;
+
+          // Check if this is a verification payment
+          if (succeededIntent.metadata.type === 'verification') {
+            await this.handleVerificationPaymentSuccess(succeededIntent.id);
+            logger.info(`Verification payment succeeded: ${succeededIntent.id}`);
+          } else {
+            // Handle regular payment
+            await this.processPayment(succeededIntent.id);
+            logger.info(`Payment intent succeeded: ${succeededIntent.id}`);
+          }
           break;
 
         case 'payment_intent.payment_failed':
           const paymentIntentFailed = event.data.object;
-          const paymentId = paymentIntentFailed.metadata.payment_id;
-          if (paymentId) {
-            await PaymentModel.updatePayment(paymentId, { status: 'failed' });
-            logger.warn(`Payment failed: ${paymentId}`);
+
+          // Check if this is a verification payment
+          if (paymentIntentFailed.metadata.type === 'verification') {
+            await this.handleVerificationPaymentFailure(paymentIntentFailed.id);
+            logger.warn(`Verification payment failed: ${paymentIntentFailed.id}`);
+          } else {
+            // Handle regular payment
+            const paymentId = paymentIntentFailed.metadata.payment_id;
+            if (paymentId) {
+              await PaymentModel.updatePayment(paymentId, { status: 'failed' });
+              logger.warn(`Payment failed: ${paymentId}`);
+            }
           }
           break;
 
         case 'payment_intent.canceled':
           const paymentIntentCanceled = event.data.object;
-          const canceledPaymentId = paymentIntentCanceled.metadata.payment_id;
-          if (canceledPaymentId) {
-            await PaymentModel.updatePayment(canceledPaymentId, { status: 'failed' });
-            logger.info(`Payment canceled: ${canceledPaymentId}`);
+
+          // Check if this is a verification payment
+          if (paymentIntentCanceled.metadata.type === 'verification') {
+            await this.handleVerificationPaymentFailure(paymentIntentCanceled.id);
+            logger.info(`Verification payment canceled: ${paymentIntentCanceled.id}`);
+          } else {
+            // Handle regular payment
+            const canceledPaymentId = paymentIntentCanceled.metadata.payment_id;
+            if (canceledPaymentId) {
+              await PaymentModel.updatePayment(canceledPaymentId, { status: 'failed' });
+              logger.info(`Payment canceled: ${canceledPaymentId}`);
+            }
           }
           break;
 
@@ -565,7 +849,12 @@ export const PaymentService = {
         default:
           logger.info(`Unhandled event type: ${event.type}`);
       }
+
+      // Mark event as completed
+      await WebhookEventModel.markAsCompleted(webhookEvent.id);
     } catch (error: any) {
+      // Mark event as failed
+      await WebhookEventModel.markAsFailed(webhookEvent.id, error.message);
       logger.error(`Error processing webhook ${event.type}:`, error);
       throw error;
     }

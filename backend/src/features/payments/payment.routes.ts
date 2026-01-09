@@ -134,6 +134,38 @@ router.get(
 );
 
 // ========================================
+// Verification Payment Endpoints
+// ========================================
+
+/**
+ * POST /api/payments/verification/create-intent
+ * Create verification payment intent ($39)
+ *
+ * Auth: Required (JWT)
+ * Rate Limit: 10 req/hour
+ * Validation: CreateVerificationPaymentSchema
+ */
+router.post(
+  '/verification/create-intent',
+  authenticateToken,
+  paymentLimiter,
+  PaymentController.createVerificationPaymentIntent,
+);
+
+/**
+ * GET /api/payments/verification/status
+ * Get verification payment status for current user
+ *
+ * Auth: Required (JWT)
+ * Validation: GetVerificationPaymentStatusSchema (query params)
+ */
+router.get(
+  '/verification/status',
+  authenticateToken,
+  PaymentController.getVerificationPaymentStatus,
+);
+
+// ========================================
 // Legacy Endpoints (Backward Compatibility)
 // ========================================
 
