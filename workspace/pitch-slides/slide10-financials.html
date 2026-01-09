@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #ffffff; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #2E7D32; padding: 10pt 36pt;
+}
+.header h1 { color: #ffffff; font-size: 20pt; margin: 0; }
+.content {
+  padding: 6pt 36pt; flex: 1; display: flex; gap: 12pt;
+}
+.left-col {
+  flex: 1; display: flex; flex-direction: column; gap: 4pt;
+}
+.section-title { color: #1976D2; font-size: 8pt; margin: 0 0 2pt 0; font-weight: bold; }
+.unit-econ {
+  background: #F5F5F5; border-radius: 4pt; padding: 6pt;
+}
+.econ-row {
+  display: flex; justify-content: space-between; padding: 2pt 0;
+  border-bottom: 1pt solid #EEEEEE;
+}
+.econ-row:last-child { border-bottom: none; }
+.econ-row p { font-size: 7pt; margin: 0; }
+.econ-label { color: #666666; }
+.econ-value { color: #333333; font-weight: bold; }
+.highlight-value { color: #2E7D32; font-weight: bold; }
+.right-col {
+  flex: 1.2; display: flex; flex-direction: column; gap: 4pt;
+}
+.projections {
+  background: #E8F5E9; border-radius: 4pt; padding: 6pt; flex: 1;
+}
+.proj-header {
+  display: flex; padding: 3pt 0; border-bottom: 2pt solid #2E7D32;
+}
+.proj-row {
+  display: flex; padding: 3pt 0; border-bottom: 1pt solid #C8E6C9;
+}
+.proj-row:last-child { border-bottom: none; }
+.proj-cell { flex: 1; text-align: center; }
+.proj-cell-label { flex: 1.2; text-align: left; }
+.proj-cell p { font-size: 7pt; margin: 0; color: #333333; }
+.proj-header .proj-cell p { font-weight: bold; color: #2E7D32; }
+.assumptions {
+  background: #FFF3E0; border-radius: 4pt; padding: 5pt;
+}
+.assumptions h4 { color: #F57C00; font-size: 7pt; margin: 0 0 2pt 0; }
+.assumptions p { color: #333333; font-size: 6pt; margin: 0; line-height: 1.3; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Financial Projections & Unit Economics</h1>
+</div>
+<div class="content">
+  <div class="left-col">
+    <p class="section-title">UNIT ECONOMICS (AT SCALE)</p>
+    <div class="unit-econ">
+      <div class="econ-row">
+        <p class="econ-label">Customer Acquisition Cost (CAC)</p>
+        <p class="econ-value">$35</p>
+      </div>
+      <div class="econ-row">
+        <p class="econ-label">Verification Revenue (one-time)</p>
+        <p class="econ-value">$39</p>
+      </div>
+      <div class="econ-row">
+        <p class="econ-label">Premium ARPU (monthly)</p>
+        <p class="econ-value">$14.99</p>
+      </div>
+      <div class="econ-row">
+        <p class="econ-label">Premium Conversion Rate</p>
+        <p class="econ-value">25%</p>
+      </div>
+      <div class="econ-row">
+        <p class="econ-label">Average Customer Lifespan</p>
+        <p class="econ-value">14 months</p>
+      </div>
+      <div class="econ-row">
+        <p class="econ-label">Lifetime Value (LTV)</p>
+        <p class="highlight-value">$91</p>
+      </div>
+      <div class="econ-row">
+        <p class="econ-label">LTV:CAC Ratio</p>
+        <p class="highlight-value">2.6:1</p>
+      </div>
+      <div class="econ-row">
+        <p class="econ-label">CAC Payback Period</p>
+        <p class="highlight-value">3 months</p>
+      </div>
+    </div>
+  </div>
+  <div class="right-col">
+    <p class="section-title">3-YEAR PROJECTIONS</p>
+    <div class="projections">
+      <div class="proj-header">
+        <div class="proj-cell-label"><p>Metric</p></div>
+        <div class="proj-cell"><p>Year 1</p></div>
+        <div class="proj-cell"><p>Year 2</p></div>
+        <div class="proj-cell"><p>Year 3</p></div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-cell-label"><p>Registered Users</p></div>
+        <div class="proj-cell"><p>5,000</p></div>
+        <div class="proj-cell"><p>25,000</p></div>
+        <div class="proj-cell"><p>100,000</p></div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-cell-label"><p>Verified Users</p></div>
+        <div class="proj-cell"><p>2,500</p></div>
+        <div class="proj-cell"><p>15,000</p></div>
+        <div class="proj-cell"><p>65,000</p></div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-cell-label"><p>Premium Subscribers</p></div>
+        <div class="proj-cell"><p>625</p></div>
+        <div class="proj-cell"><p>5,000</p></div>
+        <div class="proj-cell"><p>25,000</p></div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-cell-label"><p>Annual Revenue</p></div>
+        <div class="proj-cell"><p>$210K</p></div>
+        <div class="proj-cell"><p>$1.5M</p></div>
+        <div class="proj-cell"><p>$7.2M</p></div>
+      </div>
+      <div class="proj-row">
+        <div class="proj-cell-label"><p>Gross Margin</p></div>
+        <div class="proj-cell"><p>65%</p></div>
+        <div class="proj-cell"><p>72%</p></div>
+        <div class="proj-cell"><p>78%</p></div>
+      </div>
+    </div>
+    <div class="assumptions">
+      <h4>KEY ASSUMPTIONS</h4>
+      <p>50% verification rate, 25% premium conversion, 14-month avg lifespan, 5% monthly churn, 3 metro launch Y1 expanding to 10 by Y3</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

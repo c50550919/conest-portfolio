@@ -18,13 +18,13 @@ module.exports = {
     jest: true,
   },
   rules: {
-    // Code Complexity Rules
-    'complexity': ['error', 15], // Maximum cyclomatic complexity
-    'max-depth': ['error', 4], // Maximum nesting depth
+    // Code Complexity Rules (stricter for maintainability)
+    'complexity': ['error', 10], // Maximum cyclomatic complexity (reduced from 15)
+    'max-depth': ['error', 3], // Maximum nesting depth (reduced from 4)
     'max-lines': ['warn', { max: 300, skipBlankLines: true, skipComments: true }],
     'max-lines-per-function': ['warn', { max: 50, skipBlankLines: true, skipComments: true }],
-    'max-params': ['error', 5], // Maximum function parameters
-    'max-statements': ['warn', 30], // Maximum statements per function
+    'max-params': ['error', 4], // Maximum function parameters (reduced from 5)
+    'max-statements': ['warn', 25], // Maximum statements per function (reduced from 30)
 
     // Code Quality Rules
     'no-console': ['warn', { allow: ['warn', 'error'] }],
@@ -44,7 +44,7 @@ module.exports = {
       allowTypedFunctionExpressions: true,
     }],
     '@typescript-eslint/explicit-module-boundary-types': 'warn',
-    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-explicit-any': 'error', // Strict: no implicit any types
     '@typescript-eslint/no-unused-vars': ['error', {
       argsIgnorePattern: '^_',
       varsIgnorePattern: '^_',

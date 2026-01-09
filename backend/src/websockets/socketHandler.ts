@@ -21,7 +21,11 @@ export const initializeWebSocket = (server: HTTPServer): Server => {
     }
 
     try {
-      const secret = process.env.JWT_SECRET || 'your-secret-key';
+      const secret = process.env.JWT_SECRET;
+      if (!secret) {
+        logger.error('JWT_SECRET environment variable is not configured');
+        return next(new Error('Server configuration error'));
+      }
       const decoded = jwt.verify(token, secret) as { userId: string };
       socket.data.userId = decoded.userId;
       next();

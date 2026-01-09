@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #FFFFFF; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #277884; padding: 20pt 40pt;
+}
+h1 {
+  color: #FFFFFF; font-size: 28pt; margin: 0;
+  font-weight: bold;
+}
+.content {
+  flex: 1; padding: 20pt 40pt 40pt 40pt;
+  display: flex; justify-content: space-between;
+}
+.metric {
+  width: 22%; background: #F0F9F8; padding: 15pt 10pt;
+  border-radius: 8pt;
+  border-bottom: 4pt solid #5EA8A7;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center;
+}
+.metric-value {
+  color: #277884; font-size: 28pt; margin: 0;
+  font-weight: bold; text-align: center;
+}
+.metric-label {
+  color: #2C3E50; font-size: 10pt; margin: 8pt 0 0 0;
+  text-align: center;
+}
+.metric-highlight {
+  border-bottom-color: #FE4447;
+}
+.metric-highlight .metric-value {
+  color: #FE4447;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Success Metrics</h1>
+</div>
+<div class="content">
+  <div class="metric metric-highlight">
+    <p class="metric-value">Zero</p>
+    <p class="metric-label">Child Safety Incidents</p>
+  </div>
+  <div class="metric">
+    <p class="metric-value">95%</p>
+    <p class="metric-label">User Verification Rate</p>
+  </div>
+  <div class="metric">
+    <p class="metric-value">&lt;24h</p>
+    <p class="metric-label">Background Check Time</p>
+  </div>
+  <div class="metric">
+    <p class="metric-value">80%</p>
+    <p class="metric-label">Successful Matches</p>
+  </div>
+</div>
+</body>
+</html>

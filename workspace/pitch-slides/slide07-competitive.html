@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #ffffff; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #1976D2; padding: 12pt 36pt;
+}
+.header h1 { color: #ffffff; font-size: 22pt; margin: 0; }
+.content {
+  padding: 8pt 36pt; flex: 1; display: flex; flex-direction: column;
+}
+.table-header {
+  display: flex; background: #F5F5F5; border-radius: 4pt 4pt 0 0; padding: 5pt;
+}
+.col { flex: 1; text-align: center; }
+.col-feature { flex: 1.5; text-align: left; padding-left: 6pt; }
+.col p { font-size: 8pt; font-weight: bold; color: #333333; margin: 0; }
+.col-conest p { color: #2E7D32; }
+.table-row {
+  display: flex; padding: 4pt 6pt; border-bottom: 1pt solid #EEEEEE;
+}
+.table-row:nth-child(even) { background: #FAFAFA; }
+.cell { flex: 1; text-align: center; }
+.cell-feature { flex: 1.5; text-align: left; }
+.cell p { font-size: 8pt; color: #333333; margin: 0; }
+.check { color: #2E7D32; font-weight: bold; }
+.x { color: #D32F2F; }
+.partial { color: #F57C00; }
+.moat {
+  margin-top: auto; background: #E8F5E9; border-radius: 4pt; padding: 8pt;
+  display: flex; gap: 12pt;
+}
+.moat-item { flex: 1; }
+.moat-item h4 { color: #2E7D32; font-size: 8pt; margin: 0 0 2pt 0; }
+.moat-item p { color: #333333; font-size: 7pt; margin: 0; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Competitive Advantage: Safety-First Moat</h1>
+</div>
+<div class="content">
+  <div class="table-header">
+    <div class="col-feature"><p>Feature</p></div>
+    <div class="col col-conest"><p>CoNest</p></div>
+    <div class="col"><p>Roomies</p></div>
+    <div class="col"><p>SpareRoom</p></div>
+    <div class="col"><p>Facebook</p></div>
+    <div class="col"><p>Craigslist</p></div>
+  </div>
+  <div class="table-row">
+    <div class="cell-feature"><p>Background Checks</p></div>
+    <div class="cell"><p class="check">Required</p></div>
+    <div class="cell"><p class="partial">Optional</p></div>
+    <div class="cell"><p class="partial">Optional</p></div>
+    <div class="cell"><p class="x">None</p></div>
+    <div class="cell"><p class="x">None</p></div>
+  </div>
+  <div class="table-row">
+    <div class="cell-feature"><p>ID Verification</p></div>
+    <div class="cell"><p class="check">Required</p></div>
+    <div class="cell"><p class="x">None</p></div>
+    <div class="cell"><p class="partial">Optional</p></div>
+    <div class="cell"><p class="x">None</p></div>
+    <div class="cell"><p class="x">None</p></div>
+  </div>
+  <div class="table-row">
+    <div class="cell-feature"><p>Parent-Focused Matching</p></div>
+    <div class="cell"><p class="check">Yes</p></div>
+    <div class="cell"><p class="x">No</p></div>
+    <div class="cell"><p class="x">No</p></div>
+    <div class="cell"><p class="x">No</p></div>
+    <div class="cell"><p class="x">No</p></div>
+  </div>
+  <div class="table-row">
+    <div class="cell-feature"><p>Child Safety Protocols</p></div>
+    <div class="cell"><p class="check">Core</p></div>
+    <div class="cell"><p class="x">None</p></div>
+    <div class="cell"><p class="x">None</p></div>
+    <div class="cell"><p class="x">None</p></div>
+    <div class="cell"><p class="x">None</p></div>
+  </div>
+  <div class="table-row">
+    <div class="cell-feature"><p>Household Management</p></div>
+    <div class="cell"><p class="check">Full Suite</p></div>
+    <div class="cell"><p class="x">None</p></div>
+    <div class="cell"><p class="x">None</p></div>
+    <div class="cell"><p class="x">None</p></div>
+    <div class="cell"><p class="x">None</p></div>
+  </div>
+  <div class="moat">
+    <div class="moat-item">
+      <h4>NETWORK EFFECTS</h4>
+      <p>More verified parents = better matches = higher retention</p>
+    </div>
+    <div class="moat-item">
+      <h4>TRUST INFRASTRUCTURE</h4>
+      <p>Verification data compounds, creating switching costs</p>
+    </div>
+    <div class="moat-item">
+      <h4>VERTICAL FOCUS</h4>
+      <p>Deep single-parent features competitors can't replicate</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

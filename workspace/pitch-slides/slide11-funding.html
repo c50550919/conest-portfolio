@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #ffffff; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #1976D2; padding: 14pt 36pt;
+}
+.header h1 { color: #ffffff; font-size: 24pt; margin: 0; }
+.content {
+  padding: 12pt 36pt; flex: 1; display: flex; gap: 16pt;
+}
+.ask-section {
+  width: 180pt; display: flex; flex-direction: column; gap: 10pt;
+}
+.ask-card {
+  background: #1A1A1A; border-radius: 6pt; padding: 14pt; text-align: center;
+}
+.ask-card h3 { color: #AAAAAA; font-size: 10pt; margin: 0 0 6pt 0; }
+.ask-card p { color: #4CAF50; font-size: 32pt; font-weight: bold; margin: 0; }
+.ask-card .detail { color: #ffffff; font-size: 10pt; margin-top: 6pt; }
+.runway {
+  background: #E8F5E9; border-radius: 6pt; padding: 10pt;
+}
+.runway h4 { color: #2E7D32; font-size: 10pt; margin: 0 0 4pt 0; }
+.runway p { color: #333333; font-size: 9pt; margin: 0; }
+.use-section {
+  flex: 1; display: flex; flex-direction: column;
+}
+.section-title { color: #1976D2; font-size: 10pt; margin: 0 0 8pt 0; font-weight: bold; }
+.use-bars { display: flex; flex-direction: column; gap: 6pt; }
+.use-item { display: flex; align-items: center; gap: 8pt; }
+.use-bar-container { flex: 1; background: #F5F5F5; border-radius: 4pt; height: 22pt; position: relative; }
+.use-bar { height: 100%; border-radius: 4pt; display: flex; align-items: center; padding-left: 8pt; }
+.use-bar p { color: #ffffff; font-size: 8pt; font-weight: bold; margin: 0; }
+.use-pct { width: 32pt; text-align: right; }
+.use-pct p { color: #333333; font-size: 10pt; font-weight: bold; margin: 0; }
+.milestones {
+  margin-top: auto; background: #E3F2FD; border-radius: 6pt; padding: 10pt;
+}
+.milestones h4 { color: #1976D2; font-size: 9pt; margin: 0 0 6pt 0; }
+.milestone-row { display: flex; gap: 8pt; }
+.milestone-item { flex: 1; background: #ffffff; border-radius: 4pt; padding: 6pt; text-align: center; }
+.milestone-item h5 { color: #1976D2; font-size: 8pt; margin: 0 0 2pt 0; }
+.milestone-item p { color: #333333; font-size: 7pt; margin: 0; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Funding Ask & Use of Funds</h1>
+</div>
+<div class="content">
+  <div class="ask-section">
+    <div class="ask-card">
+      <h3>PRE-SEED ROUND</h3>
+      <p>$500K</p>
+      <p class="detail">SAFE at $5M cap</p>
+    </div>
+    <div class="runway">
+      <h4>18-MONTH RUNWAY</h4>
+      <p>Funds us through product-market fit and Series A readiness with key metrics proven.</p>
+    </div>
+  </div>
+  <div class="use-section">
+    <p class="section-title">ALLOCATION OF FUNDS</p>
+    <div class="use-bars">
+      <div class="use-item">
+        <div class="use-bar-container">
+          <div class="use-bar" style="width: 40%; background: #2E7D32;">
+            <p>Product Development</p>
+          </div>
+        </div>
+        <div class="use-pct"><p>40%</p></div>
+      </div>
+      <div class="use-item">
+        <div class="use-bar-container">
+          <div class="use-bar" style="width: 30%; background: #1976D2;">
+            <p>Marketing & User Acquisition</p>
+          </div>
+        </div>
+        <div class="use-pct"><p>30%</p></div>
+      </div>
+      <div class="use-item">
+        <div class="use-bar-container">
+          <div class="use-bar" style="width: 15%; background: #F57C00;">
+            <p>Operations</p>
+          </div>
+        </div>
+        <div class="use-pct"><p>15%</p></div>
+      </div>
+      <div class="use-item">
+        <div class="use-bar-container">
+          <div class="use-bar" style="width: 15%; background: #7B1FA2;">
+            <p>Legal & Compliance</p>
+          </div>
+        </div>
+        <div class="use-pct"><p>15%</p></div>
+      </div>
+    </div>
+    <div class="milestones">
+      <h4>MILESTONES THIS ROUND UNLOCKS</h4>
+      <div class="milestone-row">
+        <div class="milestone-item">
+          <h5>MONTH 6</h5>
+          <p>Launch in 3 metros, 2,500 verified users</p>
+        </div>
+        <div class="milestone-item">
+          <h5>MONTH 12</h5>
+          <p>$15K MRR, 500 premium subscribers</p>
+        </div>
+        <div class="milestone-item">
+          <h5>MONTH 18</h5>
+          <p>Series A ready, 5,000 verified users</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

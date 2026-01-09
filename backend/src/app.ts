@@ -22,6 +22,8 @@ import messageRoutes from './features/messages/messages.routes';
 import enhancedMessageRoutes from './features/messages/enhanced-messages.routes';
 // Payments feature (migrated to feature-based structure)
 import { paymentRoutes, stripeWebhookRouter } from './features/payments';
+// Billing feature (mobile IAP - iOS/Android)
+import { billingRoutes } from './features/billing';
 // Discovery feature (migrated to feature-based structure)
 import discoveryRoutes from './features/discovery/discovery.routes';
 // Household feature (migrated to feature-based structure)
@@ -78,6 +80,7 @@ app.use('/api/matches', matchRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/messages', enhancedMessageRoutes); // Enhanced messaging with verification & moderation
 app.use('/api/payments', paymentRoutes);
+app.use('/api/billing', billingRoutes); // Mobile IAP (iOS/Android)
 app.use('/api/discovery', discoveryRoutes);
 app.use('/api/household', householdRoutes);
 app.use('/api/saved-profiles', savedProfileRoutes);

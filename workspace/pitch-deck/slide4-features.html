@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #FFFFFF; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #277884; padding: 20pt 40pt;
+}
+h1 {
+  color: #FFFFFF; font-size: 28pt; margin: 0;
+  font-weight: bold;
+}
+.content {
+  flex: 1; padding: 18pt 40pt 40pt 40pt;
+  display: flex;
+}
+.column {
+  flex: 1; padding: 0 12pt;
+}
+.section-title {
+  color: #277884; font-size: 13pt; margin: 0 0 10pt 0;
+  font-weight: bold;
+}
+.section-line {
+  background: #5EA8A7; height: 2pt; margin-bottom: 10pt;
+}
+.feature-row {
+  display: flex; margin-bottom: 6pt;
+}
+.feature-accent {
+  background: #FE4447; width: 3pt; margin-right: 8pt;
+}
+.feature-item {
+  color: #2C3E50; font-size: 10pt; margin: 0;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Key Features</h1>
+</div>
+<div class="content">
+  <div class="column">
+    <p class="section-title">Verification System</p>
+    <div class="section-line"></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Government ID via Jumio API</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Background checks via Checkr</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Phone and email verification</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Optional income verification</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Verification badges on profiles</p></div>
+  </div>
+  <div class="column">
+    <p class="section-title">Matching Algorithm</p>
+    <div class="section-line"></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Schedule compatibility (25%)</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Parenting philosophy (20%)</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">House rules alignment (20%)</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Location and schools (15%)</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Budget match (10%)</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Lifestyle factors (10%)</p></div>
+  </div>
+  <div class="column">
+    <p class="section-title">Household Tools</p>
+    <div class="section-line"></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Expense splitting with Stripe</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Shared calendar</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Chore scheduling</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">House rules documentation</p></div>
+    <div class="feature-row"><div class="feature-accent"></div><p class="feature-item">Lease agreement templates</p></div>
+  </div>
+</div>
+</body>
+</html>

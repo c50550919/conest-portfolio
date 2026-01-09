@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #FFFFFF; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #277884; padding: 20pt 40pt;
+}
+h1 {
+  color: #FFFFFF; font-size: 28pt; margin: 0;
+  font-weight: bold;
+}
+.content {
+  flex: 1; padding: 20pt 40pt 40pt 40pt;
+  display: flex; justify-content: space-between;
+}
+.tier {
+  width: 28%; padding: 15pt; border-radius: 8pt;
+  display: flex; flex-direction: column; align-items: center;
+}
+.tier-free {
+  background: #F5F5F5; border: 2pt solid #CCCCCC;
+}
+.tier-verified {
+  background: #F0F9F8; border: 2pt solid #5EA8A7;
+}
+.tier-premium {
+  background: #277884; border: 2pt solid #277884;
+}
+.tier-name {
+  font-size: 16pt; margin: 0 0 8pt 0; font-weight: bold;
+}
+.tier-name-dark { color: #2C3E50; }
+.tier-name-light { color: #FFFFFF; }
+.tier-price {
+  font-size: 24pt; margin: 0 0 4pt 0; font-weight: bold;
+}
+.tier-price-dark { color: #277884; }
+.tier-price-light { color: #FFFFFF; }
+.tier-period {
+  font-size: 10pt; margin: 0 0 12pt 0;
+}
+.tier-period-dark { color: #666666; }
+.tier-period-light { color: #B8E0DC; }
+.tier-feature {
+  font-size: 10pt; margin: 0 0 5pt 0; text-align: center;
+}
+.tier-feature-dark { color: #2C3E50; }
+.tier-feature-light { color: #FFFFFF; }
+.bundle {
+  margin-top: 10pt; padding: 6pt 12pt;
+  background: #FE4447; border-radius: 4pt;
+}
+.bundle-text {
+  color: #FFFFFF; font-size: 9pt; margin: 0;
+  text-align: center; font-weight: bold;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Business Model</h1>
+</div>
+<div class="content">
+  <div class="tier tier-free">
+    <p class="tier-name tier-name-dark">Free</p>
+    <p class="tier-price tier-price-dark">$0</p>
+    <p class="tier-period tier-period-dark">forever</p>
+    <p class="tier-feature tier-feature-dark">Browse profiles</p>
+    <p class="tier-feature tier-feature-dark">Create profile</p>
+    <p class="tier-feature tier-feature-dark">Basic matching</p>
+    <p class="tier-feature tier-feature-dark">Limited swipes</p>
+  </div>
+  <div class="tier tier-verified">
+    <p class="tier-name tier-name-dark">Verified</p>
+    <p class="tier-price tier-price-dark">$39</p>
+    <p class="tier-period tier-period-dark">one-time</p>
+    <p class="tier-feature tier-feature-dark">Full background check</p>
+    <p class="tier-feature tier-feature-dark">ID verification</p>
+    <p class="tier-feature tier-feature-dark">Verification badge</p>
+    <p class="tier-feature tier-feature-dark">Unlock messaging</p>
+  </div>
+  <div class="tier tier-premium">
+    <p class="tier-name tier-name-light">Premium</p>
+    <p class="tier-price tier-price-light">$14.99</p>
+    <p class="tier-period tier-period-light">per month</p>
+    <p class="tier-feature tier-feature-light">Unlimited swipes</p>
+    <p class="tier-feature tier-feature-light">Advanced filters</p>
+    <p class="tier-feature tier-feature-light">Priority matching</p>
+    <p class="tier-feature tier-feature-light">Household tools</p>
+    <div class="bundle">
+      <p class="bundle-text">Bundle: $99 (6mo + verify)</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

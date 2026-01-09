@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #ffffff; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #1976D2; padding: 14pt 36pt;
+}
+.header h1 { color: #ffffff; font-size: 24pt; margin: 0; }
+.content {
+  padding: 12pt 36pt; flex: 1; display: flex; gap: 16pt;
+}
+.team-section {
+  flex: 1.5; display: flex; flex-direction: column; gap: 10pt;
+}
+.team-card {
+  background: #F5F5F5; border-radius: 6pt; padding: 10pt;
+  display: flex; gap: 12pt;
+}
+.avatar {
+  width: 44pt; height: 44pt; background: #2E7D32; border-radius: 22pt;
+  display: flex; justify-content: center; align-items: center;
+}
+.avatar p { color: #ffffff; font-size: 18pt; font-weight: bold; margin: 0; }
+.team-info { flex: 1; }
+.team-info h3 { color: #333333; font-size: 12pt; margin: 0 0 1pt 0; }
+.team-info h4 { color: #2E7D32; font-size: 9pt; margin: 0 0 4pt 0; font-weight: normal; }
+.team-info p { color: #666666; font-size: 9pt; margin: 0; line-height: 1.3; }
+.why-us {
+  flex: 1; display: flex; flex-direction: column; gap: 8pt;
+}
+.section-title { color: #1976D2; font-size: 10pt; margin: 0 0 2pt 0; font-weight: bold; }
+.why-card {
+  background: #E8F5E9; border-radius: 6pt; padding: 8pt;
+  border-left: 3pt solid #2E7D32;
+}
+.why-card h4 { color: #2E7D32; font-size: 9pt; margin: 0 0 2pt 0; }
+.why-card p { color: #333333; font-size: 8pt; margin: 0; }
+.advisors {
+  background: #E3F2FD; border-radius: 6pt; padding: 8pt; margin-top: auto;
+}
+.advisors h4 { color: #1976D2; font-size: 9pt; margin: 0 0 4pt 0; }
+.advisors p { color: #333333; font-size: 8pt; margin: 0; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Team & Execution</h1>
+</div>
+<div class="content">
+  <div class="team-section">
+    <div class="team-card">
+      <div class="avatar"><p>F</p></div>
+      <div class="team-info">
+        <h3>Founder Name</h3>
+        <h4>CEO & Co-Founder</h4>
+        <p>Single parent with firsthand experience of the housing crisis. Previously led product at [Company]. 10+ years in consumer tech. Stanford MBA.</p>
+      </div>
+    </div>
+    <div class="team-card">
+      <div class="avatar" style="background: #1976D2;"><p>C</p></div>
+      <div class="team-info">
+        <h3>Co-Founder Name</h3>
+        <h4>CTO & Co-Founder</h4>
+        <p>Full-stack engineer with expertise in React Native and Node.js. Previously at [Tech Company]. Built verification systems at scale. MS Computer Science.</p>
+      </div>
+    </div>
+  </div>
+  <div class="why-us">
+    <p class="section-title">WHY WE WILL WIN</p>
+    <div class="why-card">
+      <h4>DOMAIN EXPERTISE</h4>
+      <p>Firsthand experience with the problem we're solving</p>
+    </div>
+    <div class="why-card">
+      <h4>TECHNICAL DEPTH</h4>
+      <p>Verification and safety systems are our core competency</p>
+    </div>
+    <div class="why-card">
+      <h4>CUSTOMER OBSESSION</h4>
+      <p>50+ user interviews shaping every product decision</p>
+    </div>
+    <div class="advisors">
+      <h4>ADVISORS</h4>
+      <p>Housing policy expert (HUD), Child safety advocate, Fintech payments veteran</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

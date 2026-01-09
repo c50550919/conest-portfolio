@@ -10,7 +10,10 @@ import crypto from 'crypto';
  * Uses HMAC to create consistent tokens for the same input
  */
 export function tokenizePII(pii: string, salt?: string): string {
-  const secret = process.env.TOKENIZATION_SECRET || 'default-secret-change-me';
+  const secret = process.env.TOKENIZATION_SECRET;
+  if (!secret) {
+    throw new Error('TOKENIZATION_SECRET environment variable is not configured');
+  }
   const hmac = crypto.createHmac('sha256', secret);
 
   if (salt) {

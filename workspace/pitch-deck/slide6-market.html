@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #FFFFFF; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #277884; padding: 20pt 40pt;
+}
+h1 {
+  color: #FFFFFF; font-size: 28pt; margin: 0;
+  font-weight: bold;
+}
+.content {
+  flex: 1; padding: 20pt 40pt 40pt 40pt;
+  display: flex;
+}
+.left {
+  flex: 1; padding-right: 25pt;
+}
+.right {
+  flex: 1;
+}
+.section-title {
+  color: #277884; font-size: 15pt; margin: 0 0 12pt 0;
+  font-weight: bold;
+}
+.demographic {
+  display: flex; margin-bottom: 10pt; align-items: center;
+}
+.demo-label {
+  background: #5EA8A7; padding: 6pt 10pt; border-radius: 4pt;
+  min-width: 90pt;
+}
+.demo-label-text {
+  color: #FFFFFF; font-size: 10pt; margin: 0; font-weight: bold;
+}
+.demo-value {
+  padding-left: 12pt;
+}
+.demo-value-text {
+  color: #2C3E50; font-size: 11pt; margin: 0;
+}
+.pain-point {
+  background: #FFF5F5; padding: 10pt; margin-bottom: 8pt;
+  border-left: 4pt solid #FE4447; border-radius: 0 4pt 4pt 0;
+}
+.pain-text {
+  color: #2C3E50; font-size: 10pt; margin: 0;
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Target Market</h1>
+</div>
+<div class="content">
+  <div class="left">
+    <p class="section-title">Demographics</p>
+    <div class="demographic">
+      <div class="demo-label"><p class="demo-label-text">Age</p></div>
+      <div class="demo-value"><p class="demo-value-text">25-45 years old</p></div>
+    </div>
+    <div class="demographic">
+      <div class="demo-label"><p class="demo-label-text">Income</p></div>
+      <div class="demo-value"><p class="demo-value-text">$25K - $75K annually</p></div>
+    </div>
+    <div class="demographic">
+      <div class="demo-label"><p class="demo-label-text">Rent Burden</p></div>
+      <div class="demo-value"><p class="demo-value-text">40-60% of income</p></div>
+    </div>
+    <div class="demographic">
+      <div class="demo-label"><p class="demo-label-text">Market Size</p></div>
+      <div class="demo-value"><p class="demo-value-text">11M+ US households</p></div>
+    </div>
+  </div>
+  <div class="right">
+    <p class="section-title">Key Pain Points</p>
+    <div class="pain-point">
+      <p class="pain-text">Cannot afford housing alone in desired school districts</p>
+    </div>
+    <div class="pain-point">
+      <p class="pain-text">No trusted way to find verified roommates</p>
+    </div>
+    <div class="pain-point">
+      <p class="pain-text">Safety concerns for children with strangers</p>
+    </div>
+    <div class="pain-point">
+      <p class="pain-text">Need schedule-compatible co-parents nearby</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

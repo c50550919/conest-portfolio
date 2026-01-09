@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #ffffff; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #2E7D32; padding: 16pt 36pt;
+}
+.header h1 { color: #ffffff; font-size: 24pt; margin: 0; }
+.content {
+  padding: 16pt 36pt; flex: 1; display: flex; flex-direction: column;
+}
+.stats-row {
+  display: flex; gap: 16pt; margin-bottom: 14pt;
+}
+.stat-box {
+  background: #E8F5E9; border-radius: 6pt; padding: 12pt 16pt;
+  text-align: center; min-width: 80pt;
+}
+.stat-box p { margin: 0; }
+.stat-number { color: #2E7D32; font-size: 28pt; font-weight: bold; }
+.stat-label { color: #666666; font-size: 9pt; margin-top: 2pt; }
+.stat-desc { flex: 1; display: flex; align-items: center; }
+.stat-desc p { color: #333333; font-size: 13pt; margin: 0; }
+.pain-points {
+  display: flex; gap: 12pt; margin-top: auto;
+}
+.pain-card {
+  flex: 1; background: #FAFAFA; border-radius: 6pt; padding: 12pt;
+  border-left: 3pt solid #D32F2F;
+}
+.pain-card h3 { color: #D32F2F; font-size: 10pt; margin: 0 0 6pt 0; }
+.pain-card p { color: #333333; font-size: 9pt; margin: 0; line-height: 1.3; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>The Problem: Single Parents Face a Housing Crisis</h1>
+</div>
+<div class="content">
+  <div class="stats-row">
+    <div class="stat-box">
+      <p class="stat-number">11M+</p>
+      <p class="stat-label">US households</p>
+    </div>
+    <div class="stat-desc">
+      <p>Single-parent households struggle with housing affordability, spending 40-60% of income on rent.</p>
+    </div>
+  </div>
+  <div class="stats-row">
+    <div class="stat-box">
+      <p class="stat-number">52%</p>
+      <p class="stat-label">rent burden</p>
+    </div>
+    <div class="stat-desc">
+      <p>Over half of single parents are housing cost-burdened, leaving little for childcare or savings.</p>
+    </div>
+  </div>
+  <div class="pain-points">
+    <div class="pain-card">
+      <h3>NO TRUSTED VERIFICATION</h3>
+      <p>No way to verify roommates when children are involved. Traditional apps ignore child safety.</p>
+    </div>
+    <div class="pain-card">
+      <h3>INCOMPATIBLE LIFESTYLES</h3>
+      <p>Finding schedule-compatible co-parents with aligned parenting values is nearly impossible.</p>
+    </div>
+    <div class="pain-card">
+      <h3>SAFETY CONCERNS</h3>
+      <p>Parents won't risk their children's safety with unverified strangers from generic apps.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

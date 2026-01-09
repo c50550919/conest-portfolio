@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #ffffff; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #2E7D32; padding: 14pt 36pt;
+}
+.header h1 { color: #ffffff; font-size: 24pt; margin: 0; }
+.header p { color: #C8E6C9; font-size: 10pt; margin: 4pt 0 0 0; }
+.content {
+  padding: 14pt 36pt; flex: 1; display: flex; gap: 20pt;
+}
+.left-col {
+  width: 220pt; display: flex; flex-direction: column; gap: 10pt;
+}
+.metric-card {
+  background: #E8F5E9; border-radius: 6pt; padding: 12pt;
+  border-left: 3pt solid #2E7D32;
+}
+.metric-card h4 { color: #2E7D32; font-size: 9pt; margin: 0 0 2pt 0; }
+.metric-card p { color: #333333; font-size: 9pt; margin: 0; }
+.metric-value { font-size: 26pt; font-weight: bold; color: #2E7D32; margin: 0 0 2pt 0; }
+.right-col {
+  flex: 1; display: flex; flex-direction: column; gap: 8pt;
+}
+.section-title { color: #1976D2; font-size: 10pt; margin: 0 0 4pt 0; font-weight: bold; }
+.evidence-list {
+  background: #F5F5F5; border-radius: 6pt; padding: 10pt; flex: 1;
+}
+.evidence-list ul { margin: 0; padding-left: 14pt; }
+.evidence-list li { color: #333333; font-size: 9pt; margin-bottom: 5pt; line-height: 1.3; }
+.milestone-row {
+  display: flex; gap: 10pt;
+}
+.milestone {
+  flex: 1; background: #E3F2FD; border-radius: 6pt; padding: 8pt; text-align: center;
+}
+.milestone h5 { color: #1976D2; font-size: 9pt; margin: 0 0 2pt 0; }
+.milestone p { color: #333333; font-size: 8pt; margin: 0; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Evidence of Progress</h1>
+  <p>Pre-revenue traction demonstrating market validation and execution capability</p>
+</div>
+<div class="content">
+  <div class="left-col">
+    <div class="metric-card">
+      <h4>WAITLIST SIGNUPS</h4>
+      <p class="metric-value">250+</p>
+      <p>Single parents actively waiting for launch</p>
+    </div>
+    <div class="metric-card">
+      <h4>USER INTERVIEWS</h4>
+      <p class="metric-value">50+</p>
+      <p>In-depth problem discovery conversations</p>
+    </div>
+    <div class="metric-card">
+      <h4>PRODUCT STATUS</h4>
+      <p class="metric-value">MVP</p>
+      <p>Functional prototype with core features</p>
+    </div>
+  </div>
+  <div class="right-col">
+    <p class="section-title">VALIDATED INSIGHTS</p>
+    <div class="evidence-list">
+      <ul>
+        <li><b>Primary pain:</b> 92% cite "no trusted verification" as #1 barrier</li>
+        <li><b>Willingness to pay:</b> 78% would pay $39+ for background-checked matches</li>
+        <li><b>Target savings:</b> Average user expects $800-1,200/month savings</li>
+        <li><b>Geographic demand:</b> Highest interest in NYC, LA, Chicago, Atlanta</li>
+        <li><b>Schedule importance:</b> 85% prioritize schedule compatibility</li>
+      </ul>
+    </div>
+    <p class="section-title">MILESTONES ACHIEVED</p>
+    <div class="milestone-row">
+      <div class="milestone">
+        <h5>TECH STACK</h5>
+        <p>React Native + Node.js deployed</p>
+      </div>
+      <div class="milestone">
+        <h5>INTEGRATIONS</h5>
+        <p>Jumio, Checkr, Stripe APIs connected</p>
+      </div>
+      <div class="milestone">
+        <h5>LANDING PAGE</h5>
+        <p>Live at conest.app</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

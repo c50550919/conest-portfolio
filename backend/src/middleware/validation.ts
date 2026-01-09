@@ -60,8 +60,8 @@ export const schemas = {
       budget_max: z.number().min(0, 'Budget must be positive'),
       // FHA COMPLIANCE: Child data is now OPTIONAL (user-initiated disclosure)
       // Users can choose to share this information, platform does not require it
-      number_of_children: z.number().int().min(0).optional(),
-      ages_of_children: z.string().optional(),
+      children_count: z.number().int().min(0).optional(),
+      children_age_groups: z.string().optional(),
       schedule_type: z.enum(['flexible', 'fixed', 'shift_work']),
       work_from_home: z.boolean(),
     }),

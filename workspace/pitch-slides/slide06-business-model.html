@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #ffffff; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.header {
+  background: #2E7D32; padding: 16pt 36pt;
+}
+.header h1 { color: #ffffff; font-size: 24pt; margin: 0; }
+.content {
+  padding: 14pt 36pt; flex: 1; display: flex; flex-direction: column; gap: 12pt;
+}
+.tiers {
+  display: flex; gap: 14pt; flex: 1;
+}
+.tier {
+  flex: 1; border-radius: 6pt; padding: 12pt; display: flex; flex-direction: column;
+}
+.free { background: #F5F5F5; border: 1pt solid #CCCCCC; }
+.verified { background: #E8F5E9; border: 1pt solid #2E7D32; }
+.premium { background: #1A1A1A; border: 1pt solid #2E7D32; }
+.tier h3 { font-size: 12pt; margin: 0 0 2pt 0; }
+.free h3 { color: #666666; }
+.verified h3 { color: #2E7D32; }
+.premium h3 { color: #4CAF50; }
+.price { font-size: 24pt; font-weight: bold; margin: 0 0 2pt 0; }
+.free .price { color: #333333; }
+.verified .price { color: #2E7D32; }
+.premium .price { color: #ffffff; }
+.period { font-size: 9pt; margin: 0 0 8pt 0; }
+.free .period { color: #666666; }
+.verified .period { color: #666666; }
+.premium .period { color: #AAAAAA; }
+.tier ul { margin: 0; padding-left: 12pt; flex: 1; }
+.tier li { font-size: 9pt; margin-bottom: 4pt; }
+.free li { color: #333333; }
+.verified li { color: #333333; }
+.premium li { color: #ffffff; }
+.bundle {
+  background: #E3F2FD; border-radius: 6pt; padding: 10pt;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.bundle-left h4 { color: #1976D2; font-size: 12pt; margin: 0 0 2pt 0; }
+.bundle-left p { color: #333333; font-size: 10pt; margin: 0; }
+.bundle-right { text-align: right; }
+.bundle-right p { color: #2E7D32; font-size: 18pt; font-weight: bold; margin: 0; }
+.bundle-right .save { color: #1976D2; font-size: 10pt; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Business Model: Freemium + Verification</h1>
+</div>
+<div class="content">
+  <div class="tiers">
+    <div class="tier free">
+      <h3>FREE</h3>
+      <p class="price">$0</p>
+      <p class="period">forever</p>
+      <ul>
+        <li>Browse verified profiles</li>
+        <li>Create your profile</li>
+        <li>Basic matching algorithm</li>
+        <li>Limited swipes (10/day)</li>
+        <li>View compatibility scores</li>
+      </ul>
+    </div>
+    <div class="tier verified">
+      <h3>VERIFIED</h3>
+      <p class="price">$39</p>
+      <p class="period">one-time (required for messaging)</p>
+      <ul>
+        <li>Full background check</li>
+        <li>Government ID verification</li>
+        <li>Verification badge</li>
+        <li>Unlock messaging</li>
+        <li>Income verification (optional)</li>
+      </ul>
+    </div>
+    <div class="tier premium">
+      <h3>PREMIUM</h3>
+      <p class="price">$14.99</p>
+      <p class="period">per month</p>
+      <ul>
+        <li>Unlimited swipes</li>
+        <li>Advanced matching filters</li>
+        <li>Priority in search results</li>
+        <li>Household management tools</li>
+        <li>Expense splitting via Stripe</li>
+        <li>Shared calendar and chores</li>
+      </ul>
+    </div>
+  </div>
+  <div class="bundle">
+    <div class="bundle-left">
+      <h4>BUNDLE DEAL: Best Value</h4>
+      <p>Verification + 6 months Premium subscription</p>
+    </div>
+    <div class="bundle-right">
+      <p>$99</p>
+      <p class="save">Save $29.94</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
