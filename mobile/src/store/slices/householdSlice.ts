@@ -20,6 +20,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import householdAPI from '../../services/api/household';
 import templatesAPI from '../../services/api/templatesAPI';
+import invitationsAPI from '../../services/api/invitationsAPI';
 import {
   Household,
   Member,
@@ -31,6 +32,7 @@ import {
   SplitRentRequest,
 } from '../../types/household';
 import { Template } from '../../types/templates';
+import { Invitation, InvitationWithDetails, SendInvitationRequest } from '../../types/invitation';
 
 // ============================================================================
 // Initial State
@@ -59,6 +61,12 @@ const initialState: HouseholdState = {
   templatesLoading: false,
   templatesError: null as string | null,
   downloadingTemplateId: null as string | null,
+
+  // Invitations
+  pendingInvitations: [] as InvitationWithDetails[],
+  sentInvitations: [] as Invitation[],
+  invitationsLoading: false,
+  invitationsError: null as string | null,
 
   // UI State
   loading: false,
@@ -341,6 +349,105 @@ export const getTemplateDownloadUrl = createAsyncThunk(
 );
 
 // ============================================================================
+// Invitation Thunks
+// ============================================================================
+
+/**
+ * Fetch received invitations for current user
+ */
+export const fetchReceivedInvitations = createAsyncThunk(
+  'household/fetchReceivedInvitations',
+  async (_, { rejectWithValue }) => {
+    try {
+      const invitations = await invitationsAPI.getReceivedInvitations();
+      return invitations;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch received invitations'
+      );
+    }
+  }
+);
+
+/**
+ * Fetch sent invitations for a household
+ */
+export const fetchSentInvitations = createAsyncThunk(
+  'household/fetchSentInvitations',
+  async (householdId: string, { rejectWithValue }) => {
+    try {
+      const invitations = await invitationsAPI.getSentInvitations(householdId);
+      return invitations;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch sent invitations');
+    }
+  }
+);
+
+/**
+ * Send an invitation to join a household
+ */
+export const sendInvitation = createAsyncThunk(
+  'household/sendInvitation',
+  async (
+    { householdId, data }: { householdId: string; data: SendInvitationRequest },
+    { rejectWithValue }
+  ) => {
+    try {
+      const invitation = await invitationsAPI.sendInvitation(householdId, data);
+      return invitation;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to send invitation');
+    }
+  }
+);
+
+/**
+ * Accept an invitation to join a household
+ */
+export const acceptInvitation = createAsyncThunk(
+  'household/acceptInvitation',
+  async (inviteId: string, { rejectWithValue }) => {
+    try {
+      const invitation = await invitationsAPI.acceptInvitation(inviteId);
+      return invitation;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to accept invitation');
+    }
+  }
+);
+
+/**
+ * Decline an invitation
+ */
+export const declineInvitation = createAsyncThunk(
+  'household/declineInvitation',
+  async (inviteId: string, { rejectWithValue }) => {
+    try {
+      const invitation = await invitationsAPI.declineInvitation(inviteId);
+      return invitation;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to decline invitation');
+    }
+  }
+);
+
+/**
+ * Cancel a sent invitation
+ */
+export const cancelInvitation = createAsyncThunk(
+  'household/cancelInvitation',
+  async (inviteId: string, { rejectWithValue }) => {
+    try {
+      const invitation = await invitationsAPI.cancelInvitation(inviteId);
+      return invitation;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to cancel invitation');
+    }
+  }
+);
+
+// ============================================================================
 // Slice
 // ============================================================================
 
@@ -425,6 +532,44 @@ const householdSlice = createSlice({
 
     clearTemplatesError: (state) => {
       state.templatesError = null;
+    },
+
+    // Invitations reducers
+    setPendingInvitations: (state, action: PayloadAction<InvitationWithDetails[]>) => {
+      state.pendingInvitations = action.payload;
+    },
+
+    setSentInvitations: (state, action: PayloadAction<Invitation[]>) => {
+      state.sentInvitations = action.payload;
+    },
+
+    setInvitationsLoading: (state, action: PayloadAction<boolean>) => {
+      state.invitationsLoading = action.payload;
+    },
+
+    setInvitationsError: (state, action: PayloadAction<string | null>) => {
+      state.invitationsError = action.payload;
+    },
+
+    clearInvitationsError: (state) => {
+      state.invitationsError = null;
+    },
+
+    // Remove a pending invitation locally (after accept/decline)
+    removePendingInvitationLocal: (state, action: PayloadAction<string>) => {
+      state.pendingInvitations = state.pendingInvitations.filter(
+        (inv) => inv.invitation.id !== action.payload
+      );
+    },
+
+    // Remove a sent invitation locally (after cancel)
+    removeSentInvitationLocal: (state, action: PayloadAction<string>) => {
+      state.sentInvitations = state.sentInvitations.filter((inv) => inv.id !== action.payload);
+    },
+
+    // Add a sent invitation locally (after send)
+    addSentInvitationLocal: (state, action: PayloadAction<Invitation>) => {
+      state.sentInvitations.unshift(action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -643,6 +788,103 @@ const householdSlice = createSlice({
         state.downloadingTemplateId = null;
         state.templatesError = action.payload as string;
       });
+
+    // Fetch Received Invitations
+    builder
+      .addCase(fetchReceivedInvitations.pending, (state) => {
+        state.invitationsLoading = true;
+        state.invitationsError = null;
+      })
+      .addCase(fetchReceivedInvitations.fulfilled, (state, action) => {
+        state.invitationsLoading = false;
+        state.pendingInvitations = action.payload;
+      })
+      .addCase(fetchReceivedInvitations.rejected, (state, action) => {
+        state.invitationsLoading = false;
+        state.invitationsError = action.payload as string;
+      });
+
+    // Fetch Sent Invitations
+    builder
+      .addCase(fetchSentInvitations.pending, (state) => {
+        state.invitationsLoading = true;
+        state.invitationsError = null;
+      })
+      .addCase(fetchSentInvitations.fulfilled, (state, action) => {
+        state.invitationsLoading = false;
+        state.sentInvitations = action.payload;
+      })
+      .addCase(fetchSentInvitations.rejected, (state, action) => {
+        state.invitationsLoading = false;
+        state.invitationsError = action.payload as string;
+      });
+
+    // Send Invitation
+    builder
+      .addCase(sendInvitation.pending, (state) => {
+        state.invitationsLoading = true;
+        state.invitationsError = null;
+      })
+      .addCase(sendInvitation.fulfilled, (state, action) => {
+        state.invitationsLoading = false;
+        state.sentInvitations.unshift(action.payload);
+      })
+      .addCase(sendInvitation.rejected, (state, action) => {
+        state.invitationsLoading = false;
+        state.invitationsError = action.payload as string;
+      });
+
+    // Accept Invitation
+    builder
+      .addCase(acceptInvitation.pending, (state) => {
+        state.invitationsLoading = true;
+        state.invitationsError = null;
+      })
+      .addCase(acceptInvitation.fulfilled, (state, action) => {
+        state.invitationsLoading = false;
+        // Remove from pending invitations
+        state.pendingInvitations = state.pendingInvitations.filter(
+          (inv) => inv.invitation.id !== action.payload.id
+        );
+      })
+      .addCase(acceptInvitation.rejected, (state, action) => {
+        state.invitationsLoading = false;
+        state.invitationsError = action.payload as string;
+      });
+
+    // Decline Invitation
+    builder
+      .addCase(declineInvitation.pending, (state) => {
+        state.invitationsLoading = true;
+        state.invitationsError = null;
+      })
+      .addCase(declineInvitation.fulfilled, (state, action) => {
+        state.invitationsLoading = false;
+        // Remove from pending invitations
+        state.pendingInvitations = state.pendingInvitations.filter(
+          (inv) => inv.invitation.id !== action.payload.id
+        );
+      })
+      .addCase(declineInvitation.rejected, (state, action) => {
+        state.invitationsLoading = false;
+        state.invitationsError = action.payload as string;
+      });
+
+    // Cancel Invitation
+    builder
+      .addCase(cancelInvitation.pending, (state) => {
+        state.invitationsLoading = true;
+        state.invitationsError = null;
+      })
+      .addCase(cancelInvitation.fulfilled, (state, action) => {
+        state.invitationsLoading = false;
+        // Remove from sent invitations
+        state.sentInvitations = state.sentInvitations.filter((inv) => inv.id !== action.payload.id);
+      })
+      .addCase(cancelInvitation.rejected, (state, action) => {
+        state.invitationsLoading = false;
+        state.invitationsError = action.payload as string;
+      });
   },
 });
 
@@ -668,6 +910,15 @@ export const {
   setTemplatesError,
   setDownloadingTemplateId,
   clearTemplatesError,
+  // Invitations
+  setPendingInvitations,
+  setSentInvitations,
+  setInvitationsLoading,
+  setInvitationsError,
+  clearInvitationsError,
+  removePendingInvitationLocal,
+  removeSentInvitationLocal,
+  addSentInvitationLocal,
 } = householdSlice.actions;
 
 export default householdSlice.reducer;

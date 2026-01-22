@@ -392,6 +392,18 @@ export interface HouseholdState {
   documents: Document[];
   houseRules: HouseRule[];
 
+  // Templates
+  templates: import('./templates').Template[];
+  templatesLoading: boolean;
+  templatesError: string | null;
+  downloadingTemplateId: string | null;
+
+  // Invitations
+  pendingInvitations: import('./invitation').InvitationWithDetails[];
+  sentInvitations: import('./invitation').Invitation[];
+  invitationsLoading: boolean;
+  invitationsError: string | null;
+
   // UI State
   loading: boolean;
   error: string | null;

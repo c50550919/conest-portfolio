@@ -6,6 +6,8 @@
  * - HouseholdMain: Main household dashboard
  * - Documents: Document templates
  * - CreateHousehold: Create a new household
+ * - PendingInvites: View pending household invitations
+ * - ViewInvitation: View single invitation details
  *
  * Created: 2026-01-21
  */
@@ -15,11 +17,17 @@ import { createStackNavigator } from '@react-navigation/stack';
 import HouseholdScreen from '../screens/main/HouseholdScreen';
 import DocumentsScreen from '../screens/household/DocumentsScreen';
 import CreateHouseholdScreen from '../screens/household/CreateHouseholdScreen';
+import PendingInvitesScreen from '../screens/household/PendingInvitesScreen';
+import ViewInvitationScreen from '../screens/household/ViewInvitationScreen';
+import InviteMemberScreen from '../screens/household/InviteMemberScreen';
 
 export type HouseholdStackParamList = {
   HouseholdMain: undefined;
   Documents: undefined;
   CreateHousehold: undefined;
+  PendingInvites: undefined;
+  ViewInvitation: { invitationId: string };
+  InviteMember: undefined;
 };
 
 const Stack = createStackNavigator<HouseholdStackParamList>();
@@ -50,6 +58,27 @@ const HouseholdNavigator: React.FC = () => {
       <Stack.Screen
         name="CreateHousehold"
         component={CreateHouseholdScreen}
+        options={{
+          headerShown: false, // Screen has its own header
+        }}
+      />
+      <Stack.Screen
+        name="PendingInvites"
+        component={PendingInvitesScreen}
+        options={{
+          headerShown: false, // Screen has its own header
+        }}
+      />
+      <Stack.Screen
+        name="ViewInvitation"
+        component={ViewInvitationScreen}
+        options={{
+          headerShown: false, // Screen has its own header
+        }}
+      />
+      <Stack.Screen
+        name="InviteMember"
+        component={InviteMemberScreen}
         options={{
           headerShown: false, // Screen has its own header
         }}
