@@ -19,12 +19,14 @@ import rateLimit from 'express-rate-limit';
 import redis from '../config/redis';
 
 // Try to import RedisStore, fallback to memory if not available
-let RedisStore: any;
+// Using any type for dynamic require - rate-limit-redis may not be installed
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let RedisStore: any = null;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   RedisStore = require('rate-limit-redis').default;
-} catch (err) {
-  console.warn('⚠️  rate-limit-redis not installed, using memory store. Install for production use.');
-  RedisStore = null;
+} catch (_err) {
+  console.warn('rate-limit-redis not installed, using memory store. Install for production use.');
 }
 
 /**

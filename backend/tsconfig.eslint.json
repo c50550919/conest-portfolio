@@ -6,7 +6,10 @@
   "include": [
     "src/**/*",
     "__tests__/**/*",
-    "tests/**/*"
+    "tests/**/*",
+    "scripts/**/*.ts",
+    "seeds/**/*.ts",
+    "*.ts"
   ],
   "exclude": [
     "node_modules",

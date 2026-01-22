@@ -155,7 +155,7 @@ export function decryptFields<T extends Record<string, any>>(
         result[field] = decrypt(String(result[field]));
       } catch (error) {
         // If decryption fails, keep original value (might not be encrypted)
-        console.error('Failed to decrypt field', field + ':', error);
+        console.error('Failed to decrypt field', `${field  }:`, error);
       }
     }
   }

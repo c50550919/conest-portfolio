@@ -12,7 +12,19 @@ import * as jwt from 'jsonwebtoken';
 import { JsonWebTokenError, TokenExpiredError, NotBeforeError } from 'jsonwebtoken';
 import { randomUUID } from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+/**
+ * JWT_SECRET must be provided via environment variable
+ * No fallback - fail fast in production to prevent weak secrets
+ * Using getter function for proper TypeScript type narrowing
+ */
+function getJWTSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required. Cannot start without a secure secret.');
+  }
+  return secret;
+}
+const JWT_SECRET = getJWTSecret();
 const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes
 const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
 
@@ -49,7 +61,7 @@ export function generateRefreshToken(payload: JWTPayload): string {
   return jwt.sign(
     { ...payload, jti: randomUUID() },
     JWT_SECRET,
-    { expiresIn: REFRESH_TOKEN_EXPIRY }
+    { expiresIn: REFRESH_TOKEN_EXPIRY },
   );
 }
 

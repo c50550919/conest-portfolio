@@ -45,23 +45,21 @@ const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024; // 10MB
 /**
  * Create file filter for specific allowed types
  */
-const createFileFilter = (allowedTypes: Set<string>) => {
-  return (
-    _req: Request,
-    file: Express.Multer.File,
-    callback: FileFilterCallback,
-  ): void => {
-    // Check MIME type against whitelist
-    if (allowedTypes.has(file.mimetype)) {
-      callback(null, true);
-    } else {
-      callback(
-        new Error(
-          `Invalid file type: ${file.mimetype}. Allowed types: ${Array.from(allowedTypes).join(', ')}`,
-        ),
-      );
-    }
-  };
+const createFileFilter = (allowedTypes: Set<string>) => (
+  _req: Request,
+  file: Express.Multer.File,
+  callback: FileFilterCallback,
+): void => {
+  // Check MIME type against whitelist
+  if (allowedTypes.has(file.mimetype)) {
+    callback(null, true);
+  } else {
+    callback(
+      new Error(
+        `Invalid file type: ${file.mimetype}. Allowed types: ${Array.from(allowedTypes).join(', ')}`,
+      ),
+    );
+  }
 };
 
 /**
@@ -162,17 +160,15 @@ export const handleUploadError = (
 /**
  * Middleware to validate that a file was actually uploaded
  */
-export const requireFile = (fieldName: string = 'file') => {
-  return (req: MulterRequest, res: Response, next: NextFunction): void => {
-    if (!req.file) {
-      res.status(400).json({
-        success: false,
-        error: `No file uploaded. Please provide a ${fieldName}.`,
-      });
-      return;
-    }
-    next();
-  };
+export const requireFile = (fieldName: string = 'file') => (req: MulterRequest, res: Response, next: NextFunction): void => {
+  if (!req.file) {
+    res.status(400).json({
+      success: false,
+      error: `No file uploaded. Please provide a ${fieldName}.`,
+    });
+    return;
+  }
+  next();
 };
 
 /**

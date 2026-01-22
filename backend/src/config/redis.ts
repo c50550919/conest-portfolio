@@ -15,6 +15,7 @@
  */
 
 import Redis from 'ioredis';
+import logger from './logger';
 
 // TTL constants (in seconds)
 export const REDIS_TTL = {
@@ -35,7 +36,7 @@ const redisConfig = {
   enableReadyCheck: true,
   retryStrategy(times: number): number | void {
     const delay = Math.min(times * 50, 2000);
-    console.warn(`Redis connection retry attempt ${times}, waiting ${delay}ms`);
+    logger.warn('Redis connection retry', { attempt: times, delay });
     return delay;
   },
   reconnectOnError(err: Error): boolean | 1 | 2 {
@@ -62,23 +63,23 @@ export const redis = new Redis(redisConfig);
 
 // Connection event handlers
 redis.on('connect', () => {
-  console.log('✅ Redis client connected');
+  logger.info('Redis client connected');
 });
 
 redis.on('ready', () => {
-  console.log('✅ Redis client ready to accept commands');
+  logger.info('Redis client ready to accept commands');
 });
 
 redis.on('error', (err: Error) => {
-  console.error('❌ Redis client error:', err);
+  logger.error('Redis client error', { error: err.message });
 });
 
 redis.on('close', () => {
-  console.warn('⚠️  Redis connection closed');
+  logger.warn('Redis connection closed');
 });
 
 redis.on('reconnecting', () => {
-  console.log('🔄 Redis client reconnecting');
+  logger.info('Redis client reconnecting');
 });
 
 /**
@@ -87,9 +88,9 @@ redis.on('reconnecting', () => {
 export async function closeRedis(): Promise<void> {
   try {
     await redis.quit();
-    console.log('✅ Redis connection closed gracefully');
+    logger.info('Redis connection closed gracefully');
   } catch (err) {
-    console.error('❌ Error closing Redis connection:', err);
+    logger.error('Error closing Redis connection', { error: err });
     redis.disconnect();
   }
 }
@@ -102,7 +103,7 @@ export async function checkRedisHealth(): Promise<boolean> {
     const result = await redis.ping();
     return result === 'PONG';
   } catch (err) {
-    console.error('❌ Redis health check failed:', err);
+    logger.error('Redis health check failed', { error: err });
     return false;
   }
 }
@@ -138,7 +139,7 @@ export async function getJSON<T>(key: string): Promise<T | null> {
   try {
     return JSON.parse(value) as T;
   } catch (err) {
-    console.error('❌ Failed to parse JSON from Redis key:', key, err);
+    logger.error('Failed to parse JSON from Redis', { key, error: err });
     return null;
   }
 }
@@ -166,7 +167,7 @@ export async function deleteByPattern(pattern: string): Promise<number> {
     }
   } while (cursor !== '0');
 
-  console.log('✅ Deleted', deletedCount, 'keys matching pattern:', pattern);
+  logger.debug('Deleted keys by pattern', { pattern, deletedCount });
   return deletedCount;
 }
 

@@ -20,6 +20,7 @@ import { Server, Socket } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import Redis from 'ioredis';
 import jwt from 'jsonwebtoken';
+import logger from './logger';
 
 // Redis clients for Socket.io adapter (pub/sub pattern)
 const pubClient = new Redis({
@@ -30,8 +31,11 @@ const pubClient = new Redis({
 
 const subClient = pubClient.duplicate();
 
-// JWT secret for authentication
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+// JWT secret for authentication - MUST be set in environment
+if (!process.env.JWT_SECRET) {
+  throw new Error('CRITICAL: JWT_SECRET environment variable is required for WebSocket authentication');
+}
+const JWT_SECRET: string = process.env.JWT_SECRET;
 
 /**
  * Extended Socket interface with authenticated user data
@@ -87,10 +91,10 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
       socket.userId = decoded.userId;
       socket.email = decoded.email;
 
-      console.log('✅ Socket authenticated:', decoded.email, '(' + decoded.userId + ')');
+      logger.info('Socket authenticated', { email: decoded.email, userId: decoded.userId });
       next();
     } catch (err) {
-      console.error('❌ Socket authentication failed:', err);
+      logger.error('Socket authentication failed', { error: err });
       next(new Error('Invalid authentication token'));
     }
   });
@@ -98,7 +102,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
   // Connection handler
   io.on('connection', (socket: AuthenticatedSocket) => {
     const { userId, email } = socket;
-    console.log('🔌 Client connected:', email, '(' + userId + ')');
+    logger.info('Client connected', { email, userId });
 
     // Join user-specific room for targeted notifications
     socket.join(`user:${userId}`);
@@ -170,7 +174,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
      */
     socket.on('conversation:join', (data: { conversationId: string }) => {
       socket.join(`conversation:${data.conversationId}`);
-      console.log('✅ User', userId, 'joined conversation', data.conversationId);
+      logger.debug('User joined conversation', { userId, conversationId: data.conversationId });
     });
 
     /**
@@ -178,7 +182,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
      */
     socket.on('conversation:leave', (data: { conversationId: string }) => {
       socket.leave(`conversation:${data.conversationId}`);
-      console.log('✅ User', userId, 'left conversation', data.conversationId);
+      logger.debug('User left conversation', { userId, conversationId: data.conversationId });
     });
 
     /**
@@ -196,7 +200,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
      */
     socket.on('household:join', (data: { householdId: string }) => {
       socket.join(`household:${data.householdId}`);
-      console.log('✅ User', userId, 'joined household', data.householdId);
+      logger.debug('User joined household', { userId, householdId: data.householdId });
     });
 
     /**
@@ -210,26 +214,26 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
     // ========================================
 
     socket.on('disconnect', () => {
-      console.log('🔌 Client disconnected:', email, '(' + userId + ')');
+      logger.info('Client disconnected', { email, userId });
       socket.broadcast.emit('user:offline', { userId });
     });
 
     // Error handler
     socket.on('error', (err: Error) => {
-      console.error('❌ Socket error for user', userId + ':', err);
+      logger.error('Socket error', { userId, error: err.message, stack: err.stack });
     });
   });
 
   // Redis adapter error handlers
   pubClient.on('error', (err) => {
-    console.error('❌ Redis pub client error:', err);
+    logger.error('Redis pub client error', { error: err.message });
   });
 
   subClient.on('error', (err) => {
-    console.error('❌ Redis sub client error:', err);
+    logger.error('Redis sub client error', { error: err.message });
   });
 
-  console.log('✅ Socket.io server initialized with Redis adapter');
+  logger.info('Socket.io server initialized with Redis adapter');
 
   // Store singleton instance
   ioInstance = io;
@@ -243,7 +247,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
 export async function closeSocketIO(io: Server): Promise<void> {
   return new Promise((resolve) => {
     io.close(() => {
-      console.log('✅ Socket.io server closed');
+      logger.info('Socket.io server closed');
       pubClient.quit();
       subClient.quit();
       ioInstance = null; // Clear singleton instance

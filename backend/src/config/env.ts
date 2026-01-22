@@ -43,10 +43,12 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
 
-  // Stripe Configuration (optional in development, required in production)
-  STRIPE_SECRET_KEY: z.string().default('sk_test_placeholder'),
-  STRIPE_PUBLISHABLE_KEY: z.string().default('pk_test_placeholder'),
-  STRIPE_WEBHOOK_SECRET: z.string().default('whsec_placeholder'),
+  // Stripe Configuration
+  // In development: defaults to placeholder (payments will fail but app runs)
+  // In production: must provide real keys (enforced in enforceProductionSecurity)
+  STRIPE_SECRET_KEY: z.string().min(1).default('sk_test_not_configured'),
+  STRIPE_PUBLISHABLE_KEY: z.string().min(1).default('pk_test_not_configured'),
+  STRIPE_WEBHOOK_SECRET: z.string().min(1).default('whsec_not_configured'),
 
   // Verification Providers
   VERIFF_API_KEY: z.string().optional(),
@@ -165,8 +167,9 @@ export function validateEnv(): Env {
     // Auto-generate encryption key if not provided in development
     if (!validatedEnv.ENCRYPTION_MASTER_KEY) {
       if (validatedEnv.SECURITY_MODE === 'development' || validatedEnv.SECURITY_MODE === 'testing') {
-        const crypto = require('crypto');
-        const key = crypto.randomBytes(32).toString('base64');
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const cryptoModule = require('crypto');
+        const key = cryptoModule.randomBytes(32).toString('base64');
         validatedEnv.ENCRYPTION_MASTER_KEY = key;
         logger.warn('⚠️  Auto-generated ENCRYPTION_MASTER_KEY for development (DO NOT USE IN PRODUCTION)');
       } else {
@@ -367,7 +370,7 @@ function logTestingSecurityStatus(env: Env): void {
  * Log development security status
  * Warn about relaxed security in development
  */
-function logDevelopmentSecurityStatus(env: Env): void {
+function logDevelopmentSecurityStatus(_env: Env): void {
   logger.warn('⚠️  Development mode - Security is relaxed for fast iteration');
   logger.warn('⚠️  DO NOT use this configuration in production!');
 }
@@ -388,8 +391,9 @@ export function getEnv(): Env {
  * Use this to generate ENCRYPTION_MASTER_KEY for .env
  */
 export function generateEncryptionKey(): string {
-  const crypto = require('crypto');
-  const key = crypto.randomBytes(32); // 256 bits
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const cryptoModule = require('crypto');
+  const key = cryptoModule.randomBytes(32); // 256 bits
   return key.toString('base64');
 }
 

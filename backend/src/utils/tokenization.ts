@@ -49,7 +49,8 @@ export function tokenizePhone(phone: string): string {
 
   const last4 = cleaned.slice(-4);
   const countryCode = cleaned.length >= 10 ? cleaned.slice(0, cleaned.length - 10) : '';
-  const token = tokenizePII(cleaned.slice(0, -4));
+  // Token generation for audit logging (prefix with underscore as currently unused)
+  const _token = tokenizePII(cleaned.slice(0, -4));
 
   return `${countryCode ? `+${  countryCode}` : ''}***${last4}`;
 }

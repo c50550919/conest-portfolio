@@ -63,7 +63,8 @@ export const notFoundHandler = (
   next(error);
 };
 
-// Async error wrapper
-export const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
+// Async error wrapper - wraps async route handlers to catch errors
+type AsyncRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<void> | void;
+export const asyncHandler = (fn: AsyncRequestHandler) => (req: Request, res: Response, next: NextFunction) => {
   Promise.resolve(fn(req, res, next)).catch(next);
 };

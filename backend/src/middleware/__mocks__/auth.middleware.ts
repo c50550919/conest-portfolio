@@ -105,57 +105,55 @@ function getMockUserForToken(token: string): typeof defaultMockUser {
  * Create mock auth middleware
  * Handles both valid JWTs and legacy mock tokens
  */
-const createMockAuthMiddleware = (mockUser = defaultMockUser) => {
-  return async (req: any, res: Response, next: NextFunction): Promise<void> => {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader?.split(' ')[1];
+const createMockAuthMiddleware = (mockUser = defaultMockUser) => async (req: any, res: Response, next: NextFunction): Promise<void> => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader?.split(' ')[1];
 
-    if (!token) {
+  if (!token) {
+    res.status(401).json({
+      error: 'unauthorized',
+      message: 'Authentication required - Access token is missing',
+    });
+    return;
+  }
+
+  // Try to decode the token to get user info
+  try {
+    const decoded = jwt.verify(token, TEST_JWT_SECRET) as { userId: string; email: string };
+    req.userId = decoded.userId;
+    req.email = decoded.email;
+    req.user = {
+      ...mockUser,
+      id: decoded.userId,
+      email: decoded.email,
+    };
+    req.jwtPayload = decoded;
+    next();
+  } catch (error) {
+    // If token is invalid, check if it's a mock token pattern
+    if (token.startsWith('mock-token-')) {
+      const userId = token.replace('mock-token-', '');
+      req.userId = userId;
+      req.email = mockUser.email;
+      req.user = { ...mockUser, id: userId };
+      req.jwtPayload = { userId, email: mockUser.email };
+      next();
+    } else if (token.startsWith('mock-jwt-token')) {
+      // Handle all mock-jwt-token-{suffix} patterns
+      const user = getMockUserForToken(token);
+      req.userId = user.id;
+      req.email = user.email;
+      req.user = user;
+      req.jwtPayload = { userId: user.id, email: user.email };
+      next();
+    } else {
       res.status(401).json({
         error: 'unauthorized',
-        message: 'Authentication required - Access token is missing',
+        message: 'Invalid authentication token',
       });
       return;
     }
-
-    // Try to decode the token to get user info
-    try {
-      const decoded = jwt.verify(token, TEST_JWT_SECRET) as { userId: string; email: string };
-      req.userId = decoded.userId;
-      req.email = decoded.email;
-      req.user = {
-        ...mockUser,
-        id: decoded.userId,
-        email: decoded.email,
-      };
-      req.jwtPayload = decoded;
-      next();
-    } catch (error) {
-      // If token is invalid, check if it's a mock token pattern
-      if (token.startsWith('mock-token-')) {
-        const userId = token.replace('mock-token-', '');
-        req.userId = userId;
-        req.email = mockUser.email;
-        req.user = { ...mockUser, id: userId };
-        req.jwtPayload = { userId, email: mockUser.email };
-        next();
-      } else if (token.startsWith('mock-jwt-token')) {
-        // Handle all mock-jwt-token-{suffix} patterns
-        const user = getMockUserForToken(token);
-        req.userId = user.id;
-        req.email = user.email;
-        req.user = user;
-        req.jwtPayload = { userId: user.id, email: user.email };
-        next();
-      } else {
-        res.status(401).json({
-          error: 'unauthorized',
-          message: 'Invalid authentication token',
-        });
-        return;
-      }
-    }
-  };
+  }
 };
 
 /**
@@ -175,7 +173,7 @@ export const authenticate = createMockAuthMiddleware();
 export async function authenticateJWTOptional(
   req: any,
   _res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   const authHeader = req.headers['authorization'];
   const token = authHeader?.split(' ')[1];
@@ -212,7 +210,7 @@ export async function authenticateJWTOptional(
 export function requireEmailVerification(
   req: any,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   if (!req.user) {
     res.status(401).json({
@@ -239,7 +237,7 @@ export function requireEmailVerification(
 export function requirePhoneVerification(
   req: any,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   if (!req.user) {
     res.status(401).json({
@@ -266,7 +264,7 @@ export function requirePhoneVerification(
 export function requireFullVerification(
   req: any,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   if (!req.user) {
     res.status(401).json({
@@ -293,7 +291,7 @@ export function requireFullVerification(
 export function requireAdmin(
   req: any,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   if (!req.user) {
     res.status(401).json({

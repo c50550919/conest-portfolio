@@ -174,7 +174,7 @@ export function setupSwagger(app: Express): void {
   app.use(
     '/api-docs',
     swaggerUi.serve,
-    swaggerUi.setup(swaggerSpec, swaggerUiOptions)
+    swaggerUi.setup(swaggerSpec, swaggerUiOptions),
   );
 
   // Serve raw OpenAPI spec as JSON
