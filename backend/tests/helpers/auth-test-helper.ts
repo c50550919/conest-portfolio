@@ -61,7 +61,7 @@ export const defaultMockUser: MockUser = {
 export function createTestToken(
   userId: string = defaultMockUser.id,
   email: string = defaultMockUser.email,
-  expiresIn: string = '1h'
+  expiresIn: string = '1h',
 ): string {
   return jwt.sign({ userId, email }, TEST_JWT_SECRET, { expiresIn });
 }
@@ -71,7 +71,7 @@ export function createTestToken(
  */
 export function createAuthHeader(
   userId: string = defaultMockUser.id,
-  email: string = defaultMockUser.email
+  email: string = defaultMockUser.email,
 ): string {
   return `Bearer ${createTestToken(userId, email)}`;
 }

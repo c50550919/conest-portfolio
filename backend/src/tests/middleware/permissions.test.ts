@@ -18,6 +18,17 @@ import {
   requireCustomPermission,
 } from '../../middleware/permissions';
 
+// Mock HouseholdMemberModel for database-independent testing
+jest.mock('../../models/HouseholdMember', () => ({
+  HouseholdMemberModel: {
+    isMember: jest.fn(),
+    isAdmin: jest.fn(),
+  },
+}));
+
+import { HouseholdMemberModel } from '../../models/HouseholdMember';
+const mockHouseholdMemberModel = HouseholdMemberModel as jest.Mocked<typeof HouseholdMemberModel>;
+
 // Helper functions for creating mock request/response
 const createMockRequest = (overrides: Partial<Request> = {}): Partial<Request> => ({
   params: {},
@@ -360,27 +371,71 @@ describe('Permissions Middleware', () => {
       });
     });
 
-    it('should call next when user is household member (placeholder implementation)', async () => {
-      const req = createMockRequest({ params: { householdId: 'household-123' } }) as Request;
-      (req as any).user = { id: 'user-123', role: 'user' };
+    it('should call next when user is verified household member', async () => {
+      const householdId = '550e8400-e29b-41d4-a716-446655440000';
+      const userId = '550e8400-e29b-41d4-a716-446655440001';
+      const req = createMockRequest({ params: { householdId } }) as Request;
+      (req as any).user = { id: userId, role: 'user' };
       const res = createMockResponse() as Response;
       const next = createMockNext();
 
+      // Mock database returns user is a member
+      mockHouseholdMemberModel.isMember.mockResolvedValue(true);
+
       await requireHouseholdMembership(req, res, next);
 
-      // Current implementation always allows (isMember = true placeholder)
+      expect(mockHouseholdMemberModel.isMember).toHaveBeenCalledWith(householdId, userId);
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('should allow admin access regardless of membership', async () => {
-      const req = createMockRequest({ params: { householdId: 'household-123' } }) as Request;
-      (req as any).user = { id: 'admin-123', role: 'admin' };
+    it('should return 403 when user is NOT a household member', async () => {
+      const householdId = '550e8400-e29b-41d4-a716-446655440000';
+      const userId = '550e8400-e29b-41d4-a716-446655440001';
+      const req = createMockRequest({ params: { householdId } }) as Request;
+      (req as any).user = { id: userId, role: 'user' };
+      const res = createMockResponse() as Response;
+      const next = createMockNext();
+
+      // Mock database returns user is NOT a member
+      mockHouseholdMemberModel.isMember.mockResolvedValue(false);
+
+      await requireHouseholdMembership(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Not a household member',
+        code: 'NOT_HOUSEHOLD_MEMBER',
+      });
+      expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should allow admin access regardless of membership (bypasses DB check)', async () => {
+      const householdId = '550e8400-e29b-41d4-a716-446655440000';
+      const req = createMockRequest({ params: { householdId } }) as Request;
+      (req as any).user = { id: '550e8400-e29b-41d4-a716-446655440002', role: 'admin' };
       const res = createMockResponse() as Response;
       const next = createMockNext();
 
       await requireHouseholdMembership(req, res, next);
 
+      // Admin bypasses DB check entirely
+      expect(mockHouseholdMemberModel.isMember).not.toHaveBeenCalled();
       expect(next).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return 400 for invalid UUID format', async () => {
+      const req = createMockRequest({ params: { householdId: 'not-a-uuid' } }) as Request;
+      (req as any).user = { id: '550e8400-e29b-41d4-a716-446655440001', role: 'user' };
+      const res = createMockResponse() as Response;
+      const next = createMockNext();
+
+      await requireHouseholdMembership(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        error: 'Invalid household ID format',
+        code: 'INVALID_HOUSEHOLD_ID',
+      });
     });
   });
 
@@ -400,7 +455,7 @@ describe('Permissions Middleware', () => {
       expect(res.status).not.toHaveBeenCalled();
     });
 
-    it('should block request with "child" in body', () => {
+    it('should block request with child PII key in body', () => {
       const req = createMockRequest({
         body: { childName: 'Test Child' },
       }) as Request;
@@ -413,7 +468,7 @@ describe('Permissions Middleware', () => {
       expect(res.json).toHaveBeenCalledWith({
         error: 'Child data access forbidden',
         code: 'CHILD_DATA_FORBIDDEN',
-        message: 'This platform does not store or process child data',
+        message: 'This platform does not store or process child-specific data. Only aggregate family information (children_count, children_age_groups) is permitted.',
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -430,7 +485,7 @@ describe('Permissions Middleware', () => {
       expect(res.status).toHaveBeenCalledWith(400);
     });
 
-    it('should block request with "minor" in params', () => {
+    it('should block request with minor PII key in params', () => {
       const req = createMockRequest({
         params: { minorProfile: 'abc' },
       }) as Request;
@@ -440,11 +495,16 @@ describe('Permissions Middleware', () => {
       preventChildDataAccess(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: 'CHILD_DATA_FORBIDDEN',
+        }),
+      );
     });
 
-    it('should be case-insensitive for child data detection', () => {
+    it('should be case-insensitive for child PII detection', () => {
       const req = createMockRequest({
-        body: { CHILD_AGE: 5 },
+        body: { CHILD_AGE: 5 }, // Specific child's age = PII
       }) as Request;
       const res = createMockResponse() as Response;
       const next = createMockNext();
@@ -452,6 +512,11 @@ describe('Permissions Middleware', () => {
       preventChildDataAccess(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          code: 'CHILD_DATA_FORBIDDEN',
+        }),
+      );
     });
 
     it('should handle empty request data gracefully', () => {
@@ -468,16 +533,19 @@ describe('Permissions Middleware', () => {
       expect(next).toHaveBeenCalledTimes(1);
     });
 
-    it('should block "numberOfChildren" as it contains "child"', () => {
+    it('should ALLOW aggregate child data like "numberOfChildren" or "children_count"', () => {
+      // Aggregate data about children (count, age groups) is allowed
+      // Only child-specific PII (names, photos, specific ages) is blocked
       const req = createMockRequest({
-        body: { numberOfChildren: 2 },
+        body: { numberOfChildren: 2, children_count: 3, children_age_groups: ['toddler', 'elementary'] },
       }) as Request;
       const res = createMockResponse() as Response;
       const next = createMockNext();
 
       preventChildDataAccess(req, res, next);
 
-      expect(res.status).toHaveBeenCalledWith(400);
+      expect(next).toHaveBeenCalledTimes(1);
+      expect(res.status).not.toHaveBeenCalled();
     });
   });
 
@@ -557,10 +625,10 @@ describe('Permissions Middleware', () => {
     });
 
     it('should pass request object to custom check for context', async () => {
-      const customCheck = jest.fn().mockImplementation((req, user) => {
+      const customCheck = jest.fn().mockImplementation((req, user) => 
         // Check if user can access a specific resource based on request params
-        return req.params.resourceId === user.ownedResourceId;
-      });
+        req.params.resourceId === user.ownedResourceId,
+      );
       const middleware = requireCustomPermission(customCheck);
       const req = createMockRequest({ params: { resourceId: 'res-456' } }) as Request;
       (req as any).user = { id: 'user-123', ownedResourceId: 'res-456' };
@@ -627,7 +695,7 @@ describe('Permissions Middleware', () => {
         Permission.USER_DELETE,
         Permission.ADMIN_DELETE,
         Permission.VERIFICATION_APPROVE,
-        Permission.HOUSEHOLD_MANAGE_MEMBERS
+        Permission.HOUSEHOLD_MANAGE_MEMBERS,
       );
       const req = createMockRequest() as Request;
       (req as any).user = { role: 'admin' };

@@ -191,7 +191,7 @@ describe('GET /api/admin/verifications/queue - Contract Tests', () => {
             if (queue[i].sla_hours_remaining !== undefined &&
                 queue[i + 1].sla_hours_remaining !== undefined) {
               expect(queue[i].sla_hours_remaining).toBeLessThanOrEqual(
-                queue[i + 1].sla_hours_remaining
+                queue[i + 1].sla_hours_remaining,
               );
             }
           }

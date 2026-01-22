@@ -220,15 +220,13 @@ describe('Action Determination Logic', () => {
 });
 
 describe('Signal Detection', () => {
-  const hasSignals = (signals: ModerationSignals): boolean => {
-    return (
-      signals.child_focus ||
+  const hasSignals = (signals: ModerationSignals): boolean => (
+    signals.child_focus ||
       signals.asks_schedule ||
       signals.asks_location_school ||
       signals.offers_unsolicited_access_to_child ||
       signals.probes_security_details
-    );
-  };
+  );
 
   it('should detect no signals when all false', () => {
     const signals: ModerationSignals = {
@@ -305,7 +303,7 @@ describe('API Response Parsing', () => {
     const text = mockGeminiResponse.candidates?.[0]?.content?.parts?.[0]?.text;
     expect(text).toBeDefined();
 
-    const result = JSON.parse(text!) as ModerationResult;
+    const result = JSON.parse(text) as ModerationResult;
     expect(result.category).toBe('normal');
     expect(result.confidence).toBe(0.95);
   });
@@ -333,7 +331,7 @@ describe('API Response Parsing', () => {
     const text = mockOpenAIResponse.choices?.[0]?.message?.content;
     expect(text).toBeDefined();
 
-    const result = JSON.parse(text!) as ModerationResult;
+    const result = JSON.parse(text) as ModerationResult;
     expect(result.category).toBe('child_safety_questionable');
     expect(result.signals.child_focus).toBe(true);
   });

@@ -1,8 +1,18 @@
-module.exports = {
+/**
+ * Jest Configuration
+ *
+ * Uses Jest projects to separate unit/contract tests from integration tests.
+ * Integration tests use real DB/Redis connections via setup-integration.ts.
+ *
+ * Commands:
+ *   npm test                    - Run all unit/contract tests
+ *   npm run test:integration    - Run integration tests (requires docker-compose.test.yml)
+ *   npm run test:all            - Run all tests
+ */
+
+const baseConfig = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/src', '<rootDir>/tests'],
-  testMatch: ['**/tests/**/*.test.ts', '**/?(*.)+(spec|test).ts', '!**/tests/e2e/**'],
   transform: {
     '^.+\\.ts$': ['ts-jest', {
       tsconfig: {
@@ -13,6 +23,58 @@ module.exports = {
       },
     }],
   },
+  moduleFileExtensions: ['ts', 'js', 'json'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/src/$1',
+    '^@config/(.*)$': '<rootDir>/src/config/$1',
+    '^@utils/(.*)$': '<rootDir>/src/utils/$1',
+    '^@services/(.*)$': '<rootDir>/src/services/$1',
+    '^@middleware/(.*)$': '<rootDir>/src/middleware/$1',
+  },
+};
+
+module.exports = {
+  // Use projects for different test types
+  projects: [
+    // Unit & Contract Tests (default - mocked dependencies)
+    {
+      ...baseConfig,
+      displayName: 'unit',
+      roots: ['<rootDir>/src', '<rootDir>/tests'],
+      testMatch: [
+        '**/tests/**/*.test.ts',
+        '**/?(*.)+(spec|test).ts',
+        '!**/tests/e2e/**',
+        '!**/tests/integration/**',
+        '!**/*.integration.test.ts',
+      ],
+      setupFiles: ['<rootDir>/tests/setup-env.ts'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+      testTimeout: 10000,
+      moduleNameMapper: {
+        ...baseConfig.moduleNameMapper,
+        // Auto-mock auth middleware for unit tests
+        '^(.*)/middleware/auth\\.middleware$': '<rootDir>/src/middleware/__mocks__/auth.middleware.ts',
+      },
+    },
+    // Integration Tests (real DB/Redis)
+    {
+      ...baseConfig,
+      displayName: 'integration',
+      roots: ['<rootDir>/tests/integration'],
+      testMatch: [
+        '**/tests/integration/**/*.test.ts',
+        '**/*.integration.test.ts',
+      ],
+      // Use dedicated env setup for integration tests with real container settings
+      setupFiles: ['<rootDir>/tests/setup-env-integration.ts'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup-integration.ts'],
+      testTimeout: 30000,
+      // DO NOT mock auth middleware for integration tests - use real auth
+    },
+  ],
+
+  // Coverage configuration (applies to all projects)
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',
@@ -38,19 +100,6 @@ module.exports = {
       statements: 100,
     },
   },
-  moduleFileExtensions: ['ts', 'js', 'json'],
+
   verbose: true,
-  testTimeout: 10000,
-  setupFiles: ['<rootDir>/tests/setup-env.ts'],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/src/$1',
-    '^@config/(.*)$': '<rootDir>/src/config/$1',
-    '^@utils/(.*)$': '<rootDir>/src/utils/$1',
-    '^@services/(.*)$': '<rootDir>/src/services/$1',
-    '^@middleware/(.*)$': '<rootDir>/src/middleware/$1',
-    // Auto-mock auth middleware for all tests
-    // This redirects all imports of auth.middleware to the mock version
-    '^(.*)/middleware/auth\\.middleware$': '<rootDir>/src/middleware/__mocks__/auth.middleware.ts',
-  },
 };

@@ -164,14 +164,14 @@ export async function createTestUser(options: CreateTestUserOptions): Promise<Te
 export function getAuthToken(
   userId: string,
   email: string = 'test@example.com',
-  options: { expiresIn?: string } = {}
+  options: { expiresIn?: string } = {},
 ): string {
   const JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-testing-only';
   const expiresIn = options.expiresIn || '1h';
   const token = jwt.sign(
     { userId, email },
     JWT_SECRET,
-    { expiresIn } as jwt.SignOptions
+    { expiresIn } as jwt.SignOptions,
   );
   return token;
 }
@@ -194,7 +194,7 @@ export function getExpiredAuthToken(userId: string, email: string = 'test@exampl
   // Create token that expired 1 hour ago
   const token = jwt.sign(
     { userId, email, exp: Math.floor(Date.now() / 1000) - 3600 },
-    JWT_SECRET
+    JWT_SECRET,
   );
   return token;
 }
