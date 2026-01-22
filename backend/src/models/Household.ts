@@ -10,31 +10,42 @@ import { db } from '../config/database';
  * - Rent splitting and expense management
  * - Stripe Connect integration for payments
  * - Multi-member household support
+ *
+ * IMPORTANT: The actual database schema uses `active` (boolean),
+ * not `status` (enum). This model matches the actual database.
  */
 
 export interface Household {
   id: string;
   name: string;
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  monthly_rent: number; // Amount in cents
+  address_encrypted: string;
+  address_hash?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  monthly_rent: number; // Amount in dollars (numeric)
+  bedrooms: number;
+  max_occupants: number;
+  house_rules: string;
   lease_start_date?: Date;
   lease_end_date?: Date;
-  stripe_account_id?: string;
-  status: 'active' | 'inactive';
+  active: boolean;
   created_at: Date;
   updated_at: Date;
 }
 
 export interface CreateHouseholdData {
   name: string;
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
+  address_encrypted: string;
+  address_hash?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
   monthly_rent: number;
+  bedrooms: number;
+  max_occupants: number;
+  house_rules: string;
+  location: string; // PostGIS geography point
   lease_start_date?: Date;
   lease_end_date?: Date;
 }
@@ -42,7 +53,7 @@ export interface CreateHouseholdData {
 export const HouseholdModel = {
   async create(data: CreateHouseholdData): Promise<Household> {
     const [household] = await db('households')
-      .insert({ ...data, status: 'active' })
+      .insert({ ...data, active: true })
       .returning('*');
     return household;
   },
@@ -51,9 +62,9 @@ export const HouseholdModel = {
     return await db('households').where({ id }).first();
   },
 
-  async findByAddress(address: string, zipCode: string): Promise<Household | undefined> {
+  async findByAddressHash(addressHash: string): Promise<Household | undefined> {
     return await db('households')
-      .where({ address, zip_code: zipCode })
+      .where({ address_hash: addressHash })
       .first();
   },
 
@@ -74,7 +85,7 @@ export const HouseholdModel = {
    */
   async getActive(): Promise<Household[]> {
     return await db('households')
-      .where({ status: 'active' })
+      .where({ active: true })
       .orderBy('created_at', 'desc');
   },
 
@@ -82,22 +93,18 @@ export const HouseholdModel = {
    * Deactivate household (soft delete)
    */
   async deactivate(id: string): Promise<Household> {
-    return await this.update(id, { status: 'inactive' });
-  },
-
-  /**
-   * Link Stripe Connect account to household
-   */
-  async setStripeAccount(id: string, stripeAccountId: string): Promise<Household> {
-    return await this.update(id, { stripe_account_id: stripeAccountId });
+    return await this.update(id, { active: false });
   },
 
   /**
    * Get household member count
+   * Note: household_members table doesn't have status column,
+   * use move_out_date to determine active members
    */
   async getMemberCount(id: string): Promise<number> {
     const result = await db('household_members')
-      .where({ household_id: id, status: 'active' })
+      .where({ household_id: id })
+      .whereNull('move_out_date')
       .count('* as count')
       .first();
     return parseInt(result?.count as string || '0', 10);
@@ -117,5 +124,4 @@ export const HouseholdModel = {
  *
  * - hasMany: HouseholdMembers (via household_id foreign key)
  * - hasMany: Payments (via household_id foreign key)
- * - hasMany: Expenses (via household_id foreign key)
  */

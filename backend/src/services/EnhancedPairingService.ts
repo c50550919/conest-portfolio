@@ -209,8 +209,6 @@ export class EnhancedPairingService {
   // ============================================
   private calculateLifestyleScore(profile1: Profile, profile2: Profile): number {
     let score = 50; // Base score
-    let factorsCompared = 0;
-    let factorsMatched = 0;
 
     // Pet compatibility (CRITICAL - 20 points or dealbreaker)
     if (profile1.pets && !profile2.pet_friendly) return 0; // Dealbreaker
@@ -242,9 +240,7 @@ export class EnhancedPairingService {
 
     lifestyleFactors.forEach(({ key, weight }) => {
       if ((profile1 as any)[key] !== undefined && (profile2 as any)[key] !== undefined) {
-        factorsCompared++;
         if ((profile1 as any)[key] === (profile2 as any)[key]) {
-          factorsMatched++;
           score += weight;
         }
       }

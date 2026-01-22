@@ -203,6 +203,28 @@ export async function seed(knex: Knex): Promise<void> {
         status: 'forming',
         created_by: userMap['jennifer.complete@test.com'],
       },
+      // E2E Test Household - for Documents flow testing
+      {
+        name: 'E2E Test Home',
+        address_street: '999 Test Avenue',
+        address_city: 'Austin',
+        address_state: 'TX',
+        address_zip: '78701',
+        monthly_rent: 1800,
+        bedrooms: 3,
+        bathrooms: 2,
+        lease_start_date: new Date('2025-01-01'),
+        lease_end_date: new Date('2026-01-01'),
+        house_rules: JSON.stringify({
+          no_smoking: true,
+          no_pets: false,
+          quiet_hours: '9pm-7am',
+          guest_policy: 'weekends_only',
+          shared_expenses: true,
+        }),
+        status: 'active',
+        created_by: userMap['test@conest.com'],
+      },
     ])
     .returning('*');
 
@@ -251,6 +273,16 @@ export async function seed(knex: Knex): Promise<void> {
       status: 'active',
       rent_share: 1100,
       joined_at: new Date('2025-01-20'),
+    },
+
+    // E2E Test Home - Active household for test@conest.com
+    {
+      household_id: households[3].id,
+      user_id: userMap['test@conest.com'],
+      role: 'admin',
+      status: 'active',
+      rent_share: 900,
+      joined_at: new Date('2025-01-01'),
     },
   ]);
 

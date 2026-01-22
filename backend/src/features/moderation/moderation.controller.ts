@@ -626,11 +626,11 @@ export const moderationController = {
         totalReviewed: parseInt((totalReviewed?.count as string) || '0'),
         falsePositiveRate:
           totalReviewed?.count && parseInt(totalReviewed.count as string) > 0
-            ? (
-                (parseInt((falsePositiveRate?.count as string) || '0') /
+            ? `${(
+              (parseInt((falsePositiveRate?.count as string) || '0') /
                   parseInt(totalReviewed.count as string)) *
                 100
-              ).toFixed(2) + '%'
+            ).toFixed(2)  }%`
             : '0%',
         recentActions,
       },

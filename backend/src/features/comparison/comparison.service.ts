@@ -208,7 +208,7 @@ export class ProfileComparisonService {
    */
   private async fetchSavedProfile(
     savedProfileId: string,
-    userId: string,
+    _userId: string,
   ): Promise<ComparisonProfile | null> {
     const result = await this.db('saved_profiles as sp')
       .join('users as u', 'sp.profile_id', 'u.id')

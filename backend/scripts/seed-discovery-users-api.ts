@@ -322,7 +322,7 @@ async function seedUsers() {
         console.error(
           `❌ Error: ${user.email} - ${
             error.response?.data?.error || error.response?.data?.message || error.message
-          }`
+          }`,
         );
         errors++;
       }
@@ -332,7 +332,7 @@ async function seedUsers() {
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
-  console.log(`\n📊 Summary:`);
+  console.log('\n📊 Summary:');
   console.log(`   ✅ Created: ${created}`);
   console.log(`   ⏭️  Skipped: ${skipped}`);
   console.log(`   ❌ Errors: ${errors}`);

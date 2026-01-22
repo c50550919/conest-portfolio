@@ -65,14 +65,14 @@ interface MessageResponse {
 const TEST_MESSAGES = {
   normal: [
     "Hi! I saw your profile and I think we might be compatible roommates. What's your work schedule like?",
-    "I have a 2-bedroom apartment in the suburbs. The rent is $1500/month split. Are you interested?",
+    'I have a 2-bedroom apartment in the suburbs. The rent is $1500/month split. Are you interested?',
     "I'm looking for someone who's family-friendly. I have a quiet lifestyle and work from home.",
     "The neighborhood is great for families. There's a park nearby and good schools in the area.",
   ],
   questionable: [
     "So, how old is your kid exactly? And what's their name? I'd love to get to know them better.",
     "When do you usually leave for work? I'm asking because I want to know when the house is empty.",
-    "Does your child ever stay home alone? Just curious about the house situation.",
+    'Does your child ever stay home alone? Just curious about the house situation.',
   ],
   predatory: [
     "I noticed you have young children. What school do they go to? I could pick them up sometimes if you're busy at work. What time does school let out?",
@@ -162,7 +162,7 @@ class ModerationTestRunner {
 
       const conversations = response.data.data || [];
       const existingConvo = conversations.find(
-        (c: any) => c.participants?.includes(this.user2Id)
+        (c: any) => c.participants?.includes(this.user2Id),
       );
 
       if (existingConvo) {
@@ -171,7 +171,7 @@ class ModerationTestRunner {
       } else {
         // Create a new conversation by sending first message
         this.conversationId = `conv_${this.user1Id}_${this.user2Id}`;
-        this.success(`Will create conversation with first message`);
+        this.success('Will create conversation with first message');
       }
 
       return true;
@@ -188,7 +188,7 @@ class ModerationTestRunner {
    */
   async sendMessage(
     content: string,
-    expectedCategory: 'normal' | 'child_safety_questionable' | 'child_predatory_risk'
+    expectedCategory: 'normal' | 'child_safety_questionable' | 'child_predatory_risk',
   ): Promise<{ success: boolean; messageId?: string; category?: string }> {
     try {
       const response = await this.api.post<MessageResponse>(
@@ -201,7 +201,7 @@ class ModerationTestRunner {
         },
         {
           headers: { Authorization: `Bearer ${this.user1Token}` },
-        }
+        },
       );
 
       const message = response.data.data;

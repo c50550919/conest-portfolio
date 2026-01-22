@@ -42,7 +42,7 @@ export async function up(knex: Knex): Promise<void> {
     table.check(
       "processing_status IN ('pending', 'processing', 'completed', 'failed', 'skipped')",
       [],
-      'chk_webhook_events_status'
+      'chk_webhook_events_status',
     );
   });
 
@@ -82,12 +82,12 @@ export async function up(knex: Knex): Promise<void> {
     table.check(
       "status IN ('pending', 'processing', 'completed', 'failed')",
       [],
-      'chk_idempotency_keys_status'
+      'chk_idempotency_keys_status',
     );
     table.check(
       "operation_type IN ('verification_payment', 'payment_intent', 'subscription', 'bundle_payment')",
       [],
-      'chk_idempotency_keys_operation'
+      'chk_idempotency_keys_operation',
     );
   });
 

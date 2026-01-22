@@ -17,6 +17,8 @@ import { Response } from 'express';
 import { HouseholdService } from './household.service';
 import { asyncHandler } from '../../middleware/errorHandler';
 import { AuthRequest } from '../../middleware/auth.middleware';
+import { HouseholdModel } from '../../models/Household';
+import { householdActualDBToMobileAPI } from '../../types/entities/transformers';
 
 export const HouseholdController = {
   /**
@@ -29,7 +31,8 @@ export const HouseholdController = {
   getMembers: asyncHandler(async (req: AuthRequest, res: Response) => {
     try {
       const { id: householdId } = req.params;
-      const userId = req.user?.userId;
+      // Use req.userId which is set by auth middleware, not req.userId
+      const userId = req.userId;
 
       if (!userId) {
         res.status(401).json({
@@ -78,7 +81,7 @@ export const HouseholdController = {
   getExpenses: asyncHandler(async (req: AuthRequest, res: Response) => {
     try {
       const { id: householdId } = req.params;
-      const userId = req.user?.userId;
+      const userId = req.userId;
       const { status, type } = req.query;
 
       if (!userId) {
@@ -131,7 +134,7 @@ export const HouseholdController = {
   addMember: asyncHandler(async (req: AuthRequest, res: Response) => {
     try {
       const { id: householdId } = req.params;
-      const requestingUserId = req.user?.userId;
+      const requestingUserId = req.userId;
       const { userId, rentShare, role } = req.body;
 
       if (!requestingUserId) {
@@ -197,7 +200,7 @@ export const HouseholdController = {
    */
   createHousehold: asyncHandler(async (req: AuthRequest, res: Response) => {
     try {
-      const userId = req.user?.userId;
+      const userId = req.userId;
 
       if (!userId) {
         res.status(401).json({
@@ -234,7 +237,7 @@ export const HouseholdController = {
   getHousehold: asyncHandler(async (req: AuthRequest, res: Response) => {
     try {
       const { id: householdId } = req.params;
-      const userId = req.user?.userId;
+      const userId = req.userId;
 
       if (!userId) {
         res.status(401).json({
@@ -281,7 +284,7 @@ export const HouseholdController = {
   updateHousehold: asyncHandler(async (req: AuthRequest, res: Response) => {
     try {
       const { id: householdId } = req.params;
-      const requestingUserId = req.user?.userId;
+      const requestingUserId = req.userId;
 
       if (!requestingUserId) {
         res.status(401).json({
@@ -330,7 +333,7 @@ export const HouseholdController = {
   removeMember: asyncHandler(async (req: AuthRequest, res: Response) => {
     try {
       const { id: householdId, userId: userIdToRemove } = req.params;
-      const requestingUserId = req.user?.userId;
+      const requestingUserId = req.userId;
 
       if (!requestingUserId) {
         res.status(401).json({
@@ -379,7 +382,7 @@ export const HouseholdController = {
   updateRentShare: asyncHandler(async (req: AuthRequest, res: Response) => {
     try {
       const { id: householdId, userId: userIdToUpdate } = req.params;
-      const requestingUserId = req.user?.userId;
+      const requestingUserId = req.userId;
       const { rentShare } = req.body;
 
       if (!requestingUserId) {
@@ -431,7 +434,7 @@ export const HouseholdController = {
   createExpense: asyncHandler(async (req: AuthRequest, res: Response) => {
     try {
       const { id: householdId } = req.params;
-      const userId = req.user?.userId;
+      const userId = req.userId;
       const { type, amount, description, dueDate } = req.body;
 
       if (!userId) {
@@ -485,7 +488,7 @@ export const HouseholdController = {
   deactivateHousehold: asyncHandler(async (req: AuthRequest, res: Response) => {
     try {
       const { id: householdId } = req.params;
-      const requestingUserId = req.user?.userId;
+      const requestingUserId = req.userId;
 
       if (!requestingUserId) {
         res.status(401).json({
@@ -520,6 +523,50 @@ export const HouseholdController = {
           return;
         }
       }
+      throw error;
+    }
+  }),
+
+  /**
+   * GET /api/household/me
+   * Get current user's household
+   *
+   * Authorization: Authenticated user
+   * Returns: User's active household or 404 if not in a household
+   *
+   * Response format: Mobile-compatible with structured address object
+   */
+  getMyHousehold: asyncHandler(async (req: AuthRequest, res: Response) => {
+    try {
+      const userId = req.userId;
+
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          error: 'Unauthorized',
+          statusCode: 401,
+        });
+        return;
+      }
+
+      const household = await HouseholdService.getMyHousehold(userId);
+
+      if (!household) {
+        res.status(404).json({
+          success: false,
+          error: 'No household found for user',
+        });
+        return;
+      }
+
+      // Get member count for the household
+      const memberCount = await HouseholdModel.getMemberCount(household.id);
+
+      // Transform to mobile-compatible format with structured address
+      const transformedHousehold = householdActualDBToMobileAPI(household, memberCount);
+
+      res.status(200).json(transformedHousehold);
+    } catch (error) {
       throw error;
     }
   }),

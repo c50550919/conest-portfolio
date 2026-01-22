@@ -1,11 +1,16 @@
 import http from 'http';
+import { initializeSentry, isSentryInitialized } from './config/sentry';
+
+// Initialize Sentry EARLY (before other imports that might throw)
+initializeSentry();
+
 import app from './app';
 import { testConnection } from './config/database';
 import { checkRedisHealth } from './config/redis';
 import { initializeWebSocket } from './websockets/socketHandler';
 import logger from './config/logger';
 import SocketService from './services/SocketService';
-import { validateEnv, getEnv } from './config/env';
+import { validateEnv } from './config/env';
 import { moderationWorker } from './features/moderation';
 
 // Validate environment variables (fail fast if misconfigured)
@@ -120,8 +125,8 @@ const startServer = async () => {
         moderationWorker.start();
         const shadowMode = process.env.AI_MODERATION_SHADOW_MODE === 'true';
         console.log(`\n🤖 AI Content Moderation: ${shadowMode ? 'SHADOW MODE (logging only)' : 'ACTIVE'}`);
-        console.log('   - Primary Provider: ' + (process.env.AI_MODERATION_PRIMARY_PROVIDER || 'gemini'));
-        console.log('   - Fallback Provider: ' + (process.env.AI_MODERATION_FALLBACK_PROVIDER || 'openai'));
+        console.log(`   - Primary Provider: ${  process.env.AI_MODERATION_PRIMARY_PROVIDER || 'gemini'}`);
+        console.log(`   - Fallback Provider: ${  process.env.AI_MODERATION_FALLBACK_PROVIDER || 'openai'}`);
       } else {
         console.log('\n⚠️  AI Content Moderation: DISABLED');
       }

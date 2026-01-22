@@ -73,8 +73,9 @@ export const initializeWebSocket = (server: HTTPServer): Server => {
       }
 
       // Emit to recipient via SocketService
-      const SocketService = require('../services/SocketService').default;
-      SocketService.emitTypingStart(userId, matchId, recipientId);
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const SocketServiceModule = require('../services/SocketService').default;
+      SocketServiceModule.emitTypingStart(userId, matchId, recipientId);
     });
 
     // T067: Handle typing:stop indicator
@@ -88,8 +89,9 @@ export const initializeWebSocket = (server: HTTPServer): Server => {
       }
 
       // Emit to recipient via SocketService
-      const SocketService = require('../services/SocketService').default;
-      SocketService.emitTypingStop(userId, matchId, recipientId);
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const SocketServiceModule = require('../services/SocketService').default;
+      SocketServiceModule.emitTypingStop(userId, matchId, recipientId);
     });
 
     // Legacy typing indicator (backward compatibility)

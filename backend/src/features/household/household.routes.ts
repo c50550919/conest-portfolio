@@ -54,6 +54,18 @@ router.use(authMiddleware);
 router.post('/', HouseholdController.createHousehold);
 
 /**
+ * GET /api/household/me
+ * Get current user's household
+ *
+ * Response:
+ * - household: User's active household object
+ *
+ * Returns 404 if user is not in any household
+ * Security: Authenticated user can only access their own household
+ */
+router.get('/me', HouseholdController.getMyHousehold);
+
+/**
  * GET /api/household/:id
  * Get household details
  *

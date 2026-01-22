@@ -2,7 +2,7 @@ import { ProfileModel, Profile } from '../../models/Profile';
 import { MatchModel, CreateMatchData } from '../../models/Match';
 import logger from '../../config/logger';
 import SocketService from '../../services/SocketService';
-import { logCompatibilityCalculation, logPairingCreated } from '../../services/auditService';
+import { logPairingCreated } from '../../services/auditService';
 
 /**
  * Pairing Service (formerly Matching Service) - FHA COMPLIANT

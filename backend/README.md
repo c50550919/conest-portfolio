@@ -6,7 +6,7 @@ Complete Node.js/TypeScript backend for the CoNest single parent housing platfor
 
 ### Core Services
 - **Authentication Service**: JWT with refresh tokens, password reset, 2FA (mock)
-- **Verification Service**: ID verification (mock Jumio), background checks (mock Checkr), phone/email verification (mock Twilio)
+- **Verification Service**: ID verification (mock Veriff), background checks (mock Certn), phone/email verification (mock Twilio)
 - **Matching Service**: Weighted compatibility algorithm (25% schedule, 20% parenting, 20% rules, 15% location, 10% budget, 10% lifestyle)
 - **Messaging Service**: Real-time messaging via Socket.io with encryption placeholders
 - **Payment Service**: Stripe Connect integration for rent splitting and payment processing

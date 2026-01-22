@@ -17,7 +17,6 @@ import {
   ParentDB,
   Parent,
   ProfileCard,
-  ExtendedProfileCard,
   WorkScheduleDB,
   WorkSchedule,
   HouseholdPreferencesDB,
@@ -41,7 +40,6 @@ import {
 import {
   ConnectionRequestDB,
   ConnectionRequest,
-  ConnectionRequestWithProfile,
 } from './connection-request.entity';
 
 import {
@@ -51,6 +49,7 @@ import {
   HouseholdMember,
   ExpenseDB,
   Expense,
+  HouseholdActualDB,
 } from './household.entity';
 
 import {
@@ -81,7 +80,7 @@ export function camelToSnake(str: string): string {
  * Transform object keys from snake_case to camelCase
  */
 export function transformKeysToCamel<T extends Record<string, unknown>>(
-  obj: T
+  obj: T,
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
@@ -95,7 +94,7 @@ export function transformKeysToCamel<T extends Record<string, unknown>>(
       result[camelKey] = value.map((item) =>
         item !== null && typeof item === 'object' && !(item instanceof Date)
           ? transformKeysToCamel(item as Record<string, unknown>)
-          : item
+          : item,
       );
     } else {
       result[camelKey] = value;
@@ -109,7 +108,7 @@ export function transformKeysToCamel<T extends Record<string, unknown>>(
  * Transform object keys from camelCase to snake_case
  */
 export function transformKeysToSnake<T extends Record<string, unknown>>(
-  obj: T
+  obj: T,
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
@@ -123,7 +122,7 @@ export function transformKeysToSnake<T extends Record<string, unknown>>(
       result[snakeKey] = value.map((item) =>
         item !== null && typeof item === 'object' && !(item instanceof Date)
           ? transformKeysToSnake(item as Record<string, unknown>)
-          : item
+          : item,
       );
     } else {
       result[snakeKey] = value;
@@ -215,7 +214,7 @@ export function workScheduleDBToAPI(db: WorkScheduleDB | undefined): WorkSchedul
  * Transform HouseholdPreferencesDB to HouseholdPreferences API format
  */
 export function householdPreferencesDBToAPI(
-  db: HouseholdPreferencesDB | undefined
+  db: HouseholdPreferencesDB | undefined,
 ): HouseholdPreferences | undefined {
   if (!db) return undefined;
   return {
@@ -265,11 +264,11 @@ export function parentDBToAPI(db: ParentDB): Parent {
 
     occupation: db.occupation,
     employer: db.employer,
-    workSchedule: workScheduleDBToAPI(db.work_schedule as WorkScheduleDB | undefined),
+    workSchedule: workScheduleDBToAPI(db.work_schedule),
     workFromHome: db.work_from_home,
 
     parentingStyle: db.parenting_style,
-    householdPreferences: householdPreferencesDBToAPI(db.household_preferences as HouseholdPreferencesDB | undefined),
+    householdPreferences: householdPreferencesDBToAPI(db.household_preferences),
     dietaryRestrictions: db.dietary_restrictions,
     allergies: db.allergies,
 
@@ -306,7 +305,7 @@ export function parentDBToAPI(db: ParentDB): Parent {
  */
 export function parentDBToProfileCard(
   db: ParentDB,
-  compatibilityScore: number = 0
+  compatibilityScore: number = 0,
 ): ProfileCard {
   const age = db.date_of_birth ? calculateAge(db.date_of_birth) : 0;
 
@@ -392,7 +391,7 @@ export function verificationDBToAPI(db: VerificationDB): Verification {
 export function messageDBToAPI(
   db: MessageDB,
   decryptedContent: string,
-  status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed' = 'sent'
+  status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed' = 'sent',
 ): Message {
   return {
     id: db.id,
@@ -415,7 +414,7 @@ export function messageDBToAPI(
  */
 export function conversationDBToAPI(
   db: ConversationDB,
-  unreadCount: number = 0
+  unreadCount: number = 0,
 ): Conversation {
   return {
     id: db.id,
@@ -441,7 +440,7 @@ export function conversationDBToAPI(
 export function connectionRequestDBToAPI(
   db: ConnectionRequestDB,
   decryptedMessage: string,
-  decryptedResponseMessage?: string
+  decryptedResponseMessage?: string,
 ): ConnectionRequest {
   return {
     id: db.id,
@@ -485,11 +484,64 @@ export function householdDBToAPI(db: HouseholdDB): Household {
 }
 
 /**
+ * Transform actual database household to mobile-compatible API response
+ *
+ * Handles the conversion of:
+ * - address_encrypted + city/state/zip_code → structured address object
+ * - active: boolean → status: 'active' | 'inactive'
+ * - Adds computed fields: totalMembers, maxMembers, establishedAt, settings
+ */
+export function householdActualDBToMobileAPI(
+  db: HouseholdActualDB,
+  memberCount: number = 0,
+): Household {
+  // Build structured address object
+  const address = {
+    street: db.address_encrypted || '', // Note: might be encrypted, use city/state/zip for display
+    city: db.city || '',
+    state: db.state || '',
+    zipCode: db.zip_code || '',
+  };
+
+  // Convert boolean active to status enum
+  const status: 'active' | 'inactive' = db.active ? 'active' : 'inactive';
+
+  return {
+    id: db.id,
+    name: db.name,
+    address,
+    city: db.city,
+    state: db.state,
+    zipCode: db.zip_code,
+    monthlyRent: Number(db.monthly_rent), // Ensure it's a number, not string
+    leaseStartDate: dateToISOString(db.lease_start_date) || '', // Required by mobile - empty string if missing
+    leaseEndDate: dateToISOString(db.lease_end_date) || '', // Required by mobile - empty string if missing
+    status,
+
+    // Computed fields for mobile
+    totalMembers: memberCount,
+    maxMembers: db.max_occupants || 4, // Default to 4 if not set
+    establishedAt: dateToISOString(db.created_at),
+
+    // Default settings (can be expanded later)
+    settings: {
+      requireApprovalForNewMembers: true,
+      allowGuestVisitors: true,
+      petPolicy: 'with-approval',
+      smokingPolicy: 'prohibited',
+    },
+
+    createdAt: dateToISOString(db.created_at)!,
+    updatedAt: dateToISOString(db.updated_at)!,
+  };
+}
+
+/**
  * Transform HouseholdMemberDB to HouseholdMember API response
  */
 export function householdMemberDBToAPI(
   db: HouseholdMemberDB,
-  profile?: { first_name: string; last_name?: string; profile_photo_url?: string }
+  profile?: { first_name: string; last_name?: string; profile_photo_url?: string },
 ): HouseholdMember {
   return {
     id: db.id,
@@ -601,7 +653,7 @@ export function createParentRequestToDB(
     budgetMin?: number;
     budgetMax?: number;
   },
-  userId: string
+  userId: string,
 ): {
   user_id: string;
   first_name: string;

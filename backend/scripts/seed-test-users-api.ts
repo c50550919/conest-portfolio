@@ -110,7 +110,7 @@ async function seedUsers() {
     }
   }
 
-  console.log(`\n📊 Summary:`);
+  console.log('\n📊 Summary:');
   console.log(`   ✅ Created: ${created}`);
   console.log(`   ⏭️  Skipped: ${skipped}`);
   console.log(`   ❌ Errors: ${errors}`);

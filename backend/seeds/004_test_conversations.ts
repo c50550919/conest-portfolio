@@ -163,7 +163,7 @@ export async function seed(knex: Knex): Promise<void> {
     {
       conversation_id: conversations[2].id,
       sender_id: userMap['patricia.schedule@test.com'],
-      content: "Hi Lisa! Yes, I love the flexibility. Do you work from home full-time?",
+      content: 'Hi Lisa! Yes, I love the flexibility. Do you work from home full-time?',
       is_read: true,
       created_at: new Date('2025-01-26T10:00:00'),
     },
@@ -179,7 +179,7 @@ export async function seed(knex: Knex): Promise<void> {
     {
       conversation_id: conversations[3].id,
       sender_id: userMap['jennifer.complete@test.com'],
-      content: "Hi Sarah! I really like your profile. I think our parenting styles would mesh well. Would you be interested in chatting more?",
+      content: 'Hi Sarah! I really like your profile. I think our parenting styles would mesh well. Would you be interested in chatting more?',
       is_read: true,
       created_at: new Date('2025-01-24T11:00:00'),
     },
@@ -195,7 +195,7 @@ export async function seed(knex: Knex): Promise<void> {
     {
       conversation_id: conversations[4].id,
       sender_id: userMap['karen.lifestyle@test.com'],
-      content: "Hi Patricia! Interested in discussing a potential roommate situation?",
+      content: 'Hi Patricia! Interested in discussing a potential roommate situation?',
       is_read: true,
       created_at: new Date('2025-01-10T10:00:00'),
     },

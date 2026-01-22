@@ -129,6 +129,29 @@ export interface HouseholdSettings {
 }
 
 /**
+ * Actual database schema for households table
+ * Note: This matches what's actually in PostgreSQL, which differs from HouseholdDB
+ */
+export interface HouseholdActualDB {
+  id: string;
+  name: string;
+  address_encrypted: string;
+  address_hash?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+  monthly_rent: number;
+  bedrooms: number;
+  max_occupants: number;
+  house_rules: string;
+  lease_start_date?: Date;
+  lease_end_date?: Date;
+  active: boolean; // Note: boolean, not status enum
+  created_at: Date;
+  updated_at: Date;
+}
+
+/**
  * Household member API response
  */
 export interface HouseholdMember {

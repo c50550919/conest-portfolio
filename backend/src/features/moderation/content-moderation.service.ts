@@ -120,7 +120,7 @@ Respond with JSON only.`;
         contents: [
           {
             role: 'user',
-            parts: [{ text: SYSTEM_PROMPT + '\n\n' + userPrompt }],
+            parts: [{ text: `${SYSTEM_PROMPT  }\n\n${  userPrompt}` }],
           },
         ],
         generationConfig: {
@@ -253,7 +253,7 @@ function validateResult(result: ModerationResult): void {
 /**
  * Determine action based on moderation result
  */
-function determineAction(result: ModerationResult, config: ModerationConfig): ModerationAction {
+function determineAction(result: ModerationResult, _config: ModerationConfig): ModerationAction {
   const { category, confidence } = result;
   const thresholds = DEFAULT_THRESHOLDS;
 

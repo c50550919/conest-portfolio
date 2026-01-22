@@ -24,8 +24,8 @@ export interface Profile extends EnhancedPreferences {
 
   // FHA COMPLIANCE: Child data is OPTIONAL (user-initiated disclosure)
   // Users can choose whether to share family information
-  number_of_children?: number; // OPTIONAL - not used in scoring
-  ages_of_children?: string; // OPTIONAL - not used in scoring
+  children_count?: number; // OPTIONAL - not used in scoring
+  children_age_groups?: string; // OPTIONAL - not used in scoring
   parenting_style?: string; // User preference (philosophy, not family composition)
 
   // Verification status
@@ -46,8 +46,8 @@ export interface CreateProfileData {
   zip_code: string;
   budget_min: number;
   budget_max: number;
-  number_of_children: number;
-  ages_of_children: string;
+  children_count?: number;
+  children_age_groups?: string;
   schedule_type: 'flexible' | 'fixed' | 'shift_work';
   work_from_home: boolean;
 }

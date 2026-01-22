@@ -1,7 +1,8 @@
 import { HouseholdModel, CreateHouseholdData } from '../../models/Household';
-import { HouseholdMemberModel, CreateHouseholdMemberData } from '../../models/HouseholdMember';
+import { HouseholdMemberModel } from '../../models/HouseholdMember';
 import { ExpenseModel } from '../../models/Expense';
 import { UserModel } from '../../models/User';
+import { ParentModel } from '../../models/Parent';
 import { db } from '../../config/database';
 
 /**
@@ -17,7 +18,7 @@ import { db } from '../../config/database';
 
 export class HouseholdService {
   /**
-   * Create new household with creator as admin
+   * Create new household with creator as owner
    */
   static async createHousehold(
     data: CreateHouseholdData,
@@ -32,13 +33,16 @@ export class HouseholdService {
     // Create household
     const household = await HouseholdModel.create(data);
 
-    // Add creator as admin with 100% rent share initially
-    const member = await HouseholdMemberModel.create({
-      household_id: household.id,
-      user_id: creatorUserId,
-      role: 'admin',
-      rent_share: data.monthly_rent,
-    });
+    // Add creator as owner with 100% rent share initially
+    // Uses createByUserId which internally looks up parent_id
+    const member = await HouseholdMemberModel.createByUserId(
+      household.id,
+      creatorUserId,
+      {
+        role: 'owner',
+        rent_share: data.monthly_rent,
+      },
+    );
 
     return { household, member };
   }
@@ -51,31 +55,65 @@ export class HouseholdService {
   }
 
   /**
+   * Get user's active household
+   * Returns the first active household the user belongs to
+   * Note: household_members table uses parent_id, not user_id
+   */
+  static async getMyHousehold(userId: string) {
+    // First, find the parent record for this user
+    const parent = await ParentModel.findByUserId(userId);
+
+    if (!parent) {
+      // User might not have a parent profile yet
+      return null;
+    }
+
+    // Find household memberships by parent_id
+    const memberships = await db('household_members')
+      .where({ parent_id: parent.id })
+      .orderBy('created_at', 'desc');
+
+    if (!memberships || memberships.length === 0) {
+      return null;
+    }
+
+    // Get the first active household
+    for (const membership of memberships) {
+      const household = await HouseholdModel.findById(membership.household_id);
+      if (household && household.active) {
+        return household;
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * Get household members with user profile info (NO CHILD PII)
    */
   static async getMembers(householdId: string) {
     const members = await HouseholdMemberModel.findByHousehold(householdId);
 
-    // Enrich with user profile data (firstName, profilePhotoUrl)
+    // Enrich with parent profile data (firstName, profilePhotoUrl)
+    // Note: Profile info is stored in parents table, not a separate profiles table
     const enrichedMembers = await Promise.all(
       members.map(async (member) => {
-        const user = await UserModel.findById(member.user_id);
-
-        // Get basic profile info from profiles table
-        const profile = await db('profiles')
-          .where({ user_id: member.user_id })
-          .select('first_name', 'profile_photo_url')
+        // Get parent profile info (first_name, profile_photo_url are in parents table)
+        const parent = await db('parents')
+          .where({ id: member.parent_id })
+          .select('user_id', 'first_name', 'profile_photo_url')
           .first();
 
         return {
           id: member.id,
-          userId: member.user_id,
-          firstName: profile?.first_name || 'Unknown',
-          profilePhotoUrl: profile?.profile_photo_url || null,
+          parentId: member.parent_id,
+          userId: parent?.user_id || null,
+          firstName: parent?.first_name || 'Unknown',
+          profilePhotoUrl: parent?.profile_photo_url || null,
           role: member.role,
           rentShare: member.rent_share,
-          joinedAt: member.joined_at,
-          status: member.status,
+          moveInDate: member.move_in_date,
+          leaseSigned: member.lease_signed,
         };
       }),
     );
@@ -100,10 +138,10 @@ export class HouseholdService {
       expenses = await ExpenseModel.findByHousehold(householdId);
     }
 
-    // Enrich with payer name
+    // Enrich with payer name (from parents table)
     const enrichedExpenses = await Promise.all(
       expenses.map(async (expense) => {
-        const profile = await db('profiles')
+        const parent = await db('parents')
           .where({ user_id: expense.payer_id })
           .select('first_name')
           .first();
@@ -112,7 +150,7 @@ export class HouseholdService {
           id: expense.id,
           householdId: expense.household_id,
           payerId: expense.payer_id,
-          payerName: profile?.first_name || 'Unknown',
+          payerName: parent?.first_name || 'Unknown',
           amount: expense.amount,
           type: expense.type,
           status: expense.status,
@@ -154,7 +192,7 @@ export class HouseholdService {
     if (!household) {
       throw new Error('Household not found');
     }
-    if (household.status !== 'active') {
+    if (!household.active) {
       throw new Error('Household is not active');
     }
 
@@ -170,13 +208,15 @@ export class HouseholdService {
       throw new Error('User is already a member of this household');
     }
 
-    // Add member
-    const member = await HouseholdMemberModel.create({
-      household_id: householdId,
-      user_id: data.userId,
-      rent_share: data.rentShare,
-      role: data.role || 'member',
-    });
+    // Add member using createByUserId which looks up parent_id internally
+    const member = await HouseholdMemberModel.createByUserId(
+      householdId,
+      data.userId,
+      {
+        rent_share: data.rentShare,
+        role: data.role === 'admin' ? 'owner' : 'co-tenant',
+      },
+    );
 
     return member;
   }
@@ -202,8 +242,8 @@ export class HouseholdService {
       userIdToRemove,
     );
 
-    if (memberToRemove?.role === 'admin' && admins.length <= 1) {
-      throw new Error('Cannot remove the last admin');
+    if (memberToRemove?.role === 'owner' && admins.length <= 1) {
+      throw new Error('Cannot remove the last owner');
     }
 
     await HouseholdMemberModel.removeMember(householdId, userIdToRemove);

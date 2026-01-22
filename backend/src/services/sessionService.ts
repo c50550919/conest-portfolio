@@ -209,7 +209,7 @@ async function enforceMaxSessions(userId: string): Promise<void> {
 
     // Remove oldest sessions
     const toRemove = sessions.slice(0, sessions.length - maxSessions);
-    for (const session of toRemove) {
+    for (const _session of toRemove) {
       const sessionIds = await redisClient.sMembers(`user:${userId}:sessions`);
       const oldestSessionId = sessionIds[0]; // Simplified - should match by session data
       if (oldestSessionId) {

@@ -356,7 +356,7 @@ export async function seed(knex: Knex): Promise<void> {
 
       // Create profile
       const birthYear = 1985 + Math.floor(Math.random() * 15); // Age 30-45
-      const [profileRecord] = await knex('profiles')
+      await knex('profiles')
         .insert({
           user_id: user.id,
           first_name: profile.first_name,
@@ -403,7 +403,7 @@ export async function seed(knex: Knex): Promise<void> {
         // Unique constraint violation - user already exists
         console.log('⏭️  Skipped', profile.email, '(already exists)');
       } else {
-        console.error('❌ Error creating profile for', profile.email + ':', error.message);
+        console.error('❌ Error creating profile for', `${profile.email  }:`, error.message);
       }
     }
   }

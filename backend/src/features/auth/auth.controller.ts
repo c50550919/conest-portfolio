@@ -148,7 +148,7 @@ export const AuthController = {
       }
 
       // Verify the code
-      const isValid = await AuthService.verifyPhoneCode(user.id as string, code);
+      const isValid = await AuthService.verifyPhoneCode(user.id, code);
       if (!isValid) {
         res.status(400).json({
           success: false,

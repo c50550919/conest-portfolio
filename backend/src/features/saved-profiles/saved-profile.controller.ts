@@ -1,14 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/auth.middleware';
 import SavedProfileService from './saved-profile.service';
-import { validate } from '../../middleware/validation';
-import {
-  createSavedProfileSchema,
-  updateSavedProfileSchema,
-  deleteSavedProfileSchema,
-  getSavedProfilesSchema,
-  compareProfilesSchema,
-} from '../../validators/savedProfileValidator';
 
 /**
  * SavedProfile Controller

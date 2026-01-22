@@ -13,6 +13,7 @@
  */
 
 import { UserModel, User } from '../../models/User';
+import { ParentModel } from '../../models/Parent';
 import { VerificationModel } from '../../models/Verification';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, JWTPayload } from '../../utils/jwt';
 import { hashPassword, comparePassword } from '../../utils/password';
@@ -114,6 +115,7 @@ export const AuthService = {
 
   /**
    * Authenticate user login
+   * Returns user data with profile completion status from parents table
    */
   async login(data: LoginData): Promise<AuthResponse> {
     // Find user
@@ -136,13 +138,24 @@ export const AuthService = {
     // Update last login
     await UserModel.updateLastLogin(user.id);
 
+    // Fetch parent profile for additional user data
+    const parent = await ParentModel.findByUserId(user.id);
+
     // Generate tokens with refresh token rotation (T038)
     const tokens = await this.generateTokenPair(user.id, user.email);
 
     // Remove password hash from response (security best practice)
     const { password_hash: _, ...userWithoutPassword } = user;
 
-    return { user: userWithoutPassword, tokens };
+    // Include profile data needed by mobile app for navigation
+    const userResponse = {
+      ...userWithoutPassword,
+      firstName: parent?.first_name || '',
+      lastName: parent?.last_name || '',
+      profileComplete: parent?.profile_completed ?? false,
+    };
+
+    return { user: userResponse, tokens };
   },
 
   /**

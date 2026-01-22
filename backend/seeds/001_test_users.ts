@@ -94,6 +94,16 @@ export async function seed(knex: Knex): Promise<void> {
         two_factor_enabled: false,
         status: 'active',
       },
+      // E2E Test User - MUST have household for Documents flow tests
+      {
+        email: 'test@conest.com',
+        password_hash: await bcrypt.hash('Test1234!', 10),
+        phone: '+15559990000',
+        phone_verified: true,
+        email_verified: true,
+        two_factor_enabled: false,
+        status: 'active',
+      },
     ])
     .returning('*');
 
@@ -342,6 +352,38 @@ export async function seed(knex: Knex): Promise<void> {
         social_level: 'moderate',
         dietary: 'vegan',
         exercise: 'daily',
+      }),
+      verified_id: true,
+      verified_income: true,
+      verified_background: true,
+    },
+    // E2E Test User Profile - for Documents flow tests
+    {
+      user_id: users[8].id,
+      first_name: 'Test',
+      last_name: 'User',
+      bio: 'E2E test user for automated testing. Parent with one child seeking family-friendly housing.',
+      location_city: 'Austin',
+      location_state: 'TX',
+      location_zip: '78701',
+      children_count: 1,
+      children_ages_range: '5-7',
+      budget_min: 800,
+      budget_max: 1200,
+      preferred_move_date: new Date('2025-03-01'),
+      work_schedule: 'Mon-Fri 9am-5pm',
+      parenting_style: 'balanced',
+      house_rules: JSON.stringify({
+        no_smoking: true,
+        no_pets: false,
+        quiet_hours: '9pm-7am',
+        guest_policy: 'weekends_only',
+      }),
+      lifestyle_preferences: JSON.stringify({
+        cleanliness: 'very_clean',
+        social_level: 'moderate',
+        dietary: 'omnivore',
+        exercise: 'regular',
       }),
       verified_id: true,
       verified_income: true,
