@@ -74,7 +74,7 @@ describe('VeriffClient', () => {
       expect(mockedAxios.create).toHaveBeenCalledWith(
         expect.objectContaining({
           baseURL: 'https://stationapi.veriff.com',
-        })
+        }),
       );
     });
 
@@ -85,7 +85,7 @@ describe('VeriffClient', () => {
       new VeriffClient();
 
       expect(logger.warn).toHaveBeenCalledWith(
-        'VERIFF_API_KEY not configured - verification will fail'
+        'VERIFF_API_KEY not configured - verification will fail',
       );
     });
   });
@@ -124,7 +124,7 @@ describe('VeriffClient', () => {
           headers: expect.objectContaining({
             'X-SIGNATURE': expect.any(String),
           }),
-        })
+        }),
       );
       expect(result).toEqual(mockSessionResponse);
     });
@@ -163,7 +163,7 @@ describe('VeriffClient', () => {
 
       expect(logger.info).toHaveBeenCalledWith(
         `Veriff session created for user ${userId}`,
-        { sessionId: 'session-456' }
+        { sessionId: 'session-456' },
       );
     });
 
@@ -175,7 +175,7 @@ describe('VeriffClient', () => {
       mockAxiosInstance.post.mockRejectedValue(error);
 
       await expect(client.createSession(userId, callbackUrl)).rejects.toThrow(
-        'Veriff session creation failed: API Error'
+        'Veriff session creation failed: API Error',
       );
     });
 
@@ -229,7 +229,7 @@ describe('VeriffClient', () => {
       const result = await client.getDecision(sessionId);
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        `/v1/sessions/${sessionId}/decision`
+        `/v1/sessions/${sessionId}/decision`,
       );
       expect(result).toEqual(mockDecisionResponse);
     });
@@ -242,7 +242,7 @@ describe('VeriffClient', () => {
 
       expect(logger.info).toHaveBeenCalledWith(
         `Retrieved Veriff decision for session ${sessionId}`,
-        { status: 'approved' }
+        { status: 'approved' },
       );
     });
 
@@ -250,7 +250,7 @@ describe('VeriffClient', () => {
       mockAxiosInstance.get.mockRejectedValue({ message: 'Not found' });
 
       await expect(client.getDecision('invalid-id')).rejects.toThrow(
-        'Veriff decision retrieval failed: Not found'
+        'Veriff decision retrieval failed: Not found',
       );
     });
 
@@ -349,7 +349,7 @@ describe('VeriffClient', () => {
 
       expect(logger.error).toHaveBeenCalledWith(
         'Webhook signature verification failed',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
@@ -466,7 +466,7 @@ describe('VeriffClient', () => {
       mockAxiosInstance.post.mockRejectedValue(timeoutError);
 
       await expect(
-        client.createSession('user-1', 'https://callback.com')
+        client.createSession('user-1', 'https://callback.com'),
       ).rejects.toThrow('Veriff session creation failed: timeout of 30000ms exceeded');
     });
 
@@ -486,7 +486,7 @@ describe('VeriffClient', () => {
         expect.objectContaining({
           error: 'Network error',
           response: undefined,
-        })
+        }),
       );
     });
 
@@ -501,7 +501,7 @@ describe('VeriffClient', () => {
       mockAxiosInstance.post.mockRejectedValue(authError);
 
       await expect(
-        client.createSession('user-1', 'https://callback.com')
+        client.createSession('user-1', 'https://callback.com'),
       ).rejects.toThrow('Veriff session creation failed');
     });
 
@@ -516,7 +516,7 @@ describe('VeriffClient', () => {
       mockAxiosInstance.post.mockRejectedValue(rateLimitError);
 
       await expect(
-        client.createSession('user-1', 'https://callback.com')
+        client.createSession('user-1', 'https://callback.com'),
       ).rejects.toThrow('Veriff session creation failed');
     });
   });

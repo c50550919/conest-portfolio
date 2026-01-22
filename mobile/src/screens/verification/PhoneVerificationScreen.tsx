@@ -27,6 +27,7 @@ import { colors, spacing, typography } from '../../theme';
 import { OTPInput } from '../../components/verification';
 import {
   sendPhoneCode,
+  sendPhoneVoiceCode,
   verifyPhoneCode,
   resetPhoneVerification,
   fetchVerificationStatus,
@@ -49,8 +50,43 @@ export const PhoneVerificationScreen: React.FC<Props> = ({ navigation, route }) 
 
   const [otpValue, setOtpValue] = useState('');
   const [countdown, setCountdown] = useState(0);
+  const [showVoiceOption, setShowVoiceOption] = useState(false);
+  const [codeExpiryCountdown, setCodeExpiryCountdown] = useState(0);
 
   const phoneNumber = route.params?.phoneNumber || phoneState.phoneNumber || 'your phone';
+
+  // Handle OTP expiry countdown (shows remaining time for code validity)
+  useEffect(() => {
+    if (phoneState.codeExpiry) {
+      const updateExpiry = () => {
+        const remaining = Math.max(0, Math.ceil((phoneState.codeExpiry! - Date.now()) / 1000));
+        setCodeExpiryCountdown(remaining);
+      };
+
+      updateExpiry();
+      const timer = setInterval(updateExpiry, 1000);
+      return () => clearInterval(timer);
+    } else {
+      setCodeExpiryCountdown(0);
+    }
+  }, [phoneState.codeExpiry]);
+
+  // Format expiry time as MM:SS
+  const formatExpiryTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Show voice call option after 60 seconds
+  useEffect(() => {
+    if (phoneState.codeSent && !showVoiceOption) {
+      const timer = setTimeout(() => {
+        setShowVoiceOption(true);
+      }, 60000); // 60 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [phoneState.codeSent, showVoiceOption]);
 
   // Handle resend countdown
   useEffect(() => {
@@ -126,6 +162,23 @@ export const PhoneVerificationScreen: React.FC<Props> = ({ navigation, route }) 
     }
   }, [countdown, loading, handleSendCode]);
 
+  // Handle voice call fallback
+  const handleVoiceCall = useCallback(async () => {
+    dispatch(clearError());
+    setOtpValue('');
+    const result = await dispatch(sendPhoneVoiceCode());
+
+    if (sendPhoneVoiceCode.rejected.match(result)) {
+      Alert.alert('Error', result.payload || 'Failed to initiate voice call');
+    } else {
+      Alert.alert(
+        'Voice Call Initiated',
+        'You will receive a phone call with your verification code shortly.',
+        [{ text: 'OK' }]
+      );
+    }
+  }, [dispatch]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -170,6 +223,42 @@ export const PhoneVerificationScreen: React.FC<Props> = ({ navigation, route }) 
                 disabled={loading || isCoolingDown}
                 error={!!error}
               />
+
+              {/* Code expiry timer */}
+              {codeExpiryCountdown > 0 && (
+                <View
+                  style={styles.expiryContainer}
+                  accessible
+                  accessibilityLabel={`Code expires in ${formatExpiryTime(codeExpiryCountdown)}`}
+                >
+                  <Icon
+                    name="timer-outline"
+                    size={16}
+                    color={codeExpiryCountdown < 120 ? colors.warning : colors.text.secondary}
+                  />
+                  <Text
+                    style={[
+                      styles.expiryText,
+                      codeExpiryCountdown < 120 && styles.expiryTextWarning,
+                    ]}
+                  >
+                    Code expires in {formatExpiryTime(codeExpiryCountdown)}
+                  </Text>
+                </View>
+              )}
+
+              {/* Code expired message */}
+              {phoneState.codeExpiry && codeExpiryCountdown === 0 && (
+                <View
+                  style={styles.expiredContainer}
+                  accessible
+                  accessibilityRole="alert"
+                  accessibilityLabel="Code has expired. Please request a new code."
+                >
+                  <Icon name="timer-off-outline" size={16} color={colors.error} />
+                  <Text style={styles.expiredText}>Code has expired. Please request a new code.</Text>
+                </View>
+              )}
 
               {/* Error message */}
               {error && (
@@ -227,6 +316,21 @@ export const PhoneVerificationScreen: React.FC<Props> = ({ navigation, route }) 
                   {countdown > 0 ? `Resend code in ${countdown}s` : "Didn't receive code? Resend"}
                 </Text>
               </TouchableOpacity>
+
+              {/* Voice call fallback - shown after 60s */}
+              {showVoiceOption && (
+                <TouchableOpacity
+                  onPress={handleVoiceCall}
+                  disabled={loading}
+                  style={styles.voiceCallButton}
+                  accessibilityRole="button"
+                  accessibilityLabel="Call me instead. Receive verification code via phone call."
+                  accessibilityState={{ disabled: loading }}
+                >
+                  <Icon name="phone" size={18} color={colors.primary} />
+                  <Text style={styles.voiceCallText}>Call Me Instead</Text>
+                </TouchableOpacity>
+              )}
 
               {/* Verify button */}
               <Button
@@ -314,6 +418,33 @@ const styles = StyleSheet.create({
   otpSection: {
     alignItems: 'center',
   },
+  expiryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.md,
+    gap: spacing.xs,
+  },
+  expiryText: {
+    ...typography.caption,
+    color: colors.text.secondary,
+  },
+  expiryTextWarning: {
+    color: colors.warning,
+    fontWeight: '500' as const,
+  },
+  expiredContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.md,
+    gap: spacing.xs,
+    backgroundColor: `${colors.error}10`,
+    padding: spacing.sm,
+    borderRadius: 8,
+  },
+  expiredText: {
+    ...typography.caption,
+    color: colors.error,
+  },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -353,6 +484,22 @@ const styles = StyleSheet.create({
   },
   resendTextDisabled: {
     color: colors.text.disabled,
+  },
+  voiceCallButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.sm,
+    padding: spacing.sm,
+    gap: spacing.xs,
+    backgroundColor: `${colors.primary}10`,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+  },
+  voiceCallText: {
+    ...typography.body2,
+    color: colors.primary,
+    fontWeight: '500' as const,
   },
   verifyButton: {
     marginTop: spacing.lg,

@@ -168,7 +168,7 @@ export class TelnyxVerifyClient {
         {
           code: code,
           verify_profile_id: this.verifyProfileId,
-        }
+        },
       );
 
       // Response format: { data: { phone_number: string, response_code: "accepted" } }
@@ -223,6 +223,67 @@ export class TelnyxVerifyClient {
   }
 
   /**
+   * Send verification code via Voice Call
+   *
+   * Voice call fallback for users who can't receive SMS.
+   * Telnyx API: POST /verifications/call
+   * Built-in rate limiting: max 3 attempts per 10 minutes per phone.
+   *
+   * @param phoneNumber - E.164 format phone number (e.g., +15551234567)
+   * @returns Verification ID and expiration info
+   */
+  async sendVoiceCode(phoneNumber: string): Promise<SendCodeResult> {
+    try {
+      const normalizedPhone = this.normalizePhoneNumber(phoneNumber);
+
+      // Per Telnyx docs: POST /verifications/call for voice OTP
+      const response = await this.client.post<TelnyxVerifyResponse>('/verifications/call', {
+        phone_number: normalizedPhone,
+        verify_profile_id: this.verifyProfileId,
+      });
+
+      const verification = response.data.data;
+
+      logger.info('Telnyx verification voice call initiated', {
+        verificationId: verification.id,
+        phoneNumber: this.maskPhoneNumber(normalizedPhone),
+        expiresIn: verification.timeout_secs,
+      });
+
+      return {
+        verificationId: verification.id,
+        phoneNumber: normalizedPhone,
+        expiresInSeconds: verification.timeout_secs,
+      };
+    } catch (error: any) {
+      if (error.response?.status === 429) {
+        logger.warn('Telnyx voice call rate limit hit', {
+          phoneNumber: this.maskPhoneNumber(phoneNumber),
+        });
+        throw new Error('Too many verification attempts. Please wait before trying again.');
+      }
+
+      if (error.response?.status === 400) {
+        const errorCode = error.response?.data?.errors?.[0]?.code;
+        if (errorCode === 'invalid_phone_number') {
+          throw new Error('Invalid phone number format');
+        }
+        if (errorCode === 'voice_not_supported') {
+          throw new Error('Voice calls are not supported for this phone number');
+        }
+      }
+
+      logger.error('Failed to initiate Telnyx voice verification', {
+        phoneNumber: this.maskPhoneNumber(phoneNumber),
+        error: error.message,
+        response: error.response?.data,
+      });
+
+      throw new Error(`Failed to initiate voice verification: ${error.message}`);
+    }
+  }
+
+  /**
    * Get verification status by ID
    *
    * @param verificationId - Telnyx verification ID
@@ -231,7 +292,7 @@ export class TelnyxVerifyClient {
   async getVerificationStatus(verificationId: string): Promise<TelnyxVerification> {
     try {
       const response = await this.client.get<TelnyxVerifyResponse>(
-        `/verifications/${verificationId}`
+        `/verifications/${verificationId}`,
       );
 
       return response.data.data;
@@ -256,11 +317,11 @@ export class TelnyxVerifyClient {
     if (!normalized.startsWith('+')) {
       // Remove leading 1 if present (to avoid +11...)
       if (normalized.startsWith('1') && normalized.length === 11) {
-        normalized = '+' + normalized;
+        normalized = `+${  normalized}`;
       } else if (normalized.length === 10) {
-        normalized = '+1' + normalized;
+        normalized = `+1${  normalized}`;
       } else {
-        normalized = '+' + normalized;
+        normalized = `+${  normalized}`;
       }
     }
 
@@ -272,7 +333,7 @@ export class TelnyxVerifyClient {
    */
   private maskPhoneNumber(phone: string): string {
     if (phone.length < 6) return '***';
-    return phone.substring(0, 3) + '****' + phone.substring(phone.length - 4);
+    return `${phone.substring(0, 3)  }****${  phone.substring(phone.length - 4)}`;
   }
 
   /**

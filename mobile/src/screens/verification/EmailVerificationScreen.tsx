@@ -9,7 +9,7 @@
  * 4. Screen shows pending status
  */
 
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -18,9 +18,12 @@ import {
   TouchableOpacity,
   Alert,
   Linking,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import { Button } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
+import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { colors, spacing, typography } from '../../theme';
 import {
@@ -47,11 +50,56 @@ export const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) 
   const error = useSelector(selectVerificationError);
 
   const [countdown, setCountdown] = useState(0);
+  const appState = useRef(AppState.currentState);
 
   const email = route.params?.email || emailState.email || 'your email';
 
   // Check if already verified
   const isVerified = status?.email_verified === true;
+
+  // Auto-refresh when app comes to foreground (user clicked email link and returned)
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        // App has come to the foreground - auto-check verification status
+        if (emailState.linkSent && !isVerified) {
+          dispatch(fetchVerificationStatus()).then((result) => {
+            if (
+              fetchVerificationStatus.fulfilled.match(result) &&
+              result.payload.email_verified
+            ) {
+              Alert.alert('Success', 'Email verified successfully!', [
+                { text: 'OK', onPress: () => navigation.goBack() },
+              ]);
+            }
+          });
+        }
+      }
+      appState.current = nextAppState;
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [dispatch, emailState.linkSent, isVerified, navigation]);
+
+  // Auto-refresh when screen gains focus (navigated back from browser/email app)
+  useFocusEffect(
+    useCallback(() => {
+      if (emailState.linkSent && !isVerified) {
+        dispatch(fetchVerificationStatus()).then((result) => {
+          if (
+            fetchVerificationStatus.fulfilled.match(result) &&
+            result.payload.email_verified
+          ) {
+            Alert.alert('Success', 'Email verified successfully!', [
+              { text: 'OK', onPress: () => navigation.goBack() },
+            ]);
+          }
+        });
+      }
+    }, [dispatch, emailState.linkSent, isVerified, navigation]),
+  );
 
   // Handle countdown for resend
   useEffect(() => {

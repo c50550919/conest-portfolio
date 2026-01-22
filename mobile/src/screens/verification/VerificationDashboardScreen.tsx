@@ -112,6 +112,7 @@ export const VerificationDashboardScreen: React.FC<VerificationDashboardProps> =
         status: mapIdStatus(status?.id_verification_status),
         required: true,
         icon: 'card-account-details-outline',
+        expiresAt: status?.id_expiration_date ? new Date(status.id_expiration_date) : undefined,
       },
       {
         id: 'background',
@@ -120,6 +121,9 @@ export const VerificationDashboardScreen: React.FC<VerificationDashboardProps> =
         status: mapBackgroundStatus(status?.background_check_status),
         required: true,
         icon: 'shield-check-outline',
+        expiresAt: status?.bg_check_expiration_date
+          ? new Date(status.bg_check_expiration_date)
+          : undefined,
       },
       {
         id: 'income',

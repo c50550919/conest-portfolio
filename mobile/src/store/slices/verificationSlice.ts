@@ -105,6 +105,20 @@ export const sendPhoneCode = createAsyncThunk<PhoneSendResponse, void, { rejectV
 );
 
 /**
+ * Send phone verification via voice call (fallback)
+ */
+export const sendPhoneVoiceCode = createAsyncThunk<PhoneSendResponse, void, { rejectValue: string }>(
+  'verification/sendPhoneVoiceCode',
+  async (_, { rejectWithValue }) => {
+    try {
+      return await verificationAPI.sendPhoneVoiceCode();
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+/**
  * Verify phone with OTP code
  */
 export const verifyPhoneCode = createAsyncThunk<
@@ -331,6 +345,28 @@ const verificationSlice = createSlice({
       .addCase(sendPhoneCode.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Failed to send verification code';
+        if (action.payload === 'RATE_LIMITED') {
+          state.phoneVerification.cooldownUntil =
+            Date.now() + VERIFICATION_CONSTANTS.COOLDOWN_MINUTES * 60 * 1000;
+        }
+      })
+
+      // sendPhoneVoiceCode (voice call fallback)
+      .addCase(sendPhoneVoiceCode.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(sendPhoneVoiceCode.fulfilled, (state, action) => {
+        state.loading = false;
+        state.phoneVerification.codeSent = true;
+        state.phoneVerification.codeExpiry = action.payload.expiresAt
+          ? new Date(action.payload.expiresAt).getTime()
+          : Date.now() + VERIFICATION_CONSTANTS.OTP_EXPIRY_MINUTES * 60 * 1000;
+        state.phoneVerification.resendAvailableAt = Date.now() + 60 * 1000;
+      })
+      .addCase(sendPhoneVoiceCode.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Failed to initiate voice verification';
         if (action.payload === 'RATE_LIMITED') {
           state.phoneVerification.cooldownUntil =
             Date.now() + VERIFICATION_CONSTANTS.COOLDOWN_MINUTES * 60 * 1000;

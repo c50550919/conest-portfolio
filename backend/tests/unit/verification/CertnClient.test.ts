@@ -73,7 +73,7 @@ describe('CertnClient', () => {
       expect(mockedAxios.create).toHaveBeenCalledWith(
         expect.objectContaining({
           baseURL: 'https://api.certn.co/v1',
-        })
+        }),
       );
     });
 
@@ -84,7 +84,7 @@ describe('CertnClient', () => {
       new CertnClient();
 
       expect(logger.warn).toHaveBeenCalledWith(
-        'CERTN_API_KEY not configured - background checks will fail'
+        'CERTN_API_KEY not configured - background checks will fail',
       );
     });
   });
@@ -134,7 +134,7 @@ describe('CertnClient', () => {
       mockAxiosInstance.post.mockRejectedValue(error);
 
       await expect(client.createApplicant(applicantData)).rejects.toThrow(
-        'Certn applicant creation failed: API Error'
+        'Certn applicant creation failed: API Error',
       );
     });
 
@@ -198,7 +198,7 @@ describe('CertnClient', () => {
       mockAxiosInstance.post.mockRejectedValue({ message: 'Network error' });
 
       await expect(client.createApplication(applicationData)).rejects.toThrow(
-        'Certn application creation failed: Network error'
+        'Certn application creation failed: Network error',
       );
     });
   });
@@ -238,7 +238,7 @@ describe('CertnClient', () => {
       mockAxiosInstance.get.mockRejectedValue({ message: 'Not found' });
 
       await expect(client.getApplication('invalid-id')).rejects.toThrow(
-        'Certn application retrieval failed: Not found'
+        'Certn application retrieval failed: Not found',
       );
     });
   });
@@ -264,7 +264,7 @@ describe('CertnClient', () => {
       mockAxiosInstance.get.mockRejectedValue({ message: 'Unauthorized' });
 
       await expect(client.getApplicant('invalid-id')).rejects.toThrow(
-        'Certn applicant retrieval failed: Unauthorized'
+        'Certn applicant retrieval failed: Unauthorized',
       );
     });
   });
@@ -499,7 +499,7 @@ describe('CertnClient', () => {
       mockAxiosInstance.post.mockRejectedValue(timeoutError);
 
       await expect(
-        client.createApplicant({ email: 'test@example.com' })
+        client.createApplicant({ email: 'test@example.com' }),
       ).rejects.toThrow('Certn applicant creation failed: timeout of 30000ms exceeded');
     });
 
@@ -519,7 +519,7 @@ describe('CertnClient', () => {
         expect.objectContaining({
           error: 'Network error',
           response: undefined,
-        })
+        }),
       );
     });
   });

@@ -23,6 +23,9 @@ export interface VerificationStatusResponse {
   income_verification_status: 'pending' | 'verified' | 'rejected';
   verification_score: number;
   fully_verified: boolean;
+  // Expiration dates for time-limited verifications
+  id_expiration_date?: string;
+  bg_check_expiration_date?: string;
 }
 
 export interface PhoneSendResponse {

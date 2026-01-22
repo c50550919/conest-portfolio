@@ -10,14 +10,21 @@ import TelnyxVerifyClient from './telnyx/TelnyxVerifyClient';
  * Phone Verification Configuration
  *
  * Uses Telnyx Verify API in production (40% cheaper than Twilio)
- * Falls back to mock mode if Telnyx is not configured
+ * Falls back to mock mode ONLY in development/test environments
  *
- * Mock mode accepts code "123456" for development/testing
+ * SECURITY: Mock mode is BLOCKED in production even if Telnyx isn't configured
+ * This prevents accidental deployment with mock verification enabled
  */
-const USE_MOCK_PHONE = !TelnyxVerifyClient.isConfigured();
+const IS_PRODUCTION = process.env.NODE_ENV === 'production' || process.env.SECURITY_MODE === 'production';
+const TELNYX_CONFIGURED = TelnyxVerifyClient.isConfigured();
 
-if (USE_MOCK_PHONE) {
-  logger.warn('Telnyx not configured - using mock phone verification (code: 123456)');
+// In production, Telnyx MUST be configured - no mock fallback allowed
+const USE_MOCK_PHONE = !TELNYX_CONFIGURED && !IS_PRODUCTION;
+
+if (IS_PRODUCTION && !TELNYX_CONFIGURED) {
+  logger.error('CRITICAL: Telnyx not configured in production mode. Phone verification will fail.');
+} else if (USE_MOCK_PHONE) {
+  logger.warn('⚠️  Development mode: Using mock phone verification (code: 123456)');
 }
 
 export const VerificationService = {
@@ -43,11 +50,14 @@ export const VerificationService = {
 
     // Use Telnyx in production, mock in development
     if (USE_MOCK_PHONE) {
-      logger.info(`[MOCK] Phone verification code sent`, {
+      logger.info('[MOCK] Phone verification code sent', {
         userId,
-        phone: phoneNumber.substring(0, 3) + '****',
+        phone: phoneNumber.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+        mockCode: '123456',
+        event: 'phone_verification_sent',
+        mode: 'mock',
       });
-      console.log(`\n📱 MOCK SMS to ${phoneNumber}: Verification code is 123456\n`);
+      // Note: In development, check logs for the mock code (123456)
       return { expiresIn: 300 };
     }
 
@@ -56,8 +66,63 @@ export const VerificationService = {
 
     logger.info('Phone verification code sent via Telnyx', {
       userId,
+      phone: phoneNumber.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
       verificationId: result.verificationId,
       expiresIn: result.expiresInSeconds,
+      event: 'phone_verification_sent',
+      mode: 'telnyx',
+    });
+
+    return {
+      verificationId: result.verificationId,
+      expiresIn: result.expiresInSeconds,
+    };
+  },
+
+  /**
+   * Send phone verification code via voice call
+   *
+   * Fallback option for users who cannot receive SMS.
+   * Production: Uses Telnyx Verify API voice call feature
+   * Development: Logs mock code "123456" to console
+   *
+   * @param userId - User ID to verify
+   * @returns Verification metadata (verificationId in production)
+   */
+  async sendPhoneVerificationVoice(userId: string): Promise<{ verificationId?: string; expiresIn?: number }> {
+    const user = await UserModel.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const phoneNumber = user.phone || (user as any).phone_number;
+    if (!phoneNumber) {
+      throw new Error('Phone number not found for user');
+    }
+
+    // Use mock in development
+    if (USE_MOCK_PHONE) {
+      logger.info('[MOCK] Phone verification voice call initiated', {
+        userId,
+        phone: phoneNumber.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+        mockCode: '123456',
+        event: 'phone_verification_voice_sent',
+        mode: 'mock',
+      });
+      // Note: In development, check logs for the mock code (123456)
+      return { expiresIn: 300 };
+    }
+
+    // Production: Use Telnyx Verify API voice call
+    const result = await TelnyxVerifyClient.sendVoiceCode(phoneNumber);
+
+    logger.info('Phone verification voice call initiated via Telnyx', {
+      userId,
+      phone: phoneNumber.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+      verificationId: result.verificationId,
+      expiresIn: result.expiresInSeconds,
+      event: 'phone_verification_voice_sent',
+      mode: 'telnyx',
     });
 
     return {
@@ -98,7 +163,7 @@ export const VerificationService = {
     if (USE_MOCK_PHONE) {
       // Mock: Accept "123456" as valid code
       verified = code === '123456';
-      logger.info(`[MOCK] Phone verification attempt`, {
+      logger.info('[MOCK] Phone verification attempt', {
         userId,
         verified,
       });
@@ -151,10 +216,25 @@ export const VerificationService = {
     // In production, store token in Redis
     // await redisClient.setEx(`email_verify:${userId}`, 3600, token);
 
-    // MOCK: Log verification link
+    // TODO: Integrate with email service (SendGrid/SES) for production
     const verificationLink = `${process.env.API_URL}/verify-email?token=${token}`;
-    logger.info(`[MOCK] Email verification link for ${user.email}: ${verificationLink}`);
-    console.log(`\n📧 MOCK Email to ${user.email}: Click to verify: ${verificationLink}\n`);
+
+    if (!IS_PRODUCTION) {
+      logger.info('[MOCK] Email verification link generated', {
+        userId,
+        email: user.email.replace(/(.{2}).*(@.*)/, '$1***$2'),
+        verificationLink,
+        event: 'email_verification_sent',
+        mode: 'mock',
+      });
+    } else {
+      // In production, this should send via email service
+      logger.warn('Email verification attempted but email service not configured', {
+        userId,
+        event: 'email_verification_failed',
+        reason: 'email_service_not_configured',
+      });
+    }
   },
 
   async verifyEmail(userId: string): Promise<void> {
@@ -452,6 +532,25 @@ export const VerificationService = {
       };
     }
 
+    // Calculate expiration dates for time-limited verifications
+    // ID verification: 1 year validity (Veriff standard)
+    // Background check: 2 years validity (Certn standard)
+    // TODO: Store actual approval timestamps in database for accurate expiration tracking
+    let idExpirationDate: string | null = null;
+    let bgCheckExpirationDate: string | null = null;
+
+    if (verification.id_verification_status === 'approved' && verification.updated_at) {
+      const expiryDate = new Date(verification.updated_at);
+      expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+      idExpirationDate = expiryDate.toISOString();
+    }
+
+    if (verification.background_check_status === 'approved' && verification.updated_at) {
+      const expiryDate = new Date(verification.updated_at);
+      expiryDate.setFullYear(expiryDate.getFullYear() + 2);
+      bgCheckExpirationDate = expiryDate.toISOString();
+    }
+
     return {
       email_verified: verification.email_verified,
       phone_verified: verification.phone_verified,
@@ -460,6 +559,8 @@ export const VerificationService = {
       income_verification_status: verification.income_verification_status,
       verification_score: verification.verification_score,
       fully_verified: verification.fully_verified,
+      id_expiration_date: idExpirationDate,
+      bg_check_expiration_date: bgCheckExpirationDate,
     };
   },
 };

@@ -4,6 +4,7 @@ import { VerificationService } from './verification.service';
 import VeriffClient from './veriff/VeriffClient';
 import CertnClient from './certn/CertnClient';
 import { VerificationModel } from '../../models/Verification';
+import { VerificationWebhookEventModel } from '../../models/VerificationWebhookEvent';
 
 /**
  * Webhook Controller
@@ -36,32 +37,68 @@ export const webhookController = {
    * }
    */
   async handleVeriffWebhook(req: Request, res: Response): Promise<void> {
+    let webhookEventId: string | null = null;
+
     try {
       // Get raw body and signature
-      const signature = req.headers['x-signature'] as string;
+      // Per Veriff docs: X-HMAC-SIGNATURE header contains the signature
+      // https://devdocs.veriff.com/docs/hmac-authentication-and-endpoint-security
+      const signature = (req.headers['x-hmac-signature'] || req.headers['x-signature']) as string;
       const payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+
+      // Extract data early for logging
+      const sessionId = payload.verification?.id;
+      const userId = payload.verification?.vendorData;
 
       logger.info('Received Veriff webhook', {
         event: payload.status,
-        sessionId: payload.verification?.id,
+        sessionId,
+        provider: 'veriff',
       });
 
       // Verify signature
       if (!VeriffClient.verifyWebhookSignature(payload, signature)) {
-        logger.error('Invalid Veriff webhook signature');
+        logger.error('Invalid Veriff webhook signature', { sessionId });
         res.status(401).json({ error: 'Invalid signature' });
         return;
       }
 
-      // Extract data
-      const { verification } = payload;
-      const userId = verification.vendorData; // Our internal user ID
-      const sessionId = verification.id;
+      // Idempotency check - prevent duplicate processing
+      const isProcessed = await VerificationWebhookEventModel.isEventProcessed('veriff', sessionId);
+      if (isProcessed) {
+        logger.info('Veriff webhook already processed (idempotency)', { sessionId });
+        res.status(200).json({ received: true, duplicate: true });
+        return;
+      }
+
+      // Create webhook event record
+      const { event: webhookEvent, isNew } = await VerificationWebhookEventModel.createOrGet({
+        provider: 'veriff',
+        provider_event_id: sessionId,
+        event_type: payload.status,
+        user_id: userId,
+        payload,
+      });
+
+      webhookEventId = webhookEvent.id;
+
+      if (!isNew) {
+        logger.info('Veriff webhook duplicate detected', { sessionId });
+        await VerificationWebhookEventModel.markAsSkipped(webhookEventId);
+        res.status(200).json({ received: true, duplicate: true });
+        return;
+      }
+
+      // Mark as processing
+      await VerificationWebhookEventModel.markAsProcessing(webhookEventId);
 
       // Process verification completion
       if (payload.status === 'success') {
         await VerificationService.completeIDVerification(userId, sessionId);
       }
+
+      // Mark as completed
+      await VerificationWebhookEventModel.markAsCompleted(webhookEventId);
 
       // Acknowledge webhook
       res.status(200).json({ received: true });
@@ -69,7 +106,14 @@ export const webhookController = {
       logger.error('Failed to process Veriff webhook', {
         error: error.message,
         stack: error.stack,
+        provider: 'veriff',
       });
+
+      // Mark webhook event as failed
+      if (webhookEventId) {
+        await VerificationWebhookEventModel.markAsFailed(webhookEventId, error.message);
+      }
+
       res.status(500).json({ error: 'Webhook processing failed' });
     }
   },
@@ -93,26 +137,58 @@ export const webhookController = {
    * }
    */
   async handleCertnWebhook(req: Request, res: Response): Promise<void> {
+    let webhookEventId: string | null = null;
+
     try {
       // Get signature header (if Certn provides signature verification)
       const signature = req.headers['x-certn-signature'] as string;
       const payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
+      // Extract data early for logging
+      const { event, data } = payload;
+      const applicationId = data?.id;
+
       logger.info('Received Certn webhook', {
-        event: payload.event,
-        applicationId: payload.data?.id,
+        event,
+        applicationId,
+        provider: 'certn',
       });
 
       // Verify signature (if implemented)
       if (signature && !CertnClient.verifyWebhookSignature(payload, signature)) {
-        logger.error('Invalid Certn webhook signature');
+        logger.error('Invalid Certn webhook signature', { applicationId });
         res.status(401).json({ error: 'Invalid signature' });
         return;
       }
 
-      // Extract data
-      const { event, data } = payload;
-      const applicationId = data.id;
+      // Idempotency check - prevent duplicate processing
+      const isProcessed = await VerificationWebhookEventModel.isEventProcessed('certn', applicationId);
+      if (isProcessed) {
+        logger.info('Certn webhook already processed (idempotency)', { applicationId });
+        res.status(200).json({ received: true, duplicate: true });
+        return;
+      }
+
+      // Create webhook event record
+      const { event: webhookEvent, isNew } = await VerificationWebhookEventModel.createOrGet({
+        provider: 'certn',
+        provider_event_id: applicationId,
+        event_type: event || 'status_update',
+        user_id: data?.applicant_id,
+        payload,
+      });
+
+      webhookEventId = webhookEvent.id;
+
+      if (!isNew) {
+        logger.info('Certn webhook duplicate detected', { applicationId });
+        await VerificationWebhookEventModel.markAsSkipped(webhookEventId);
+        res.status(200).json({ received: true, duplicate: true });
+        return;
+      }
+
+      // Mark as processing
+      await VerificationWebhookEventModel.markAsProcessing(webhookEventId);
 
       // Only process completed applications
       if (event === 'application.completed' || data.status === 'COMPLETED') {
@@ -124,6 +200,7 @@ export const webhookController = {
             applicationId,
             applicantId: data.applicant_id,
           });
+          await VerificationWebhookEventModel.markAsFailed(webhookEventId, 'Verification record not found');
           res.status(404).json({ error: 'Verification not found' });
           return;
         }
@@ -135,13 +212,23 @@ export const webhookController = {
         await VerificationService.processBackgroundCheckResult(userId, applicationId);
       }
 
+      // Mark as completed
+      await VerificationWebhookEventModel.markAsCompleted(webhookEventId);
+
       // Acknowledge webhook
       res.status(200).json({ received: true });
     } catch (error: any) {
       logger.error('Failed to process Certn webhook', {
         error: error.message,
         stack: error.stack,
+        provider: 'certn',
       });
+
+      // Mark webhook event as failed
+      if (webhookEventId) {
+        await VerificationWebhookEventModel.markAsFailed(webhookEventId, error.message);
+      }
+
       res.status(500).json({ error: 'Webhook processing failed' });
     }
   },

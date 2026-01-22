@@ -66,6 +66,22 @@ class VerificationAPI {
   }
 
   /**
+   * Send verification code via voice call (fallback for SMS)
+   * POST /api/verification/phone/voice
+   */
+  async sendPhoneVoiceCode(): Promise<PhoneSendResponse> {
+    try {
+      const response = await apiClient.post<PhoneSendResponse>('/api/verification/phone/voice');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.status === 429) {
+        throw new Error('RATE_LIMITED');
+      }
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * Verify phone with 6-digit OTP code
    * POST /api/verification/phone/verify
    */

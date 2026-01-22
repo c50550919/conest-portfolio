@@ -23,7 +23,16 @@ router.post(
   '/phone/send',
   phoneVerificationRateLimit,
   phoneNumberRateLimit,
-  verificationController.sendPhoneVerification
+  verificationController.sendPhoneVerification,
+);
+
+// Voice call fallback for users who can't receive SMS
+// Uses same rate limiting as SMS (prevents abuse)
+router.post(
+  '/phone/voice',
+  phoneVerificationRateLimit,
+  phoneNumberRateLimit,
+  verificationController.sendPhoneVerificationVoice,
 );
 
 // OTP verification with attempt limiting:
@@ -31,7 +40,7 @@ router.post(
 router.post(
   '/phone/verify',
   otpAttemptRateLimit,
-  verificationController.verifyPhone
+  verificationController.verifyPhone,
 );
 
 router.post('/email/send', verificationLimiter, verificationController.sendEmailVerification);

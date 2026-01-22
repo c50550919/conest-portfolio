@@ -32,6 +32,20 @@ export const verificationController = {
     });
   }),
 
+  sendPhoneVerificationVoice: asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    await VerificationService.sendPhoneVerificationVoice(req.userId);
+
+    res.json({
+      success: true,
+      message: 'Verification code will be delivered via voice call',
+    });
+  }),
+
   verifyPhone: asyncHandler(async (req: AuthRequest, res: Response) => {
     if (!req.userId) {
       res.status(401).json({ error: 'Unauthorized' });

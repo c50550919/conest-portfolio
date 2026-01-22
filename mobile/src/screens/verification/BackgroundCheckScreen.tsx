@@ -150,6 +150,120 @@ export const BackgroundCheckScreen: React.FC<BackgroundCheckProps> = ({ navigati
     };
   }, [dispatch]);
 
+  // Rejected - Show FCRA-compliant adverse action notice
+  if (isRejected) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <View style={[styles.iconContainer, styles.iconError]}>
+              <Icon name="shield-alert" size={48} color={colors.error} />
+            </View>
+            <Text style={styles.title}>Background Check Results</Text>
+            <Text style={styles.subtitle}>
+              We were unable to approve your background check at this time.
+            </Text>
+          </View>
+
+          {/* FCRA Adverse Action Notice */}
+          <View
+            style={styles.adverseActionCard}
+            accessible
+            accessibilityRole="alert"
+            accessibilityLabel="Important Notice: Pre-Adverse Action Disclosure under the Fair Credit Reporting Act"
+          >
+            <Text style={styles.adverseActionTitle}>
+              Pre-Adverse Action Notice
+            </Text>
+            <Text style={styles.adverseActionText}>
+              In accordance with the Fair Credit Reporting Act (FCRA), we are providing you with this
+              notice because information in a consumer report obtained from a consumer reporting agency
+              may be used in making a decision that affects you.
+            </Text>
+          </View>
+
+          {/* Consumer Reporting Agency Info */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Consumer Reporting Agency</Text>
+            <Text style={styles.agencyText}>
+              The background check was conducted by:
+            </Text>
+            <View style={styles.agencyInfo}>
+              <Text style={styles.agencyName}>Certn</Text>
+              <Text style={styles.agencyContact}>Website: www.certn.co</Text>
+              <Text style={styles.agencyContact}>Email: support@certn.co</Text>
+              <Text style={styles.agencyContact}>Phone: 1-888-902-3786</Text>
+            </View>
+            <Text style={[styles.agencyText, { marginTop: spacing.sm }]}>
+              The consumer reporting agency did not make the decision to take this action and cannot
+              provide you with the specific reasons why this action was taken.
+            </Text>
+          </View>
+
+          {/* Your Rights Under FCRA */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Your Rights Under FCRA</Text>
+            <View style={styles.rightItem}>
+              <Icon name="file-document-outline" size={20} color={colors.primary} />
+              <Text style={styles.rightText}>
+                You have the right to obtain a free copy of your consumer report from the reporting
+                agency within 60 days.
+              </Text>
+            </View>
+            <View style={styles.rightItem}>
+              <Icon name="shield-check-outline" size={20} color={colors.primary} />
+              <Text style={styles.rightText}>
+                You have the right to dispute directly with the consumer reporting agency the accuracy
+                or completeness of any information provided by them.
+              </Text>
+            </View>
+            <View style={styles.rightItem}>
+              <Icon name="information-outline" size={20} color={colors.primary} />
+              <Text style={styles.rightText}>
+                A summary of your rights under FCRA is available from the Consumer Financial Protection
+                Bureau at www.consumerfinance.gov/learnmore.
+              </Text>
+            </View>
+          </View>
+
+          {/* Appeal Instructions */}
+          <View style={styles.appealCard}>
+            <Icon name="message-text-outline" size={24} color={colors.info} />
+            <View style={styles.appealContent}>
+              <Text style={styles.appealTitle}>Need Help or Want to Appeal?</Text>
+              <Text style={styles.appealText}>
+                If you believe there is an error in your background check or would like to discuss your
+                results, please contact our support team:
+              </Text>
+              <Text style={styles.appealContact}>Email: support@conest.app</Text>
+              <Text style={styles.appealContact}>Phone: 1-800-CONEST-1</Text>
+              <Text style={[styles.appealText, { marginTop: spacing.sm }]}>
+                You may also resubmit your background check after resolving any discrepancies with the
+                consumer reporting agency.
+              </Text>
+            </View>
+          </View>
+
+          <Button
+            mode="contained"
+            onPress={() => {
+              // Reset to allow retry
+              setStep('disclosure');
+            }}
+            style={styles.button}
+            contentStyle={styles.buttonContent}
+            icon="refresh"
+          >
+            Try Again
+          </Button>
+          <Button mode="text" onPress={() => navigation.goBack()} style={styles.backButton}>
+            Go Back
+          </Button>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   // Already approved
   if (isApproved) {
     return (
@@ -265,15 +379,6 @@ export const BackgroundCheckScreen: React.FC<BackgroundCheckProps> = ({ navigati
               </Text>
             </View>
           </View>
-
-          {isRejected && (
-            <View style={styles.errorContainer}>
-              <Icon name="alert-circle" size={16} color={colors.error} />
-              <Text style={styles.errorText}>
-                Your previous background check was not approved. You may try again.
-              </Text>
-            </View>
-          )}
 
           <Button
             mode="contained"
@@ -434,6 +539,9 @@ const styles = StyleSheet.create({
   iconPending: {
     backgroundColor: `${colors.warning}15`,
   },
+  iconError: {
+    backgroundColor: `${colors.error}15`,
+  },
   title: {
     ...typography.h3,
     color: colors.text.primary,
@@ -544,6 +652,88 @@ const styles = StyleSheet.create({
   },
   statusContainer: {
     alignItems: 'center',
+  },
+  // FCRA Adverse Action Styles
+  adverseActionCard: {
+    backgroundColor: `${colors.error}10`,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: `${colors.error}30`,
+  },
+  adverseActionTitle: {
+    ...typography.body1,
+    fontWeight: '700' as const,
+    color: colors.error,
+    marginBottom: spacing.sm,
+  },
+  adverseActionText: {
+    ...typography.body2,
+    color: colors.text.primary,
+    lineHeight: 20,
+  },
+  agencyText: {
+    ...typography.body2,
+    color: colors.text.secondary,
+    marginBottom: spacing.sm,
+  },
+  agencyInfo: {
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    padding: spacing.sm,
+    marginVertical: spacing.sm,
+  },
+  agencyName: {
+    ...typography.body1,
+    fontWeight: '600' as const,
+    color: colors.text.primary,
+    marginBottom: 4,
+  },
+  agencyContact: {
+    ...typography.body2,
+    color: colors.text.secondary,
+  },
+  rightItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: spacing.md,
+    gap: spacing.sm,
+  },
+  rightText: {
+    ...typography.body2,
+    color: colors.text.secondary,
+    flex: 1,
+    lineHeight: 20,
+  },
+  appealCard: {
+    flexDirection: 'row',
+    backgroundColor: `${colors.info}10`,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+    alignItems: 'flex-start',
+  },
+  appealContent: {
+    flex: 1,
+  },
+  appealTitle: {
+    ...typography.body1,
+    fontWeight: '600' as const,
+    color: colors.text.primary,
+    marginBottom: spacing.xs,
+  },
+  appealText: {
+    ...typography.body2,
+    color: colors.text.secondary,
+    lineHeight: 20,
+  },
+  appealContact: {
+    ...typography.body2,
+    fontWeight: '500' as const,
+    color: colors.info,
+    marginTop: 4,
   },
 });
 
