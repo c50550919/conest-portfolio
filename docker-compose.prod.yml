@@ -1,0 +1,165 @@
+# Production Docker Compose Configuration
+# All secrets must be provided via environment variables - no defaults
+#
+# Usage:
+#   docker-compose -f docker-compose.prod.yml up -d
+#
+# Required: Copy .env.production.template to .env and fill in all values
+# or set environment variables directly
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3-alpine
+    container_name: conest-postgres-prod
+    environment:
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - conest-network-prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    container_name: conest-redis-prod
+    command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    ports:
+      - "6379:6379"
+    networks:
+      - conest-network-prod
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: conest-backend-prod
+    environment:
+      # Server Configuration
+      NODE_ENV: production
+      SECURITY_MODE: production
+      PORT: 3000
+      API_URL: ${API_URL:?API_URL is required}
+
+      # Database Configuration (all required)
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:?DB_NAME is required}
+      DB_USER: ${DB_USER:?DB_USER is required}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+
+      # Redis Configuration
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+
+      # JWT Configuration (required, no fallbacks)
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required - must be 32+ characters}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?JWT_REFRESH_SECRET is required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+
+      # Stripe Configuration (live keys required)
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:?STRIPE_SECRET_KEY is required - must start with sk_live_}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:?STRIPE_PUBLISHABLE_KEY is required}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:?STRIPE_WEBHOOK_SECRET is required}
+
+      # Verification Providers (production mode)
+      ID_PROVIDER: veriff
+      VERIFF_API_KEY: ${VERIFF_API_KEY:?VERIFF_API_KEY is required}
+      VERIFF_API_SECRET: ${VERIFF_API_SECRET:?VERIFF_API_SECRET is required}
+      VERIFF_BASE_URL: ${VERIFF_BASE_URL:-https://stationapi.veriff.com}
+
+      BG_CHECK_PROVIDER: certn
+      CERTN_API_KEY: ${CERTN_API_KEY:?CERTN_API_KEY is required}
+      CERTN_BASE_URL: ${CERTN_BASE_URL:-https://api.certn.co/v1}
+
+      # Telnyx Phone Verification
+      TELNYX_API_KEY: ${TELNYX_API_KEY:?TELNYX_API_KEY is required}
+      TELNYX_VERIFY_PROFILE_ID: ${TELNYX_VERIFY_PROFILE_ID:?TELNYX_VERIFY_PROFILE_ID is required}
+      TELNYX_BASE_URL: ${TELNYX_BASE_URL:-https://api.telnyx.com/v2}
+
+      # AWS S3 Configuration
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:?AWS_ACCESS_KEY_ID is required}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY is required}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET:?AWS_S3_BUCKET is required}
+
+      # Security Configuration
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+
+      # Encryption (required for message encryption)
+      ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY:?ENCRYPTION_MASTER_KEY is required}
+
+      # CORS
+      CORS_ORIGIN: ${CORS_ORIGIN:?CORS_ORIGIN is required}
+
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+      # Security Features (all enabled in production)
+      ENABLE_RATE_LIMITING: "true"
+      ENABLE_JWT_VALIDATION: "true"
+      ENABLE_ENCRYPTION: "true"
+      ENABLE_VERIFICATION_CHECKS: "true"
+      ENABLE_PAYMENT_VALIDATION: "true"
+
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - conest-network-prod
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data_prod:
+
+networks:
+  conest-network-prod:
+    driver: bridge
