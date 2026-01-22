@@ -31,7 +31,6 @@ import {
   SplitRentSchema,
   RefundSchema,
   GetPaymentHistorySchema,
-  CreatePaymentSchema,
   CreateVerificationPaymentSchema,
   GetVerificationPaymentStatusSchema,
 } from './payment.schemas';
@@ -472,7 +471,16 @@ export const PaymentController = {
       // Use provided userId (admin) or authenticated userId
       const targetUserId = validation.data.userId || req.userId;
 
-      // TODO: Add admin check if targetUserId !== req.userId
+      // Authorization check: Only admins can access other users' payment status
+      if (targetUserId !== req.userId) {
+        if (!req.user || req.user.role !== 'admin') {
+          res.status(403).json({
+            error: 'Access denied',
+            message: 'Only administrators can access payment status for other users',
+          });
+          return;
+        }
+      }
 
       const status = await PaymentService.getVerificationPaymentStatus(targetUserId);
 

@@ -24,17 +24,17 @@ import { Knex } from 'knex';
 
 export async function up(knex: Knex): Promise<void> {
   // ============================================================
-  // 1. ALTER parents TABLE - Add address tracking for cross-checking
+  // 1. ALTER profiles TABLE - Add address tracking for cross-checking
   // ============================================================
-  await knex.schema.alterTable('parents', (table) => {
+  await knex.schema.alterTable('profiles', (table) => {
     table.text('current_address').nullable();
     table.timestamp('address_updated_at').nullable();
     table.boolean('move_in_confirmed').defaultTo(false);
-    table.date('move_in_date').nullable();
+    // Note: move_in_date already exists in profiles table from initial migration
   });
 
   await knex.raw(`
-    CREATE INDEX idx_parents_address ON parents(current_address)
+    CREATE INDEX idx_profiles_address ON profiles(current_address)
     WHERE current_address IS NOT NULL;
   `);
 
@@ -276,13 +276,13 @@ export async function down(knex: Knex): Promise<void> {
 
   await knex.schema.dropTableIfExists('housing_documents');
 
-  // Revert parents table changes
+  // Revert profiles table changes
   await knex.raw(`
-    DROP INDEX IF EXISTS idx_parents_address;
+    DROP INDEX IF EXISTS idx_profiles_address;
   `);
 
-  await knex.schema.alterTable('parents', (table) => {
-    table.dropColumn('move_in_date');
+  await knex.schema.alterTable('profiles', (table) => {
+    // Note: move_in_date was not added by this migration (exists in initial migration)
     table.dropColumn('move_in_confirmed');
     table.dropColumn('address_updated_at');
     table.dropColumn('current_address');
