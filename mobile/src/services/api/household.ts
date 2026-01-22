@@ -58,10 +58,20 @@ class HouseholdAPI {
    * @returns List of household members
    */
   async getMembers(householdId: string): Promise<GetMembersResponse> {
-    const response = await apiClient.get<GetMembersResponse>(
-      `/api/households/${householdId}/members`
-    );
-    return response.data;
+    console.log('[HouseholdAPI] getMembers called for household:', householdId);
+    try {
+      const response = await apiClient.get<GetMembersResponse>(
+        `/api/households/${householdId}/members`
+      );
+      console.log('[HouseholdAPI] getMembers response status:', response.status);
+      console.log('[HouseholdAPI] getMembers response data:', JSON.stringify(response.data, null, 2));
+      return response.data;
+    } catch (error: any) {
+      console.error('[HouseholdAPI] getMembers error:', error.message);
+      console.error('[HouseholdAPI] getMembers error response:', JSON.stringify(error.response?.data, null, 2));
+      console.error('[HouseholdAPI] getMembers error status:', error.response?.status);
+      throw error;
+    }
   }
 
   /**
@@ -225,15 +235,43 @@ class HouseholdAPI {
   }
 
   /**
+   * Create a new household
+   * @param data - Household creation data
+   * @returns Created household
+   */
+  async createHousehold(data: {
+    name: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    monthlyRent: number; // in cents
+    leaseStartDate?: string; // YYYY-MM-DD
+    leaseEndDate?: string; // YYYY-MM-DD
+  }): Promise<Household> {
+    console.log('[HouseholdAPI] createHousehold called with:', JSON.stringify(data, null, 2));
+    const response = await apiClient.post<Household>('/api/household', data);
+    console.log('[HouseholdAPI] createHousehold response:', JSON.stringify(response.data, null, 2));
+    return response.data;
+  }
+
+  /**
    * Get current user's household
    * @returns User's active household or null
    */
   async getMyHousehold(): Promise<Household | null> {
     try {
+      console.log('[HouseholdAPI] getMyHousehold called - fetching /api/households/me');
       const response = await apiClient.get<Household>('/api/households/me');
+      console.log('[HouseholdAPI] getMyHousehold response status:', response.status);
+      console.log('[HouseholdAPI] getMyHousehold response data:', JSON.stringify(response.data, null, 2));
       return response.data;
     } catch (error: any) {
+      console.error('[HouseholdAPI] getMyHousehold error:', error.message);
+      console.error('[HouseholdAPI] Error response status:', error.response?.status);
+      console.error('[HouseholdAPI] Error response data:', JSON.stringify(error.response?.data, null, 2));
       if (error.response?.status === 404) {
+        console.log('[HouseholdAPI] 404 - User not in a household');
         return null; // User not in a household
       }
       throw error;

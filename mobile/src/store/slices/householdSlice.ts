@@ -19,6 +19,7 @@
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import householdAPI from '../../services/api/household';
+import templatesAPI from '../../services/api/templatesAPI';
 import {
   Household,
   Member,
@@ -29,6 +30,7 @@ import {
   AddMemberRequest,
   SplitRentRequest,
 } from '../../types/household';
+import { Template } from '../../types/templates';
 
 // ============================================================================
 // Initial State
@@ -51,6 +53,12 @@ const initialState: HouseholdState = {
   // Documents
   documents: [],
   houseRules: [],
+
+  // Templates
+  templates: [] as Template[],
+  templatesLoading: false,
+  templatesError: null as string | null,
+  downloadingTemplateId: null as string | null,
 
   // UI State
   loading: false,
@@ -89,6 +97,38 @@ export const fetchMyHousehold = createAsyncThunk(
       };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch household');
+    }
+  }
+);
+
+/**
+ * Create a new household
+ */
+export const createHousehold = createAsyncThunk(
+  'household/createHousehold',
+  async (
+    data: {
+      name: string;
+      address: string;
+      city: string;
+      state: string;
+      zipCode: string;
+      monthlyRent: number; // in cents
+      leaseStartDate?: string;
+      leaseEndDate?: string;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const household = await householdAPI.createHousehold(data);
+      // Fetch members (creator is added automatically)
+      const membersResponse = await householdAPI.getMembers(household.id);
+      return {
+        household,
+        members: membersResponse.members,
+      };
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to create household');
     }
   }
 );
@@ -262,6 +302,45 @@ export const markExpenseAsPaid = createAsyncThunk(
 );
 
 // ============================================================================
+// Templates Thunks
+// ============================================================================
+
+/**
+ * Fetch document templates
+ */
+export const fetchTemplates = createAsyncThunk(
+  'household/fetchTemplates',
+  async (_, { rejectWithValue }) => {
+    try {
+      const templates = await templatesAPI.getTemplates();
+      return templates;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch templates');
+    }
+  }
+);
+
+/**
+ * Get download URL for a template
+ * Returns the download URL for opening in browser/PDF viewer
+ */
+export const getTemplateDownloadUrl = createAsyncThunk(
+  'household/getTemplateDownloadUrl',
+  async (templateId: string, { rejectWithValue }) => {
+    try {
+      const response = await templatesAPI.getDownloadUrl(templateId);
+      return {
+        templateId,
+        downloadUrl: response.downloadUrl,
+        expiresIn: response.expiresIn,
+      };
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to get download URL');
+    }
+  }
+);
+
+// ============================================================================
 // Slice
 // ============================================================================
 
@@ -326,6 +405,27 @@ const householdSlice = createSlice({
     setRefreshing: (state, action: PayloadAction<boolean>) => {
       state.refreshing = action.payload;
     },
+
+    // Templates reducers
+    setTemplates: (state, action: PayloadAction<Template[]>) => {
+      state.templates = action.payload;
+    },
+
+    setTemplatesLoading: (state, action: PayloadAction<boolean>) => {
+      state.templatesLoading = action.payload;
+    },
+
+    setTemplatesError: (state, action: PayloadAction<string | null>) => {
+      state.templatesError = action.payload;
+    },
+
+    setDownloadingTemplateId: (state, action: PayloadAction<string | null>) => {
+      state.downloadingTemplateId = action.payload;
+    },
+
+    clearTemplatesError: (state) => {
+      state.templatesError = null;
+    },
   },
   extraReducers: (builder) => {
     // Fetch My Household
@@ -340,6 +440,22 @@ const householdSlice = createSlice({
         state.members = action.payload.members;
       })
       .addCase(fetchMyHousehold.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+
+    // Create Household
+    builder
+      .addCase(createHousehold.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createHousehold.fulfilled, (state, action) => {
+        state.loading = false;
+        state.household = action.payload.household;
+        state.members = action.payload.members;
+      })
+      .addCase(createHousehold.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
@@ -499,6 +615,34 @@ const householdSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       });
+
+    // Fetch Templates
+    builder
+      .addCase(fetchTemplates.pending, (state) => {
+        state.templatesLoading = true;
+        state.templatesError = null;
+      })
+      .addCase(fetchTemplates.fulfilled, (state, action) => {
+        state.templatesLoading = false;
+        state.templates = action.payload;
+      })
+      .addCase(fetchTemplates.rejected, (state, action) => {
+        state.templatesLoading = false;
+        state.templatesError = action.payload as string;
+      });
+
+    // Get Template Download URL
+    builder
+      .addCase(getTemplateDownloadUrl.pending, (state, action) => {
+        state.downloadingTemplateId = action.meta.arg;
+      })
+      .addCase(getTemplateDownloadUrl.fulfilled, (state) => {
+        state.downloadingTemplateId = null;
+      })
+      .addCase(getTemplateDownloadUrl.rejected, (state, action) => {
+        state.downloadingTemplateId = null;
+        state.templatesError = action.payload as string;
+      });
   },
 });
 
@@ -518,6 +662,12 @@ export const {
   setError,
   clearHousehold,
   setRefreshing,
+  // Templates
+  setTemplates,
+  setTemplatesLoading,
+  setTemplatesError,
+  setDownloadingTemplateId,
+  clearTemplatesError,
 } = householdSlice.actions;
 
 export default householdSlice.reducer;

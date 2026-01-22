@@ -5,16 +5,22 @@
  * Screens:
  * - HomeScreen: Dashboard with stats and quick actions
  * - ConnectionRequests: View and manage connection requests
+ * - Documents: Household document templates
+ * - CreateHousehold: Create a new household
  */
 
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from '../screens/main/HomeScreen';
 import ConnectionRequestsScreen from '../screens/main/ConnectionRequestsScreen';
+import DocumentsScreen from '../screens/household/DocumentsScreen';
+import CreateHouseholdScreen from '../screens/household/CreateHouseholdScreen';
 
 export type HomeStackParamList = {
   HomeScreen: undefined;
   ConnectionRequests: undefined;
+  Documents: undefined;
+  CreateHousehold: undefined;
 };
 
 const Stack = createStackNavigator<HomeStackParamList>();
@@ -28,6 +34,21 @@ const HomeNavigator: React.FC = () => {
     >
       <Stack.Screen name="HomeScreen" component={HomeScreen} />
       <Stack.Screen name="ConnectionRequests" component={ConnectionRequestsScreen} />
+      <Stack.Screen
+        name="Documents"
+        component={DocumentsScreen}
+        options={{
+          headerShown: true,
+          title: 'Documents',
+        }}
+      />
+      <Stack.Screen
+        name="CreateHousehold"
+        component={CreateHouseholdScreen}
+        options={{
+          headerShown: false, // Screen has its own header
+        }}
+      />
     </Stack.Navigator>
   );
 };

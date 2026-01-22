@@ -17,8 +17,9 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../../store';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '../../store';
+import { fetchMyHousehold } from '../../store/slices/householdSlice';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 import connectionRequestsAPI from '../../services/api/connectionRequestsAPI';
 import enhancedMessagesAPI from '../../services/api/enhancedMessagesAPI';
@@ -31,7 +32,13 @@ interface DashboardStats {
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
+
+  // Household state from Redux
+  const household = useSelector((state: RootState) => state.household.household);
+  const householdLoading = useSelector((state: RootState) => state.household.loading);
+  const householdMembers = useSelector((state: RootState) => state.household.members);
 
   // Dashboard stats state
   const [stats, setStats] = useState<DashboardStats>({
@@ -76,11 +83,12 @@ const HomeScreen: React.FC = () => {
     setIsLoadingStats(false);
   }, []);
 
-  // Fetch stats when screen comes into focus
+  // Fetch stats and household data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       fetchDashboardStats();
-    }, [fetchDashboardStats])
+      dispatch(fetchMyHousehold());
+    }, [fetchDashboardStats, dispatch])
   );
 
   // Debug logging
@@ -162,43 +170,83 @@ const HomeScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Household Status */}
+        {/* Household Status - Conditional Rendering */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Household Status</Text>
-          <LinearGradient
-            colors={[colors.primary, colors.primaryDark]}
-            style={styles.householdCard}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-          >
-            <View style={styles.householdHeader}>
-              <Icon name="home-group" size={32} color="#FFFFFF" />
-              <View style={styles.verifiedBadge}>
-                <Icon name="check-decagram" size={16} color={colors.primary} />
-                <Text style={styles.verifiedText}>Verified</Text>
+
+          {householdLoading ? (
+            // Loading state
+            <View style={styles.householdLoadingCard}>
+              <ActivityIndicator color={colors.primary} />
+              <Text style={styles.householdLoadingText}>Loading household...</Text>
+            </View>
+          ) : household ? (
+            // Real household data
+            <LinearGradient
+              colors={[colors.primary, colors.primaryDark]}
+              style={styles.householdCard}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={styles.householdHeader}>
+                <Icon name="home-group" size={32} color="#FFFFFF" />
+                {/* Show verified badge only if all members have completed verification */}
+                {householdMembers.length > 0 && householdMembers.every(m => m.verifiedAt || m.verificationBadges?.idVerified) && (
+                  <View style={styles.verifiedBadge}>
+                    <Icon name="check-decagram" size={16} color={colors.primary} />
+                    <Text style={styles.verifiedText}>Verified</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.householdTitle}>{household.name}</Text>
+              <Text style={styles.householdSubtitle}>
+                {household.address?.city}, {household.address?.state} • {householdMembers.length} {householdMembers.length === 1 ? 'Member' : 'Members'}
+              </Text>
+              <View style={styles.householdActions}>
+                <TouchableOpacity
+                  testID="household-schedule-button"
+                  style={styles.householdButton}
+                  onPress={() => navigation.navigate('Household' as never)}
+                >
+                  <Icon name="calendar" size={18} color="#FFFFFF" />
+                  <Text style={styles.householdButtonText}>Schedule</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  testID="household-expenses-button"
+                  style={styles.householdButton}
+                  onPress={() => navigation.navigate('Household' as never)}
+                >
+                  <Icon name="currency-usd" size={18} color="#FFFFFF" />
+                  <Text style={styles.householdButtonText}>Expenses</Text>
+                </TouchableOpacity>
+              </View>
+            </LinearGradient>
+          ) : (
+            // No household - CTA card
+            <View style={styles.noHouseholdCard}>
+              <Icon name="home-search" size={48} color={colors.primary} />
+              <Text style={styles.noHouseholdTitle}>Find Your Co-Living Match!</Text>
+              <Text style={styles.noHouseholdSubtitle}>
+                Connect with verified parents and create your household.
+              </Text>
+              <View style={styles.noHouseholdButtons}>
+                <TouchableOpacity
+                  testID="discover-matches-button"
+                  style={styles.discoverButton}
+                  onPress={() => navigation.navigate('Discover' as never)}
+                >
+                  <Text style={styles.discoverButtonText}>Discover Matches</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  testID="create-household-button"
+                  style={styles.createHouseholdButton}
+                  onPress={() => navigation.navigate('CreateHousehold' as never)}
+                >
+                  <Text style={styles.createHouseholdButtonText}>Create Household</Text>
+                </TouchableOpacity>
               </View>
             </View>
-            <Text style={styles.householdTitle}>Mountain View House</Text>
-            <Text style={styles.householdSubtitle}>3 Bedrooms • 2 Parents • 4 Children</Text>
-            <View style={styles.householdActions}>
-              <TouchableOpacity
-                testID="household-schedule-button"
-                style={styles.householdButton}
-                onPress={() => navigation.navigate('Household' as never)}
-              >
-                <Icon name="calendar" size={18} color="#FFFFFF" />
-                <Text style={styles.householdButtonText}>Schedule</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                testID="household-expenses-button"
-                style={styles.householdButton}
-                onPress={() => navigation.navigate('Household' as never)}
-              >
-                <Icon name="currency-usd" size={18} color="#FFFFFF" />
-                <Text style={styles.householdButtonText}>Expenses</Text>
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
+          )}
         </View>
 
         {/* Quick Actions */}
@@ -235,7 +283,11 @@ const HomeScreen: React.FC = () => {
               <Text style={styles.actionLabel}>Manage Home</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCard}>
+            <TouchableOpacity
+              style={styles.actionCard}
+              onPress={() => navigation.navigate('Documents' as never)}
+              testID="home-documents-button"
+            >
               <View style={[styles.actionIcon, { backgroundColor: '#9C27B0' + '20' }]}>
                 <Icon name="file-document-outline" size={28} color="#9C27B0" />
               </View>
@@ -447,6 +499,69 @@ const styles = StyleSheet.create({
     ...typography.body2,
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  householdLoadingCard: {
+    backgroundColor: colors.surface,
+    padding: spacing.xl,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    minHeight: 150,
+  },
+  householdLoadingText: {
+    ...typography.body2,
+    color: colors.text.secondary,
+    marginTop: spacing.md,
+  },
+  noHouseholdCard: {
+    backgroundColor: colors.surface,
+    padding: spacing.xl,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border.light,
+    borderStyle: 'dashed',
+  },
+  noHouseholdTitle: {
+    ...typography.h6,
+    color: colors.text.primary,
+    marginTop: spacing.md,
+    textAlign: 'center',
+  },
+  noHouseholdSubtitle: {
+    ...typography.body2,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
+  },
+  noHouseholdButtons: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  discoverButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.md,
+  },
+  discoverButtonText: {
+    ...typography.button,
+    color: '#FFFFFF',
+  },
+  createHouseholdButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  createHouseholdButtonText: {
+    ...typography.button,
+    color: colors.primary,
   },
   actionsGrid: {
     flexDirection: 'row',
