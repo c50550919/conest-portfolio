@@ -11,8 +11,11 @@
  * - Expense splitting and payment functionality
  * - Household calendar and chore assignments
  * - House rules documentation
+ * - Create household flow
+ * - Invitation send/accept/decline flow
  *
  * Created: 2025-10-08
+ * Updated: 2026-01-22 - Added create household and invitation tests
  */
 
 import { device, element, by, expect as detoxExpect } from 'detox';
@@ -350,6 +353,376 @@ describe('Household Flow (Child Safety Critical)', () => {
       // await detoxExpect(
       //   element(by.text(/bedtime for \w+|curfew for \w+/i))
       // ).not.toExist();
+    });
+  });
+});
+
+/**
+ * E2E Tests: No Household State & Creation Flow
+ *
+ * Tests the user journey for users without a household:
+ * 1. HomeScreen shows CTA to create household
+ * 2. CreateHouseholdScreen form validation and submission
+ * 3. Navigation flow after household creation
+ *
+ * Created: 2026-01-22
+ */
+describe('No Household State & Creation Flow', () => {
+  beforeAll(async () => {
+    await device.launchApp({
+      newInstance: true,
+      permissions: { notifications: 'YES' },
+    });
+
+    // Login as user WITHOUT household (test user)
+    await element(by.id('email-input')).typeText('nohouse@test.com');
+    await element(by.id('password-input')).typeText('TestPass123!');
+    await element(by.id('password-input')).tapReturnKey();
+    await element(by.id('login-button')).tap();
+
+    // Wait for main app
+    await waitFor(element(by.id('home-screen')))
+      .toBeVisible()
+      .withTimeout(10000);
+  });
+
+  describe('HomeScreen - No Household State', () => {
+    it('should display no household CTA card instead of hardcoded data', async () => {
+      // CRITICAL: Should NOT show hardcoded "Mountain View House"
+      await detoxExpect(element(by.text('Mountain View House'))).not.toBeVisible();
+
+      // Should show CTA card for creating household
+      await detoxExpect(element(by.id('no-household-card'))).toBeVisible();
+      await detoxExpect(element(by.text('Find Your Co-Living Match!'))).toBeVisible();
+    });
+
+    it('CRITICAL: should NOT display child count (Principle I)', async () => {
+      // VERIFY: No "X Children" text anywhere on screen
+      await detoxExpect(element(by.text(/\d+ Children/))).not.toExist();
+      await detoxExpect(element(by.text(/Children/))).not.toExist();
+    });
+
+    it('should show Discover Matches button', async () => {
+      await detoxExpect(element(by.id('discover-button'))).toBeVisible();
+    });
+
+    it('should show Create Household button', async () => {
+      await detoxExpect(element(by.id('create-household-button'))).toBeVisible();
+    });
+
+    it('should navigate to Discover screen on tap', async () => {
+      await element(by.id('discover-button')).tap();
+
+      await waitFor(element(by.id('discovery-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
+
+      // Navigate back to Home
+      await device.pressBack();
+    });
+  });
+
+  describe('Create Household Flow', () => {
+    it('should navigate to CreateHouseholdScreen on tap', async () => {
+      await element(by.id('create-household-button')).tap();
+
+      await waitFor(element(by.id('create-household-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
+    });
+
+    it('should display form fields', async () => {
+      await detoxExpect(element(by.id('household-name-input'))).toBeVisible();
+      await detoxExpect(element(by.id('address-input'))).toBeVisible();
+      await detoxExpect(element(by.id('city-input'))).toBeVisible();
+      await detoxExpect(element(by.id('state-picker-button'))).toBeVisible();
+      await detoxExpect(element(by.id('zipcode-input'))).toBeVisible();
+      await detoxExpect(element(by.id('rent-input'))).toBeVisible();
+    });
+
+    it('should validate required fields', async () => {
+      // Try to submit empty form
+      await element(by.id('create-household-button')).tap();
+
+      // Should show validation errors
+      await detoxExpect(element(by.text('Household name is required'))).toBeVisible();
+    });
+
+    it('should fill and submit form successfully', async () => {
+      // Fill household name
+      await element(by.id('household-name-input')).clearText();
+      await element(by.id('household-name-input')).typeText('Test Household');
+
+      // Fill address
+      await element(by.id('address-input')).typeText('123 Test Street');
+
+      // Fill city
+      await element(by.id('city-input')).typeText('Austin');
+
+      // Select state
+      await element(by.id('state-picker-button')).tap();
+      await element(by.text('Texas')).tap();
+
+      // Fill zip code
+      await element(by.id('zipcode-input')).typeText('78701');
+
+      // Fill rent (optional)
+      await element(by.id('rent-input')).typeText('2400');
+
+      // Dismiss keyboard
+      await element(by.id('rent-input')).tapReturnKey();
+
+      // Submit
+      await element(by.id('create-household-button')).tap();
+
+      // Should navigate to household screen on success
+      await waitFor(element(by.id('household-screen')))
+        .toBeVisible()
+        .withTimeout(5000);
+
+      // Verify household was created with correct name
+      await detoxExpect(element(by.text('Test Household'))).toBeVisible();
+    });
+  });
+});
+
+/**
+ * E2E Tests: Household Invitation Flow
+ *
+ * Tests the invitation flow for adding members to households:
+ * 1. View pending invitations
+ * 2. View invitation details
+ * 3. Accept/decline invitations
+ * 4. Send invitations (household owner)
+ *
+ * Created: 2026-01-22
+ */
+describe('Household Invitation Flow', () => {
+  describe('Pending Invitations List', () => {
+    beforeAll(async () => {
+      await device.launchApp({
+        newInstance: true,
+        permissions: { notifications: 'YES' },
+      });
+
+      // Login as user with pending invitations (test user)
+      await element(by.id('email-input')).typeText('invitee@test.com');
+      await element(by.id('password-input')).typeText('TestPass123!');
+      await element(by.id('password-input')).tapReturnKey();
+      await element(by.id('login-button')).tap();
+
+      // Wait for main app
+      await waitFor(element(by.id('home-screen')))
+        .toBeVisible()
+        .withTimeout(10000);
+    });
+
+    it('should navigate to pending invitations screen', async () => {
+      // Navigate to Household tab
+      await element(by.text('Household')).tap();
+
+      // Tap on pending invitations
+      await element(by.id('pending-invites-button')).tap();
+
+      await waitFor(element(by.id('pending-invites-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
+    });
+
+    it('should display invitation cards with household info', async () => {
+      // Should show at least one invitation card
+      await detoxExpect(element(by.id('invitation-card-0'))).toBeVisible();
+
+      // Card should show household name
+      await detoxExpect(element(by.id('household-name-0'))).toBeVisible();
+
+      // Card should show location
+      await detoxExpect(element(by.id('household-location-0'))).toBeVisible();
+
+      // Card should show proposed rent share
+      await detoxExpect(element(by.id('rent-share-0'))).toBeVisible();
+    });
+
+    it('should display expiration countdown', async () => {
+      await detoxExpect(element(by.text(/Expires in \d+ days?/))).toBeVisible();
+    });
+
+    it('CRITICAL: should NOT display child info in invitation', async () => {
+      // VERIFY: No child data in invitation cards
+      await detoxExpect(element(by.text(/child|children/i))).not.toExist();
+    });
+  });
+
+  describe('View & Accept Invitation', () => {
+    it('should navigate to invitation details', async () => {
+      await element(by.id('invitation-card-0')).tap();
+
+      await waitFor(element(by.id('view-invitation-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
+    });
+
+    it('should display household details', async () => {
+      await detoxExpect(element(by.id('household-card'))).toBeVisible();
+      await detoxExpect(element(by.id('household-name'))).toBeVisible();
+      await detoxExpect(element(by.id('household-location'))).toBeVisible();
+      await detoxExpect(element(by.id('monthly-rent'))).toBeVisible();
+    });
+
+    it('should display household members (parents only)', async () => {
+      await detoxExpect(element(by.id('members-section'))).toBeVisible();
+
+      // CRITICAL: Should only show parent members
+      await detoxExpect(element(by.text(/child/i))).not.toExist();
+    });
+
+    it('should display inviter info', async () => {
+      await detoxExpect(element(by.id('invited-by-section'))).toBeVisible();
+      await detoxExpect(element(by.id('inviter-name'))).toBeVisible();
+    });
+
+    it('should display proposed rent share', async () => {
+      await detoxExpect(element(by.id('rent-share'))).toBeVisible();
+    });
+
+    it('should show accept and decline buttons', async () => {
+      await detoxExpect(element(by.id('accept-button'))).toBeVisible();
+      await detoxExpect(element(by.id('decline-button'))).toBeVisible();
+    });
+
+    it('should show confirmation modal on accept tap', async () => {
+      await element(by.id('accept-button')).tap();
+
+      await waitFor(element(by.id('confirmation-modal')))
+        .toBeVisible()
+        .withTimeout(2000);
+
+      // Modal should ask for confirmation
+      await detoxExpect(element(by.text(/confirm|accept/i))).toBeVisible();
+    });
+
+    it('should accept invitation and navigate to household', async () => {
+      // Tap confirm in modal
+      await element(by.id('modal-confirm-button')).tap();
+
+      // Should navigate to household screen
+      await waitFor(element(by.id('household-screen')))
+        .toBeVisible()
+        .withTimeout(5000);
+
+      // User should now be a member of the household
+      await detoxExpect(element(by.text(/Welcome|Member/))).toBeVisible();
+    });
+  });
+
+  describe('Decline Invitation', () => {
+    beforeAll(async () => {
+      // Navigate back to pending invites for decline test
+      // This assumes another pending invitation exists
+      await element(by.text('Household')).tap();
+      await element(by.id('pending-invites-button')).tap();
+
+      await waitFor(element(by.id('pending-invites-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
+
+      // Tap on second invitation (if exists)
+      await element(by.id('invitation-card-1')).tap();
+
+      await waitFor(element(by.id('view-invitation-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
+    });
+
+    it('should show confirmation modal on decline tap', async () => {
+      await element(by.id('decline-button')).tap();
+
+      await waitFor(element(by.id('confirmation-modal')))
+        .toBeVisible()
+        .withTimeout(2000);
+
+      // Modal should ask for confirmation
+      await detoxExpect(element(by.text(/decline/i))).toBeVisible();
+    });
+
+    it('should decline invitation and navigate back', async () => {
+      // Tap confirm in modal
+      await element(by.id('modal-confirm-button')).tap();
+
+      // Should navigate back to pending invites
+      await waitFor(element(by.id('pending-invites-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
+
+      // Declined invitation should be removed from list
+      // (or show as declined if we keep it)
+    });
+  });
+
+  describe('Send Invitation (Household Owner)', () => {
+    beforeAll(async () => {
+      await device.launchApp({
+        newInstance: true,
+        permissions: { notifications: 'YES' },
+      });
+
+      // Login as household owner
+      await element(by.id('email-input')).typeText('owner@test.com');
+      await element(by.id('password-input')).typeText('TestPass123!');
+      await element(by.id('password-input')).tapReturnKey();
+      await element(by.id('login-button')).tap();
+
+      // Wait for main app
+      await waitFor(element(by.id('home-screen')))
+        .toBeVisible()
+        .withTimeout(10000);
+
+      // Navigate to Household
+      await element(by.text('Household')).tap();
+    });
+
+    it('should navigate to invite member screen', async () => {
+      await element(by.id('invite-member-button')).tap();
+
+      await waitFor(element(by.id('invite-member-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
+    });
+
+    it('should display eligible matches to invite', async () => {
+      // Should show list of accepted connections not in a household
+      await detoxExpect(element(by.id('matches-list'))).toBeVisible();
+    });
+
+    it('should open invitation modal on match tap', async () => {
+      await element(by.id('invite-button-0')).tap();
+
+      await waitFor(element(by.id('invite-modal')))
+        .toBeVisible()
+        .withTimeout(2000);
+    });
+
+    it('should fill invitation form', async () => {
+      // Enter proposed rent share
+      await element(by.id('rent-share-input')).typeText('1200');
+
+      // Enter optional message
+      await element(by.id('message-input')).typeText('Looking forward to co-living!');
+    });
+
+    it('should send invitation successfully', async () => {
+      await element(by.id('send-invitation-button')).tap();
+
+      // Should show success message
+      await waitFor(element(by.text(/invitation sent/i)))
+        .toBeVisible()
+        .withTimeout(3000);
+    });
+
+    it('CRITICAL: invitation form should NOT request child info', async () => {
+      // VERIFY: No fields for child information
+      await detoxExpect(element(by.id('child-name-input'))).not.toExist();
+      await detoxExpect(element(by.id('child-age-input'))).not.toExist();
     });
   });
 });
