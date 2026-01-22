@@ -5,6 +5,7 @@ import fs from 'fs';
 import { setupSecurity } from './middleware/security';
 import { generalLimiter } from './middleware/rateLimit';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { getSentryRequestHandler, getSentryErrorHandler } from './config/sentry';
 import storageService from './services/s3Service';
 import { setupSwagger } from './config/swagger';
 
@@ -28,6 +29,8 @@ import { billingRoutes } from './features/billing';
 import discoveryRoutes from './features/discovery/discovery.routes';
 // Household feature (migrated to feature-based structure)
 import householdRoutes from './features/household/household.routes';
+import templatesRoutes from './features/household/templates.routes';
+import invitationsRoutes from './features/household/invitations.routes';
 // Saved Profiles feature (migrated to feature-based structure)
 import savedProfileRoutes from './features/saved-profiles/saved-profile.routes';
 // Connections feature (migrated to feature-based structure)
@@ -47,6 +50,10 @@ const app: Express = express();
 // Security middleware
 setupSecurity(app);
 
+// Sentry request handler (must be first middleware after security)
+// Captures request data for error context
+app.use(getSentryRequestHandler());
+
 // Webhook endpoints (require raw body for signature verification)
 // MUST be before body parsing middleware
 app.use('/api/stripe', express.raw({ type: 'application/json' }), stripeWebhookRouter);
@@ -58,6 +65,14 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Rate limiting
 app.use(generalLimiter);
+
+// Request logging middleware (development only)
+if (process.env.NODE_ENV === 'development') {
+  app.use((req, _res, next) => {
+    console.log(`[HTTP] ${req.method} ${req.url} - Auth: ${req.headers.authorization ? 'Yes' : 'No'}`);
+    next();
+  });
+}
 
 // API Documentation (Swagger)
 // Available at /api-docs
@@ -83,6 +98,9 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/billing', billingRoutes); // Mobile IAP (iOS/Android)
 app.use('/api/discovery', discoveryRoutes);
 app.use('/api/household', householdRoutes);
+app.use('/api/households/templates', templatesRoutes); // Document templates - MUST be before /:id routes
+app.use('/api/households', invitationsRoutes); // Invitations - MUST be before /:id routes
+app.use('/api/households', householdRoutes); // Also mount at plural form for mobile compatibility
 app.use('/api/saved-profiles', savedProfileRoutes);
 app.use('/api/connection-requests', connectionRequestRoutes);
 app.use('/api/compatibility', comparisonRoutes);
@@ -102,7 +120,7 @@ if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
 
 // Local file uploads serving (development mode only)
 // Security: Only serves files in the uploads directory with proper MIME types
-app.use('/api/uploads', (req: Request, res: Response, next: NextFunction) => {
+app.use('/api/uploads', (req: Request, res: Response, _next: NextFunction) => {
   // Only serve files in local storage mode
   if (!storageService.isLocalStorageMode()) {
     res.status(404).json({ success: false, error: 'Not found' });
@@ -137,6 +155,9 @@ app.use('/api/uploads', (req: Request, res: Response, next: NextFunction) => {
 
 // 404 handler
 app.use(notFoundHandler);
+
+// Sentry error handler (captures errors before custom handler)
+app.use(getSentryErrorHandler());
 
 // Error handler (must be last)
 app.use(errorHandler);
