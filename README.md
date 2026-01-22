@@ -21,8 +21,8 @@ Help single parents find safe, verified, and compatible roommates to make housin
 ## ✨ Key Features
 
 ### 1. **Parent Verification System**
-- Government ID verification via Jumio (mocked for development)
-- Background checks via Checkr API (mocked for development)
+- Government ID verification via Veriff (mocked for development)
+- Background checks via Certn API (mocked for development)
 - Phone/email verification
 - Income verification (optional)
 - Trust scoring system

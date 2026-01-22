@@ -117,3 +117,6 @@ out/
 # ============================================================================
 !.gitkeep
 !.env.examplemobile/TempProject/
+
+# Detox E2E test artifacts
+mobile/artifacts/
