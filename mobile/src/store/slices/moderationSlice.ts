@@ -7,7 +7,7 @@
  * Constitution: Principle I (Child Safety)
  */
 
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import api from '../../services/api';
 
 /**
@@ -311,15 +311,22 @@ export const selectModerationStatus = (state: { moderation: ModerationState }) =
 export const selectIsSuspended = (state: { moderation: ModerationState }) =>
   state.moderation.status === 'suspended' || state.moderation.status === 'banned';
 
-export const selectSuspensionInfo = (state: { moderation: ModerationState }) => ({
-  until: state.moderation.suspensionUntil,
-  reason: state.moderation.suspensionReason,
-});
+// Memoized selector to prevent unnecessary re-renders
+export const selectSuspensionInfo = createSelector(
+  (state: { moderation: ModerationState }) => state.moderation.suspensionUntil,
+  (state: { moderation: ModerationState }) => state.moderation.suspensionReason,
+  (until, reason) => ({ until, reason })
+);
 
-export const selectUnreadNotifications = (state: { moderation: ModerationState }) =>
-  state.moderation.notifications.filter((n) => !n.read);
+// Memoized selector - only recomputes when notifications array changes
+export const selectUnreadNotifications = createSelector(
+  (state: { moderation: ModerationState }) => state.moderation.notifications,
+  (notifications) => notifications.filter((n) => !n.read)
+);
 
-export const selectLastMessageBlocked = (state: { moderation: ModerationState }) => ({
-  blocked: state.moderation.lastMessageBlocked,
-  reason: state.moderation.lastBlockedReason,
-});
+// Memoized selector to prevent unnecessary re-renders from object creation
+export const selectLastMessageBlocked = createSelector(
+  (state: { moderation: ModerationState }) => state.moderation.lastMessageBlocked,
+  (state: { moderation: ModerationState }) => state.moderation.lastBlockedReason,
+  (blocked, reason) => ({ blocked, reason })
+);

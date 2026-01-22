@@ -11,7 +11,7 @@ import HomeNavigator from './HomeNavigator';
 import { BrowseDiscoveryScreen } from '../screens/main/BrowseDiscoveryScreen';
 import SavedProfilesScreen from '../screens/main/SavedProfilesScreen';
 import MessagesNavigator from './MessagesNavigator';
-import HouseholdScreen from '../screens/main/HouseholdScreen';
+import HouseholdNavigator from './HouseholdNavigator';
 import ProfileNavigator from './ProfileNavigator';
 
 import { theme } from '../theme';
@@ -90,7 +90,7 @@ const MainNavigator: React.FC = () => {
       />
       <Tab.Screen
         name="Household"
-        component={HouseholdScreen}
+        component={HouseholdNavigator}
         options={{
           tabBarTestID: 'tab-household',
           tabBarAccessibilityLabel: 'Household',

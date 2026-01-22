@@ -2,7 +2,7 @@
  * API Client Configuration
  *
  * Configures axios with:
- * - Base URL for backend API
+ * - Base URL for backend API (environment-aware)
  * - JWT token interceptors (auto-attach access token)
  * - Refresh token flow (401 → refresh → retry)
  * - Request/response logging
@@ -10,29 +10,26 @@
  * Constitution Principles:
  * - Principle III: Security (JWT auto-refresh, secure token storage)
  * - Principle IV: Performance (<200ms API calls P95)
+ *
+ * Environment Configuration:
+ * - Development: http://localhost:3000 (use adb reverse for Android)
+ * - Production: Set in environment.ts before building release
  */
 
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as Keychain from 'react-native-keychain';
-import { Platform } from 'react-native';
+import { getApiBaseUrl, isDevelopment } from './environment';
 
-// Base URL configuration for different platforms
-// Both iOS and Android can use localhost with adb reverse port forwarding
-const getApiBaseUrl = (): string => {
-  if (process.env.API_BASE_URL) {
-    return process.env.API_BASE_URL;
-  }
-
-  // Both platforms use localhost:3000
-  // Android: Requires adb reverse tcp:3000 tcp:3000 for port forwarding
-  // iOS: Works natively with localhost
-  return 'http://localhost:3000';
-};
-
+// Get environment-aware API URL
 const API_BASE_URL = getApiBaseUrl();
 
 // Export for components that need the base URL directly
 export const API_URL = API_BASE_URL;
+
+// Log API URL in development for debugging
+if (isDevelopment) {
+  console.log(`[API] Base URL: ${API_BASE_URL}`);
+}
 
 /**
  * Main API client instance
@@ -53,16 +50,33 @@ apiClient.interceptors.request.use(
     try {
       // Skip auth for login/register endpoints
       if (config.url?.includes('/auth/login') || config.url?.includes('/auth/register')) {
+        console.log('[API] Skipping auth for:', config.url);
         return config;
       }
 
       // Retrieve access token from secure storage
-      const credentials = await Keychain.getGenericPassword({ service: 'auth' });
+      // IMPORTANT: Must match service name in tokenStorage.ts ('conest-auth')
+      console.log('[API] Fetching credentials from keychain for:', config.url);
+      const credentials = await Keychain.getGenericPassword({ service: 'conest-auth' });
+      console.log('[API] Keychain result:', {
+        found: !!credentials,
+        hasPassword: credentials && 'password' in credentials ? !!credentials.password : false,
+      });
       if (credentials && credentials.password) {
-        const { accessToken } = JSON.parse(credentials.password);
+        const parsed = JSON.parse(credentials.password);
+        const { accessToken } = parsed;
+        console.log('[API] Parsed token:', {
+          hasAccessToken: !!accessToken,
+          tokenLength: accessToken?.length,
+        });
         if (accessToken) {
           config.headers.Authorization = `Bearer ${accessToken}`;
+          console.log('[API] ✅ Authorization header attached');
+        } else {
+          console.warn('[API] ⚠️ No access token found in parsed credentials');
         }
+      } else {
+        console.warn('[API] ⚠️ No credentials found in keychain');
       }
     } catch (err) {
       console.error('❌ Failed to attach access token:', err);
@@ -114,7 +128,8 @@ apiClient.interceptors.response.use(
 
       try {
         // Retrieve refresh token from secure storage
-        const credentials = await Keychain.getGenericPassword({ service: 'auth' });
+        // IMPORTANT: Must match service name in tokenStorage.ts ('conest-auth')
+        const credentials = await Keychain.getGenericPassword({ service: 'conest-auth' });
         if (!credentials) {
           throw new Error('No credentials found');
         }
@@ -132,13 +147,14 @@ apiClient.interceptors.response.use(
         const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data;
 
         // Update stored tokens
+        // IMPORTANT: Must match service name in tokenStorage.ts ('conest-auth')
         await Keychain.setGenericPassword(
-          'user',
+          'user-tokens',
           JSON.stringify({
             accessToken: newAccessToken,
             refreshToken: newRefreshToken,
           }),
-          { service: 'auth' }
+          { service: 'conest-auth' }
         );
 
         // Notify waiting requests
@@ -154,7 +170,8 @@ apiClient.interceptors.response.use(
         refreshSubscribers = [];
 
         // Clear stored credentials and redirect to login
-        await Keychain.resetGenericPassword({ service: 'auth' });
+        // IMPORTANT: Must match service name in tokenStorage.ts ('conest-auth')
+        await Keychain.resetGenericPassword({ service: 'conest-auth' });
         // TODO: Dispatch Redux action to navigate to login screen
         return Promise.reject(refreshError);
       }
@@ -166,26 +183,29 @@ apiClient.interceptors.response.use(
 
 /**
  * Helper: Store JWT tokens in secure storage
+ * IMPORTANT: Must match service name in tokenStorage.ts ('conest-auth')
  */
 export async function storeTokens(accessToken: string, refreshToken: string): Promise<void> {
-  await Keychain.setGenericPassword('user', JSON.stringify({ accessToken, refreshToken }), {
-    service: 'auth',
+  await Keychain.setGenericPassword('user-tokens', JSON.stringify({ accessToken, refreshToken }), {
+    service: 'conest-auth',
   });
 }
 
 /**
  * Helper: Clear stored tokens (logout)
+ * IMPORTANT: Must match service name in tokenStorage.ts ('conest-auth')
  */
 export async function clearTokens(): Promise<void> {
-  await Keychain.resetGenericPassword({ service: 'auth' });
+  await Keychain.resetGenericPassword({ service: 'conest-auth' });
 }
 
 /**
  * Helper: Check if user has valid tokens
+ * IMPORTANT: Must match service name in tokenStorage.ts ('conest-auth')
  */
 export async function hasValidTokens(): Promise<boolean> {
   try {
-    const credentials = await Keychain.getGenericPassword({ service: 'auth' });
+    const credentials = await Keychain.getGenericPassword({ service: 'conest-auth' });
     if (!credentials) {
       return false;
     }

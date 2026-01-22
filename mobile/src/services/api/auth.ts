@@ -238,13 +238,14 @@ class AuthAPI {
       console.log('[AuthAPI] Token save result:', saveResult);
 
       // Transform backend response to match mobile app expectations
+      // Backend returns camelCase fields: firstName, lastName, profileComplete
       const loginResponse = {
         user: {
           id: backendData.user.id,
           email: backendData.user.email,
-          firstName: backendData.user.first_name || '',
-          lastName: backendData.user.last_name || '',
-          profileComplete: backendData.user.profile_complete || false,
+          firstName: backendData.user.firstName || '',
+          lastName: backendData.user.lastName || '',
+          profileComplete: backendData.user.profileComplete ?? false,
         },
         tokens,
       };

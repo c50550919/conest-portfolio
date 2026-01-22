@@ -1315,6 +1315,8 @@ PODS:
     - React-Core
     - SDWebImage (~> 5.11.1)
     - SDWebImageWebPCoder (~> 0.8.4)
+  - RNFS (2.20.0):
+    - React-Core
   - RNGestureHandler (2.16.2):
     - DoubleConversion
     - glog
@@ -1504,6 +1506,7 @@ DEPENDENCIES:
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - RNFastImage (from `../node_modules/react-native-fast-image`)
+  - RNFS (from `../node_modules/react-native-fs`)
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
   - "RNGoogleSignin (from `../node_modules/@react-native-google-signin/google-signin`)"
   - RNIap (from `../node_modules/react-native-iap`)
@@ -1675,6 +1678,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/datetimepicker"
   RNFastImage:
     :path: "../node_modules/react-native-fast-image"
+  RNFS:
+    :path: "../node_modules/react-native-fs"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
   RNGoogleSignin:
@@ -1772,6 +1777,7 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: b6410dead2732b5c72a7fdb1ecb5651bbcf4674b
   RNDateTimePicker: 8c12d12e8660697c2e176d2f98775764431c141f
   RNFastImage: 462a183c4b0b6b26fdfd639e1ed6ba37536c3b87
+  RNFS: 89de7d7f4c0f6bafa05343c578f61118c8282ed8
   RNGestureHandler: 326e35460fb6c8c64a435d5d739bea90d7ed4e49
   RNGoogleSignin: 2792145770d2bbd5656bf91c5c83db4cadb5ebe0
   RNIap: 65051c94a29a17bd8356bcf16a878821862eecd0

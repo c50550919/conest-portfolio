@@ -8,9 +8,12 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { Button } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useDispatch } from 'react-redux';
 import { OnboardingStackParamList } from '../../navigation/OnboardingNavigator';
 import { colors, spacing, typography } from '../../theme';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { logout } from '../../store/slices/authSlice';
+import tokenStorage from '../../services/tokenStorage';
 
 type WelcomeScreenNavigationProp = StackNavigationProp<OnboardingStackParamList, 'Welcome'>;
 
@@ -19,6 +22,18 @@ interface Props {
 }
 
 const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
+  const dispatch = useDispatch();
+
+  /**
+   * Handle "Already have an account? Log in" button
+   * Clears current session and redirects to login screen
+   */
+  const handleLoginPress = async () => {
+    // Clear tokens to trigger navigation to AuthNavigator (Login screen)
+    await tokenStorage.clearTokens();
+    dispatch(logout());
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -66,7 +81,7 @@ const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
         </Button>
         <Button
           mode="text"
-          onPress={() => {}}
+          onPress={handleLoginPress}
           style={styles.loginButton}
           testID="welcome-back-to-login-button"
         >

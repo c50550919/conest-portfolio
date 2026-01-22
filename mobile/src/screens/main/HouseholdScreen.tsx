@@ -20,7 +20,10 @@ import {
   Alert,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { HouseholdStackParamList } from '../../navigation/HouseholdNavigator';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 import { RootState, AppDispatch } from '../../store';
@@ -34,6 +37,7 @@ import {
 import { Member, Expense } from '../../types/household';
 
 const HouseholdScreen: React.FC = () => {
+  const navigation = useNavigation<StackNavigationProp<HouseholdStackParamList>>();
   const dispatch = useDispatch<AppDispatch>();
   const { household, members, expenses, recentTransactions, loading, error } = useSelector(
     (state: RootState) => state.household,
@@ -41,24 +45,43 @@ const HouseholdScreen: React.FC = () => {
 
   const [refreshing, setRefreshing] = useState(false);
 
+  // Log state changes for debugging
+  useEffect(() => {
+    console.log('[HouseholdScreen] State changed:', {
+      hasHousehold: !!household,
+      householdId: household?.id,
+      householdName: household?.name,
+      membersCount: members?.length,
+      loading,
+      error,
+    });
+  }, [household, members, loading, error]);
+
   // Fetch household data on mount
   useEffect(() => {
     loadHouseholdData();
   }, []);
 
   const loadHouseholdData = async () => {
+    console.log('[HouseholdScreen] loadHouseholdData called');
     try {
+      console.log('[HouseholdScreen] Dispatching fetchMyHousehold...');
       const result = await dispatch(fetchMyHousehold()).unwrap();
+      console.log('[HouseholdScreen] fetchMyHousehold result:', JSON.stringify(result, null, 2));
       if (result.household) {
+        console.log('[HouseholdScreen] Household found, fetching expenses/transactions...');
         // Fetch expenses and transactions in parallel
         await Promise.all([
           dispatch(fetchExpenses({ householdId: result.household.id, refresh: true })),
           dispatch(fetchRecentTransactions(result.household.id)),
           dispatch(fetchUpcomingPayments(result.household.id)),
         ]);
+        console.log('[HouseholdScreen] All data loaded successfully');
+      } else {
+        console.log('[HouseholdScreen] No household in result');
       }
     } catch (err) {
-      console.error('Failed to load household data:', err);
+      console.error('[HouseholdScreen] Failed to load household data:', err);
     }
   };
 
@@ -187,7 +210,11 @@ const HouseholdScreen: React.FC = () => {
             </View>
             <Text style={styles.actionText}>Add Member</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} testID="documents-button">
+          <TouchableOpacity
+            style={styles.actionButton}
+            testID="documents-button"
+            onPress={() => navigation.navigate('Documents')}
+          >
             <View style={[styles.actionIcon, { backgroundColor: colors.secondary + '20' }]}>
               <Icon name="file-document" size={20} color={colors.secondary} />
             </View>
@@ -241,7 +268,7 @@ const HouseholdScreen: React.FC = () => {
                       {getInitials(member.firstName, member.lastName)}
                     </Text>
                   </View>
-                  {member.verificationBadges.backgroundCheckComplete && (
+                  {member.verificationBadges?.backgroundCheckComplete && (
                     <View style={styles.verifiedBadge}>
                       <Icon name="check-decagram" size={16} color={colors.primary} />
                     </View>
@@ -260,19 +287,19 @@ const HouseholdScreen: React.FC = () => {
                     {childrenInfo} • {roleText}
                   </Text>
                   <View style={styles.memberStats}>
-                    {member.verificationBadges.backgroundCheckComplete && (
+                    {member.verificationBadges?.backgroundCheckComplete && (
                       <View style={styles.statBadge}>
                         <Icon name="shield-check" size={14} color={colors.primary} />
                         <Text style={styles.statBadgeText}>Verified</Text>
                       </View>
                     )}
-                    {member.paymentStatus.currentMonth === 'paid' && (
+                    {member.paymentStatus?.currentMonth === 'paid' && (
                       <View style={styles.statBadge}>
                         <Icon name="check-circle" size={14} color={colors.primary} />
                         <Text style={styles.statBadgeText}>Rent Paid</Text>
                       </View>
                     )}
-                    {member.paymentStatus.currentMonth === 'overdue' && (
+                    {member.paymentStatus?.currentMonth === 'overdue' && (
                       <View style={[styles.statBadge, { backgroundColor: colors.errorLight }]}>
                         <Icon name="alert-circle" size={14} color={colors.error} />
                         <Text style={[styles.statBadgeText, { color: colors.error }]}>Overdue</Text>

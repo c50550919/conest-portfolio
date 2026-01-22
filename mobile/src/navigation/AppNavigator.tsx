@@ -55,6 +55,10 @@ import {
   initializeMessagingSocket,
   cleanupMessagingSocket,
 } from '../services/messaging/socketIntegration';
+import {
+  initializeModerationSocket,
+  cleanupModerationSocket,
+} from '../services/moderation/moderationSocketIntegration';
 
 // Navigation reference for programmatic navigation (including E2E tests)
 export const navigationRef = createNavigationContainerRef();
@@ -111,36 +115,38 @@ const AppNavigator: React.FC = () => {
 
   /**
    * Initialize Socket.io and messaging integration when authenticated
+   * NON-BLOCKING: Socket connects in background while navigation proceeds
    * Cleanup when user logs out
    */
   useEffect(() => {
-    const initializeSocket = async () => {
-      if (isAuthenticated && isOnboardingComplete) {
-        console.log('[AppNavigator] Initializing Socket.io and messaging integration...');
-        try {
-          // Connect to Socket.io server
-          await socketService.connect();
+    if (isAuthenticated && isOnboardingComplete) {
+      console.log('[AppNavigator] Initializing Socket.io (non-blocking)...');
 
-          // Initialize messaging socket event listeners
+      // Don't await - let socket connect in background while navigation proceeds
+      socketService
+        .connect()
+        .then(() => {
+          console.log('[AppNavigator] Socket connected, initializing integrations');
+          // Initialize socket event listeners after connection established
           initializeMessagingSocket();
-
-          console.log('[AppNavigator] Socket.io and messaging integration initialized');
-        } catch (error) {
-          console.error('[AppNavigator] Failed to initialize socket:', error);
-        }
-      } else {
-        // User logged out or onboarding incomplete, cleanup socket connections
-        console.log('[AppNavigator] Cleaning up Socket.io and messaging integration...');
-        cleanupMessagingSocket();
-        socketService.disconnect();
-      }
-    };
-
-    initializeSocket();
+          initializeModerationSocket();
+        })
+        .catch((error) => {
+          // Socket has built-in reconnection, log and continue
+          console.warn('[AppNavigator] Socket connection failed, will retry:', error);
+        });
+    } else {
+      // User logged out or onboarding incomplete, cleanup socket connections
+      console.log('[AppNavigator] Cleaning up socket connections...');
+      cleanupMessagingSocket();
+      cleanupModerationSocket();
+      socketService.disconnect();
+    }
 
     // Cleanup on unmount
     return () => {
       cleanupMessagingSocket();
+      cleanupModerationSocket();
       socketService.disconnect();
     };
   }, [isAuthenticated, isOnboardingComplete]);
