@@ -120,3 +120,9 @@ out/
 
 # Detox E2E test artifacts
 mobile/artifacts/
+
+# ============================================================================
+# Security Reports & Business Documents
+# ============================================================================
+snyk_report*.json
+*.xlsx

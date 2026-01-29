@@ -183,13 +183,19 @@ artillery run artillery-config.yml
 
 ## 📚 Documentation
 
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture and design
+- **[ARCHITECTURE.md](./docs/architecture/ARCHITECTURE.md)** - System architecture and design
 - **[SECURITY.md](./SECURITY.md)** - Security best practices and compliance
-- **[COMPLEXITY.md](./COMPLEXITY.md)** - Code complexity management
-- **[UI_DESIGN.md](./UI_DESIGN.md)** - Design system and components
+- **[COMPLEXITY.md](./backend/COMPLEXITY.md)** - Code complexity management
+- **[UI_DESIGN.md](./docs/guides/UI_DESIGN.md)** - Design system and components
 - **[TESTING_GUIDE.md](./backend/TESTING_GUIDE.md)** - Comprehensive testing guide
 - **[API_EXAMPLES.md](./backend/API_EXAMPLES.md)** - All 47 API endpoint examples
-- **[IMPLEMENTATION.md](./IMPLEMENTATION.md)** - Step-by-step implementation guide
+- **[IMPLEMENTATION.md](./docs/implementation/IMPLEMENTATION.md)** - Step-by-step implementation guide
+
+### Additional Documentation
+- **[Developer Onboarding](./docs/guides/DEVELOPER_ONBOARDING.md)** - Getting started guide
+- **[Code Quality Standards](./docs/guides/CODE_QUALITY_STANDARDS.md)** - Coding standards
+- **[Security Testing](./docs/security/SECURITY_TESTING_GUIDE.md)** - Security test guide
+- **[Business Roadmap](./docs/business/PROJECT_ROADMAP.md)** - Product roadmap
 
 ## 🔐 Security Features
 
