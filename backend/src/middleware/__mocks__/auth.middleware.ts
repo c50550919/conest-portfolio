@@ -13,6 +13,14 @@
 import { Request, Response, NextFunction } from 'express';
 import * as jwt from 'jsonwebtoken';
 
+// SECURITY GUARD: This mock MUST only run in test environments
+if (process.env.NODE_ENV !== 'test') {
+  throw new Error(
+    'SECURITY ERROR: Auth mock middleware loaded outside test environment. ' +
+    'This file should only be used during testing via Jest moduleNameMapper.'
+  );
+}
+
 // Define AuthRequest interface directly to avoid circular import
 export interface AuthRequest extends Request {
   userId?: string;
@@ -27,7 +35,9 @@ export interface AuthRequest extends Request {
   file?: Express.Multer.File;
 }
 
-const TEST_JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-testing-only';
+// Test-only secret: Safe because of NODE_ENV guard above prevents production use
+// deepcode ignore HardcodedSecret: Intentional test secret with NODE_ENV=test runtime guard
+const TEST_JWT_SECRET = process.env.TEST_JWT_SECRET || process.env.JWT_SECRET || 'test-jwt-secret-e2e-only';
 
 /**
  * Default mock user for tests

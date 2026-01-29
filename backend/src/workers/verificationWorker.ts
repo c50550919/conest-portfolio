@@ -20,7 +20,7 @@ interface VerificationJob {
 }
 
 // Process verification jobs
-verificationQueue.process('id_verification', async (job) => {
+void verificationQueue.process('id_verification', async (job) => {
   const { userId, sessionId } = job.data as VerificationJob & { sessionId: string };
 
   logger.info(`Processing ID verification for user ${userId}`);
@@ -40,7 +40,7 @@ verificationQueue.process('id_verification', async (job) => {
   }
 });
 
-verificationQueue.process('background_check', async (job) => {
+void verificationQueue.process('background_check', async (job) => {
   const { userId } = job.data as VerificationJob;
 
   logger.info(`Processing background check for user ${userId}`);

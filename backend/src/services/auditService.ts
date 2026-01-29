@@ -3,12 +3,10 @@
  * Comprehensive audit logging for sensitive operations
  */
 
-import { createClient } from 'redis';
 import winston from 'winston';
+import { redis } from '../config/redis';
 import { securityConfig } from '../config/security';
 import { sanitizeForLogging, generateCorrelationId } from '../utils/tokenization';
-
-let redisClient: ReturnType<typeof createClient> | null = null;
 
 export interface AuditLogEntry {
   id: string;
@@ -57,19 +55,11 @@ if (process.env.NODE_ENV !== 'production') {
 
 /**
  * Initialize Redis client for audit logs
+ * @deprecated No longer needed - ioredis auto-connects. Kept for backwards compatibility.
  */
 export async function initializeAuditRedis(): Promise<void> {
-  if (redisClient) return;
-
-  redisClient = createClient({
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
-  });
-
-  redisClient.on('error', (err) => {
-    console.error('Redis audit client error:', err);
-  });
-
-  await redisClient.connect();
+  // ioredis auto-connects, no initialization needed
+  auditLogger.debug('Audit Redis initialization called (no-op with ioredis)');
 }
 
 /**
@@ -91,37 +81,37 @@ export async function createAuditLog(entry: Omit<AuditLogEntry, 'id' | 'timestam
   auditLogger.info('Audit log entry', auditEntry);
 
   // Store in Redis for recent access
-  if (redisClient) {
-    try {
-      const key = `audit:${auditEntry.id}`;
-      const ttl = securityConfig.audit.retentionDays * 24 * 60 * 60; // Convert to seconds
+  try {
+    const key = `audit:${auditEntry.id}`;
+    const ttl = securityConfig.audit.retentionDays * 24 * 60 * 60; // Convert to seconds
 
-      await redisClient.setEx(key, ttl, JSON.stringify(auditEntry));
+    await redis.setex(key, ttl, JSON.stringify(auditEntry));
 
-      // Add to user's audit trail
-      if (auditEntry.userId) {
-        await redisClient.zAdd(`audit:user:${auditEntry.userId}`, {
-          score: auditEntry.timestamp,
-          value: auditEntry.id,
-        });
+    // Add to user's audit trail
+    if (auditEntry.userId) {
+      await redis.zadd(
+        `audit:user:${auditEntry.userId}`,
+        auditEntry.timestamp,
+        auditEntry.id,
+      );
 
-        // Expire old entries
-        const cutoff = Date.now() - (ttl * 1000);
-        await redisClient.zRemRangeByScore(
-          `audit:user:${auditEntry.userId}`,
-          0,
-          cutoff,
-        );
-      }
-
-      // Add to operation index
-      await redisClient.zAdd(`audit:operation:${auditEntry.operation}`, {
-        score: auditEntry.timestamp,
-        value: auditEntry.id,
-      });
-    } catch (error) {
-      console.error('Failed to store audit log in Redis:', error);
+      // Expire old entries
+      const cutoff = Date.now() - (ttl * 1000);
+      await redis.zremrangebyscore(
+        `audit:user:${auditEntry.userId}`,
+        0,
+        cutoff,
+      );
     }
+
+    // Add to operation index
+    await redis.zadd(
+      `audit:operation:${auditEntry.operation}`,
+      auditEntry.timestamp,
+      auditEntry.id,
+    );
+  } catch (error) {
+    auditLogger.error('Failed to store audit log in Redis:', { error });
   }
 
   // TODO: Store in PostgreSQL for long-term retention
@@ -269,21 +259,18 @@ export async function getUserAuditLogs(
   limit: number = 100,
   offset: number = 0,
 ): Promise<AuditLogEntry[]> {
-  if (!redisClient) return [];
-
   try {
-    // Get audit log IDs from sorted set
-    const logIds = await redisClient.zRange(
+    // Get audit log IDs from sorted set (most recent first)
+    const logIds = await redis.zrevrange(
       `audit:user:${userId}`,
       offset,
       offset + limit - 1,
-      { REV: true }, // Most recent first
     );
 
     // Fetch full log entries
     const logs: AuditLogEntry[] = [];
     for (const logId of logIds) {
-      const data = await redisClient.get(`audit:${logId}`);
+      const data = await redis.get(`audit:${logId}`);
       if (data) {
         logs.push(JSON.parse(data));
       }
@@ -291,7 +278,7 @@ export async function getUserAuditLogs(
 
     return logs;
   } catch (error) {
-    console.error('Failed to retrieve user audit logs:', error);
+    auditLogger.error('Failed to retrieve user audit logs:', { error });
     return [];
   }
 }
@@ -303,19 +290,16 @@ export async function getOperationAuditLogs(
   operation: string,
   limit: number = 100,
 ): Promise<AuditLogEntry[]> {
-  if (!redisClient) return [];
-
   try {
-    const logIds = await redisClient.zRange(
+    const logIds = await redis.zrevrange(
       `audit:operation:${operation}`,
       0,
       limit - 1,
-      { REV: true },
     );
 
     const logs: AuditLogEntry[] = [];
     for (const logId of logIds) {
-      const data = await redisClient.get(`audit:${logId}`);
+      const data = await redis.get(`audit:${logId}`);
       if (data) {
         logs.push(JSON.parse(data));
       }
@@ -323,7 +307,7 @@ export async function getOperationAuditLogs(
 
     return logs;
   } catch (error) {
-    console.error('Failed to retrieve operation audit logs:', error);
+    auditLogger.error('Failed to retrieve operation audit logs:', { error });
     return [];
   }
 }

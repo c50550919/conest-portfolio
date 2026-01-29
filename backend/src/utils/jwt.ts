@@ -127,17 +127,29 @@ export function verifyRefreshToken(token: string): JWTPayload {
 }
 
 /**
- * Decode token without verification (for debugging)
+ * Decode token without verification - FOR DEBUGGING ONLY
+ *
+ * @deprecated Use verifyToken() for any authentication decisions.
+ * This function does NOT verify the token signature and MUST NOT be used
+ * to make access control decisions. Tokens can be forged without verification.
+ *
+ * @security UNSAFE - Does not validate signature. Never use for auth decisions.
  * @param token - JWT token to decode
- * @returns Decoded payload or null
+ * @returns Decoded payload or null (UNVERIFIED - could be forged)
  */
-export function decodeToken(token: string): JWTPayload | null {
+// nosemgrep: jwt-decode-without-verify
+export function decodeTokenUnsafe(token: string): JWTPayload | null {
   try {
     return jwt.decode(token) as JWTPayload;
   } catch {
     return null;
   }
 }
+
+/**
+ * @deprecated Renamed to decodeTokenUnsafe to make security implications clear
+ */
+export const decodeToken = decodeTokenUnsafe;
 
 /**
  * Check if token is expired without throwing error

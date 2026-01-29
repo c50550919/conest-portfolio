@@ -67,7 +67,7 @@ export const MatchModel = {
   async findExistingMatch(userId1: string, userId2: string): Promise<Match | undefined> {
     return await db('matches')
       .where((builder) => {
-        builder
+        void builder
           .where({ user_id_1: userId1, user_id_2: userId2 })
           .orWhere({ user_id_1: userId2, user_id_2: userId1 });
       })

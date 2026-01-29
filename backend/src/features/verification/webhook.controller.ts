@@ -5,6 +5,7 @@ import VeriffClient from './veriff/VeriffClient';
 import CertnClient from './certn/CertnClient';
 import { VerificationModel } from '../../models/Verification';
 import { VerificationWebhookEventModel } from '../../models/VerificationWebhookEvent';
+import { queueWebhookRetry } from '../../workers/webhookRetryWorker';
 
 /**
  * Webhook Controller
@@ -109,12 +110,34 @@ export const webhookController = {
         provider: 'veriff',
       });
 
-      // Mark webhook event as failed
+      // Mark webhook event as failed and queue for retry
       if (webhookEventId) {
         await VerificationWebhookEventModel.markAsFailed(webhookEventId, error.message);
+
+        // TASK-W2-01: Queue for automatic retry with exponential backoff
+        const payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        const sessionId = payload.verification?.id;
+        try {
+          await queueWebhookRetry(
+            webhookEventId,
+            'veriff',
+            payload.status || 'unknown',
+            payload,
+            0, // Initial retry count
+          );
+          logger.info('Veriff webhook queued for retry', { webhookEventId, sessionId });
+        } catch (queueError: any) {
+          logger.error('Failed to queue Veriff webhook for retry', {
+            webhookEventId,
+            sessionId,
+            error: queueError.message,
+          });
+        }
       }
 
-      res.status(500).json({ error: 'Webhook processing failed' });
+      // Return 200 to acknowledge receipt (webhook will be retried internally)
+      // This prevents external providers from retrying unnecessarily
+      res.status(200).json({ received: true, willRetry: true });
     }
   },
 
@@ -140,8 +163,10 @@ export const webhookController = {
     let webhookEventId: string | null = null;
 
     try {
-      // Get signature header (if Certn provides signature verification)
-      const signature = req.headers['x-certn-signature'] as string;
+      // Get signature header - Certn uses "Certn-Signature" header
+      // Per Certn docs: https://docs.certn.co/api/guides/use-the-api/webhooks
+      // Format: "t=timestamp,v1=signature1,v1=signature2"
+      const signature = req.headers['certn-signature'] as string;
       const payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
       // Extract data early for logging
@@ -152,10 +177,14 @@ export const webhookController = {
         event,
         applicationId,
         provider: 'certn',
+        hasSignature: !!signature,
       });
 
-      // Verify signature (if implemented)
-      if (signature && !CertnClient.verifyWebhookSignature(payload, signature)) {
+      // Verify webhook signature (HMAC-SHA256)
+      // CertnClient handles the case where secret isn't configured:
+      // - Production: Returns false (rejects webhook)
+      // - Development: Returns true with warning
+      if (!CertnClient.verifyWebhookSignature(payload, signature)) {
         logger.error('Invalid Certn webhook signature', { applicationId });
         res.status(401).json({ error: 'Invalid signature' });
         return;
@@ -224,12 +253,34 @@ export const webhookController = {
         provider: 'certn',
       });
 
-      // Mark webhook event as failed
+      // Mark webhook event as failed and queue for retry
       if (webhookEventId) {
         await VerificationWebhookEventModel.markAsFailed(webhookEventId, error.message);
+
+        // TASK-W2-01: Queue for automatic retry with exponential backoff
+        const payload = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+        const applicationId = payload.data?.id;
+        try {
+          await queueWebhookRetry(
+            webhookEventId,
+            'certn',
+            payload.event || 'status_update',
+            payload,
+            0, // Initial retry count
+          );
+          logger.info('Certn webhook queued for retry', { webhookEventId, applicationId });
+        } catch (queueError: any) {
+          logger.error('Failed to queue Certn webhook for retry', {
+            webhookEventId,
+            applicationId,
+            error: queueError.message,
+          });
+        }
       }
 
-      res.status(500).json({ error: 'Webhook processing failed' });
+      // Return 200 to acknowledge receipt (webhook will be retried internally)
+      // This prevents external providers from retrying unnecessarily
+      res.status(200).json({ received: true, willRetry: true });
     }
   },
 };

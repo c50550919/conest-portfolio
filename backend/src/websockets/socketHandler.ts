@@ -39,7 +39,7 @@ export const initializeWebSocket = (server: HTTPServer): Server => {
     logger.info(`User ${userId} connected via WebSocket`);
 
     // Join user's personal room
-    socket.join(`user:${userId}`);
+    void socket.join(`user:${userId}`);
 
     // Handle message sending
     socket.on('send_message', async (data) => {
@@ -123,14 +123,14 @@ export const initializeWebSocket = (server: HTTPServer): Server => {
     // Handle join conversation (for real-time updates)
     socket.on('join_conversation', (data) => {
       const { conversationId } = data;
-      socket.join(`conversation:${conversationId}`);
+      void socket.join(`conversation:${conversationId}`);
       logger.info(`User ${userId} joined conversation ${conversationId}`);
     });
 
     // Handle leave conversation
     socket.on('leave_conversation', (data) => {
       const { conversationId } = data;
-      socket.leave(`conversation:${conversationId}`);
+      void socket.leave(`conversation:${conversationId}`);
       logger.info(`User ${userId} left conversation ${conversationId}`);
     });
 

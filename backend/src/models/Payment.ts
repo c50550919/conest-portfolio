@@ -6,7 +6,7 @@ export interface Payment {
   payer_id: string;
   amount: number;
   type: 'rent' | 'utilities' | 'deposit' | 'other';
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded';
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'cancelled';
   stripe_payment_intent_id?: string;
   stripe_charge_id?: string;
   description?: string;
@@ -14,6 +14,7 @@ export interface Payment {
   paid_at?: Date;
   created_at: Date;
   updated_at: Date;
+  operation_id?: string;
 }
 
 export interface Household {

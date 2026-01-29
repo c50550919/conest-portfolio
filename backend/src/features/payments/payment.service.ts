@@ -19,7 +19,7 @@
  * - Secure payment metadata
  */
 
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
 import { v4 as uuidv4 } from 'uuid';
 import stripe, { createConnectedAccount, createAccountLink } from '../../config/stripe';
 import { PaymentModel, HouseholdModel } from '../../models/Payment';
@@ -27,6 +27,7 @@ import { UserModel } from '../../models/User';
 import { VerificationPaymentModel } from '../../models/VerificationPayment';
 import { VerificationService } from '../verification/verification.service';
 import { WebhookEventModel } from '../../models/WebhookEvent';
+import { PaymentCompensationService, SplitRentSagaResult, RollbackResult, CompensationResult } from './paymentCompensation.service';
 import logger from '../../config/logger';
 
 // Constants for verification payments
@@ -355,10 +356,27 @@ export const PaymentService = {
   },
 
   /**
-   * Legacy splitRentPayment method
-   * Kept for backward compatibility
+   * Split Rent Payment with Saga Pattern
+   *
+   * TASK-W2-02: Uses PaymentCompensationService for atomic operations
+   * - Wraps operations in database transaction
+   * - Implements Saga pattern with compensation on failure
+   * - Provides rollback capability
+   *
+   * @param householdId - Household ID
+   * @returns SplitRentSagaResult with operation details
    */
-  async splitRentPayment(householdId: string): Promise<any[]> {
+  async splitRentPayment(householdId: string): Promise<SplitRentSagaResult> {
+    return PaymentCompensationService.executeSplitRentSaga(householdId);
+  },
+
+  /**
+   * Legacy splitRentPayment method (deprecated)
+   * Use splitRentPayment with saga pattern instead
+   *
+   * @deprecated Use splitRentPayment instead
+   */
+  async splitRentPaymentLegacy(householdId: string): Promise<any[]> {
     const household = await HouseholdModel.findById(householdId);
     if (!household) {
       throw new Error('Household not found');
@@ -391,6 +409,44 @@ export const PaymentService = {
     logger.info(`Created ${payments.length} rent payments for household ${householdId}`);
 
     return payments;
+  },
+
+  /**
+   * Rollback a single payment
+   *
+   * TASK-W2-02: Cancels or refunds a payment based on its state
+   * - Pending/processing: cancels Stripe intent
+   * - Completed: refunds the charge
+   *
+   * @param paymentId - Payment ID to rollback
+   * @param reason - Optional reason for rollback
+   * @returns RollbackResult
+   */
+  async rollbackPayment(paymentId: string, reason?: string): Promise<RollbackResult> {
+    return PaymentCompensationService.rollbackPayment(paymentId, reason);
+  },
+
+  /**
+   * Compensate a failed split rent operation
+   *
+   * TASK-W2-02: Cancels/refunds all payments created as part of the operation
+   *
+   * @param operationId - Operation ID to compensate
+   * @returns CompensationResult
+   */
+  async compensateFailedSplit(operationId: string): Promise<CompensationResult> {
+    return PaymentCompensationService.compensateFailedSplit(operationId);
+  },
+
+  /**
+   * Get operation status
+   *
+   * TASK-W2-02: Returns operation details including saga status and compensations
+   *
+   * @param operationId - Operation ID to query
+   */
+  async getOperationStatus(operationId: string) {
+    return PaymentCompensationService.getOperationStatus(operationId);
   },
 
   /**

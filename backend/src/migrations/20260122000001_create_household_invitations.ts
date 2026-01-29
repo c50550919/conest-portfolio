@@ -19,7 +19,7 @@
  *
  * Constraints:
  * - Unique pending invite per household+invitee
- * - Foreign keys to households and parents tables
+ * - Foreign keys to households and profiles tables
  *
  * Indexes:
  * - invitee_id + status (for fetching received invitations)
@@ -47,8 +47,8 @@ export async function up(knex: Knex): Promise<void> {
 
     // Relationships
     table.uuid('household_id').notNullable().references('id').inTable('households').onDelete('CASCADE');
-    table.uuid('inviter_id').notNullable().references('id').inTable('parents').onDelete('CASCADE');
-    table.uuid('invitee_id').notNullable().references('id').inTable('parents').onDelete('CASCADE');
+    table.uuid('inviter_id').notNullable().references('id').inTable('profiles').onDelete('CASCADE');
+    table.uuid('invitee_id').notNullable().references('id').inTable('profiles').onDelete('CASCADE');
 
     // Invitation details
     table.specificType('status', 'invitation_status').notNullable().defaultTo('pending');

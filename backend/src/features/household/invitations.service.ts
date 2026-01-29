@@ -77,7 +77,7 @@ export const InvitationsService = {
     // Validate inviter is a member of the household
     const inviterMembership = await HouseholdMemberModel.findByHouseholdAndUser(
       householdId,
-      inviterId
+      inviterId,
     );
     if (!inviterMembership) {
       throw new Error('You are not a member of this household');
@@ -86,7 +86,7 @@ export const InvitationsService = {
     // Validate invitee is not already in the household
     const inviteeMembership = await HouseholdMemberModel.findByHouseholdAndUser(
       householdId,
-      inviteeId
+      inviteeId,
     );
     if (inviteeMembership) {
       throw new Error('User is already a member of this household');
@@ -309,7 +309,7 @@ export const InvitationsService = {
     const isInviter = invitation.inviterId === userId;
     const membership = await HouseholdMemberModel.findByHouseholdAndUser(
       invitation.householdId,
-      userId
+      userId,
     );
     const isOwner = membership?.role === 'owner';
 
@@ -346,7 +346,7 @@ export const InvitationsService = {
     const isInvitee = invitation.inviteeId === userId;
     const membership = await HouseholdMemberModel.findByHouseholdAndUser(
       invitation.householdId,
-      userId
+      userId,
     );
 
     if (!isInvitee && !membership) {

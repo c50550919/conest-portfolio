@@ -107,17 +107,17 @@ export class EnhancedMessagingService {
   }): Promise<any> {
     const { conversationId, senderId, recipientId, content, messageType = 'text', fileUrl, metadata } = params;
 
-    // Enforce verification requirement
+    // Enforce verification requirement for SENDER only
+    // Verified users can message anyone, but unverified recipients must verify to VIEW/REPLY
     const senderVerification = await this.getUserVerification(senderId);
-    const recipientVerification = await this.getUserVerification(recipientId);
 
     if (!senderVerification || !senderVerification.isVerified) {
       throw new Error('SENDER_NOT_VERIFIED: You must complete verification to send messages');
     }
 
-    if (!recipientVerification || !recipientVerification.isVerified) {
-      throw new Error('RECIPIENT_NOT_VERIFIED: The recipient must be verified to receive messages');
-    }
+    // NOTE: Recipient verification NOT required for sending
+    // Unverified recipients can receive messages but must verify to view/reply
+    // This is enforced in getMessagesGated() method
 
     // Check if conversation is blocked
     const conversation = await this.knex('conversations')
@@ -362,8 +362,8 @@ export class EnhancedMessagingService {
    */
   async getUserConversations(userId: string): Promise<ConversationListItem[]> {
     const conversations = await this.knex('conversations')
-      .where(function() {
-        this.where('participant1_id', userId)
+      .where((builder) => {
+        void builder.where('participant1_id', userId)
           .orWhere('participant2_id', userId);
       })
       .where('archived', false)
@@ -470,6 +470,119 @@ export class EnhancedMessagingService {
       });
 
     logger.info(`Conversation ${conversationId} blocked by ${userId}`);
+  }
+
+  /**
+   * Get messages with verification gating
+   *
+   * Verified users: Return full message content
+   * Unverified users: Return locked response with unread count only
+   *
+   * This enables asymmetric messaging:
+   * - Verified users can send to anyone
+   * - Unverified users can receive but must verify to view/reply
+   */
+  async getMessagesGated(conversationId: string, userId: string): Promise<{
+    locked: boolean;
+    unreadCount?: number;
+    message?: string;
+    messages?: any[];
+    nextCursor?: string | null;
+  }> {
+    // Check if user is verified
+    const verification = await this.getUserVerification(userId);
+
+    if (!verification || !verification.isVerified) {
+      // User not verified - return locked response with count only
+      const unreadResult = await this.knex('messages')
+        .where('conversation_id', conversationId)
+        .where('sender_id', '!=', userId)
+        .where('read', false)
+        .count('id as count')
+        .first();
+
+      const unreadCount = parseInt(unreadResult?.count?.toString() || '0', 10);
+
+      logger.info(`Unverified user ${userId} attempted to view messages. Returning locked response.`);
+
+      return {
+        locked: true,
+        unreadCount,
+        message: 'Complete verification to view your messages',
+      };
+    }
+
+    // User is verified - return full messages
+    const messages = await this.knex('messages')
+      .where('conversation_id', conversationId)
+      .where('deleted', false)
+      .orderBy('created_at', 'desc')
+      .limit(50)
+      .select('*');
+
+    // Decrypt message content for verified user
+    const decryptedMessages = messages.map(msg => ({
+      id: msg.id,
+      conversationId: msg.conversation_id,
+      senderId: msg.sender_id,
+      content: decrypt(msg.content),
+      messageType: msg.message_type,
+      fileUrl: msg.file_url,
+      read: msg.read,
+      readAt: msg.read_at,
+      createdAt: msg.created_at,
+      moderationStatus: msg.moderation_status,
+    }));
+
+    return {
+      locked: false,
+      messages: decryptedMessages.reverse(), // Return in chronological order
+      nextCursor: null,
+    };
+  }
+
+  /**
+   * Get total unread message count for a user (verification-gated)
+   * Unverified users still see the count to encourage verification
+   */
+  async getTotalUnreadCount(userId: string): Promise<{
+    locked: boolean;
+    unreadCount: number;
+    message?: string;
+  }> {
+    // Get total unread count across all conversations
+    const result = await this.knex('conversations')
+      .where((builder) => {
+        void builder.where('participant1_id', userId)
+          .orWhere('participant2_id', userId);
+      })
+      .select(
+        this.knex.raw(`
+          SUM(CASE
+            WHEN participant1_id = ? THEN unread_count_p1
+            ELSE unread_count_p2
+          END) as total_unread
+        `, [userId]),
+      )
+      .first();
+
+    const unreadCount = parseInt(result?.total_unread?.toString() || '0', 10);
+
+    // Check verification status
+    const verification = await this.getUserVerification(userId);
+
+    if (!verification || !verification.isVerified) {
+      return {
+        locked: true,
+        unreadCount,
+        message: 'Verify your account to view messages',
+      };
+    }
+
+    return {
+      locked: false,
+      unreadCount,
+    };
   }
 }
 

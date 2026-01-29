@@ -105,7 +105,7 @@ export const SavedProfileModel = {
       .orderBy('sp.saved_at', 'desc');
 
     if (folder) {
-      query.where('sp.folder', folder);
+      void query.where('sp.folder', folder);
     }
 
     const results = await query;

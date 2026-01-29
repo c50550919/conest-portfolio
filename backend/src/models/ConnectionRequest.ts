@@ -163,8 +163,8 @@ export const ConnectionRequestModel = {
   ): Promise<string | null> {
     const request = await db('connection_requests')
       .where({ id })
-      .where(function () {
-        this.where('sender_id', userId).orWhere('recipient_id', userId);
+      .where((builder) => {
+        void builder.where('sender_id', userId).orWhere('recipient_id', userId);
       })
       .first();
 
@@ -185,8 +185,8 @@ export const ConnectionRequestModel = {
   ): Promise<string | null> {
     const request = await db('connection_requests')
       .where({ id })
-      .where(function () {
-        this.where('sender_id', userId).orWhere('recipient_id', userId);
+      .where((builder) => {
+        void builder.where('sender_id', userId).orWhere('recipient_id', userId);
       })
       .first();
 
@@ -248,7 +248,7 @@ export const ConnectionRequestModel = {
       .orderBy('cr.sent_at', 'desc');
 
     if (status) {
-      query.where('cr.status', status);
+      void query.where('cr.status', status);
     }
 
     const results = await query;
@@ -332,7 +332,7 @@ export const ConnectionRequestModel = {
       .orderBy('cr.sent_at', 'desc');
 
     if (status) {
-      query.where('cr.status', status);
+      void query.where('cr.status', status);
     }
 
     const results = await query;
@@ -604,8 +604,8 @@ export const ConnectionRequestModel = {
     const result = await db('connection_requests')
       .whereIn('status', ['accepted', 'declined', 'expired', 'cancelled'])
       .whereNull('archived_at')
-      .where(function () {
-        this.where(
+      .where((builder) => {
+        void builder.where(
           'responded_at',
           '<=',
           db.raw("NOW() - INTERVAL '90 days'"),

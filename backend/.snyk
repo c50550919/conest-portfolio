@@ -27,6 +27,7 @@ exclude:
     - dist/**
     - coverage/**
     - __tests__/**
+    - '**/__mocks__/**'  # Test mocks contain intentional test secrets
 
 # License policy
 license:

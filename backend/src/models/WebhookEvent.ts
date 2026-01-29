@@ -28,6 +28,13 @@ export interface WebhookEvent {
   received_at: Date;
   processed_at: Date | null;
   created_at: Date;
+  // TASK-W2-01: Retry queue fields
+  retry_count: number;
+  last_retry_at: Date | null;
+  next_retry_at: Date | null;
+  dead_letter: boolean;
+  dead_letter_at: Date | null;
+  dead_letter_reason: string | null;
 }
 
 export interface CreateWebhookEventData {
@@ -171,12 +178,60 @@ export const WebhookEventModel = {
   /**
    * Find failed events for retry
    * Returns events that failed processing within the last 24 hours
+   * TASK-W2-01: Updated to exclude dead letter events
    */
   async findFailedEvents(limit: number = 50): Promise<WebhookEvent[]> {
     return await db('stripe_webhook_events')
       .where({ processing_status: 'failed' })
+      .where((builder) => {
+        void builder.where('dead_letter', false).orWhereNull('dead_letter');
+      })
       .where('received_at', '>', db.raw("NOW() - INTERVAL '24 hours'"))
       .orderBy('received_at', 'asc')
+      .limit(limit);
+  },
+
+  /**
+   * TASK-W2-01: Find events eligible for retry
+   * Returns failed events that haven't exceeded max retries and aren't in dead letter
+   */
+  async findRetryEligibleEvents(maxRetries: number = 3, limit: number = 50): Promise<WebhookEvent[]> {
+    return await db('stripe_webhook_events')
+      .where({ processing_status: 'failed' })
+      .where((builder) => {
+        void builder.where('dead_letter', false).orWhereNull('dead_letter');
+      })
+      .where((builder) => {
+        void builder.where('retry_count', '<', maxRetries).orWhereNull('retry_count');
+      })
+      .where('received_at', '>', db.raw("NOW() - INTERVAL '24 hours'"))
+      .whereRaw('(next_retry_at IS NULL OR next_retry_at <= NOW())')
+      .orderBy('received_at', 'asc')
+      .limit(limit);
+  },
+
+  /**
+   * TASK-W2-01: Mark event as failed and queue for retry
+   */
+  async markAsFailedAndQueueRetry(id: string, errorMessage: string): Promise<WebhookEvent | undefined> {
+    await db('stripe_webhook_events')
+      .where({ id })
+      .update({
+        processing_status: 'failed',
+        error_message: errorMessage,
+        processed_at: db.fn.now(),
+      });
+
+    return await db('stripe_webhook_events').where({ id }).first();
+  },
+
+  /**
+   * TASK-W2-01: Get dead letter events
+   */
+  async getDeadLetterEvents(limit: number = 50): Promise<WebhookEvent[]> {
+    return await db('stripe_webhook_events')
+      .where('dead_letter', true)
+      .orderBy('dead_letter_at', 'desc')
       .limit(limit);
   },
 

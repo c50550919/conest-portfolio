@@ -31,6 +31,13 @@ export interface VerificationWebhookEvent {
   received_at: Date;
   processed_at: Date | null;
   created_at: Date;
+  // TASK-W2-01: Retry queue fields
+  retry_count: number;
+  last_retry_at: Date | null;
+  next_retry_at: Date | null;
+  dead_letter: boolean;
+  dead_letter_at: Date | null;
+  dead_letter_reason: string | null;
 }
 
 export interface CreateVerificationWebhookEventData {
@@ -131,6 +138,12 @@ export const VerificationWebhookEventModel = {
             received_at: new Date(),
             processed_at: null,
             created_at: new Date(),
+            retry_count: 0,
+            last_retry_at: null,
+            next_retry_at: null,
+            dead_letter: false,
+            dead_letter_at: null,
+            dead_letter_reason: null,
           },
           isNew: true,
         };
@@ -207,11 +220,15 @@ export const VerificationWebhookEventModel = {
 
   /**
    * Find failed events for retry
+   * TASK-W2-01: Updated to exclude dead letter events
    */
   async findFailedEvents(provider?: VerificationProvider, limit: number = 50): Promise<VerificationWebhookEvent[]> {
     try {
       let query = db('verification_webhook_events')
         .where({ processing_status: 'failed' })
+        .where((builder) => {
+          void builder.where('dead_letter', false).orWhereNull('dead_letter');
+        })
         .where('received_at', '>', db.raw("NOW() - INTERVAL '24 hours'"));
 
       if (provider) {
@@ -219,6 +236,58 @@ export const VerificationWebhookEventModel = {
       }
 
       return await query.orderBy('received_at', 'asc').limit(limit);
+    } catch (error: any) {
+      if (error.code === '42P01') return []; // Table doesn't exist
+      throw error;
+    }
+  },
+
+  /**
+   * TASK-W2-01: Find events eligible for retry
+   */
+  async findRetryEligibleEvents(
+    maxRetries: number = 3,
+    provider?: VerificationProvider,
+    limit: number = 50,
+  ): Promise<VerificationWebhookEvent[]> {
+    try {
+      let query = db('verification_webhook_events')
+        .where({ processing_status: 'failed' })
+        .where((builder) => {
+          void builder.where('dead_letter', false).orWhereNull('dead_letter');
+        })
+        .where((builder) => {
+          void builder.where('retry_count', '<', maxRetries).orWhereNull('retry_count');
+        })
+        .where('received_at', '>', db.raw("NOW() - INTERVAL '24 hours'"))
+        .whereRaw('(next_retry_at IS NULL OR next_retry_at <= NOW())');
+
+      if (provider) {
+        query = query.where({ provider });
+      }
+
+      return await query.orderBy('received_at', 'asc').limit(limit);
+    } catch (error: any) {
+      if (error.code === '42P01') return []; // Table doesn't exist
+      throw error;
+    }
+  },
+
+  /**
+   * TASK-W2-01: Get dead letter events
+   */
+  async getDeadLetterEvents(provider?: VerificationProvider, limit: number = 50): Promise<VerificationWebhookEvent[]> {
+    try {
+      let query = db('verification_webhook_events')
+        .where('dead_letter', true)
+        .orderBy('dead_letter_at', 'desc')
+        .limit(limit);
+
+      if (provider) {
+        query = query.where({ provider });
+      }
+
+      return await query;
     } catch (error: any) {
       if (error.code === '42P01') return []; // Table doesn't exist
       throw error;

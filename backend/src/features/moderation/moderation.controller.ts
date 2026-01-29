@@ -136,8 +136,8 @@ export const moderationController = {
       .join('users', 'messages.sender_id', 'users.id')
       .where('messages.flagged_for_review', true)
       .whereIn('messages.moderation_status', ['pending', 'pending_ai_review'])
-      .where(function () {
-        this.where('messages.ai_category', 'child_predatory_risk').orWhere(
+      .where((builder) => {
+        void builder.where('messages.ai_category', 'child_predatory_risk').orWhere(
           'messages.ai_confidence_score',
           '>=',
           0.7,

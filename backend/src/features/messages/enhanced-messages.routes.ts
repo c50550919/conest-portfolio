@@ -235,6 +235,65 @@ router.get('/verification-status/:userId', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/messages/conversations/:conversationId/gated
+ * Get messages with verification gating
+ *
+ * Verified users: Returns full message content
+ * Unverified users: Returns locked response with unread count only
+ *
+ * This enables asymmetric messaging:
+ * - Verified users can send to anyone
+ * - Unverified users can receive but must verify to view/reply
+ */
+router.get('/conversations/:conversationId/gated', async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const userId = req.user!.userId;
+
+    const result = await EnhancedMessagingService.getMessagesGated(conversationId, userId);
+
+    return res.status(200).json({
+      success: true,
+      ...result,
+    });
+  } catch (error: any) {
+    logger.error('Error getting gated messages:', error);
+
+    return res.status(500).json({
+      error: 'Failed to get messages',
+      message: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/messages/unread-count
+ * Get total unread message count with verification gating
+ *
+ * Both verified and unverified users can see the count
+ * Unverified users get a prompt to verify to view messages
+ */
+router.get('/unread-count', async (req, res) => {
+  try {
+    const userId = req.user!.userId;
+
+    const result = await EnhancedMessagingService.getTotalUnreadCount(userId);
+
+    return res.status(200).json({
+      success: true,
+      ...result,
+    });
+  } catch (error: any) {
+    logger.error('Error getting unread count:', error);
+
+    return res.status(500).json({
+      error: 'Failed to get unread count',
+      message: error.message,
+    });
+  }
+});
+
 // ==================== ADMIN ROUTES ====================
 
 /**

@@ -1,5 +1,5 @@
 import http from 'http';
-import { initializeSentry, isSentryInitialized } from './config/sentry';
+import { initializeSentry } from './config/sentry';
 
 // Initialize Sentry EARLY (before other imports that might throw)
 initializeSentry();
@@ -12,6 +12,7 @@ import logger from './config/logger';
 import SocketService from './services/SocketService';
 import { validateEnv } from './config/env';
 import { moderationWorker } from './features/moderation';
+import { startWebhookRetryWorker, stopWebhookRetryWorker } from './workers/webhookRetryWorker';
 
 // Validate environment variables (fail fast if misconfigured)
 let env;
@@ -122,7 +123,7 @@ const startServer = async () => {
       // Start AI Content Moderation Worker
       const aiModerationEnabled = process.env.AI_MODERATION_ENABLED === 'true';
       if (aiModerationEnabled) {
-        moderationWorker.start();
+        void moderationWorker.start();
         const shadowMode = process.env.AI_MODERATION_SHADOW_MODE === 'true';
         console.log(`\n🤖 AI Content Moderation: ${shadowMode ? 'SHADOW MODE (logging only)' : 'ACTIVE'}`);
         console.log(`   - Primary Provider: ${  process.env.AI_MODERATION_PRIMARY_PROVIDER || 'gemini'}`);
@@ -130,6 +131,14 @@ const startServer = async () => {
       } else {
         console.log('\n⚠️  AI Content Moderation: DISABLED');
       }
+
+      // TASK-W2-01: Start Webhook Retry Worker
+      // This enables automatic retry of failed webhooks with exponential backoff
+      startWebhookRetryWorker();
+      console.log('\n🔄 Webhook Retry Worker: ACTIVE');
+      console.log('   - Max retries: 3 (2s, 4s, 8s backoff)');
+      console.log('   - Hourly reprocessing: Enabled');
+      console.log('   - Dead letter queue: Enabled');
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
@@ -141,6 +150,7 @@ const startServer = async () => {
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully');
   moderationWorker.stop();
+  stopWebhookRetryWorker();
   server.close(() => {
     logger.info('Server closed');
     process.exit(0);
@@ -150,6 +160,7 @@ process.on('SIGTERM', () => {
 process.on('SIGINT', () => {
   logger.info('SIGINT received, shutting down gracefully');
   moderationWorker.stop();
+  stopWebhookRetryWorker();
   server.close(() => {
     logger.info('Server closed');
     process.exit(0);
@@ -158,7 +169,7 @@ process.on('SIGINT', () => {
 
 // Start the server only if this file is run directly (not imported by tests)
 if (require.main === module) {
-  startServer();
+  void startServer();
 }
 
 export default app;

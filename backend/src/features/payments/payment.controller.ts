@@ -566,13 +566,14 @@ export const PaymentController = {
   splitRentLegacy: asyncHandler(async (req: AuthRequest, res: Response) => {
     const { householdId } = req.params;
 
-    const payments = await PaymentService.splitRentPayment(householdId);
+    const result = await PaymentService.splitRentPayment(householdId);
 
     res.json({
-      success: true,
-      message: 'Rent payments created',
-      count: payments.length,
-      data: payments,
+      success: result.success,
+      message: result.success ? 'Rent payments created' : result.error,
+      count: result.payments.length,
+      operationId: result.operationId,
+      data: result.payments,
     });
   }),
 

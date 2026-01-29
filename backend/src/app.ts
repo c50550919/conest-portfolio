@@ -31,6 +31,8 @@ import discoveryRoutes from './features/discovery/discovery.routes';
 import householdRoutes from './features/household/household.routes';
 import templatesRoutes from './features/household/templates.routes';
 import invitationsRoutes from './features/household/invitations.routes';
+// Household Safety feature (mandatory disclosure system)
+import householdSafetyRoutes from './features/household-safety/household-safety.routes';
 // Saved Profiles feature (migrated to feature-based structure)
 import savedProfileRoutes from './features/saved-profiles/saved-profile.routes';
 // Connections feature (migrated to feature-based structure)
@@ -101,6 +103,7 @@ app.use('/api/household', householdRoutes);
 app.use('/api/households/templates', templatesRoutes); // Document templates - MUST be before /:id routes
 app.use('/api/households', invitationsRoutes); // Invitations - MUST be before /:id routes
 app.use('/api/households', householdRoutes); // Also mount at plural form for mobile compatibility
+app.use('/api/household-safety', householdSafetyRoutes); // Mandatory disclosure system
 app.use('/api/saved-profiles', savedProfileRoutes);
 app.use('/api/connection-requests', connectionRequestRoutes);
 app.use('/api/compatibility', comparisonRoutes);
@@ -127,19 +130,19 @@ app.use('/api/uploads', (req: Request, res: Response, _next: NextFunction) => {
     return;
   }
 
-  const uploadDir = storageService.getLocalUploadDir();
+  const uploadDir = path.resolve(storageService.getLocalUploadDir());
   const requestedPath = req.path.replace(/^\//, ''); // Remove leading slash
-  const filePath = path.join(uploadDir, requestedPath);
 
   // Security: Prevent path traversal attacks
-  const normalizedPath = path.normalize(filePath);
-  if (!normalizedPath.startsWith(uploadDir)) {
+  // Use path.resolve to get absolute path and ensure it's within uploadDir
+  const resolvedPath = path.resolve(uploadDir, requestedPath);
+  if (!resolvedPath.startsWith(uploadDir + path.sep) && resolvedPath !== uploadDir) {
     res.status(403).json({ success: false, error: 'Access denied' });
     return;
   }
 
   // Check if file exists
-  if (!fs.existsSync(filePath)) {
+  if (!fs.existsSync(resolvedPath)) {
     res.status(404).json({ success: false, error: 'File not found' });
     return;
   }
@@ -149,8 +152,8 @@ app.use('/api/uploads', (req: Request, res: Response, _next: NextFunction) => {
   res.setHeader('Content-Security-Policy', "default-src 'none'");
   res.setHeader('Cache-Control', 'private, max-age=3600');
 
-  // Send the file
-  res.sendFile(filePath);
+  // Send the file using the resolved safe path
+  res.sendFile(resolvedPath);
 });
 
 // 404 handler

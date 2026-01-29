@@ -12,6 +12,7 @@ export interface VerificationStatus {
   idVerified: boolean;
   backgroundCheckComplete: boolean;
   phoneVerified: boolean;
+  fullyVerified: boolean; // All verifications complete - for badge display
 }
 
 export interface ProfileCard {

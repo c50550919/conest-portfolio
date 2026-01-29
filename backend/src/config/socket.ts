@@ -105,7 +105,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
     logger.info('Client connected', { email, userId });
 
     // Join user-specific room for targeted notifications
-    socket.join(`user:${userId}`);
+    void socket.join(`user:${userId}`);
 
     // Emit presence update
     socket.broadcast.emit('user:online', { userId });
@@ -173,7 +173,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
      * Client → Server: Join conversation room
      */
     socket.on('conversation:join', (data: { conversationId: string }) => {
-      socket.join(`conversation:${data.conversationId}`);
+      void socket.join(`conversation:${data.conversationId}`);
       logger.debug('User joined conversation', { userId, conversationId: data.conversationId });
     });
 
@@ -181,7 +181,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
      * Client → Server: Leave conversation room
      */
     socket.on('conversation:leave', (data: { conversationId: string }) => {
-      socket.leave(`conversation:${data.conversationId}`);
+      void socket.leave(`conversation:${data.conversationId}`);
       logger.debug('User left conversation', { userId, conversationId: data.conversationId });
     });
 
@@ -199,7 +199,7 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
      * Client → Server: Join household room
      */
     socket.on('household:join', (data: { householdId: string }) => {
-      socket.join(`household:${data.householdId}`);
+      void socket.join(`household:${data.householdId}`);
       logger.debug('User joined household', { userId, householdId: data.householdId });
     });
 
@@ -245,15 +245,11 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
  * Graceful shutdown for Socket.io and Redis clients
  */
 export async function closeSocketIO(io: Server): Promise<void> {
-  return new Promise((resolve) => {
-    io.close(() => {
-      logger.info('Socket.io server closed');
-      pubClient.quit();
-      subClient.quit();
-      ioInstance = null; // Clear singleton instance
-      resolve();
-    });
-  });
+  await io.close();
+  logger.info('Socket.io server closed');
+  void pubClient.quit();
+  void subClient.quit();
+  ioInstance = null; // Clear singleton instance
 }
 
 export default initializeSocketIO;

@@ -36,7 +36,7 @@ export const MessageModel = {
     // Check if conversation already exists
     const existing = await db('conversations')
       .where((builder) => {
-        builder
+        void builder
           .where({ participant1_id: participant1Id, participant2_id: participant2Id })
           .orWhere({ participant1_id: participant2Id, participant2_id: participant1Id });
       })
@@ -57,7 +57,7 @@ export const MessageModel = {
   async findConversation(participant1Id: string, participant2Id: string): Promise<Conversation | undefined> {
     return await db('conversations')
       .where((builder) => {
-        builder
+        void builder
           .where({ participant1_id: participant1Id, participant2_id: participant2Id })
           .orWhere({ participant1_id: participant2Id, participant2_id: participant1Id });
       })

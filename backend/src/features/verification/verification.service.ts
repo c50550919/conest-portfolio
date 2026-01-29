@@ -563,4 +563,86 @@ export const VerificationService = {
       bg_check_expiration_date: bgCheckExpirationDate,
     };
   },
+
+  /**
+   * TASK-W2-01: Handle Veriff webhook payload for retry processing
+   *
+   * Wrapper method that can be called by the webhook retry worker
+   * without needing an HTTP Request/Response context.
+   *
+   * @param payload - The Veriff webhook payload
+   */
+  async handleVeriffWebhook(payload: Record<string, unknown>): Promise<void> {
+    const verification = payload.verification as { id?: string; vendorData?: string } | undefined;
+    const sessionId = verification?.id;
+    const userId = verification?.vendorData;
+    const status = payload.status as string;
+
+    if (!sessionId || !userId) {
+      throw new Error('Invalid Veriff webhook payload: missing sessionId or userId');
+    }
+
+    logger.info('Processing Veriff webhook via retry worker', {
+      sessionId,
+      userId,
+      status,
+    });
+
+    // Process verification completion
+    if (status === 'success') {
+      await this.completeIDVerification(userId, sessionId);
+    }
+
+    logger.info('Veriff webhook retry processing completed', {
+      sessionId,
+      userId,
+      status,
+    });
+  },
+
+  /**
+   * TASK-W2-01: Handle Certn webhook payload for retry processing
+   *
+   * Wrapper method that can be called by the webhook retry worker
+   * without needing an HTTP Request/Response context.
+   *
+   * @param payload - The Certn webhook payload
+   */
+  async handleCertnWebhook(payload: Record<string, unknown>): Promise<void> {
+    const event = payload.event as string;
+    const data = payload.data as { id?: string; applicant_id?: string; status?: string } | undefined;
+    const applicationId = data?.id;
+    const applicantId = data?.applicant_id;
+    const status = data?.status;
+
+    if (!applicationId) {
+      throw new Error('Invalid Certn webhook payload: missing applicationId');
+    }
+
+    logger.info('Processing Certn webhook via retry worker', {
+      event,
+      applicationId,
+      applicantId,
+      status,
+    });
+
+    // Only process completed applications
+    if (event === 'application.completed' || status === 'COMPLETED') {
+      // Find verification record by applicant ID
+      const verification = await VerificationModel.findByUserId(applicantId || '');
+
+      if (!verification) {
+        throw new Error(`Verification record not found for applicant: ${applicantId}`);
+      }
+
+      // Process background check result
+      await this.processBackgroundCheckResult(verification.user_id, applicationId);
+    }
+
+    logger.info('Certn webhook retry processing completed', {
+      event,
+      applicationId,
+      applicantId,
+    });
+  },
 };

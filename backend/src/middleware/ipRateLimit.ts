@@ -1,29 +1,20 @@
 /**
  * IP-based Rate Limiting Middleware
- * Implements distributed rate limiting using Redis
+ * Implements distributed rate limiting using Redis (ioredis)
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { createClient } from 'redis';
+import { redis } from '../config/redis';
 import { securityConfig } from '../config/security';
-
-let redisClient: ReturnType<typeof createClient> | null = null;
+import logger from '../config/logger';
 
 /**
  * Initialize Redis client for rate limiting
+ * @deprecated No longer needed - ioredis auto-connects. Kept for backwards compatibility.
  */
 export async function initializeRateLimitRedis(): Promise<void> {
-  if (redisClient) return;
-
-  redisClient = createClient({
-    url: process.env.REDIS_URL || 'redis://localhost:6379',
-  });
-
-  redisClient.on('error', (err) => {
-    console.error('Redis rate limit client error:', err);
-  });
-
-  await redisClient.connect();
+  // ioredis auto-connects, no initialization needed
+  logger.debug('Rate limit Redis initialization called (no-op with ioredis)');
 }
 
 /**
@@ -53,21 +44,16 @@ export function ipRateLimit(options?: {
   } = options || {};
 
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    if (!redisClient) {
-      console.warn('Redis client not initialized for rate limiting');
-      return next();
-    }
-
     const ip = getClientIP(req);
     const key = `${keyPrefix}:${ip}`;
 
     try {
       // Get current count
-      const current = await redisClient.get(key);
+      const current = await redis.get(key);
       const count = current ? parseInt(current, 10) : 0;
 
       if (count >= maxRequests) {
-        const ttl = await redisClient.ttl(key);
+        const ttl = await redis.ttl(key);
 
         res.setHeader('X-RateLimit-Limit', maxRequests.toString());
         res.setHeader('X-RateLimit-Remaining', '0');
@@ -81,15 +67,15 @@ export function ipRateLimit(options?: {
         return;
       }
 
-      // Increment counter
-      const multi = redisClient.multi();
-      multi.incr(key);
+      // Increment counter using ioredis pipeline
+      const pipeline = redis.pipeline();
+      pipeline.incr(key);
 
       if (count === 0) {
-        multi.expire(key, Math.ceil(windowMs / 1000));
+        pipeline.expire(key, Math.ceil(windowMs / 1000));
       }
 
-      await multi.exec();
+      await pipeline.exec();
 
       // Set rate limit headers
       res.setHeader('X-RateLimit-Limit', maxRequests.toString());
@@ -97,7 +83,7 @@ export function ipRateLimit(options?: {
 
       next();
     } catch (error) {
-      console.error('Rate limiting error:', error);
+      logger.error('Rate limiting error:', { error });
       // Fail open - allow request if rate limiting fails
       next();
     }
@@ -136,11 +122,6 @@ export function userRateLimit(options?: {
   } = options || {};
 
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    if (!redisClient) {
-      console.warn('Redis client not initialized for rate limiting');
-      return next();
-    }
-
     const userId = (req as any).user?.id;
     if (!userId) {
       return next(); // Skip if user not authenticated
@@ -149,11 +130,11 @@ export function userRateLimit(options?: {
     const key = `ratelimit:user:${userId}`;
 
     try {
-      const current = await redisClient.get(key);
+      const current = await redis.get(key);
       const count = current ? parseInt(current, 10) : 0;
 
       if (count >= maxRequests) {
-        const ttl = await redisClient.ttl(key);
+        const ttl = await redis.ttl(key);
 
         res.status(429).json({
           error: 'Too many requests',
@@ -163,18 +144,18 @@ export function userRateLimit(options?: {
         return;
       }
 
-      const multi = redisClient.multi();
-      multi.incr(key);
+      const pipeline = redis.pipeline();
+      pipeline.incr(key);
 
       if (count === 0) {
-        multi.expire(key, Math.ceil(windowMs / 1000));
+        pipeline.expire(key, Math.ceil(windowMs / 1000));
       }
 
-      await multi.exec();
+      await pipeline.exec();
 
       next();
     } catch (error) {
-      console.error('User rate limiting error:', error);
+      logger.error('User rate limiting error:', { error });
       next();
     }
   };
@@ -184,8 +165,6 @@ export function userRateLimit(options?: {
  * Clear rate limit for specific IP or user
  */
 export async function clearRateLimit(identifier: string, type: 'ip' | 'user' = 'ip'): Promise<void> {
-  if (!redisClient) return;
-
   const key = `ratelimit:${type}:${identifier}`;
-  await redisClient.del(key);
+  await redis.del(key);
 }

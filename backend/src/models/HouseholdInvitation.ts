@@ -129,7 +129,7 @@ export const HouseholdInvitationModel = {
    */
   async findReceivedByUserId(
     userId: string,
-    status: InvitationStatus = 'pending'
+    status: InvitationStatus = 'pending',
   ): Promise<HouseholdInvitation[]> {
     const rows = await db('household_invitations')
       .where({ invitee_id: userId, status })
@@ -144,7 +144,7 @@ export const HouseholdInvitationModel = {
    */
   async findSentByHouseholdId(
     householdId: string,
-    status?: InvitationStatus
+    status?: InvitationStatus,
   ): Promise<HouseholdInvitation[]> {
     let query = db('household_invitations').where({ household_id: householdId });
 
@@ -178,7 +178,7 @@ export const HouseholdInvitationModel = {
   async updateStatus(
     id: string,
     status: InvitationStatus,
-    respondedAt?: Date
+    respondedAt?: Date,
   ): Promise<HouseholdInvitation | null> {
     const [row] = await db('household_invitations')
       .where({ id })
@@ -265,7 +265,7 @@ export const HouseholdInvitationModel = {
         'h.state as household_state',
         'p.id as inviter_id',
         'p.first_name as inviter_first_name',
-        'p.last_name as inviter_last_name'
+        'p.last_name as inviter_last_name',
       )
       .join('households as h', 'i.household_id', 'h.id')
       .join('parents as p', 'i.inviter_id', 'p.id')

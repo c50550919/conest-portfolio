@@ -1,7 +1,10 @@
 import type { Knex } from 'knex';
-import dotenv from 'dotenv';
 
-dotenv.config();
+// Only load .env if DB_NAME isn't already set (allows dotenv-cli to override)
+if (!process.env.DB_NAME) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('dotenv').config();
+}
 
 const config: { [key: string]: Knex.Config } = {
   development: {

@@ -44,6 +44,7 @@ export class DiscoveryService {
     );
 
     // Get users already matched with current user
+    // Note: matches table uses user_id_1/user_id_2 which directly reference users.id
     const matches = await db('matches')
       .where('user_id_1', userId)
       .orWhere('user_id_2', userId)
@@ -68,11 +69,13 @@ export class DiscoveryService {
     // Get users to exclude (connection requests + matches)
     const excludedUserIds = await this.getExcludedUserIds(userId);
 
+    // LEFT JOIN verifications to include users without verification records
+    // This allows ALL users to appear in discovery (verified badge shows status)
     let query = db('users as u')
       .join('parents as p', 'u.id', 'p.user_id')
-      .join('verifications as v', 'u.id', 'v.user_id')
+      .leftJoin('verifications as v', 'u.id', 'v.user_id')
       .where('u.id', '!=', userId)
-      .where('v.fully_verified', true)
+      // REMOVED: .where('v.fully_verified', true) - show all users with verification badges
       .select(
         'u.id as userId',
         'p.first_name as firstName',
@@ -88,6 +91,7 @@ export class DiscoveryService {
         'v.id_verification_status',
         'v.background_check_status',
         'v.phone_verified',
+        'v.fully_verified',
       );
 
     // Exclude users with existing connections or matches
@@ -130,7 +134,8 @@ export class DiscoveryService {
         verificationStatus: {
           idVerified: p.id_verification_status === 'approved',
           backgroundCheckComplete: p.background_check_status === 'clear',
-          phoneVerified: p.phone_verified,
+          phoneVerified: p.phone_verified ?? false, // null-safe for LEFT JOIN
+          fullyVerified: p.fully_verified ?? false, // for badge display
         },
         budget,
         moveInDate: p.moveInDate ? new Date(p.moveInDate).toISOString() : undefined,

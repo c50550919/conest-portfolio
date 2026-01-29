@@ -131,8 +131,10 @@ export const AuthService = {
     }
 
     // Check if account is active
-    if (user.account_status !== 'active') {
-      throw new Error(`Account is ${user.account_status}`);
+    // Note: database column is 'status', not 'account_status'
+    const accountStatus = (user as any).status || (user as any).account_status;
+    if (accountStatus !== 'active') {
+      throw new Error(`Account is ${accountStatus}`);
     }
 
     // Update last login

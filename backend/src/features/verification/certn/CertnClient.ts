@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import crypto from 'crypto';
 import logger from '../../../config/logger';
 
 /**
@@ -76,13 +77,21 @@ export class CertnClient {
   private client: AxiosInstance;
   private apiKey: string;
   private baseURL: string;
+  private webhookSecret: string;
+  private webhookToleranceSeconds: number;
 
   constructor() {
     this.apiKey = process.env.CERTN_API_KEY || '';
     this.baseURL = process.env.CERTN_BASE_URL || 'https://api.certn.co/v1';
+    this.webhookSecret = process.env.CERTN_WEBHOOK_SECRET || '';
+    this.webhookToleranceSeconds = parseInt(process.env.CERTN_WEBHOOK_TOLERANCE_SECONDS || '300', 10);
 
     if (!this.apiKey) {
       logger.warn('CERTN_API_KEY not configured - background checks will fail');
+    }
+
+    if (!this.webhookSecret) {
+      logger.warn('CERTN_WEBHOOK_SECRET not configured - webhook signature verification disabled');
     }
 
     this.client = axios.create({
@@ -243,17 +252,130 @@ export class CertnClient {
   }
 
   /**
-   * Verify webhook signature (if Certn provides signature verification)
+   * Verify webhook signature using HMAC-SHA256
    *
-   * @param payload - Webhook payload
-   * @param signature - Signature header
-   * @returns true if valid
+   * Certn webhook signature format: "t=timestamp,v1=signature"
+   * Per docs: https://docs.certn.co/api/guides/use-the-api/webhooks
+   *
+   * Security features:
+   * - HMAC-SHA256 signature verification
+   * - Timestamp validation for replay attack protection
+   * - Constant-time comparison to prevent timing attacks
+   *
+   * @param payload - Raw webhook payload (string or object)
+   * @param signatureHeader - Certn-Signature header value
+   * @returns true if signature is valid and timestamp is within tolerance
    */
-  verifyWebhookSignature(payload: any, signature: string): boolean {
-    // Certn webhook signature verification logic
-    // This is placeholder - implement based on Certn docs
-    logger.info('Certn webhook signature verification', { signature });
-    return true;
+  verifyWebhookSignature(payload: any, signatureHeader: string): boolean {
+    // If no webhook secret configured, log warning and reject in production
+    if (!this.webhookSecret) {
+      const isProduction = process.env.SECURITY_MODE === 'production' || process.env.NODE_ENV === 'production';
+      if (isProduction) {
+        logger.error('Certn webhook rejected: CERTN_WEBHOOK_SECRET not configured in production');
+        return false;
+      }
+      // In development, allow but warn
+      logger.warn('Certn webhook signature verification skipped: CERTN_WEBHOOK_SECRET not configured');
+      return true;
+    }
+
+    if (!signatureHeader) {
+      logger.error('Certn webhook rejected: Missing Certn-Signature header');
+      return false;
+    }
+
+    try {
+      // Parse signature header: "t=timestamp,v1=signature1,v1=signature2"
+      const { timestamp, signatures } = this.parseSignatureHeader(signatureHeader);
+
+      if (!timestamp || signatures.length === 0) {
+        logger.error('Certn webhook rejected: Invalid signature header format', {
+          signatureHeader: `${signatureHeader.substring(0, 50)  }...`,
+        });
+        return false;
+      }
+
+      // Validate timestamp (prevent replay attacks)
+      const timestampAge = Math.floor(Date.now() / 1000) - timestamp;
+      if (Math.abs(timestampAge) > this.webhookToleranceSeconds) {
+        logger.error('Certn webhook rejected: Timestamp outside tolerance', {
+          timestampAge,
+          tolerance: this.webhookToleranceSeconds,
+        });
+        return false;
+      }
+
+      // Prepare signed payload: "timestamp.payload"
+      const payloadString = typeof payload === 'string' ? payload : JSON.stringify(payload);
+      const signedPayload = `${timestamp}.${payloadString}`;
+
+      // Compute expected signature
+      const expectedSignature = crypto
+        .createHmac('sha256', this.webhookSecret)
+        .update(signedPayload, 'utf8')
+        .digest('hex');
+
+      // Check if any of the provided signatures match (supports secret rotation)
+      // Use safe comparison that handles invalid hex and length mismatches
+      const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+      const isValid = signatures.some((sig) => {
+        try {
+          // Validate hex format and length (SHA-256 produces 64 hex chars)
+          if (!/^[a-f0-9]{64}$/i.test(sig)) {
+            return false;
+          }
+          const sigBuffer = Buffer.from(sig, 'hex');
+          return crypto.timingSafeEqual(sigBuffer, expectedBuffer);
+        } catch {
+          // Handle any buffer/comparison errors
+          return false;
+        }
+      });
+
+      if (!isValid) {
+        logger.error('Certn webhook rejected: Invalid signature', {
+          providedSignatures: signatures.length,
+        });
+        return false;
+      }
+
+      logger.info('Certn webhook signature verified successfully', {
+        timestampAge,
+      });
+
+      return true;
+    } catch (error: any) {
+      logger.error('Certn webhook signature verification failed', {
+        error: error.message,
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Parse Certn-Signature header
+   *
+   * Format: "t=timestamp,v1=signature1,v1=signature2"
+   * Multiple v1 signatures support secret rotation
+   *
+   * @param header - Raw signature header
+   * @returns Parsed timestamp and signatures
+   */
+  private parseSignatureHeader(header: string): { timestamp: number; signatures: string[] } {
+    const parts = header.split(',');
+    let timestamp = 0;
+    const signatures: string[] = [];
+
+    for (const part of parts) {
+      const [key, value] = part.split('=');
+      if (key === 't') {
+        timestamp = parseInt(value, 10);
+      } else if (key === 'v1') {
+        signatures.push(value);
+      }
+    }
+
+    return { timestamp, signatures };
   }
 
   /**
@@ -261,6 +383,13 @@ export class CertnClient {
    */
   isConfigured(): boolean {
     return !!this.apiKey;
+  }
+
+  /**
+   * Check if webhook signature verification is configured
+   */
+  isWebhookSecretConfigured(): boolean {
+    return !!this.webhookSecret;
   }
 }
 

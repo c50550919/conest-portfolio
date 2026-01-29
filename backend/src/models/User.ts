@@ -63,7 +63,7 @@ export const UserModel = {
   async updateLastLogin(id: string): Promise<void> {
     await db('users')
       .where({ id })
-      .update({ last_login: db.fn.now() });
+      .update({ last_login_at: db.fn.now() });
   },
 
   async delete(id: string): Promise<void> {

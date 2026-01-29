@@ -165,7 +165,7 @@ async function processModeration(job: ModerationJob): Promise<ModerationResponse
 /**
  * Bull queue processor
  */
-moderationQueue.process('moderate', async (job) => {
+void moderationQueue.process('moderate', async (job) => {
   const data = job.data as ModerationJob;
 
   try {

@@ -51,16 +51,29 @@ services:
       REDIS_URL: redis://redis:6379
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      # JWT - Development secrets (DO NOT use in production)
       JWT_SECRET: dev-secret-change-in-production-2024
       JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production-2024
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_placeholder}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+      # Stripe - Use test keys for development, live keys for production
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_not_configured}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-pk_test_not_configured}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_not_configured}
+      # AWS
       AWS_S3_BUCKET: ${AWS_S3_BUCKET:-conest-dev}
       AWS_REGION: ${AWS_REGION:-us-east-1}
-      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-mock}
-      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-mock}
-      CHECKR_API_KEY: ${CHECKR_API_KEY:-mock}
-      JUMIO_API_TOKEN: ${JUMIO_API_TOKEN:-mock}
+      # Phone Verification - Telnyx (uses mock in development if not configured)
+      TELNYX_API_KEY: ${TELNYX_API_KEY:-}
+      TELNYX_VERIFY_PROFILE_ID: ${TELNYX_VERIFY_PROFILE_ID:-}
+      # ID Verification - Veriff (uses mock in development if not configured)
+      ID_PROVIDER: ${ID_PROVIDER:-mock}
+      VERIFF_API_KEY: ${VERIFF_API_KEY:-}
+      VERIFF_API_SECRET: ${VERIFF_API_SECRET:-}
+      # Background Check - Certn (uses mock in development if not configured)
+      BG_CHECK_PROVIDER: ${BG_CHECK_PROVIDER:-mock}
+      CERTN_API_KEY: ${CERTN_API_KEY:-}
+      CERTN_WEBHOOK_SECRET: ${CERTN_WEBHOOK_SECRET:-}
+      # Security mode - development allows mocks and relaxed validation
+      SECURITY_MODE: ${SECURITY_MODE:-development}
     volumes:
       - ./backend:/app
       - /app/node_modules

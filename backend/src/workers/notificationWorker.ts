@@ -21,7 +21,7 @@ interface NotificationJob {
 }
 
 // Process notification jobs
-notificationQueue.process('email', async (job) => {
+void notificationQueue.process('email', async (job) => {
   const { userId, message, data } = job.data as NotificationJob;
 
   logger.info(`Sending email notification to user ${userId}`);
@@ -38,7 +38,7 @@ notificationQueue.process('email', async (job) => {
   }
 });
 
-notificationQueue.process('sms', async (job) => {
+void notificationQueue.process('sms', async (job) => {
   const { userId, message } = job.data as NotificationJob;
 
   logger.info(`Sending SMS notification to user ${userId}`);
@@ -55,7 +55,7 @@ notificationQueue.process('sms', async (job) => {
   }
 });
 
-notificationQueue.process('push', async (job) => {
+void notificationQueue.process('push', async (job) => {
   const { userId, title, message, data } = job.data as NotificationJob;
 
   logger.info(`Sending push notification to user ${userId}`);
