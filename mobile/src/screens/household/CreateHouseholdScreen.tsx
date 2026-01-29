@@ -186,7 +186,7 @@ const CreateHouseholdScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView testID="create-household-screen" style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -205,6 +205,7 @@ const CreateHouseholdScreen: React.FC = () => {
         </View>
 
         <ScrollView
+          testID="create-household-scroll"
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -313,7 +314,7 @@ const CreateHouseholdScreen: React.FC = () => {
             {/* State Picker Dropdown */}
             {showStatePicker && (
               <View style={styles.statePicker}>
-                <ScrollView style={styles.statePickerScroll} nestedScrollEnabled>
+                <ScrollView testID="state-picker-scroll" style={styles.statePickerScroll} nestedScrollEnabled>
                   {US_STATES.map((state) => (
                     <TouchableOpacity
                       key={state}

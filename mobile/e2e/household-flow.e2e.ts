@@ -22,8 +22,10 @@ import { device, element, by, expect as detoxExpect } from 'detox';
 
 describe('Household Flow (Child Safety Critical)', () => {
   beforeAll(async () => {
+    // Delete app data to clear any persisted session/keychain tokens
     await device.launchApp({
       newInstance: true,
+      delete: true,
       permissions: { notifications: 'YES' },
     });
 
@@ -369,18 +371,31 @@ describe('Household Flow (Child Safety Critical)', () => {
  */
 describe('No Household State & Creation Flow', () => {
   beforeAll(async () => {
+    // Delete app data to clear any persisted session/keychain tokens
     await device.launchApp({
       newInstance: true,
+      delete: true,
       permissions: { notifications: 'YES' },
     });
 
-    // Login as user WITHOUT household (test user)
-    await element(by.id('email-input')).typeText('nohouse@test.com');
-    await element(by.id('password-input')).typeText('TestPass123!');
-    await element(by.id('password-input')).tapReturnKey();
-    await element(by.id('login-button')).tap();
+    // Check if already logged in (Keychain may persist across app delete)
+    try {
+      // Wait briefly for login screen
+      await waitFor(element(by.id('email-input')))
+        .toBeVisible()
+        .withTimeout(5000);
 
-    // Wait for main app
+      // Login as user WITHOUT household (test user)
+      await element(by.id('email-input')).typeText('sarah.johnson@test.com');
+      await element(by.id('password-input')).typeText('Test1234');
+      await element(by.id('password-input')).tapReturnKey();
+      await element(by.id('login-button')).tap();
+    } catch (e) {
+      // Already logged in - verify we're on home screen
+      console.log('Already logged in, skipping login step');
+    }
+
+    // Wait for main app (home screen)
     await waitFor(element(by.id('home-screen')))
       .toBeVisible()
       .withTimeout(10000);
@@ -403,7 +418,7 @@ describe('No Household State & Creation Flow', () => {
     });
 
     it('should show Discover Matches button', async () => {
-      await detoxExpect(element(by.id('discover-button'))).toBeVisible();
+      await detoxExpect(element(by.id('discover-matches-button'))).toBeVisible();
     });
 
     it('should show Create Household button', async () => {
@@ -411,18 +426,33 @@ describe('No Household State & Creation Flow', () => {
     });
 
     it('should navigate to Discover screen on tap', async () => {
-      await element(by.id('discover-button')).tap();
+      await element(by.id('discover-matches-button')).tap();
 
       await waitFor(element(by.id('discovery-screen')))
         .toBeVisible()
         .withTimeout(3000);
 
-      // Navigate back to Home
-      await device.pressBack();
+      // Navigate back to Home using tab bar (not pressBack)
+      await element(by.text('Home')).tap();
+      await waitFor(element(by.id('home-screen')))
+        .toBeVisible()
+        .withTimeout(3000);
     });
   });
 
   describe('Create Household Flow', () => {
+    beforeAll(async () => {
+      // Ensure we're on the Home screen before starting these tests
+      try {
+        await element(by.text('Home')).tap();
+      } catch (e) {
+        // Already on home
+      }
+      await waitFor(element(by.id('home-screen')))
+        .toBeVisible()
+        .withTimeout(5000);
+    });
+
     it('should navigate to CreateHouseholdScreen on tap', async () => {
       await element(by.id('create-household-button')).tap();
 
@@ -441,14 +471,24 @@ describe('No Household State & Creation Flow', () => {
     });
 
     it('should validate required fields', async () => {
-      // Try to submit empty form
-      await element(by.id('create-household-button')).tap();
+      // Scroll to top first to reset view
+      await element(by.id('create-household-scroll')).scrollTo('top');
 
-      // Should show validation errors
+      // Scroll down to make submit button visible
+      await element(by.id('create-household-scroll')).scrollTo('bottom');
+
+      // Try to submit empty form
+      await element(by.id('create-household-submit')).tap();
+
+      // Should show validation errors - scroll back to top to see error
+      await element(by.id('create-household-scroll')).scrollTo('top');
       await detoxExpect(element(by.text('Household name is required'))).toBeVisible();
     });
 
     it('should fill and submit form successfully', async () => {
+      // Scroll to top first to reset view
+      await element(by.id('create-household-scroll')).scrollTo('top');
+
       // Fill household name
       await element(by.id('household-name-input')).clearText();
       await element(by.id('household-name-input')).typeText('Test Household');
@@ -459,9 +499,14 @@ describe('No Household State & Creation Flow', () => {
       // Fill city
       await element(by.id('city-input')).typeText('Austin');
 
-      // Select state
+      // Dismiss keyboard before tapping state picker
+      await element(by.id('city-input')).tapReturnKey();
+
+      // Select state (using state abbreviation TX)
       await element(by.id('state-picker-button')).tap();
-      await element(by.text('Texas')).tap();
+      // Wait for picker to appear, then scroll to TX
+      await element(by.id('state-picker-scroll')).scrollTo('bottom');
+      await element(by.text('TX')).tap();
 
       // Fill zip code
       await element(by.id('zipcode-input')).typeText('78701');
@@ -472,8 +517,11 @@ describe('No Household State & Creation Flow', () => {
       // Dismiss keyboard
       await element(by.id('rent-input')).tapReturnKey();
 
+      // Scroll to submit button
+      await element(by.id('create-household-scroll')).scrollTo('bottom');
+
       // Submit
-      await element(by.id('create-household-button')).tap();
+      await element(by.id('create-household-submit')).tap();
 
       // Should navigate to household screen on success
       await waitFor(element(by.id('household-screen')))

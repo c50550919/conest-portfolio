@@ -88,9 +88,14 @@ jest.mock('../../../src/store/slices/enhancedMessagesSlice', () => ({
     type: 'enhancedMessages/fetchConversations',
     unwrap: () => Promise.resolve([]),
   })),
+  fetchUnreadCount: jest.fn(() => ({
+    type: 'enhancedMessages/fetchUnreadCount',
+  })),
   selectConversations: jest.fn(),
   selectConversationsLoading: jest.fn(),
   selectConversationsError: jest.fn(),
+  selectUserMessagesLocked: jest.fn(),
+  selectLockedUnreadCount: jest.fn(),
 }));
 
 // Mock VerificationBadge component
@@ -109,11 +114,24 @@ import {
   selectConversations,
   selectConversationsLoading,
   selectConversationsError,
+  selectUserMessagesLocked,
+  selectLockedUnreadCount,
 } from '../../../src/store/slices/enhancedMessagesSlice';
+
+// Mock verification slice
+jest.mock('../../../src/store/slices/verificationSlice', () => ({
+  selectIsFullyVerified: jest.fn(),
+}));
+
+import { selectIsFullyVerified } from '../../../src/store/slices/verificationSlice';
+
+const mockSelectIsFullyVerified = selectIsFullyVerified as jest.MockedFunction<typeof selectIsFullyVerified>;
 
 const mockSelectConversations = selectConversations as jest.MockedFunction<typeof selectConversations>;
 const mockSelectConversationsLoading = selectConversationsLoading as jest.MockedFunction<typeof selectConversationsLoading>;
 const mockSelectConversationsError = selectConversationsError as jest.MockedFunction<typeof selectConversationsError>;
+const mockSelectUserMessagesLocked = selectUserMessagesLocked as jest.MockedFunction<typeof selectUserMessagesLocked>;
+const mockSelectLockedUnreadCount = selectLockedUnreadCount as jest.MockedFunction<typeof selectLockedUnreadCount>;
 
 // Create mock reducer
 const createMockMessagesReducer = (conversations: any[], loading = false, error: string | null = null) =>
@@ -144,14 +162,31 @@ describe('ConversationsListScreen', () => {
     unreadCount: 0,
   };
 
-  const setupMocks = (conversations: any[] = [], loading = false, error: string | null = null) => {
+  const setupMocks = (
+    conversations: any[] = [],
+    loading = false,
+    error: string | null = null,
+    isVerified = true,
+    messagesLocked = false,
+    lockedUnread = 0
+  ) => {
     mockSelectConversations.mockReturnValue(conversations);
     mockSelectConversationsLoading.mockReturnValue(loading);
     mockSelectConversationsError.mockReturnValue(error);
+    mockSelectIsFullyVerified.mockReturnValue(isVerified);
+    mockSelectUserMessagesLocked.mockReturnValue(messagesLocked);
+    mockSelectLockedUnreadCount.mockReturnValue(lockedUnread);
   };
 
-  const createStore = (conversations: any[] = [], loading = false, error: string | null = null) => {
-    setupMocks(conversations, loading, error);
+  const createStore = (
+    conversations: any[] = [],
+    loading = false,
+    error: string | null = null,
+    isVerified = true,
+    messagesLocked = false,
+    lockedUnread = 0
+  ) => {
+    setupMocks(conversations, loading, error, isVerified, messagesLocked, lockedUnread);
     return configureStore({
       reducer: {
         enhancedMessages: createMockMessagesReducer(conversations, loading, error),
@@ -162,6 +197,10 @@ describe('ConversationsListScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetConversations.mockResolvedValue({ data: [mockConversation] });
+    // Default to verified user with no locked messages
+    mockSelectIsFullyVerified.mockReturnValue(true);
+    mockSelectUserMessagesLocked.mockReturnValue(false);
+    mockSelectLockedUnreadCount.mockReturnValue(0);
   });
 
   // ===========================================================================
@@ -615,6 +654,194 @@ describe('ConversationsListScreen', () => {
 
       // Component shows "Just now" for recent messages
       expect(getByText('Just now')).toBeTruthy();
+    });
+  });
+
+  // ===========================================================================
+  // VERIFICATION GATING TESTS
+  // ===========================================================================
+
+  describe('Verification Gating', () => {
+    describe('Locked Messages Banner', () => {
+      it('should show locked banner for unverified users with messages', () => {
+        const store = createStore([mockConversation], false, null, false, true, 5);
+
+        const { getByText } = render(
+          <Provider store={store}>
+            <ConversationsListScreen />
+          </Provider>
+        );
+
+        expect(getByText('5 messages waiting')).toBeTruthy();
+        expect(getByText('Complete verification to view and reply')).toBeTruthy();
+        expect(getByText('Get Verified')).toBeTruthy();
+      });
+
+      it('should NOT show locked banner for verified users', () => {
+        const store = createStore([mockConversation], false, null, true, false, 0);
+
+        const { queryByText } = render(
+          <Provider store={store}>
+            <ConversationsListScreen />
+          </Provider>
+        );
+
+        expect(queryByText(/messages waiting/i)).toBeNull();
+        expect(queryByText('Get Verified')).toBeNull();
+      });
+
+      it('should NOT show locked banner when no unread messages', () => {
+        // Use conversation with 0 unread to test no banner OR locked item appears
+        const conversationNoUnread = { ...mockConversation, unreadCount: 0 };
+        const store = createStore([conversationNoUnread], false, null, false, true, 0);
+
+        const { queryByText } = render(
+          <Provider store={store}>
+            <ConversationsListScreen />
+          </Provider>
+        );
+
+        // No "messages waiting" text should appear anywhere
+        expect(queryByText(/messages waiting/i)).toBeNull();
+      });
+
+      it('should navigate to Verification when Get Verified is pressed', () => {
+        const store = createStore([mockConversation], false, null, false, true, 3);
+
+        const { getByText } = render(
+          <Provider store={store}>
+            <ConversationsListScreen />
+          </Provider>
+        );
+
+        fireEvent.press(getByText('Get Verified'));
+        expect(mockNavigate).toHaveBeenCalledWith('Verification');
+      });
+
+      it('should show singular message text for 1 message', () => {
+        const store = createStore([mockConversation], false, null, false, true, 1);
+
+        const { getByText } = render(
+          <Provider store={store}>
+            <ConversationsListScreen />
+          </Provider>
+        );
+
+        expect(getByText('1 message waiting')).toBeTruthy();
+      });
+    });
+
+    describe('Locked Conversation Items', () => {
+      it('should show lock icon and message count for locked conversations', () => {
+        const conversationWithUnread = { ...mockConversation, unreadCount: 3 };
+        const store = createStore([conversationWithUnread], false, null, false, true, 3);
+
+        const { getAllByText, getAllByTestId } = render(
+          <Provider store={store}>
+            <ConversationsListScreen />
+          </Provider>
+        );
+
+        // Text appears in both banner AND conversation item
+        const messagesWaitingElements = getAllByText('3 messages waiting');
+        expect(messagesWaitingElements.length).toBeGreaterThanOrEqual(1);
+
+        // Lock icon appears in banner, conversation item, and possibly elsewhere
+        const lockIcons = getAllByTestId('icon-lock');
+        expect(lockIcons.length).toBeGreaterThanOrEqual(1);
+      });
+
+      it('should navigate to Verification instead of Chat for locked conversations', () => {
+        const store = createStore([mockConversation], false, null, false, true, 2);
+
+        const { getByText } = render(
+          <Provider store={store}>
+            <ConversationsListScreen />
+          </Provider>
+        );
+
+        fireEvent.press(getByText('Sarah Johnson'));
+        expect(mockNavigate).toHaveBeenCalledWith('Verification');
+        expect(mockNavigate).not.toHaveBeenCalledWith('Chat', expect.anything());
+      });
+
+      it('should navigate to Chat for verified users', () => {
+        const store = createStore([mockConversation], false, null, true, false, 0);
+
+        const { getByText } = render(
+          <Provider store={store}>
+            <ConversationsListScreen />
+          </Provider>
+        );
+
+        fireEvent.press(getByText('Sarah Johnson'));
+        expect(mockNavigate).toHaveBeenCalledWith('Chat', expect.objectContaining({
+          conversationId: 'conv-1',
+        }));
+      });
+    });
+  });
+
+  // ===========================================================================
+  // SECURITY - INFORMATION DISCLOSURE TESTS
+  // ===========================================================================
+
+  describe('Security - Information Disclosure', () => {
+    it('should NOT display message preview for locked conversations', () => {
+      const conversationWithMessage = {
+        ...mockConversation,
+        lastMessage: 'This should NOT be visible',
+        unreadCount: 2,
+      };
+      const store = createStore([conversationWithMessage], false, null, false, true, 2);
+
+      const { queryByText, getAllByText } = render(
+        <Provider store={store}>
+          <ConversationsListScreen />
+        </Provider>
+      );
+
+      // Should show locked indicator (in banner and/or conversation item), NOT actual message content
+      const messagesWaitingElements = getAllByText('2 messages waiting');
+      expect(messagesWaitingElements.length).toBeGreaterThanOrEqual(1);
+      expect(queryByText('This should NOT be visible')).toBeNull();
+    });
+
+    it('should show message preview for verified users', () => {
+      const conversationWithMessage = {
+        ...mockConversation,
+        lastMessage: 'Hello from Sarah!',
+        unreadCount: 0,
+      };
+      const store = createStore([conversationWithMessage], false, null, true, false, 0);
+
+      const { getByText } = render(
+        <Provider store={store}>
+          <ConversationsListScreen />
+        </Provider>
+      );
+
+      // Verified users can see message previews
+      expect(getByText('Hello from Sarah!')).toBeTruthy();
+    });
+
+    it('should show message preview when unread is 0 even for unverified', () => {
+      // Edge case: unverified user but conversation has no unread messages
+      const conversationNoUnread = {
+        ...mockConversation,
+        lastMessage: 'Old message visible',
+        unreadCount: 0,
+      };
+      const store = createStore([conversationNoUnread], false, null, false, true, 5);
+
+      const { getByText } = render(
+        <Provider store={store}>
+          <ConversationsListScreen />
+        </Provider>
+      );
+
+      // No unread in this conversation, so message preview is shown
+      expect(getByText('Old message visible')).toBeTruthy();
     });
   });
 });

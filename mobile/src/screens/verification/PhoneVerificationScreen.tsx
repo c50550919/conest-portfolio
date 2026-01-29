@@ -40,9 +40,11 @@ import { VERIFICATION_CONSTANTS, VerificationStackParamList } from '../../types/
 import { AppDispatch } from '../../store';
 import type { StackScreenProps } from '@react-navigation/stack';
 
-type Props = StackScreenProps<VerificationStackParamList, 'PhoneVerification'>;
+type Props = StackScreenProps<VerificationStackParamList, 'PhoneVerification'> & {
+  onSuccess?: () => void; // Optional callback for onboarding flow
+};
 
-export const PhoneVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
+export const PhoneVerificationScreen: React.FC<Props> = ({ navigation, route, onSuccess }) => {
   const dispatch = useDispatch<AppDispatch>();
   const phoneState = useSelector(selectPhoneVerification);
   const loading = useSelector(selectVerificationLoading);
@@ -129,10 +131,10 @@ export const PhoneVerificationScreen: React.FC<Props> = ({ navigation, route }) 
       const result = await dispatch(verifyPhoneCode(code));
 
       if (verifyPhoneCode.fulfilled.match(result)) {
-        // Refresh verification status and go back
+        // Refresh verification status
         await dispatch(fetchVerificationStatus());
         Alert.alert('Success', 'Phone verified successfully!', [
-          { text: 'OK', onPress: () => navigation.goBack() },
+          { text: 'OK', onPress: () => (onSuccess ? onSuccess() : navigation.goBack()) },
         ]);
       } else if (verifyPhoneCode.rejected.match(result)) {
         // Show error but don't clear OTP for retry

@@ -14,6 +14,7 @@ import connectionRequestsReducer from './slices/connectionRequestsSlice';
 import verificationReducer from './slices/verificationSlice';
 import moderationReducer from './slices/moderationSlice';
 import billingReducer from './slices/billingSlice';
+import householdSafetyReducer from './slices/householdSafetySlice';
 
 export const store = configureStore({
   reducer: {
@@ -27,6 +28,7 @@ export const store = configureStore({
     verification: verificationReducer,
     moderation: moderationReducer,
     billing: billingReducer,
+    householdSafety: householdSafetyReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

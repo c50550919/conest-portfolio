@@ -236,4 +236,126 @@ describe('EnhancedMessagesAPI', () => {
       expect(mockAxios.patch).toHaveBeenCalledWith('/messages/msg-123/read');
     });
   });
+
+  // ===========================================================================
+  // VERIFICATION GATING TESTS
+  // ===========================================================================
+
+  describe('getMessagesGated', () => {
+    it('should return locked response for unverified user', async () => {
+      const mockResponse = {
+        success: true,
+        locked: true,
+        unreadCount: 3,
+        message: 'Complete verification to view your messages',
+      };
+      mockAxios.get.mockResolvedValueOnce({ data: mockResponse });
+
+      const result = await enhancedMessagesAPI.getMessagesGated('conv-123');
+
+      expect(result.locked).toBe(true);
+      expect(result.unreadCount).toBe(3);
+      expect(result.data).toBeUndefined();
+      expect(mockAxios.get).toHaveBeenCalledWith('/messages/conversations/conv-123/gated');
+    });
+
+    it('should return full messages for verified user', async () => {
+      const mockResponse = {
+        success: true,
+        locked: false,
+        data: [{ id: 'msg-1', content: 'Hello', sentAt: new Date().toISOString() }],
+      };
+      mockAxios.get.mockResolvedValueOnce({ data: mockResponse });
+
+      const result = await enhancedMessagesAPI.getMessagesGated('conv-123');
+
+      expect(result.locked).toBe(false);
+      expect(result.data).toHaveLength(1);
+    });
+  });
+
+  describe('getUnreadCount', () => {
+    it('should return locked status with unread count', async () => {
+      const mockResponse = {
+        success: true,
+        locked: true,
+        unreadCount: 5,
+        message: 'Verify to view messages',
+      };
+      mockAxios.get.mockResolvedValueOnce({ data: mockResponse });
+
+      const result = await enhancedMessagesAPI.getUnreadCount();
+
+      expect(result.locked).toBe(true);
+      expect(result.unreadCount).toBe(5);
+      expect(mockAxios.get).toHaveBeenCalledWith('/messages/unread-count');
+    });
+
+    it('should return unlocked status for verified user', async () => {
+      const mockResponse = {
+        success: true,
+        locked: false,
+        unreadCount: 3,
+      };
+      mockAxios.get.mockResolvedValueOnce({ data: mockResponse });
+
+      const result = await enhancedMessagesAPI.getUnreadCount();
+
+      expect(result.locked).toBe(false);
+    });
+  });
+
+  // ===========================================================================
+  // SECURITY TESTS - Verification Gating
+  // ===========================================================================
+
+  describe('Security - Verification Gating', () => {
+    it('should NOT expose message content in locked response', async () => {
+      const mockResponse = {
+        success: true,
+        locked: true,
+        unreadCount: 3,
+        message: 'Complete verification',
+      };
+      mockAxios.get.mockResolvedValueOnce({ data: mockResponse });
+
+      const result = await enhancedMessagesAPI.getMessagesGated('conv-123');
+
+      // Verify NO sensitive data in locked response
+      expect(result.data).toBeUndefined();
+      expect(result).not.toHaveProperty('messages');
+      expect(result).not.toHaveProperty('content');
+      expect(result).not.toHaveProperty('senderInfo');
+    });
+
+    it('should NOT expose sender identities in locked response', async () => {
+      const mockResponse = {
+        success: true,
+        locked: true,
+        unreadCount: 5,
+      };
+      mockAxios.get.mockResolvedValueOnce({ data: mockResponse });
+
+      const result = await enhancedMessagesAPI.getMessagesGated('conv-123');
+
+      // Verify no PII leakage
+      expect(JSON.stringify(result)).not.toMatch(/senderId/i);
+      expect(JSON.stringify(result)).not.toMatch(/senderName/i);
+      expect(JSON.stringify(result)).not.toMatch(/email/i);
+    });
+
+    it('should handle network errors gracefully', async () => {
+      mockAxios.get.mockRejectedValueOnce(new Error('Network Error'));
+
+      await expect(enhancedMessagesAPI.getMessagesGated('conv-123')).rejects.toThrow('Network Error');
+    });
+
+    it('should handle 403 forbidden for unauthorized access', async () => {
+      mockAxios.get.mockRejectedValueOnce({ response: { status: 403 } });
+
+      await expect(enhancedMessagesAPI.getMessagesGated('conv-123')).rejects.toMatchObject({
+        response: { status: 403 },
+      });
+    });
+  });
 });

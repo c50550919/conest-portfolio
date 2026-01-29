@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   StatusBar,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -23,12 +24,66 @@ import { fetchMyHousehold } from '../../store/slices/householdSlice';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 import connectionRequestsAPI from '../../services/api/connectionRequestsAPI';
 import enhancedMessagesAPI from '../../services/api/enhancedMessagesAPI';
+import verificationAPI from '../../services/api/verificationAPI';
+
+// Shadow utility for consistent elevation across platforms
+const cardShadow = {
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.08,
+  shadowRadius: 8,
+  elevation: 3,
+};
+
+const cardShadowMedium = {
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.12,
+  shadowRadius: 12,
+  elevation: 5,
+};
+
+const cardShadowLight = {
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.05,
+  shadowRadius: 4,
+  elevation: 2,
+};
 
 interface DashboardStats {
   pendingConnections: number;
   unreadMessages: number;
   avgCompatibility: number;
 }
+
+// Activity types derived from existing data sources
+type ActivityType = 'connection_request' | 'message' | 'verification';
+
+interface ActivityItem {
+  id: string;
+  type: ActivityType;
+  title: string;
+  subtitle: string;
+  timestamp: Date;
+  icon: string;
+  iconColor: string;
+  navigationTarget: string;
+}
+
+// Helper function to format relative time
+const formatTimeAgo = (date: Date): string => {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+};
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -47,6 +102,10 @@ const HomeScreen: React.FC = () => {
     avgCompatibility: 0,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  // Recent activities state
+  const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
+  const [isLoadingActivities, setIsLoadingActivities] = useState(true);
 
   // Fetch dashboard stats
   const fetchDashboardStats = useCallback(async () => {
@@ -83,12 +142,92 @@ const HomeScreen: React.FC = () => {
     setIsLoadingStats(false);
   }, []);
 
+  // Fetch recent activities from multiple sources
+  const fetchRecentActivities = useCallback(async () => {
+    setIsLoadingActivities(true);
+    const activities: ActivityItem[] = [];
+
+    // 1. Fetch pending connection requests (received)
+    try {
+      const pendingRequests = await connectionRequestsAPI.listReceivedRequests('pending');
+      pendingRequests.slice(0, 3).forEach((request) => {
+        activities.push({
+          id: `conn-${request.id}`,
+          type: 'connection_request',
+          title: 'New Connection Request',
+          subtitle: `${request.senderProfile?.firstName || 'Someone'} wants to connect`,
+          timestamp: new Date(request.sent_at),
+          icon: 'account-multiple-plus',
+          iconColor: colors.primary,
+          navigationTarget: 'ConnectionRequests',
+        });
+      });
+    } catch (err) {
+      console.log('[HomeScreen] Could not fetch connection requests for activities:', err);
+    }
+
+    // 2. Fetch recent unread messages (from conversations)
+    try {
+      const response = await enhancedMessagesAPI.getConversations();
+      const conversations = response.data || [];
+      // Get conversations with unread messages
+      conversations
+        .filter(conv => conv.unreadCount > 0)
+        .slice(0, 3)
+        .forEach((conv) => {
+          activities.push({
+            id: `msg-${conv.id}`,
+            type: 'message',
+            title: 'New Message',
+            subtitle: `${conv.participantName}: ${conv.lastMessage?.slice(0, 35) || 'New message'}...`,
+            timestamp: new Date(conv.lastMessageAt),
+            icon: 'message-text',
+            iconColor: colors.secondary,
+            navigationTarget: 'Messages',
+          });
+        });
+    } catch (err) {
+      console.log('[HomeScreen] Could not fetch messages for activities:', err);
+    }
+
+    // 3. Check verification status for completed items
+    try {
+      const verificationStatus = await verificationAPI.getVerificationStatus();
+      // Add activity if background check is approved
+      if (verificationStatus.background_check_status === 'approved') {
+        activities.push({
+          id: 'verification-bg-complete',
+          type: 'verification',
+          title: 'Background Check Complete',
+          subtitle: 'All verifications passed',
+          // Use bg_check_expiration_date to estimate when it was verified (30 days before expiry)
+          timestamp: verificationStatus.bg_check_expiration_date
+            ? new Date(new Date(verificationStatus.bg_check_expiration_date).getTime() - 30 * 24 * 60 * 60 * 1000)
+            : new Date(),
+          icon: 'check-circle',
+          iconColor: colors.success || colors.primary,
+          navigationTarget: 'Profile',
+        });
+      }
+    } catch (err) {
+      console.log('[HomeScreen] Could not fetch verification status for activities:', err);
+    }
+
+    // Sort all activities by timestamp (most recent first)
+    activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+    // Limit to 5 most recent
+    setRecentActivities(activities.slice(0, 5));
+    setIsLoadingActivities(false);
+  }, []);
+
   // Fetch stats and household data when screen comes into focus
   useFocusEffect(
     useCallback(() => {
       fetchDashboardStats();
+      fetchRecentActivities();
       dispatch(fetchMyHousehold());
-    }, [fetchDashboardStats, dispatch])
+    }, [fetchDashboardStats, fetchRecentActivities, dispatch])
   );
 
   // Debug logging
@@ -125,11 +264,18 @@ const HomeScreen: React.FC = () => {
               {fullName}
             </Text>
           </View>
-          <TouchableOpacity style={styles.notificationButton}>
+          <TouchableOpacity
+            style={styles.notificationButton}
+            onPress={() => navigation.navigate('Messages' as never)}
+          >
             <Icon name="bell-outline" size={24} color={colors.text.primary} />
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>3</Text>
-            </View>
+            {stats.unreadMessages > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {stats.unreadMessages > 99 ? '99+' : stats.unreadMessages}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -137,36 +283,66 @@ const HomeScreen: React.FC = () => {
         <View style={styles.statsContainer}>
           <TouchableOpacity
             testID="stat-new-connections"
-            style={[styles.statCard, { backgroundColor: colors.primary + '15' }]}
+            style={styles.statCardWrapper}
             onPress={() => navigation.navigate('ConnectionRequests' as never)}
+            activeOpacity={0.7}
           >
-            <Icon name="account-multiple-plus" size={32} color={colors.primary} />
-            <Text style={styles.statNumber}>{isLoadingStats ? '-' : stats.pendingConnections}</Text>
-            <Text style={styles.statLabel}>Pending Requests</Text>
+            <LinearGradient
+              colors={[colors.primary + '18', colors.primary + '08']}
+              style={styles.statCard}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={[styles.statIconContainer, { backgroundColor: colors.primary + '20' }]}>
+                <Icon name="account-multiple-plus" size={26} color={colors.primary} />
+              </View>
+              <Text style={styles.statNumber}>{isLoadingStats ? '-' : stats.pendingConnections}</Text>
+              <Text style={styles.statLabel}>Pending{'\n'}Requests</Text>
+            </LinearGradient>
           </TouchableOpacity>
           <TouchableOpacity
             testID="stat-messages"
-            style={[styles.statCard, { backgroundColor: colors.secondary + '15' }]}
+            style={styles.statCardWrapper}
             onPress={() => navigation.navigate('Messages' as never)}
+            activeOpacity={0.7}
           >
-            <Icon name="message-text" size={32} color={colors.secondary} />
-            <Text style={styles.statNumber}>{isLoadingStats ? '-' : stats.unreadMessages}</Text>
-            <Text style={styles.statLabel}>Unread Messages</Text>
+            <LinearGradient
+              colors={[colors.secondary + '18', colors.secondary + '08']}
+              style={styles.statCard}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={[styles.statIconContainer, { backgroundColor: colors.secondary + '20' }]}>
+                <Icon name="message-text" size={26} color={colors.secondary} />
+              </View>
+              <Text style={styles.statNumber}>{isLoadingStats ? '-' : stats.unreadMessages}</Text>
+              <Text style={styles.statLabel}>Unread{'\n'}Messages</Text>
+            </LinearGradient>
           </TouchableOpacity>
           <TouchableOpacity
             testID="stat-compatibility"
-            style={[styles.statCard, { backgroundColor: colors.tertiary + '15' }]}
+            style={styles.statCardWrapper}
             onPress={() => navigation.navigate('Discover' as never)}
+            activeOpacity={0.7}
           >
-            <Icon name="home-search" size={32} color={colors.tertiary} />
-            <Text style={styles.statNumber}>
-              {isLoadingStats
-                ? '-'
-                : stats.avgCompatibility > 0
-                  ? `${stats.avgCompatibility}%`
-                  : 'N/A'}
-            </Text>
-            <Text style={styles.statLabel}>Discover</Text>
+            <LinearGradient
+              colors={[colors.tertiary + '18', colors.tertiary + '08']}
+              style={styles.statCard}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+            >
+              <View style={[styles.statIconContainer, { backgroundColor: colors.tertiary + '20' }]}>
+                <Icon name="home-search" size={26} color={colors.tertiary} />
+              </View>
+              <Text style={styles.statNumber}>
+                {isLoadingStats
+                  ? '-'
+                  : stats.avgCompatibility > 0
+                    ? `${stats.avgCompatibility}%`
+                    : 'N/A'}
+              </Text>
+              <Text style={styles.statLabel}>Discover</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
 
@@ -223,8 +399,10 @@ const HomeScreen: React.FC = () => {
             </LinearGradient>
           ) : (
             // No household - CTA card
-            <View style={styles.noHouseholdCard}>
-              <Icon name="home-search" size={48} color={colors.primary} />
+            <View testID="no-household-card" style={styles.noHouseholdCard}>
+              <View style={styles.noHouseholdIconWrapper}>
+                <Icon name="home-search" size={40} color={colors.primary} />
+              </View>
               <Text style={styles.noHouseholdTitle}>Find Your Co-Living Match!</Text>
               <Text style={styles.noHouseholdSubtitle}>
                 Connect with verified parents and create your household.
@@ -234,15 +412,24 @@ const HomeScreen: React.FC = () => {
                   testID="discover-matches-button"
                   style={styles.discoverButton}
                   onPress={() => navigation.navigate('Discover' as never)}
+                  activeOpacity={0.8}
                 >
-                  <Text style={styles.discoverButtonText}>Discover Matches</Text>
+                  <LinearGradient
+                    colors={[colors.primary, colors.primaryDark]}
+                    style={styles.discoverButtonGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <Text style={styles.discoverButtonText}>DISCOVER MATCHES</Text>
+                  </LinearGradient>
                 </TouchableOpacity>
                 <TouchableOpacity
                   testID="create-household-button"
                   style={styles.createHouseholdButton}
                   onPress={() => navigation.navigate('CreateHousehold' as never)}
+                  activeOpacity={0.7}
                 >
-                  <Text style={styles.createHouseholdButtonText}>Create Household</Text>
+                  <Text style={styles.createHouseholdButtonText}>CREATE HOUSEHOLD</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -256,30 +443,48 @@ const HomeScreen: React.FC = () => {
             <TouchableOpacity
               style={styles.actionCard}
               onPress={() => navigation.navigate('Discover' as never)}
+              activeOpacity={0.7}
             >
-              <View style={[styles.actionIcon, { backgroundColor: colors.primary + '20' }]}>
+              <LinearGradient
+                colors={[colors.primary + '15', colors.primary + '05']}
+                style={styles.actionIconGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
                 <Icon name="account-search" size={28} color={colors.primary} />
-              </View>
+              </LinearGradient>
               <Text style={styles.actionLabel}>Find Roommates</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.actionCard}
               onPress={() => navigation.navigate('Messages' as never)}
+              activeOpacity={0.7}
             >
-              <View style={[styles.actionIcon, { backgroundColor: colors.secondary + '20' }]}>
+              <LinearGradient
+                colors={[colors.secondary + '15', colors.secondary + '05']}
+                style={styles.actionIconGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
                 <Icon name="message-text" size={28} color={colors.secondary} />
-              </View>
+              </LinearGradient>
               <Text style={styles.actionLabel}>Messages</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.actionCard}
               onPress={() => navigation.navigate('Household' as never)}
+              activeOpacity={0.7}
             >
-              <View style={[styles.actionIcon, { backgroundColor: colors.tertiary + '20' }]}>
+              <LinearGradient
+                colors={[colors.tertiary + '15', colors.tertiary + '05']}
+                style={styles.actionIconGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
                 <Icon name="home-edit" size={28} color={colors.tertiary} />
-              </View>
+              </LinearGradient>
               <Text style={styles.actionLabel}>Manage Home</Text>
             </TouchableOpacity>
 
@@ -287,10 +492,16 @@ const HomeScreen: React.FC = () => {
               style={styles.actionCard}
               onPress={() => navigation.navigate('Documents' as never)}
               testID="home-documents-button"
+              activeOpacity={0.7}
             >
-              <View style={[styles.actionIcon, { backgroundColor: '#9C27B0' + '20' }]}>
+              <LinearGradient
+                colors={['#9C27B0' + '15', '#9C27B0' + '05']}
+                style={styles.actionIconGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
                 <Icon name="file-document-outline" size={28} color="#9C27B0" />
-              </View>
+              </LinearGradient>
               <Text style={styles.actionLabel}>Documents</Text>
             </TouchableOpacity>
           </View>
@@ -300,45 +511,43 @@ const HomeScreen: React.FC = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Activity</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('ConnectionRequests' as never)}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.activityCard}>
-            <View style={styles.activityIcon}>
-              <Icon name="account-multiple-check" size={20} color={colors.primary} />
+          {isLoadingActivities ? (
+            <View style={styles.activityLoadingContainer}>
+              <ActivityIndicator color={colors.primary} size="small" />
+              <Text style={styles.activityLoadingText}>Loading activity...</Text>
             </View>
-            <View style={styles.activityContent}>
-              <Text style={styles.activityTitle}>New Connection!</Text>
-              <Text style={styles.activitySubtitle}>
-                Connected with Jennifer K. • 95% compatible
-              </Text>
-              <Text style={styles.activityTime}>2 hours ago</Text>
+          ) : recentActivities.length === 0 ? (
+            <View style={styles.emptyActivityCard}>
+              <Icon name="bell-off-outline" size={32} color={colors.text.hint} />
+              <Text style={styles.emptyActivityText}>No recent activity</Text>
             </View>
-          </View>
-
-          <View style={styles.activityCard}>
-            <View style={styles.activityIcon}>
-              <Icon name="currency-usd" size={20} color={colors.primary} />
-            </View>
-            <View style={styles.activityContent}>
-              <Text style={styles.activityTitle}>Rent Payment Received</Text>
-              <Text style={styles.activitySubtitle}>$850 from Maria Lopez</Text>
-              <Text style={styles.activityTime}>1 day ago</Text>
-            </View>
-          </View>
-
-          <View style={styles.activityCard}>
-            <View style={styles.activityIcon}>
-              <Icon name="check-circle" size={20} color={colors.primary} />
-            </View>
-            <View style={styles.activityContent}>
-              <Text style={styles.activityTitle}>Background Check Complete</Text>
-              <Text style={styles.activitySubtitle}>All verifications passed</Text>
-              <Text style={styles.activityTime}>3 days ago</Text>
-            </View>
-          </View>
+          ) : (
+            recentActivities.map((activity) => (
+              <TouchableOpacity
+                key={activity.id}
+                style={styles.activityCard}
+                onPress={() => navigation.navigate(activity.navigationTarget as never)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.activityIcon, { backgroundColor: activity.iconColor + '12' }]}>
+                  <Icon name={activity.icon} size={20} color={activity.iconColor} />
+                </View>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityTitle}>{activity.title}</Text>
+                  <Text style={styles.activitySubtitle} numberOfLines={1}>
+                    {activity.subtitle}
+                  </Text>
+                  <Text style={styles.activityTime}>{formatTimeAgo(activity.timestamp)}</Text>
+                </View>
+                <Icon name="chevron-right" size={20} color={colors.text.hint} />
+              </TouchableOpacity>
+            ))
+          )}
         </View>
 
         {/* Safety Tips */}
@@ -377,38 +586,51 @@ const styles = StyleSheet.create({
   greeting: {
     ...typography.body1,
     color: colors.text.secondary,
+    letterSpacing: 0.3,
   },
   userName: {
     ...typography.h5,
     color: colors.text.primary,
     marginTop: spacing.xs,
+    fontWeight: '700',
   },
   notificationButton: {
     position: 'relative',
     padding: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    ...cardShadowLight,
   },
   badge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: 2,
+    right: 2,
     backgroundColor: colors.error,
     borderRadius: 10,
     width: 20,
     height: 20,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.surface,
   },
   badgeText: {
     ...typography.caption,
     color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 10,
+    fontWeight: '700',
   },
   statsContainer: {
     flexDirection: 'row',
     paddingHorizontal: spacing.lg,
-    gap: spacing.md,
+    gap: spacing.sm,
     marginBottom: spacing.lg,
+  },
+  statCardWrapper: {
+    flex: 1,
+    borderRadius: borderRadius.lg,
+    ...cardShadow,
+    backgroundColor: colors.surface,
   },
   statCard: {
     flex: 1,
@@ -416,17 +638,29 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: 120,
+  },
+  statIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
   },
   statNumber: {
     ...typography.h4,
     color: colors.text.primary,
-    marginTop: spacing.xs,
+    fontWeight: '700',
+    marginTop: spacing.xxs,
   },
   statLabel: {
     ...typography.caption,
     color: colors.text.secondary,
     marginTop: spacing.xxs,
     textAlign: 'center',
+    fontSize: 11,
+    lineHeight: 14,
   },
   section: {
     paddingHorizontal: spacing.lg,
@@ -436,6 +670,8 @@ const styles = StyleSheet.create({
     ...typography.h6,
     color: colors.text.primary,
     marginBottom: spacing.md,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -450,7 +686,8 @@ const styles = StyleSheet.create({
   },
   householdCard: {
     padding: spacing.lg,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
+    ...cardShadowMedium,
   },
   householdHeader: {
     flexDirection: 'row',
@@ -503,12 +740,11 @@ const styles = StyleSheet.create({
   householdLoadingCard: {
     backgroundColor: colors.surface,
     padding: spacing.xl,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.border.light,
     minHeight: 150,
+    ...cardShadow,
   },
   householdLoadingText: {
     ...typography.body2,
@@ -518,17 +754,25 @@ const styles = StyleSheet.create({
   noHouseholdCard: {
     backgroundColor: colors.surface,
     padding: spacing.xl,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.xl,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border.light,
-    borderStyle: 'dashed',
+    ...cardShadowMedium,
+  },
+  noHouseholdIconWrapper: {
+    width: 72,
+    height: 72,
+    borderRadius: borderRadius.xl,
+    backgroundColor: colors.primary + '12',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
   },
   noHouseholdTitle: {
     ...typography.h6,
     color: colors.text.primary,
     marginTop: spacing.md,
     textAlign: 'center',
+    fontWeight: '700',
   },
   noHouseholdSubtitle: {
     ...typography.body2,
@@ -536,48 +780,74 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.xs,
     marginBottom: spacing.lg,
+    paddingHorizontal: spacing.md,
+    lineHeight: 20,
   },
   noHouseholdButtons: {
     flexDirection: 'row',
-    gap: spacing.md,
+    gap: spacing.sm,
+    width: '100%',
+    paddingHorizontal: spacing.xs,
   },
   discoverButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.md,
+    flex: 1,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+    ...cardShadow,
+  },
+  discoverButtonGradient: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   discoverButtonText: {
     ...typography.button,
     color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 12,
+    letterSpacing: 0.5,
   },
   createHouseholdButton: {
+    flex: 1,
     backgroundColor: 'transparent',
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 2,
     borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   createHouseholdButtonText: {
     ...typography.button,
     color: colors.primary,
+    fontWeight: '700',
+    fontSize: 12,
+    letterSpacing: 0.5,
   },
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   actionCard: {
-    width: '47%',
+    width: '48%',
     backgroundColor: colors.surface,
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border.light,
+    ...cardShadow,
   },
   actionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.lg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  actionIconGradient: {
     width: 56,
     height: 56,
     borderRadius: borderRadius.lg,
@@ -597,14 +867,13 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: colors.border.light,
+    ...cardShadowLight,
   },
   activityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surfaceVariant,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.primary + '12',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md,
@@ -616,6 +885,7 @@ const styles = StyleSheet.create({
     ...typography.subtitle1,
     color: colors.text.primary,
     marginBottom: spacing.xxs,
+    fontWeight: '600',
   },
   activitySubtitle: {
     ...typography.body2,
@@ -625,14 +895,16 @@ const styles = StyleSheet.create({
   activityTime: {
     ...typography.caption,
     color: colors.text.hint,
+    fontSize: 11,
   },
   tipCard: {
     flexDirection: 'row',
-    backgroundColor: colors.primaryLight,
+    backgroundColor: colors.primary + '08',
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     borderLeftWidth: 4,
     borderLeftColor: colors.primary,
+    ...cardShadowLight,
   },
   tipContent: {
     flex: 1,
@@ -642,6 +914,7 @@ const styles = StyleSheet.create({
     ...typography.subtitle1,
     color: colors.primaryDark,
     marginBottom: spacing.xs,
+    fontWeight: '700',
   },
   tipText: {
     ...typography.body2,
@@ -658,6 +931,32 @@ const styles = StyleSheet.create({
     ...typography.body1,
     color: colors.text.secondary,
     marginTop: spacing.md,
+  },
+  activityLoadingContainer: {
+    backgroundColor: colors.surface,
+    padding: spacing.xl,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...cardShadowLight,
+  },
+  activityLoadingText: {
+    ...typography.body2,
+    color: colors.text.secondary,
+    marginTop: spacing.sm,
+  },
+  emptyActivityCard: {
+    backgroundColor: colors.surface,
+    padding: spacing.xl,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...cardShadowLight,
+  },
+  emptyActivityText: {
+    ...typography.body2,
+    color: colors.text.hint,
+    marginTop: spacing.sm,
   },
 });
 

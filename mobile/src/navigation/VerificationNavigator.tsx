@@ -19,6 +19,7 @@ import {
   BackgroundCheckScreen,
   IncomeVerificationScreen,
 } from '../screens/verification';
+import HouseholdSafetyDisclosureScreen from '../screens/household-safety/HouseholdSafetyDisclosureScreen';
 
 const Stack = createStackNavigator<VerificationStackParamList>();
 
@@ -77,6 +78,13 @@ export const VerificationNavigator: React.FC = () => {
         component={BackgroundCheckScreen}
         options={{
           title: 'Background Check',
+        }}
+      />
+      <Stack.Screen
+        name="HouseholdSafetyDisclosure"
+        component={HouseholdSafetyDisclosureScreen}
+        options={{
+          title: 'Household Safety',
         }}
       />
       <Stack.Screen

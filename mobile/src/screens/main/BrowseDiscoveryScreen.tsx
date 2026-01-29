@@ -63,14 +63,13 @@ import CompatibilityBreakdownModal from '../../components/compatibility/Compatib
 // Services and APIs
 import compatibilityAPI, { CompatibilityBreakdown } from '../../services/api/compatibilityAPI';
 import connectionRequestsAPI from '../../services/api/connectionRequestsAPI';
+import discoveryAPI from '../../services/api/discoveryAPI';
+import { adaptProfiles } from '../../services/adapters/discoveryAdapter';
 
 // Config and utilities
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../config/discoveryConfig';
 import { canSaveProfile } from '../../utils/rateLimits';
 import { ExtendedProfileCard, BrowseViewMode, SortOption } from '../../types/discovery';
-
-// Mock data (TODO: Remove when API is ready)
-import { MOCK_DISCOVERY_PROFILES } from '../../data/mockDiscoveryProfiles';
 
 export const BrowseDiscoveryScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -111,7 +110,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
   } | null>(null);
   const [loadingBreakdown, setLoadingBreakdown] = useState(false);
 
-  // Fetch profiles
+  // Fetch profiles from real API
   const fetchProfiles = useCallback(
     async (refresh: boolean = false) => {
       try {
@@ -121,28 +120,42 @@ export const BrowseDiscoveryScreen: React.FC = () => {
           dispatch(setLoading(true));
         }
 
-        // TODO: Replace with actual API call
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        // Real API call with pagination
+        const response = await discoveryAPI.getProfiles(
+          refresh ? undefined : nextCursor ?? undefined,
+          12 // Page size
+        );
+
+        // Adapt backend ProfileCard to frontend ExtendedProfileCard
+        const adaptedProfiles = adaptProfiles(response.profiles);
 
         if (refresh) {
           dispatch(
             setProfiles({
-              profiles: MOCK_DISCOVERY_PROFILES,
-              totalCount: MOCK_DISCOVERY_PROFILES.length,
-              nextCursor: null,
+              profiles: adaptedProfiles,
+              totalCount: adaptedProfiles.length,
+              nextCursor: response.nextCursor,
             })
           );
           dispatch(setRefreshing(false));
         } else {
           dispatch(
             appendProfiles({
-              profiles: MOCK_DISCOVERY_PROFILES,
-              nextCursor: null,
+              profiles: adaptedProfiles,
+              nextCursor: response.nextCursor,
             })
           );
         }
+        dispatch(setLoading(false));
       } catch (error) {
         console.error('Error fetching profiles:', error);
+        dispatch(setLoading(false));
+        dispatch(setRefreshing(false));
+        Alert.alert(
+          'Error',
+          'Failed to load profiles. Please check your connection and try again.',
+          [{ text: 'Retry', onPress: () => fetchProfiles(refresh) }, { text: 'OK' }]
+        );
       }
     },
     [filters, sortBy, nextCursor, dispatch]

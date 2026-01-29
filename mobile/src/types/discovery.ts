@@ -24,6 +24,7 @@ export interface VerificationStatus {
   phoneVerified: boolean;
   emailVerified?: boolean;
   incomeVerified?: boolean;
+  fullyVerified?: boolean; // All verifications complete - for badge display
 }
 
 export interface HousingPreferences {

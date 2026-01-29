@@ -162,6 +162,7 @@ export type VerificationStackParamList = {
   Dashboard: undefined;
   IDVerification: undefined;
   BackgroundCheck: undefined;
+  HouseholdSafetyDisclosure: undefined;
   PhoneVerification: {
     phoneNumber?: string;
   };

@@ -50,6 +50,17 @@ export interface VerificationStatus {
   canMessage: boolean;
 }
 
+/**
+ * Locked conversation state for unverified users
+ * Shows "X messages waiting - Verify to view"
+ */
+export interface LockedConversationInfo {
+  conversationId: string;
+  locked: boolean;
+  unreadCount: number;
+  message?: string;
+}
+
 interface MessagesState {
   // Conversations
   conversations: Conversation[];
@@ -69,6 +80,12 @@ interface MessagesState {
   // Verification
   verificationStatus: Record<string, VerificationStatus>;
   verificationLoading: boolean;
+
+  // Verification Gating (NEW)
+  // When user is unverified, conversations are "locked"
+  lockedConversations: Record<string, LockedConversationInfo>;
+  userMessagesLocked: boolean; // True if current user is unverified
+  lockedUnreadCount: number; // Total unread when locked
 
   // Reporting
   reportingMessage: boolean;
@@ -97,6 +114,11 @@ const initialState: MessagesState = {
 
   verificationStatus: {},
   verificationLoading: false,
+
+  // Verification Gating (NEW)
+  lockedConversations: {},
+  userMessagesLocked: false,
+  lockedUnreadCount: 0,
 
   reportingMessage: false,
   reportError: null,
@@ -229,6 +251,45 @@ export const blockConversation = createAsyncThunk(
       return conversationId;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to block conversation');
+    }
+  }
+);
+
+/**
+ * Fetch messages with verification gating
+ *
+ * For verified users: Returns full message content
+ * For unverified users: Returns locked response with unread count only
+ */
+export const fetchMessagesGated = createAsyncThunk(
+  'messages/fetchMessagesGated',
+  async (conversationId: string, { rejectWithValue }) => {
+    try {
+      const response = await enhancedMessagesAPI.getMessagesGated(conversationId);
+      return {
+        conversationId,
+        ...response,
+      };
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch messages');
+    }
+  }
+);
+
+/**
+ * Fetch total unread count with verification gating
+ *
+ * Both verified and unverified users can see the count
+ * Response includes locked status for UI display
+ */
+export const fetchUnreadCount = createAsyncThunk(
+  'messages/fetchUnreadCount',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await enhancedMessagesAPI.getUnreadCount();
+      return response;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch unread count');
     }
   }
 );
@@ -418,6 +479,18 @@ const enhancedMessagesSlice = createSlice({
       state.sendError = null;
       state.reportError = null;
     },
+
+    // Set user messages locked status (for verification gating)
+    setUserMessagesLocked: (state, action: PayloadAction<boolean>) => {
+      state.userMessagesLocked = action.payload;
+    },
+
+    // Clear locked state when user completes verification
+    clearLockedState: (state) => {
+      state.userMessagesLocked = false;
+      state.lockedConversations = {};
+      state.lockedUnreadCount = 0;
+    },
   },
 
   extraReducers: (builder) => {
@@ -527,6 +600,48 @@ const enhancedMessagesSlice = createSlice({
         conversation.isBlocked = true;
       }
     });
+
+    // Fetch gated messages
+    builder
+      .addCase(fetchMessagesGated.pending, (state) => {
+        state.messagesLoading = true;
+        state.messagesError = null;
+      })
+      .addCase(fetchMessagesGated.fulfilled, (state, action) => {
+        state.messagesLoading = false;
+        const { conversationId, locked, unreadCount, message, data } = action.payload;
+
+        if (locked) {
+          // User is unverified - store locked info
+          state.lockedConversations[conversationId] = {
+            conversationId,
+            locked: true,
+            unreadCount: unreadCount || 0,
+            message: message || 'Complete verification to view your messages',
+          };
+          state.userMessagesLocked = true;
+        } else {
+          // User is verified - store messages
+          if (data) {
+            state.messagesByConversation[conversationId] = data;
+          }
+          // Clear locked state for this conversation
+          delete state.lockedConversations[conversationId];
+        }
+      })
+      .addCase(fetchMessagesGated.rejected, (state, action) => {
+        state.messagesLoading = false;
+        state.messagesError = action.payload as string;
+      });
+
+    // Fetch unread count
+    builder
+      .addCase(fetchUnreadCount.fulfilled, (state, action) => {
+        const { locked, unreadCount, message } = action.payload;
+        state.userMessagesLocked = locked;
+        state.lockedUnreadCount = locked ? unreadCount : 0;
+        state.totalUnreadCount = unreadCount;
+      });
   },
 });
 
@@ -569,6 +684,21 @@ export const selectVerificationStatus = (
   userId: string
 ) => state.enhancedMessages?.verificationStatus[userId];
 
+// Verification Gating Selectors (NEW)
+export const selectUserMessagesLocked = (state: { enhancedMessages?: MessagesState }) =>
+  state.enhancedMessages?.userMessagesLocked ?? false;
+
+export const selectLockedUnreadCount = (state: { enhancedMessages?: MessagesState }) =>
+  state.enhancedMessages?.lockedUnreadCount ?? 0;
+
+export const selectLockedConversation = (
+  state: { enhancedMessages?: MessagesState },
+  conversationId: string
+) => state.enhancedMessages?.lockedConversations[conversationId];
+
+export const selectHasLockedConversations = (state: { enhancedMessages?: MessagesState }) =>
+  Object.keys(state.enhancedMessages?.lockedConversations ?? {}).length > 0;
+
 // ============ Actions ============
 
 export const {
@@ -582,6 +712,8 @@ export const {
   updateConversation,
   userOnlineStatus,
   clearErrors,
+  setUserMessagesLocked,
+  clearLockedState,
 } = enhancedMessagesSlice.actions;
 
 export default enhancedMessagesSlice.reducer;

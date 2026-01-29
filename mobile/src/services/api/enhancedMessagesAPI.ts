@@ -74,6 +74,30 @@ export interface ReportMessageRequest {
   description?: string;
 }
 
+/**
+ * Gated messages response
+ * When locked=true, user must verify to view message content
+ */
+export interface GatedMessagesResponse {
+  success: boolean;
+  locked: boolean;
+  // When locked=true
+  unreadCount?: number;
+  message?: string;
+  // When locked=false
+  data?: EnhancedMessage[];
+}
+
+/**
+ * Unread count response with verification gating
+ */
+export interface UnreadCountResponse {
+  success: boolean;
+  locked: boolean;
+  unreadCount: number;
+  message?: string;
+}
+
 // ============ API Client ============
 
 class EnhancedMessagesAPI {
@@ -233,6 +257,34 @@ class EnhancedMessagesAPI {
    */
   async markMessageAsRead(messageId: string): Promise<{ success: boolean }> {
     const response = await this.client.patch<{ success: boolean }>(`/messages/${messageId}/read`);
+    return response.data;
+  }
+
+  /**
+   * Get messages with verification gating
+   *
+   * For verified users: Returns full message content
+   * For unverified users: Returns locked response with unread count only
+   *
+   * Enables asymmetric messaging:
+   * - Verified users can send to anyone
+   * - Unverified users can receive but must verify to view/reply
+   */
+  async getMessagesGated(conversationId: string): Promise<GatedMessagesResponse> {
+    const response = await this.client.get<GatedMessagesResponse>(
+      `/messages/conversations/${conversationId}/gated`
+    );
+    return response.data;
+  }
+
+  /**
+   * Get total unread message count with verification gating
+   *
+   * Both verified and unverified users can see the count
+   * Unverified users get a prompt to verify to view messages
+   */
+  async getUnreadCount(): Promise<UnreadCountResponse> {
+    const response = await this.client.get<UnreadCountResponse>('/messages/unread-count');
     return response.data;
   }
 }

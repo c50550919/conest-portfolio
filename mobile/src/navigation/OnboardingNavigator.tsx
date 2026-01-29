@@ -15,6 +15,7 @@ import WorkScheduleScreen from '../screens/onboarding/WorkScheduleScreen';
 import PreferencesScreen from '../screens/onboarding/PreferencesScreen';
 import IDVerificationScreen from '../screens/onboarding/IDVerificationScreen';
 import BackgroundCheckScreen from '../screens/onboarding/BackgroundCheckScreen';
+import HouseholdSafetyDisclosureScreen from '../screens/household-safety/HouseholdSafetyDisclosureScreen';
 
 export type OnboardingStackParamList = {
   Welcome: undefined;
@@ -25,6 +26,7 @@ export type OnboardingStackParamList = {
   Preferences: undefined;
   IDVerification: undefined;
   BackgroundCheck: undefined;
+  HouseholdSafetyDisclosure: undefined;
 };
 
 const Stack = createStackNavigator<OnboardingStackParamList>();
@@ -45,6 +47,7 @@ const OnboardingNavigator: React.FC = () => {
       <Stack.Screen name="Preferences" component={PreferencesScreen} />
       <Stack.Screen name="IDVerification" component={IDVerificationScreen} />
       <Stack.Screen name="BackgroundCheck" component={BackgroundCheckScreen} />
+      <Stack.Screen name="HouseholdSafetyDisclosure" component={HouseholdSafetyDisclosureScreen} />
     </Stack.Navigator>
   );
 };

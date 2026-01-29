@@ -27,7 +27,11 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
+
+// Logo asset
+const CoNestLogo = require('../../assets/images/conest-logo.png');
 import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -188,6 +192,7 @@ const LoginScreen: React.FC = () => {
       <View style={styles.content}>
         {/* App Logo/Title */}
         <View style={styles.header}>
+          <Image source={CoNestLogo} style={styles.logo} resizeMode="contain" />
           <Text style={styles.title}>CoNest</Text>
           <Text style={styles.subtitle}>Welcome back</Text>
         </View>
@@ -301,6 +306,11 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: theme.spacing.xxl,
     alignItems: 'center',
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: theme.spacing.md,
   },
   title: {
     fontSize: 32,

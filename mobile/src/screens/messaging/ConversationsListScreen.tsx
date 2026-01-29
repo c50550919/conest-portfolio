@@ -22,10 +22,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../../store';
 import {
   fetchConversations,
+  fetchUnreadCount,
   selectConversations,
   selectConversationsLoading,
   selectConversationsError,
+  selectUserMessagesLocked,
+  selectLockedUnreadCount,
 } from '../../store/slices/enhancedMessagesSlice';
+import { selectIsFullyVerified } from '../../store/slices/verificationSlice';
 import VerificationBadge from '../../components/messaging/VerificationBadge';
 import { colors, spacing, borderRadius, typography } from '../../theme';
 
@@ -52,10 +56,17 @@ const ConversationsListScreen: React.FC = () => {
   const loading = useSelector((state: RootState) => selectConversationsLoading(state));
   const error = useSelector((state: RootState) => selectConversationsError(state));
 
+  // Verification gating state
+  const isFullyVerified = useSelector((state: RootState) => selectIsFullyVerified(state));
+  const userMessagesLocked = useSelector((state: RootState) => selectUserMessagesLocked(state));
+  const lockedUnreadCount = useSelector((state: RootState) => selectLockedUnreadCount(state));
+
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     loadConversations();
+    // Also fetch unread count to check locked status
+    dispatch(fetchUnreadCount());
   }, []);
 
   const loadConversations = useCallback(async () => {
@@ -79,6 +90,12 @@ const ConversationsListScreen: React.FC = () => {
         return;
       }
 
+      // If user is not verified and messages are locked, navigate to verification
+      if (!isFullyVerified && userMessagesLocked) {
+        navigation.navigate('Verification');
+        return;
+      }
+
       navigation.navigate('Chat', {
         conversationId: conversation.id,
         participantId: conversation.participantId,
@@ -86,8 +103,15 @@ const ConversationsListScreen: React.FC = () => {
         participantVerified: conversation.participantVerified,
       });
     },
-    [navigation]
+    [navigation, isFullyVerified, userMessagesLocked]
   );
+
+  /**
+   * Navigate to verification screen when user taps "Get Verified" CTA
+   */
+  const handleVerifyPress = useCallback(() => {
+    navigation.navigate('Verification');
+  }, [navigation]);
 
   const formatTimestamp = (dateString?: string): string => {
     if (!dateString) {
@@ -159,16 +183,29 @@ const ConversationsListScreen: React.FC = () => {
         </View>
 
         <View style={styles.messageRow}>
-          <Text
-            style={[styles.lastMessage, item.unreadCount > 0 && styles.lastMessageUnread]}
-            numberOfLines={1}
-          >
-            {item.isMuted && <Icon name="volume-off" size={14} color={colors.text.secondary} />}{' '}
-            {item.isBlocked ? 'Conversation blocked' : item.lastMessage || 'No messages yet'}
-          </Text>
+          {/* Show locked indicator for unverified users with messages */}
+          {!isFullyVerified && userMessagesLocked && item.unreadCount > 0 ? (
+            <View style={styles.lockedMessageRow}>
+              <Icon name="lock" size={14} color={colors.warning} />
+              <Text style={styles.lockedMessageText}>
+                {item.unreadCount} message{item.unreadCount !== 1 ? 's' : ''} waiting
+              </Text>
+            </View>
+          ) : (
+            <Text
+              style={[styles.lastMessage, item.unreadCount > 0 && styles.lastMessageUnread]}
+              numberOfLines={1}
+            >
+              {item.isMuted && <Icon name="volume-off" size={14} color={colors.text.secondary} />}{' '}
+              {item.isBlocked ? 'Conversation blocked' : item.lastMessage || 'No messages yet'}
+            </Text>
+          )}
 
           {item.unreadCount > 0 && (
-            <View style={styles.unreadBadge}>
+            <View style={[
+              styles.unreadBadge,
+              !isFullyVerified && userMessagesLocked && styles.unreadBadgeLocked,
+            ]}>
               <Text style={styles.unreadCount}>
                 {item.unreadCount > 99 ? '99+' : item.unreadCount}
               </Text>
@@ -178,6 +215,42 @@ const ConversationsListScreen: React.FC = () => {
       </View>
     </TouchableOpacity>
   );
+
+  /**
+   * Locked messages banner for unverified users
+   * Shows "X messages waiting - Verify to view" with CTA button
+   */
+  const renderLockedMessagesBanner = () => {
+    if (isFullyVerified || !userMessagesLocked || lockedUnreadCount === 0) {
+      return null;
+    }
+
+    return (
+      <View style={styles.lockedBanner}>
+        <View style={styles.lockedBannerContent}>
+          <View style={styles.lockedIconContainer}>
+            <Icon name="lock" size={24} color={colors.warning} />
+          </View>
+          <View style={styles.lockedTextContainer}>
+            <Text style={styles.lockedTitle}>
+              {lockedUnreadCount} message{lockedUnreadCount !== 1 ? 's' : ''} waiting
+            </Text>
+            <Text style={styles.lockedSubtitle}>
+              Complete verification to view and reply
+            </Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          style={styles.verifyButton}
+          onPress={handleVerifyPress}
+          activeOpacity={0.8}
+        >
+          <Icon name="shield-check" size={18} color="#FFFFFF" />
+          <Text style={styles.verifyButtonText}>Get Verified</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
@@ -209,6 +282,9 @@ const ConversationsListScreen: React.FC = () => {
           <Icon name="magnify" size={24} color={colors.text.primary} />
         </TouchableOpacity>
       </View>
+
+      {/* Locked Messages Banner for unverified users */}
+      {renderLockedMessagesBanner()}
 
       {/* Conversations List */}
       {loading && conversations.length === 0 ? (
@@ -391,6 +467,71 @@ const styles = StyleSheet.create({
     ...typography.button,
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  // Locked Messages Banner Styles
+  lockedBanner: {
+    backgroundColor: colors.warning + '15',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.warning + '30',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  lockedBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  lockedIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.warning + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  lockedTextContainer: {
+    flex: 1,
+  },
+  lockedTitle: {
+    ...typography.body1,
+    color: colors.text.primary,
+    fontWeight: '600',
+  },
+  lockedSubtitle: {
+    ...typography.body2,
+    color: colors.text.secondary,
+    marginTop: 2,
+  },
+  verifyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: borderRadius.md,
+    gap: spacing.xs,
+  },
+  verifyButtonText: {
+    ...typography.button,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  // Locked Message Row Styles
+  lockedMessageRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: spacing.xs,
+  },
+  lockedMessageText: {
+    ...typography.body2,
+    color: colors.warning,
+    fontWeight: '500',
+  },
+  unreadBadgeLocked: {
+    backgroundColor: colors.warning,
   },
 });
 

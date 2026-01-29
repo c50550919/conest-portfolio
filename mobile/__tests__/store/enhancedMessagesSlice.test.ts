@@ -21,6 +21,15 @@ import enhancedMessagesReducer, {
   updateConversation,
   userOnlineStatus,
   clearErrors,
+  // Verification gating imports
+  fetchMessagesGated,
+  fetchUnreadCount,
+  setUserMessagesLocked,
+  clearLockedState,
+  selectUserMessagesLocked,
+  selectLockedUnreadCount,
+  selectLockedConversation,
+  selectHasLockedConversations,
   Message,
   Conversation,
   VerificationStatus,
@@ -36,6 +45,8 @@ jest.mock('../../src/services/api/enhancedMessagesAPI', () => ({
     checkVerificationStatus: jest.fn(),
     reportMessage: jest.fn(),
     blockConversation: jest.fn(),
+    getMessagesGated: jest.fn(),
+    getUnreadCount: jest.fn(),
   },
 }));
 
@@ -402,6 +413,323 @@ describe('enhancedMessagesSlice', () => {
         expect(state.sendError).toBeNull();
         expect(state.reportError).toBeNull();
       });
+    });
+  });
+
+  // ===========================================================================
+  // VERIFICATION GATING TESTS
+  // ===========================================================================
+
+  describe('fetchMessagesGated', () => {
+    it('should set messagesLoading to true when pending', () => {
+      store.dispatch(fetchMessagesGated.pending('', 'conv-123'));
+
+      const state = store.getState().enhancedMessages;
+      expect(state.messagesLoading).toBe(true);
+      expect(state.messagesError).toBeNull();
+    });
+
+    it('should store locked conversation info when locked=true', () => {
+      store.dispatch(fetchMessagesGated.fulfilled(
+        {
+          conversationId: 'conv-123',
+          success: true,
+          locked: true,
+          unreadCount: 3,
+          message: 'Complete verification to view your messages',
+        },
+        '',
+        'conv-123'
+      ));
+
+      const state = store.getState().enhancedMessages;
+      expect(state.messagesLoading).toBe(false);
+      expect(state.lockedConversations['conv-123']).toEqual({
+        conversationId: 'conv-123',
+        locked: true,
+        unreadCount: 3,
+        message: 'Complete verification to view your messages',
+      });
+      expect(state.userMessagesLocked).toBe(true);
+    });
+
+    it('should store messages when locked=false', () => {
+      const messages = [{ ...mockMessage, id: 'msg-1', content: 'Hello' }];
+      store.dispatch(fetchMessagesGated.fulfilled(
+        {
+          conversationId: 'conv-123',
+          success: true,
+          locked: false,
+          data: messages,
+        },
+        '',
+        'conv-123'
+      ));
+
+      const state = store.getState().enhancedMessages;
+      expect(state.messagesLoading).toBe(false);
+      expect(state.messagesByConversation['conv-123']).toEqual(messages);
+      expect(state.lockedConversations['conv-123']).toBeUndefined();
+    });
+
+    it('should clear locked state for conversation when verified', () => {
+      // First set up locked state
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-123', success: true, locked: true, unreadCount: 2, message: 'Verify' },
+        '',
+        'conv-123'
+      ));
+
+      // Now fetch as verified user
+      const messages = [{ ...mockMessage, id: 'msg-1' }];
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-123', success: true, locked: false, data: messages },
+        '',
+        'conv-123'
+      ));
+
+      const state = store.getState().enhancedMessages;
+      expect(state.lockedConversations['conv-123']).toBeUndefined();
+      expect(state.messagesByConversation['conv-123']).toEqual(messages);
+    });
+
+    it('should set error when rejected', () => {
+      store.dispatch(fetchMessagesGated.rejected(null, '', 'conv-123', 'Network error'));
+
+      const state = store.getState().enhancedMessages;
+      expect(state.messagesLoading).toBe(false);
+      expect(state.messagesError).toBe('Network error');
+    });
+  });
+
+  describe('fetchUnreadCount', () => {
+    it('should set locked state when locked=true', () => {
+      store.dispatch(fetchUnreadCount.fulfilled(
+        { success: true, locked: true, unreadCount: 5, message: 'Verify to view' },
+        '',
+        undefined
+      ));
+
+      const state = store.getState().enhancedMessages;
+      expect(state.userMessagesLocked).toBe(true);
+      expect(state.lockedUnreadCount).toBe(5);
+      expect(state.totalUnreadCount).toBe(5);
+    });
+
+    it('should clear locked state when locked=false', () => {
+      // First set locked state
+      store.dispatch(fetchUnreadCount.fulfilled(
+        { success: true, locked: true, unreadCount: 5 },
+        '',
+        undefined
+      ));
+
+      // Then unlock
+      store.dispatch(fetchUnreadCount.fulfilled(
+        { success: true, locked: false, unreadCount: 3 },
+        '',
+        undefined
+      ));
+
+      const state = store.getState().enhancedMessages;
+      expect(state.userMessagesLocked).toBe(false);
+      expect(state.lockedUnreadCount).toBe(0);
+      expect(state.totalUnreadCount).toBe(3);
+    });
+  });
+
+  describe('setUserMessagesLocked', () => {
+    it('should set userMessagesLocked to true', () => {
+      store.dispatch(setUserMessagesLocked(true));
+
+      const state = store.getState().enhancedMessages;
+      expect(state.userMessagesLocked).toBe(true);
+    });
+
+    it('should set userMessagesLocked to false', () => {
+      store.dispatch(setUserMessagesLocked(true));
+      store.dispatch(setUserMessagesLocked(false));
+
+      const state = store.getState().enhancedMessages;
+      expect(state.userMessagesLocked).toBe(false);
+    });
+  });
+
+  describe('clearLockedState', () => {
+    it('should clear all locked state', () => {
+      // Setup locked state
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-123', success: true, locked: true, unreadCount: 3, message: 'Verify' },
+        '',
+        'conv-123'
+      ));
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-456', success: true, locked: true, unreadCount: 2, message: 'Verify' },
+        '',
+        'conv-456'
+      ));
+
+      // Clear it
+      store.dispatch(clearLockedState());
+
+      const state = store.getState().enhancedMessages;
+      expect(state.userMessagesLocked).toBe(false);
+      expect(state.lockedConversations).toEqual({});
+      expect(state.lockedUnreadCount).toBe(0);
+    });
+  });
+
+  describe('verification gating selectors', () => {
+    it('selectUserMessagesLocked returns correct value', () => {
+      store.dispatch(setUserMessagesLocked(true));
+      expect(selectUserMessagesLocked(store.getState())).toBe(true);
+    });
+
+    it('selectUserMessagesLocked returns false by default', () => {
+      expect(selectUserMessagesLocked(store.getState())).toBe(false);
+    });
+
+    it('selectLockedUnreadCount returns correct value', () => {
+      store.dispatch(fetchUnreadCount.fulfilled(
+        { success: true, locked: true, unreadCount: 7 },
+        '',
+        undefined
+      ));
+      expect(selectLockedUnreadCount(store.getState())).toBe(7);
+    });
+
+    it('selectLockedConversation returns locked info for conversation', () => {
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-123', success: true, locked: true, unreadCount: 2, message: 'Verify' },
+        '',
+        'conv-123'
+      ));
+
+      const locked = selectLockedConversation(store.getState(), 'conv-123');
+      expect(locked?.locked).toBe(true);
+      expect(locked?.unreadCount).toBe(2);
+    });
+
+    it('selectLockedConversation returns undefined for non-existent conversation', () => {
+      const locked = selectLockedConversation(store.getState(), 'non-existent');
+      expect(locked).toBeUndefined();
+    });
+
+    it('selectHasLockedConversations returns true when locked conversations exist', () => {
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-123', success: true, locked: true, unreadCount: 1, message: 'Verify' },
+        '',
+        'conv-123'
+      ));
+      expect(selectHasLockedConversations(store.getState())).toBe(true);
+    });
+
+    it('selectHasLockedConversations returns false when no locked conversations', () => {
+      expect(selectHasLockedConversations(store.getState())).toBe(false);
+    });
+  });
+
+  // ===========================================================================
+  // SECURITY TESTS - State Management
+  // ===========================================================================
+
+  describe('Security - State Management', () => {
+    it('should never store message content when locked', () => {
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-123', success: true, locked: true, unreadCount: 3 },
+        '',
+        'conv-123'
+      ));
+
+      const state = store.getState().enhancedMessages;
+
+      // Verify no message content stored for locked conversations
+      expect(state.messagesByConversation['conv-123']).toBeUndefined();
+      expect(state.lockedConversations['conv-123'].locked).toBe(true);
+    });
+
+    it('should clear locked state completely on clearLockedState', () => {
+      // Setup locked state with data
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-123', success: true, locked: true, unreadCount: 5, message: 'Verify' },
+        '',
+        'conv-123'
+      ));
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-456', success: true, locked: true, unreadCount: 2, message: 'Verify' },
+        '',
+        'conv-456'
+      ));
+
+      // Clear all locked state
+      store.dispatch(clearLockedState());
+
+      const state = store.getState().enhancedMessages;
+
+      // Verify complete cleanup (no residual data)
+      expect(Object.keys(state.lockedConversations)).toHaveLength(0);
+      expect(state.userMessagesLocked).toBe(false);
+      expect(state.lockedUnreadCount).toBe(0);
+    });
+
+    it('should not expose locked count for non-existent conversations', () => {
+      const locked = selectLockedConversation(store.getState(), 'non-existent');
+      expect(locked).toBeUndefined();
+    });
+
+    it('should isolate locked state between conversations', () => {
+      // Lock conv-123
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-123', success: true, locked: true, unreadCount: 3, message: 'Verify' },
+        '',
+        'conv-123'
+      ));
+
+      // Unlock conv-456 with messages
+      const messages = [{ ...mockMessage, conversationId: 'conv-456' }];
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-456', success: true, locked: false, data: messages },
+        '',
+        'conv-456'
+      ));
+
+      const state = store.getState().enhancedMessages;
+
+      // Verify isolation - conv-123 should still be locked
+      expect(state.lockedConversations['conv-123']).toBeDefined();
+      expect(state.lockedConversations['conv-123'].locked).toBe(true);
+
+      // conv-456 should have messages and not be locked
+      expect(state.lockedConversations['conv-456']).toBeUndefined();
+      expect(state.messagesByConversation['conv-456']).toEqual(messages);
+    });
+
+    it('should handle transition from locked to unlocked correctly', () => {
+      // First: user is unverified, conversation locked
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-123', success: true, locked: true, unreadCount: 5, message: 'Verify' },
+        '',
+        'conv-123'
+      ));
+
+      let state = store.getState().enhancedMessages;
+      expect(state.lockedConversations['conv-123']).toBeDefined();
+      expect(state.messagesByConversation['conv-123']).toBeUndefined();
+
+      // Then: user completes verification, now can see messages
+      const messages = [{ ...mockMessage, conversationId: 'conv-123', content: 'Now visible!' }];
+      store.dispatch(fetchMessagesGated.fulfilled(
+        { conversationId: 'conv-123', success: true, locked: false, data: messages },
+        '',
+        'conv-123'
+      ));
+
+      state = store.getState().enhancedMessages;
+
+      // Locked state should be cleared, messages should be available
+      expect(state.lockedConversations['conv-123']).toBeUndefined();
+      expect(state.messagesByConversation['conv-123']).toEqual(messages);
+      expect(state.messagesByConversation['conv-123'][0].content).toBe('Now visible!');
     });
   });
 });

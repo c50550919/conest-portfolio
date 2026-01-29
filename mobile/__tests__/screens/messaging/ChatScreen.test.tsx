@@ -26,6 +26,8 @@ const mockFetchMessages = jest.fn(() => ({ type: 'enhancedMessages/fetchMessages
 const mockMarkConversationAsRead = jest.fn(() => ({ type: 'enhancedMessages/markAsRead/mock' }));
 const mockSendMessageAction = jest.fn(() => ({ type: 'enhancedMessages/sendMessage/mock' }));
 
+const mockFetchMessagesGated = jest.fn(() => ({ type: 'enhancedMessages/fetchMessagesGated/mock' }));
+
 jest.mock('../../../src/store/slices/enhancedMessagesSlice', () => {
   const actualSlice = jest.requireActual('../../../src/store/slices/enhancedMessagesSlice');
   return {
@@ -33,10 +35,20 @@ jest.mock('../../../src/store/slices/enhancedMessagesSlice', () => {
     ...actualSlice,
     default: actualSlice.default,
     fetchMessages: (conversationId: string) => mockFetchMessages(conversationId),
+    fetchMessagesGated: (conversationId: string) => mockFetchMessagesGated(conversationId),
     markConversationAsRead: (conversationId: string) => mockMarkConversationAsRead(conversationId),
     sendMessage: (data: any) => mockSendMessageAction(data),
   };
 });
+
+// Mock verification slice
+jest.mock('../../../src/store/slices/verificationSlice', () => ({
+  selectIsFullyVerified: jest.fn(),
+}));
+
+import { selectIsFullyVerified } from '../../../src/store/slices/verificationSlice';
+
+const mockSelectIsFullyVerified = selectIsFullyVerified as jest.MockedFunction<typeof selectIsFullyVerified>;
 
 // Mock navigation
 const mockNavigate = jest.fn();
@@ -188,6 +200,10 @@ describe('ChatScreen', () => {
           sending: false,
           typingUsers: {},
           onlineUsers: {},
+          // Verification gating state
+          lockedConversations: {},
+          userMessagesLocked: false,
+          lockedUnreadCount: 0,
           ...overrides,
         },
         auth: {
@@ -209,6 +225,8 @@ describe('ChatScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     alertSpy = jest.spyOn(Alert, 'alert');
+    // Default to verified user
+    mockSelectIsFullyVerified.mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -482,6 +500,221 @@ describe('ChatScreen', () => {
       );
 
       expect(getByTestId('icon-message-outline')).toBeTruthy();
+    });
+  });
+
+  // ===========================================================================
+  // VERIFICATION GATING TESTS - LOCKED CONVERSATION STATE
+  // ===========================================================================
+
+  describe('Locked Conversation State', () => {
+    beforeEach(() => {
+      // Reset to unverified user
+      mockSelectIsFullyVerified.mockReturnValue(false);
+    });
+
+    it('should show locked state for unverified users', () => {
+      mockSelectIsFullyVerified.mockReturnValue(false);
+      store = createStore({
+        userMessagesLocked: true,
+        lockedConversations: {
+          'conv-123': {
+            conversationId: 'conv-123',
+            locked: true,
+            unreadCount: 4,
+            message: 'Complete verification to view',
+          },
+        },
+      });
+      const { getByText, getAllByTestId } = render(
+        <Provider store={store}>
+          <ChatScreen />
+        </Provider>
+      );
+
+      expect(getByText('4 messages waiting')).toBeTruthy();
+      expect(getByText(/Complete verification to view and reply/)).toBeTruthy();
+      expect(getByText('Get Verified Now')).toBeTruthy();
+      // Lock icon appears in both the locked content area and input bar
+      const lockIcons = getAllByTestId('icon-lock');
+      expect(lockIcons.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should show singular message text for 1 message', () => {
+      mockSelectIsFullyVerified.mockReturnValue(false);
+      store = createStore({
+        userMessagesLocked: true,
+        lockedConversations: {
+          'conv-123': {
+            conversationId: 'conv-123',
+            locked: true,
+            unreadCount: 1,
+          },
+        },
+      });
+      const { getByText } = render(
+        <Provider store={store}>
+          <ChatScreen />
+        </Provider>
+      );
+
+      expect(getByText('1 message waiting')).toBeTruthy();
+    });
+
+    it('should NOT show messages list when locked', () => {
+      mockSelectIsFullyVerified.mockReturnValue(false);
+      store = createStore({
+        userMessagesLocked: true,
+        lockedConversations: {
+          'conv-123': {
+            conversationId: 'conv-123',
+            locked: true,
+            unreadCount: 2,
+          },
+        },
+      });
+      const { queryByTestId } = render(
+        <Provider store={store}>
+          <ChatScreen />
+        </Provider>
+      );
+
+      expect(queryByTestId('message-msg-1')).toBeNull();
+      expect(queryByTestId('message-msg-2')).toBeNull();
+    });
+
+    it('should show blocked input bar when locked', () => {
+      mockSelectIsFullyVerified.mockReturnValue(false);
+      store = createStore({
+        userMessagesLocked: true,
+        lockedConversations: {
+          'conv-123': {
+            conversationId: 'conv-123',
+            locked: true,
+            unreadCount: 1,
+          },
+        },
+      });
+      const { getByText, queryByTestId } = render(
+        <Provider store={store}>
+          <ChatScreen />
+        </Provider>
+      );
+
+      expect(getByText('Verify to send messages')).toBeTruthy();
+      expect(queryByTestId('message-input')).toBeNull();
+    });
+
+    it('should navigate to Verification when Get Verified Now is pressed', () => {
+      mockSelectIsFullyVerified.mockReturnValue(false);
+      store = createStore({
+        userMessagesLocked: true,
+        lockedConversations: {
+          'conv-123': {
+            conversationId: 'conv-123',
+            locked: true,
+            unreadCount: 1,
+          },
+        },
+      });
+      const { getByText } = render(
+        <Provider store={store}>
+          <ChatScreen />
+        </Provider>
+      );
+
+      fireEvent.press(getByText('Get Verified Now'));
+      expect(mockNavigate).toHaveBeenCalledWith('Verification');
+    });
+
+    it('should show normal chat for verified users', () => {
+      mockSelectIsFullyVerified.mockReturnValue(true);
+      const { getByTestId, queryByText } = renderScreen();
+
+      expect(getByTestId('message-input')).toBeTruthy();
+      expect(queryByText('Verify to send messages')).toBeNull();
+    });
+  });
+
+  // ===========================================================================
+  // SECURITY TESTS - INPUT PREVENTION
+  // ===========================================================================
+
+  describe('Security - Input Prevention', () => {
+    it('should completely prevent message sending when locked', () => {
+      mockSelectIsFullyVerified.mockReturnValue(false);
+      store = createStore({
+        userMessagesLocked: true,
+        lockedConversations: {
+          'conv-123': {
+            conversationId: 'conv-123',
+            locked: true,
+            unreadCount: 1,
+          },
+        },
+      });
+      const { queryByTestId } = render(
+        <Provider store={store}>
+          <ChatScreen />
+        </Provider>
+      );
+
+      // Verify input is completely removed, not just disabled
+      const input = queryByTestId('message-input');
+      expect(input).toBeNull();
+
+      // Verify send button is also not present
+      const sendButton = queryByTestId('send-button');
+      expect(sendButton).toBeNull();
+    });
+
+    it('should NOT expose any message content in locked state', () => {
+      mockSelectIsFullyVerified.mockReturnValue(false);
+      store = createStore({
+        userMessagesLocked: true,
+        lockedConversations: {
+          'conv-123': {
+            conversationId: 'conv-123',
+            locked: true,
+            unreadCount: 3,
+          },
+        },
+        messagesByConversation: {
+          'conv-123': mockMessages,
+        },
+      });
+      const { queryByText } = render(
+        <Provider store={store}>
+          <ChatScreen />
+        </Provider>
+      );
+
+      // Verify no message content from mockMessages is visible
+      expect(queryByText('Hey, how are you?')).toBeNull();
+      expect(queryByText("I'm doing great!")).toBeNull();
+    });
+
+    it('should NOT render message bubbles when locked (prevent copy)', () => {
+      mockSelectIsFullyVerified.mockReturnValue(false);
+      store = createStore({
+        userMessagesLocked: true,
+        lockedConversations: {
+          'conv-123': {
+            conversationId: 'conv-123',
+            locked: true,
+            unreadCount: 1,
+          },
+        },
+      });
+      const { queryByTestId } = render(
+        <Provider store={store}>
+          <ChatScreen />
+        </Provider>
+      );
+
+      // Verify message bubbles are not rendered (cannot be long-pressed to copy)
+      expect(queryByTestId('message-msg-1')).toBeNull();
+      expect(queryByTestId('message-msg-2')).toBeNull();
     });
   });
 });

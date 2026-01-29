@@ -26,15 +26,19 @@ import type { RootState, AppDispatch } from '../../store';
 import {
   sendMessage,
   fetchMessages,
+  fetchMessagesGated,
   markConversationAsRead,
   blockConversation as blockConversationAction,
   selectMessagesByConversation,
   selectMessagesLoading,
   selectMessagesSending,
   selectTypingUsers,
+  selectLockedConversation,
+  selectUserMessagesLocked,
   setTypingStatus,
   Message,
 } from '../../store/slices/enhancedMessagesSlice';
+import { selectIsFullyVerified } from '../../store/slices/verificationSlice';
 import MessageBubble from '../../components/messaging/MessageBubble';
 import MessageInput from '../../components/messaging/MessageInput';
 import VerificationBadge from '../../components/messaging/VerificationBadge';
@@ -65,6 +69,16 @@ const ChatScreen: React.FC = () => {
   const sending = useSelector((state: RootState) => selectMessagesSending(state));
   const typingUsers = useSelector((state: RootState) => selectTypingUsers(state));
 
+  // Verification gating state
+  const isFullyVerified = useSelector((state: RootState) => selectIsFullyVerified(state));
+  const userMessagesLocked = useSelector((state: RootState) => selectUserMessagesLocked(state));
+  const lockedConversation = useSelector((state: RootState) =>
+    selectLockedConversation(state, conversationId)
+  );
+
+  // Derived state: Is this conversation locked for the current user?
+  const isConversationLocked = !isFullyVerified && (userMessagesLocked || lockedConversation?.locked);
+
   const [reportModalVisible, setReportModalVisible] = useState(false);
   const [selectedMessageForReport, setSelectedMessageForReport] = useState<Message | null>(null);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -88,11 +102,19 @@ const ChatScreen: React.FC = () => {
 
   const loadMessages = useCallback(async () => {
     try {
-      await dispatch(fetchMessages(conversationId));
+      // Use gated endpoint to handle verification-locked conversations
+      await dispatch(fetchMessagesGated(conversationId));
     } catch (err) {
       console.error('Failed to load messages:', err);
     }
   }, [dispatch, conversationId]);
+
+  /**
+   * Navigate to verification screen when user taps "Get Verified" CTA
+   */
+  const handleVerifyPress = useCallback(() => {
+    navigation.navigate('Verification');
+  }, [navigation]);
 
   const markAsRead = useCallback(async () => {
     try {
@@ -307,6 +329,33 @@ const ChatScreen: React.FC = () => {
     </View>
   );
 
+  /**
+   * Locked conversation UI for unverified users
+   * Shows message count and verification CTA
+   */
+  const renderLockedState = () => (
+    <View style={styles.lockedContainer}>
+      <View style={styles.lockedIconWrapper}>
+        <Icon name="lock" size={48} color={colors.warning} />
+      </View>
+      <Text style={styles.lockedTitle}>
+        {lockedConversation?.unreadCount || 0} message
+        {(lockedConversation?.unreadCount || 0) !== 1 ? 's' : ''} waiting
+      </Text>
+      <Text style={styles.lockedMessage}>
+        Complete verification to view and reply to messages from {participantName}
+      </Text>
+      <TouchableOpacity
+        style={styles.lockedVerifyButton}
+        onPress={handleVerifyPress}
+        activeOpacity={0.8}
+      >
+        <Icon name="shield-check" size={20} color="#FFFFFF" />
+        <Text style={styles.lockedVerifyButtonText}>Get Verified Now</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Icon name="message-outline" size={64} color={colors.text.secondary} />
@@ -324,7 +373,10 @@ const ChatScreen: React.FC = () => {
       >
         {renderHeader()}
 
-        {loading && messages.length === 0 ? (
+        {/* Show locked state for unverified users */}
+        {isConversationLocked ? (
+          renderLockedState()
+        ) : loading && messages.length === 0 ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
@@ -348,12 +400,20 @@ const ChatScreen: React.FC = () => {
           />
         )}
 
-        <MessageInput
-          onSend={handleSendMessage}
-          onTypingStart={handleTypingStart}
-          onTypingStop={handleTypingStop}
-          sending={sending}
-        />
+        {/* Block message input for unverified users */}
+        {isConversationLocked ? (
+          <View style={styles.lockedInputContainer}>
+            <Icon name="lock" size={18} color={colors.text.secondary} />
+            <Text style={styles.lockedInputText}>Verify to send messages</Text>
+          </View>
+        ) : (
+          <MessageInput
+            onSend={handleSendMessage}
+            onTypingStart={handleTypingStart}
+            onTypingStop={handleTypingStop}
+            sending={sending}
+          />
+        )}
 
         {selectedMessageForReport && (
           <ReportModal
@@ -481,6 +541,68 @@ const styles = StyleSheet.create({
   },
   typingDotDelay2: {
     opacity: 0.8,
+  },
+  // Locked Conversation Styles
+  lockedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    backgroundColor: colors.background,
+  },
+  lockedIconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.warning + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+  },
+  lockedTitle: {
+    ...typography.h2,
+    color: colors.text.primary,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  lockedMessage: {
+    ...typography.body1,
+    color: colors.text.secondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: spacing.xl,
+  },
+  lockedVerifyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    borderRadius: borderRadius.md,
+    gap: spacing.sm,
+  },
+  lockedVerifyButtonText: {
+    ...typography.button,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  lockedInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.surfaceVariant,
+    borderTopWidth: 1,
+    borderTopColor: colors.border.light,
+    gap: spacing.sm,
+  },
+  lockedInputText: {
+    ...typography.body2,
+    color: colors.text.secondary,
   },
 });
 
