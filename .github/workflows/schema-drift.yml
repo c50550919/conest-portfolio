@@ -1,0 +1,103 @@
+name: Schema Drift Detection
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/src/migrations/**'
+      - 'backend/db/schema.hcl'
+      - '.github/workflows/schema-drift.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/src/migrations/**'
+      - 'backend/db/schema.hcl'
+
+jobs:
+  schema-drift:
+    name: Check Schema Drift
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: safenest_drift_check
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare database
+        run: |
+          PGPASSWORD=postgres psql -h localhost -U postgres -d safenest_drift_check -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+          PGPASSWORD=postgres psql -h localhost -U postgres -d safenest_drift_check -c "
+            CREATE OR REPLACE FUNCTION update_updated_at_column()
+            RETURNS TRIGGER AS \$\$
+            BEGIN
+              NEW.updated_at = CURRENT_TIMESTAMP;
+              RETURN NEW;
+            END;
+            \$\$ language 'plpgsql';
+          "
+
+      - name: Run all Knex migrations
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: safenest_drift_check
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+        run: npx knex migrate:latest
+
+      - name: Install Atlas CLI
+        uses: ariga/setup-atlas@v0
+        with:
+          version: v0.28.1
+
+      - name: Inspect current schema
+        run: |
+          atlas schema inspect \
+            -u "postgres://postgres:postgres@localhost:5432/safenest_drift_check?sslmode=disable" \
+            > /tmp/current_schema.hcl
+
+      - name: Check for schema drift
+        run: |
+          if ! diff -u db/schema.hcl /tmp/current_schema.hcl; then
+            echo ""
+            echo "============================================"
+            echo "  SCHEMA DRIFT DETECTED"
+            echo "============================================"
+            echo ""
+            echo "The committed db/schema.hcl does not match"
+            echo "the schema produced by running all migrations."
+            echo ""
+            echo "To fix:"
+            echo "  1. Run all migrations locally"
+            echo "  2. Run: atlas schema inspect -u \"postgres://...\" > backend/db/schema.hcl"
+            echo "  3. Commit the updated schema.hcl"
+            echo ""
+            exit 1
+          fi
+          echo "No schema drift detected. Baseline matches migration output."
