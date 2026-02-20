@@ -1,3 +1,11 @@
+/**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
 import { db } from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -27,6 +35,7 @@ export interface VerificationWebhookEvent {
   user_id: string | null;
   processing_status: ProcessingStatus;
   payload: Record<string, unknown> | null;
+  encrypted: boolean; // CMP-02: Whether payload is encrypted at rest
   error_message: string | null;
   received_at: Date;
   processed_at: Date | null;
@@ -46,6 +55,7 @@ export interface CreateVerificationWebhookEventData {
   event_type: string;
   user_id?: string;
   payload?: Record<string, unknown>;
+  encrypted?: boolean; // CMP-02: Flag for encrypted payloads
 }
 
 export const VerificationWebhookEventModel = {
@@ -103,6 +113,7 @@ export const VerificationWebhookEventModel = {
         event_type: data.event_type,
         user_id: data.user_id || null,
         payload: data.payload ? JSON.stringify(data.payload) : null,
+        encrypted: data.encrypted ?? false,
         processing_status: 'pending' as ProcessingStatus,
         received_at: new Date(),
       };
@@ -134,6 +145,7 @@ export const VerificationWebhookEventModel = {
             user_id: data.user_id || null,
             processing_status: 'pending',
             payload: data.payload || null,
+            encrypted: data.encrypted ?? false,
             error_message: null,
             received_at: new Date(),
             processed_at: null,

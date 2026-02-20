@@ -1,3 +1,11 @@
+/**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
 import http from 'http';
 import { initializeSentry } from './config/sentry';
 
@@ -13,6 +21,7 @@ import SocketService from './services/SocketService';
 import { validateEnv } from './config/env';
 import { moderationWorker } from './features/moderation';
 import { startWebhookRetryWorker, stopWebhookRetryWorker } from './workers/webhookRetryWorker';
+import { startDataRetentionWorker, stopDataRetentionWorker } from './workers/dataRetentionWorker';
 
 // Validate environment variables (fail fast if misconfigured)
 let env;
@@ -139,6 +148,12 @@ const startServer = async () => {
       console.log('   - Max retries: 3 (2s, 4s, 8s backoff)');
       console.log('   - Hourly reprocessing: Enabled');
       console.log('   - Dead letter queue: Enabled');
+
+      // CMP-03/CMP-04: Start Data Retention Worker
+      startDataRetentionWorker();
+      console.log('\n🗑️  Data Retention Worker: ACTIVE');
+      console.log('   - Criminal record purge: Daily at 3 AM');
+      console.log('   - FCRA adverse action finalization: Daily');
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
@@ -151,6 +166,7 @@ process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully');
   moderationWorker.stop();
   stopWebhookRetryWorker();
+  stopDataRetentionWorker();
   server.close(() => {
     logger.info('Server closed');
     process.exit(0);
@@ -161,6 +177,7 @@ process.on('SIGINT', () => {
   logger.info('SIGINT received, shutting down gracefully');
   moderationWorker.stop();
   stopWebhookRetryWorker();
+  stopDataRetentionWorker();
   server.close(() => {
     logger.info('Server closed');
     process.exit(0);

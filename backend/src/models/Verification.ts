@@ -1,4 +1,13 @@
+/**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
 import db from '../config/database';
+import { getEncryptionService, EncryptedData } from '../services/encryptionService';
 
 export interface Verification {
   id: string;
@@ -14,20 +23,25 @@ export interface Verification {
   id_verification_data?: string; // JSON encrypted data
 
   // Background Check (Certn/Checkr)
-  background_check_status: 'not_started' | 'pending' | 'approved' | 'rejected' | 'consider' | 'expired';
+  background_check_status: 'not_started' | 'pending' | 'approved' | 'rejected' | 'consider' | 'expired' | 'pre_adverse';
   background_check_date?: Date;
   background_check_report_id?: string;
 
   // Certn-specific fields
   certn_report_id?: string;
   certn_applicant_id?: string;
-  flagged_records?: any; // JSONB - flagged background check records
+  flagged_records?: string; // Encrypted text (AES-256-GCM) — Constitution Principle III
 
   // Admin Review (for 'consider' status)
   admin_review_required: boolean;
   admin_reviewed_by?: string; // User ID of admin
   admin_review_date?: Date;
   admin_review_notes?: string;
+
+  // Data retention (CMP-03: criminal record data purge)
+  retention_expires_at?: Date;
+  // FCRA adverse action (CMP-04)
+  pre_adverse_notice_date?: Date;
 
   // Income Verification
   income_verification_status: 'pending' | 'verified' | 'rejected';
@@ -112,33 +126,61 @@ export const VerificationModel = {
   /**
    * Mark verification for admin review (for 'consider' status)
    * Called when background check returns 'consider' status
+   *
+   * CMP-01: Encrypts flagged_records with AES-256-GCM before storage
+   * Constitution Principle III: Criminal records must be encrypted at rest
    */
   async markForAdminReview(
     userId: string,
-    flaggedRecords: any,
+    flaggedRecords: Record<string, unknown>,
   ): Promise<Verification> {
+    const encryptionService = getEncryptionService();
+    const encrypted = await encryptionService.encryptMetadata(flaggedRecords);
+
     return await this.update(userId, {
       background_check_status: 'consider',
       admin_review_required: true,
-      flagged_records: flaggedRecords,
+      flagged_records: JSON.stringify(encrypted),
     });
+  },
+
+  /**
+   * Decrypt flagged_records for admin review detail view
+   *
+   * CMP-01: Only call this for individual record detail views,
+   * NOT for list/queue views (minimize exposure surface)
+   */
+  async getDecryptedFlaggedRecords(userId: string): Promise<Record<string, unknown> | null> {
+    const verification = await this.findByUserId(userId);
+    if (!verification?.flagged_records) return null;
+
+    const encryptionService = getEncryptionService();
+    const encryptedData: EncryptedData = JSON.parse(verification.flagged_records);
+    return await encryptionService.decryptMetadata(encryptedData);
   },
 
   /**
    * Admin approve verification after review
    * 48h SLA for admin review
+   *
+   * CMP-03: Sets retention_expires_at to 30 days from now
+   * Criminal record data will be purged after retention period
    */
   async adminApprove(
     userId: string,
     adminUserId: string,
     notes?: string,
   ): Promise<Verification> {
+    const retentionDate = new Date();
+    retentionDate.setDate(retentionDate.getDate() + 30);
+
     const verification = await this.update(userId, {
       background_check_status: 'approved',
       admin_review_required: false,
       admin_reviewed_by: adminUserId,
       admin_review_date: db.fn.now() as any,
       admin_review_notes: notes,
+      retention_expires_at: retentionDate,
     });
 
     await this.updateVerificationScore(userId);
@@ -147,28 +189,41 @@ export const VerificationModel = {
 
   /**
    * Admin reject verification after review
-   * Triggers automated refund
+   * CMP-04: Initiates FCRA pre-adverse action (does NOT directly reject)
+   * CMP-03: Sets retention_expires_at to 30 days from now
    */
   async adminReject(
     userId: string,
     adminUserId: string,
     notes?: string,
   ): Promise<Verification> {
+    const retentionDate = new Date();
+    retentionDate.setDate(retentionDate.getDate() + 30);
+
     return await this.update(userId, {
       background_check_status: 'rejected',
       admin_review_required: false,
       admin_reviewed_by: adminUserId,
       admin_review_date: db.fn.now() as any,
       admin_review_notes: notes,
+      retention_expires_at: retentionDate,
     });
   },
 
   /**
    * Get admin review queue
    * Returns verifications requiring admin review (48h SLA)
+   *
+   * CMP-01: Excludes flagged_records from list view to minimize exposure
    */
-  async getAdminReviewQueue(): Promise<Verification[]> {
+  async getAdminReviewQueue(): Promise<Partial<Verification>[]> {
     return await db('verifications')
+      .select(
+        'id', 'user_id', 'background_check_status', 'background_check_date',
+        'certn_report_id', 'certn_applicant_id', 'admin_review_required',
+        'admin_reviewed_by', 'admin_review_date', 'admin_review_notes',
+        'pre_adverse_notice_date', 'created_at', 'updated_at',
+      )
       .where({ admin_review_required: true })
       .whereIn('background_check_status', ['consider'])
       .orderBy('background_check_date', 'asc')

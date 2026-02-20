@@ -1,3 +1,11 @@
+/**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
 import { Request, Response } from 'express';
 import logger from '../../config/logger';
 import { VerificationService } from './verification.service';
@@ -6,6 +14,7 @@ import CertnClient from './certn/CertnClient';
 import { VerificationModel } from '../../models/Verification';
 import { VerificationWebhookEventModel } from '../../models/VerificationWebhookEvent';
 import { queueWebhookRetry } from '../../workers/webhookRetryWorker';
+import { getEncryptionService } from '../../services/encryptionService';
 
 /**
  * Webhook Controller
@@ -72,13 +81,18 @@ export const webhookController = {
         return;
       }
 
-      // Create webhook event record
+      // CMP-02: Encrypt payload before storage (Constitution Principle III)
+      const encryptionService = getEncryptionService();
+      const encryptedPayload = await encryptionService.encryptMetadata(payload);
+
+      // Create webhook event record with encrypted payload
       const { event: webhookEvent, isNew } = await VerificationWebhookEventModel.createOrGet({
         provider: 'veriff',
         provider_event_id: sessionId,
         event_type: payload.status,
         user_id: userId,
-        payload,
+        payload: encryptedPayload as unknown as Record<string, unknown>,
+        encrypted: true,
       });
 
       webhookEventId = webhookEvent.id;
@@ -198,13 +212,18 @@ export const webhookController = {
         return;
       }
 
-      // Create webhook event record
+      // CMP-02: Encrypt payload before storage (Constitution Principle III)
+      const encryptionService = getEncryptionService();
+      const encryptedPayload = await encryptionService.encryptMetadata(payload);
+
+      // Create webhook event record with encrypted payload
       const { event: webhookEvent, isNew } = await VerificationWebhookEventModel.createOrGet({
         provider: 'certn',
         provider_event_id: applicationId,
         event_type: event || 'status_update',
         user_id: data?.applicant_id,
-        payload,
+        payload: encryptedPayload as unknown as Record<string, unknown>,
+        encrypted: true,
       });
 
       webhookEventId = webhookEvent.id;
