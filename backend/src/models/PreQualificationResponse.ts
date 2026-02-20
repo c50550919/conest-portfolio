@@ -1,3 +1,11 @@
+/**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
 import { db } from '../config/database';
 
 /**
@@ -9,35 +17,38 @@ import { db } from '../config/database';
  *
  * Purpose: Store pre-qualification responses before payment
  * Questions:
- * 1. felony_conviction: "Have you ever been convicted of a felony?"
- * 2. sex_offender: "Are you a registered sex offender?"
- * 3. pending_charges: "Do you have any pending criminal charges?"
+ * 1. sex_offender: "Are you a registered sex offender?"
+ * 2. pending_charges: "Do you have any pending criminal charges?"
+ *
+ * CMP-06: Removed felony_conviction question per Fair Chance Housing laws.
+ * 15+ jurisdictions restrict blanket felony questions in housing contexts.
+ * Sex offender registry and pending charges are universally exempt from
+ * ban-the-box protections. Felony history is assessed through the
+ * background check with tiered classification (CMP-05).
  *
  * Responses: 'yes', 'no', 'prefer_not_to_say'
  *
  * Auto-Disqualification:
  * - 'yes' to sex_offender → Auto-reject, no payment allowed
- * - 'yes' to felony_conviction OR pending_charges → Proceed to background check
  * - 'prefer_not_to_say' → Allowed, but may affect admin review
  */
 
 export interface PreQualificationResponse {
   id: string;
   user_id: string;
-  question_id: 'felony_conviction' | 'sex_offender' | 'pending_charges';
+  question_id: 'sex_offender' | 'pending_charges';
   response: 'yes' | 'no' | 'prefer_not_to_say';
   answered_at: Date;
 }
 
 export interface CreatePreQualificationResponseData {
   user_id: string;
-  question_id: 'felony_conviction' | 'sex_offender' | 'pending_charges';
+  question_id: 'sex_offender' | 'pending_charges';
   response: 'yes' | 'no' | 'prefer_not_to_say';
 }
 
 export interface PreQualificationSummary {
   user_id: string;
-  felony_conviction: 'yes' | 'no' | 'prefer_not_to_say' | null;
   sex_offender: 'yes' | 'no' | 'prefer_not_to_say' | null;
   pending_charges: 'yes' | 'no' | 'prefer_not_to_say' | null;
   is_auto_disqualified: boolean;
@@ -55,6 +66,11 @@ export const PreQualificationResponseModel = {
   async upsertResponse(
     data: CreatePreQualificationResponseData,
   ): Promise<PreQualificationResponse> {
+    // CMP-06: Reject legacy felony_conviction question
+    if ((data.question_id as string) === 'felony_conviction') {
+      throw new Error('FELONY_QUESTION_REMOVED: Use background check tiered classification instead');
+    }
+
     // Auto-disqualify sex offenders
     if (data.question_id === 'sex_offender' && data.response === 'yes') {
       throw new Error('SEX_OFFENDER_AUTO_DISQUALIFIED');
@@ -110,7 +126,7 @@ export const PreQualificationResponseModel = {
    */
   async findByUserAndQuestion(
     userId: string,
-    questionId: 'felony_conviction' | 'sex_offender' | 'pending_charges',
+    questionId: 'sex_offender' | 'pending_charges',
   ): Promise<PreQualificationResponse | undefined> {
     return await db('pre_qualification_responses')
       .where({ user_id: userId, question_id: questionId })
@@ -126,7 +142,6 @@ export const PreQualificationResponseModel = {
 
     const summary: PreQualificationSummary = {
       user_id: userId,
-      felony_conviction: null,
       sex_offender: null,
       pending_charges: null,
       is_auto_disqualified: false,
@@ -134,29 +149,29 @@ export const PreQualificationResponseModel = {
       completion_percentage: 0,
     };
 
+    // CMP-06: Only 2 questions now (sex_offender + pending_charges)
+    const TOTAL_QUESTIONS = 2;
     let answeredCount = 0;
 
     responses.forEach((response) => {
-      if (response.question_id === 'felony_conviction') {
-        summary.felony_conviction = response.response;
-        answeredCount++;
-      } else if (response.question_id === 'sex_offender') {
+      if (response.question_id === 'sex_offender') {
         summary.sex_offender = response.response;
         answeredCount++;
       } else if (response.question_id === 'pending_charges') {
         summary.pending_charges = response.response;
         answeredCount++;
       }
+      // Ignore legacy felony_conviction responses if they exist
     });
 
     // Auto-disqualify if sex offender is 'yes'
     summary.is_auto_disqualified = summary.sex_offender === 'yes';
 
     // Calculate completion percentage
-    summary.completion_percentage = Math.floor((answeredCount / 3) * 100);
+    summary.completion_percentage = Math.floor((answeredCount / TOTAL_QUESTIONS) * 100);
 
     // Set completed_at if all questions answered
-    if (answeredCount === 3) {
+    if (answeredCount === TOTAL_QUESTIONS) {
       const latestResponse = responses.reduce((latest, current) =>
         new Date(current.answered_at) > new Date(latest.answered_at)
           ? current
@@ -177,7 +192,8 @@ export const PreQualificationResponseModel = {
       .count('* as count')
       .first();
 
-    return parseInt(count?.count as string) === 3;
+    // CMP-06: Only 2 questions now (sex_offender + pending_charges)
+    return parseInt(count?.count as string) >= 2;
   },
 
   /**

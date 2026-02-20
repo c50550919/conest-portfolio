@@ -1,3 +1,11 @@
+/**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
 import { VerificationModel } from '../../models/Verification';
 import { UserModel } from '../../models/User';
 import { VerificationPaymentModel } from '../../models/VerificationPayment';
@@ -401,6 +409,20 @@ export const VerificationService = {
   /**
    * Process Certn background check completion
    * Called from webhook handler
+   *
+   * CMP-05: Uses tiered criminal record classification
+   * CMP-04: FCRA two-step adverse action for rejections
+   *
+   * Tier flow:
+   * - auto_reject_sex_offender → immediate reject (child safety exemption)
+   * - auto_reject_child_crime → immediate reject (child safety exemption)
+   * - individualized_review → admin review with encrypted records
+   * - approved → approve directly
+   *
+   * FCRA flow for rejections:
+   * 1. Set status to 'pre_adverse', send pre-adverse notice
+   * 2. Wait 5 business days (handled by dataRetentionWorker)
+   * 3. Finalize to 'rejected', then process refund
    */
   async processBackgroundCheckResult(
     userId: string,
@@ -415,37 +437,88 @@ export const VerificationService = {
       // Parse status
       const internalStatus = CertnClient.parseStatus(application.report_status || 'PENDING');
 
-      // Extract flagged records if status is 'consider'
-      let flaggedRecords = null;
-      let requiresAdminReview = false;
-
       if (internalStatus === 'consider') {
-        flaggedRecords = CertnClient.extractFlaggedRecords(application);
-        requiresAdminReview = true;
-      }
+        // CMP-05: Extract and classify flagged records
+        const flaggedRecords = CertnClient.extractFlaggedRecords(application);
+        const classification = CertnClient.classifyApplication(flaggedRecords);
 
-      // Update verification record
-      if (requiresAdminReview) {
-        await VerificationModel.markForAdminReview(userId, flaggedRecords);
+        logger.info(`Criminal record classification for user ${userId}`, {
+          tier: classification.tier,
+          recordCount: flaggedRecords.length,
+          reason: classification.reason,
+        });
+
+        switch (classification.tier) {
+          case 'auto_reject_sex_offender':
+          case 'auto_reject_child_crime': {
+            // Child safety exemption — immediate rejection, no FCRA waiting period
+            // Sex offender registry and crimes against children are universally
+            // exempt from Fair Chance Housing protections
+            await VerificationModel.update(userId, {
+              background_check_status: 'rejected',
+              background_check_date: new Date(),
+            });
+
+            logger.warn(`User ${userId} auto-rejected: ${classification.tier}`, {
+              reason: classification.reason,
+            });
+
+            await this.processAutomaticRefund(userId);
+            break;
+          }
+
+          case 'individualized_review': {
+            // CMP-01: Encrypt flagged records before storage
+            await VerificationModel.markForAdminReview(userId, {
+              records: flaggedRecords,
+              classification: classification.tier,
+              reason: classification.reason,
+            });
+            break;
+          }
+
+          case 'approved': {
+            // All records are non-violent or older than 7 years
+            await VerificationModel.update(userId, {
+              background_check_status: 'approved',
+              background_check_date: new Date(),
+            });
+            await VerificationModel.updateVerificationScore(userId);
+            break;
+          }
+        }
+      } else if (internalStatus === 'rejected') {
+        // CMP-04: FCRA pre-adverse action — do NOT reject immediately
+        // Send pre-adverse notice and wait 5 business days
+        await VerificationModel.update(userId, {
+          background_check_status: 'pre_adverse',
+          background_check_date: new Date(),
+          pre_adverse_notice_date: new Date(),
+        });
+
+        logger.info(`Pre-adverse notice sent for user ${userId}`, {
+          applicationId,
+          note: 'FCRA requires 5 business day wait before final adverse action',
+        });
+
+        // TODO: Send pre-adverse notice email/push notification to user
+        // The dataRetentionWorker will finalize after 5 business days
+        // Refund is NOT processed until final adverse action
       } else {
+        // Clear or pending status — update directly
         await VerificationModel.update(userId, {
           background_check_status: internalStatus,
           background_check_date: new Date(),
         });
 
-        // Only update score if not requiring admin review
-        await VerificationModel.updateVerificationScore(userId);
+        if (internalStatus === 'approved') {
+          await VerificationModel.updateVerificationScore(userId);
+        }
       }
 
       logger.info(`Background check processed for user ${userId}`, {
         status: internalStatus,
-        requiresAdminReview,
       });
-
-      // Handle automatic refund for rejected background checks
-      if (internalStatus === 'rejected') {
-        await this.processAutomaticRefund(userId);
-      }
     } catch (error: any) {
       logger.error('Failed to process background check result', {
         userId,

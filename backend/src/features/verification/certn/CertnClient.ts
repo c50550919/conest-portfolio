@@ -1,3 +1,11 @@
+/**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
 import axios, { AxiosInstance } from 'axios';
 import crypto from 'crypto';
 import logger from '../../../config/logger';
@@ -57,6 +65,25 @@ export interface CertnRecord {
   date?: string;
   location?: string;
   disposition?: string;
+}
+
+/**
+ * CMP-05: 4-tier criminal record classification
+ *
+ * Fair Chance Housing compliance: sex offender registry and crimes against
+ * children are universally exempt from ban-the-box protections.
+ * All other records require individualized assessment per HUD guidance.
+ */
+export type CriminalRecordTier =
+  | 'auto_reject_sex_offender'
+  | 'auto_reject_child_crime'
+  | 'individualized_review'
+  | 'approved';
+
+export interface ClassificationResult {
+  tier: CriminalRecordTier;
+  records: CertnRecord[];
+  reason: string;
 }
 
 export interface CreateApplicantRequest {
@@ -249,6 +276,103 @@ export class CertnClient {
     }
 
     return flaggedRecords;
+  }
+
+  /**
+   * CMP-05: Classify a single criminal record into a safety tier
+   *
+   * Tier logic:
+   * 1. Sex offender registry → auto_reject_sex_offender (child safety, universal exemption)
+   * 2. Crimes against children → auto_reject_child_crime (child safety, universal exemption)
+   * 3. Violent crimes within 7 years → individualized_review (Fair Chance Housing)
+   * 4. Everything else → approved
+   */
+  classifyRecord(record: CertnRecord): CriminalRecordTier {
+    const desc = (record.description || '').toLowerCase();
+    const type = (record.type || '').toLowerCase();
+    const combined = `${type} ${desc}`;
+
+    // Tier 1: Sex offender registry — universally exempt from ban-the-box
+    const sexOffenderPatterns = [
+      'sex offender', 'sexual offender', 'sex registry',
+      'sexual predator', 'megan\'s law', 'sorna',
+      'sexual assault', 'sexual abuse', 'rape',
+      'indecent exposure', 'sexual exploitation',
+      'child pornography', 'child sexual',
+    ];
+    if (sexOffenderPatterns.some(p => combined.includes(p))) {
+      return 'auto_reject_sex_offender';
+    }
+
+    // Tier 2: Crimes against children — universally exempt
+    const childCrimePatterns = [
+      'child abuse', 'child neglect', 'child endangerment',
+      'child cruelty', 'minor victim', 'against a minor',
+      'against a child', 'juvenile victim',
+      'child exploitation', 'contributing to delinquency',
+    ];
+    if (childCrimePatterns.some(p => combined.includes(p))) {
+      return 'auto_reject_child_crime';
+    }
+
+    // Tier 3: Violent crimes within 7 years → individualized review
+    const violentPatterns = [
+      'assault', 'battery', 'robbery', 'homicide', 'murder',
+      'manslaughter', 'kidnapping', 'arson', 'domestic violence',
+      'aggravated', 'armed', 'weapon', 'firearm',
+      'stalking', 'terroristic threat',
+    ];
+    const isViolent = violentPatterns.some(p => combined.includes(p));
+
+    if (isViolent) {
+      // Check recency — within 7 years
+      if (record.date) {
+        const recordDate = new Date(record.date);
+        const sevenYearsAgo = new Date();
+        sevenYearsAgo.setFullYear(sevenYearsAgo.getFullYear() - 7);
+        if (recordDate >= sevenYearsAgo) {
+          return 'individualized_review';
+        }
+        // Violent crime older than 7 years → approved per Fair Chance Housing
+        return 'approved';
+      }
+      // No date available — err on side of caution
+      return 'individualized_review';
+    }
+
+    // Tier 4: Non-violent offenses → approved
+    return 'approved';
+  }
+
+  /**
+   * CMP-05: Classify all records for an application
+   * Returns the highest-severity tier found across all records
+   */
+  classifyApplication(records: CertnRecord[]): ClassificationResult {
+    if (records.length === 0) {
+      return { tier: 'approved', records: [], reason: 'No records found' };
+    }
+
+    // Severity ordering: sex_offender > child_crime > individualized > approved
+    const tierSeverity: Record<CriminalRecordTier, number> = {
+      auto_reject_sex_offender: 3,
+      auto_reject_child_crime: 2,
+      individualized_review: 1,
+      approved: 0,
+    };
+
+    let highestTier: CriminalRecordTier = 'approved';
+    let reason = 'All records cleared';
+
+    for (const record of records) {
+      const tier = this.classifyRecord(record);
+      if (tierSeverity[tier] > tierSeverity[highestTier]) {
+        highestTier = tier;
+        reason = `${record.type}: ${record.description}`;
+      }
+    }
+
+    return { tier: highestTier, records, reason };
   }
 
   /**
