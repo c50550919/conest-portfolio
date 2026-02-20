@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Subscription Screen
  *
  * Purpose: Display premium subscription plan and manage subscription
@@ -30,6 +38,7 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -161,18 +170,41 @@ const SubscriptionScreen: React.FC = () => {
 
   const handleManageSubscription = () => {
     Alert.alert(
-      'Manage Subscription',
-      'To manage your subscription, go to Google Play Store > Account > Subscriptions',
+      'Cancel Subscription',
+      status?.expiresAt
+        ? `Your subscription will remain active until ${new Date(status.expiresAt).toLocaleDateString()}. After cancellation, you will not be charged again.`
+        : 'You can cancel your subscription through your device\'s subscription settings.',
       [
-        { text: 'OK' },
+        { text: 'Keep Subscription', style: 'cancel' },
         {
-          text: 'Open Play Store',
-          onPress: () => {
-            // In production, would open Play Store subscriptions page
-            console.log('Opening Play Store subscriptions...');
+          text: 'Cancel Subscription',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const url = Platform.select({
+                ios: 'https://apps.apple.com/account/subscriptions',
+                android: 'https://play.google.com/store/account/subscriptions',
+              });
+              if (url) {
+                const supported = await Linking.canOpenURL(url);
+                if (supported) {
+                  await Linking.openURL(url);
+                } else {
+                  Alert.alert(
+                    'Unable to Open',
+                    Platform.OS === 'ios'
+                      ? 'Go to Settings > Apple ID > Subscriptions to cancel.'
+                      : 'Go to Google Play Store > Account > Subscriptions to cancel.',
+                  );
+                }
+              }
+            } catch (error) {
+              console.error('Error opening subscription management:', error);
+              Alert.alert('Error', 'Could not open subscription settings. Please manage your subscription through your device settings.');
+            }
           },
         },
-      ]
+      ],
     );
   };
 

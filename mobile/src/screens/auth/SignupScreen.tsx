@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Signup Screen
  *
  * Purpose: User registration with email and password
@@ -52,6 +60,8 @@ interface ValidationErrors {
   phone?: string;
   password?: string;
   confirmPassword?: string;
+  tos?: string;     // CMP-07
+  privacy?: string; // CMP-07
 }
 
 const SignupScreen: React.FC = () => {
@@ -65,6 +75,8 @@ const SignupScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoadingState] = useState(false);
+  const [tosAccepted, setTosAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
 
   /**
@@ -142,6 +154,14 @@ const SignupScreen: React.FC = () => {
       errors.confirmPassword = 'Passwords do not match';
     }
 
+    // CMP-07: ToS/Privacy consent validation
+    if (!tosAccepted) {
+      errors.tos = 'You must agree to the Terms of Service';
+    }
+    if (!privacyAccepted) {
+      errors.privacy = 'You must agree to the Privacy Policy';
+    }
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -165,6 +185,8 @@ const SignupScreen: React.FC = () => {
         email: email.trim(),
         phone: phone.replace(/\D/g, ''), // Remove non-digits
         password,
+        tosAccepted: true,      // CMP-07: Validated in form
+        privacyAccepted: true,  // CMP-07: Validated in form
       });
 
       // Update Redux state with user data
@@ -363,6 +385,42 @@ const SignupScreen: React.FC = () => {
             )}
           </View>
 
+          {/* CMP-07: Terms of Service Consent */}
+          <TouchableOpacity
+            style={styles.consentRow}
+            onPress={() => setTosAccepted(!tosAccepted)}
+            disabled={loading}
+            testID="tos-checkbox"
+          >
+            <View style={[styles.checkbox, tosAccepted && styles.checkboxChecked]}>
+              {tosAccepted && <Text style={styles.checkmark}>✓</Text>}
+            </View>
+            <Text style={styles.consentText}>
+              I agree to the <Text style={styles.consentLink}>Terms of Service</Text>
+            </Text>
+          </TouchableOpacity>
+          {validationErrors.tos && (
+            <Text style={styles.errorText}>{validationErrors.tos}</Text>
+          )}
+
+          {/* CMP-07: Privacy Policy Consent */}
+          <TouchableOpacity
+            style={styles.consentRow}
+            onPress={() => setPrivacyAccepted(!privacyAccepted)}
+            disabled={loading}
+            testID="privacy-checkbox"
+          >
+            <View style={[styles.checkbox, privacyAccepted && styles.checkboxChecked]}>
+              {privacyAccepted && <Text style={styles.checkmark}>✓</Text>}
+            </View>
+            <Text style={styles.consentText}>
+              I agree to the <Text style={styles.consentLink}>Privacy Policy</Text>
+            </Text>
+          </TouchableOpacity>
+          {validationErrors.privacy && (
+            <Text style={styles.errorText}>{validationErrors.privacy}</Text>
+          )}
+
           {/* Signup Button */}
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
@@ -473,6 +531,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: theme.colors.primary,
+  },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderWidth: 2,
+    borderColor: theme.colors.outline,
+    borderRadius: 4,
+    marginRight: theme.spacing.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  checkmark: {
+    color: theme.colors.onPrimary,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  consentText: {
+    fontSize: 14,
+    color: theme.colors.onSurface,
+    flex: 1,
+  },
+  consentLink: {
+    color: theme.colors.primary,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });
 

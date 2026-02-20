@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * AI Content Moderation Types
  *
  * Type definitions for the LLM-powered content moderation system
@@ -13,7 +21,8 @@
 export type ModerationCategory =
   | 'normal'
   | 'child_safety_questionable'
-  | 'child_predatory_risk';
+  | 'child_predatory_risk'
+  | 'housing_discrimination';
 
 /**
  * Actions the system can take based on moderation results
@@ -51,7 +60,10 @@ export type PatternType =
   | 'schedule_probing'
   | 'location_targeting'
   | 'unsolicited_access'
-  | 'security_probing';
+  | 'security_probing'
+  | 'source_of_income_discrimination'
+  | 'familial_status_discrimination'
+  | 'race_religion_discrimination';
 
 /**
  * AI provider identifiers
@@ -67,6 +79,10 @@ export interface ModerationSignals {
   asks_location_school: boolean;
   offers_unsolicited_access_to_child: boolean;
   probes_security_details: boolean;
+  // CMP-10: FHA housing discrimination signals
+  source_of_income_discrimination?: boolean;
+  familial_status_discrimination?: boolean;
+  race_religion_discrimination?: boolean;
 }
 
 /**

@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Household Safety Disclosure Constants
  *
  * Defines the attestation questions and configuration for the mandatory
@@ -24,12 +32,20 @@ export const ATTESTATION_QUESTIONS: AttestationQuestion[] = [
       'This includes any juvenile court findings for serious offenses. You are not required to disclose sealed records that you are legally prohibited from disclosing.',
   },
   {
-    id: 'court_orders',
-    text: 'Are there any active court orders restricting contact between anyone in your household and minors outside your family?',
+    id: 'court_orders_against_you',
+    text: 'Are there any active court orders or restraining orders issued AGAINST you or anyone in your household restricting contact with minors?',
     required: true,
     expectedAnswer: false,
     helpText:
-      'This includes restraining orders, custody restrictions, or court-mandated supervision requirements involving minors.',
+      'This includes restraining orders, custody restrictions, or court-mandated supervision requirements involving minors. This does NOT include protective orders issued FOR your safety.',
+  },
+  {
+    id: 'court_orders_protective',
+    text: 'Do you have a protective order issued FOR your safety (e.g., domestic violence protection order)?',
+    required: true,
+    expectedAnswer: null, // CMP-11: VAWA — informational only, neither answer blocks
+    helpText:
+      'This is for your safety and confidential handling only. Having a protective order does NOT affect your eligibility. Your address will receive additional protections per VAWA.',
   },
   {
     id: 'cps_involvement',

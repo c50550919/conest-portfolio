@@ -1,3 +1,11 @@
+/**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
 import db from '../../config/database';
 import { ProfileCard, DiscoveryResponse } from '../../types/ProfileCard';
 import { calculateAge } from '../../utils/ageCalculator';
@@ -81,13 +89,15 @@ export class DiscoveryService {
         'p.first_name as firstName',
         'p.date_of_birth as dateOfBirth',
         'p.city',
-        'p.children_count as childrenCount',
-        'p.children_age_groups as childrenAgeGroups',
+        // CMP-12: childrenCount and childrenAgeGroups removed from discovery response
+        // to prevent FHA familial status discrimination. Scoring uses these internally
+        // via getUserProfile() but they are NOT exposed to other users.
         'p.budget_min as budgetMin',
         'p.budget_max as budgetMax',
         'p.move_in_date as moveInDate',
         'p.bio',
         'p.profile_photo_url as profilePhoto',
+        'p.open_to_group_living as openToGroupLiving',
         'v.id_verification_status',
         'v.background_check_status',
         'v.phone_verified',
@@ -116,20 +126,12 @@ export class DiscoveryService {
       const age = calculateAge(p.dateOfBirth);
       const budget = p.budgetMin && p.budgetMax ? (p.budgetMin + p.budgetMax) / 2 : p.budgetMin || p.budgetMax || 0;
 
-      // Parse children_age_groups - can be string (comma-separated) or array
-      const childrenAgeGroups = Array.isArray(p.childrenAgeGroups)
-        ? p.childrenAgeGroups
-        : (typeof p.childrenAgeGroups === 'string' && p.childrenAgeGroups.length > 0)
-          ? p.childrenAgeGroups.split(',').map((s: string) => s.trim())
-          : [];
-
       return {
         userId: p.userId,
         firstName: p.firstName,
         age,
         city: p.city,
-        childrenCount: p.childrenCount,
-        childrenAgeGroups: childrenAgeGroups as ('toddler' | 'elementary' | 'teen')[],
+        // CMP-12: childrenCount and childrenAgeGroups excluded from discovery response (FHA compliance)
         compatibilityScore,
         verificationStatus: {
           idVerified: p.id_verification_status === 'approved',
@@ -141,6 +143,7 @@ export class DiscoveryService {
         moveInDate: p.moveInDate ? new Date(p.moveInDate).toISOString() : undefined,
         bio: p.bio || undefined,
         profilePhoto: p.profilePhoto || undefined,
+        openToGroupLiving: p.openToGroupLiving ?? false,
       };
     });
 

@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Content Moderation Service
  *
  * LLM-powered content moderation to detect predatory patterns in messages.
@@ -36,33 +44,45 @@ import {
 const SYSTEM_PROMPT = `You are a content safety moderator for a single-parent housing platform where verified adults find roommates.
 Users are verified adults who may have children living with them.
 
-Your task: Analyze messages for predatory patterns targeting children through their parents.
+Your task: Analyze messages for TWO categories of violations:
+A) Predatory patterns targeting children through their parents
+B) Housing discrimination violating the Fair Housing Act (FHA)
 
-RED FLAGS to detect:
+=== CHILD SAFETY RED FLAGS ===
 1. **Child Identity Probing**: Asking for children's names, ages, specific personal details
 2. **Schedule Surveillance**: Asking when children are home alone, parent work schedules, childcare gaps
 3. **Location Targeting**: Asking about schools, playgrounds, child activities, routes children take
 4. **Unsolicited Access Offers**: Offering babysitting, tutoring, "hanging out with kids", wanting to be alone with children
 5. **Security Probing**: Asking about locks, cameras, who has house keys, alarm systems
 
+=== HOUSING DISCRIMINATION RED FLAGS (CMP-10) ===
+6. **Source of Income Discrimination**: "no Section 8", "no vouchers", "no government assistance", "no welfare", "no felons allowed"
+7. **Familial Status Discrimination**: "no kids", "no children allowed", "adults only", "families only", "single people only", "childless preferred"
+8. **Protected Class Discrimination**: Language targeting race, religion, national origin, disability, sex, or sexual orientation in housing context
+
 CONTEXT:
 - Normal housing discussions about "having kids" or "family-friendly" are OK
 - Asking general compatibility questions about parenting style is OK
 - The concern is DETAILED, SPECIFIC, or REPEATED patterns that suggest targeting
+- Discussing housing preferences like neighborhood, budget, or lifestyle is OK
+- Stating discriminatory conditions for roommate selection is NOT OK
 
 IMPORTANT: Be careful not to over-flag. Housing discussions naturally involve family topics.
-Only flag when there's a clear pattern of unusual interest in children's specifics.
+Only flag when there's a clear pattern of unusual interest in children's specifics OR explicit discriminatory language.
 
 Respond ONLY with valid JSON matching this exact schema:
 {
-  "category": "normal" | "child_safety_questionable" | "child_predatory_risk",
+  "category": "normal" | "child_safety_questionable" | "child_predatory_risk" | "housing_discrimination",
   "confidence": <number between 0.0 and 1.0>,
   "signals": {
     "child_focus": <boolean - message focuses on children beyond normal>,
     "asks_schedule": <boolean - asks about children's or parent's schedule>,
     "asks_location_school": <boolean - asks about school, activities, locations>,
     "offers_unsolicited_access_to_child": <boolean - offers to be with children>,
-    "probes_security_details": <boolean - asks about home security>
+    "probes_security_details": <boolean - asks about home security>,
+    "source_of_income_discrimination": <boolean - discriminates by income source>,
+    "familial_status_discrimination": <boolean - discriminates by family status>,
+    "race_religion_discrimination": <boolean - discriminates by protected class>
   },
   "reasoning": "<brief explanation of your assessment>"
 }`;
@@ -271,6 +291,11 @@ function determineAction(result: ModerationResult, _config: ModerationConfig): M
     confidence >= thresholds.urgentReview.minConfidence
   ) {
     return 'flagged_urgent';
+  }
+
+  // CMP-10: Housing discrimination — flag for standard review (never auto-block)
+  if (category === 'housing_discrimination' && confidence >= 0.5) {
+    return 'flagged_standard';
   }
 
   // Standard review: questionable with lower confidence

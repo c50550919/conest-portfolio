@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * CoNest Profile Screen
  * User profile, settings, verification status, and account management
  */
@@ -29,6 +37,7 @@ import {
   selectVerificationScore,
 } from '../../store/slices/verificationSlice';
 import tokenStorage from '../../services/tokenStorage';
+import profileAPI from '../../services/api/profileAPI';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 import type { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 
@@ -96,6 +105,34 @@ const ProfileScreen: React.FC = () => {
         },
       },
     ]);
+  };
+
+  const handleDeleteAccount = async () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all data. This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await profileAPI.deleteProfile();
+              await tokenStorage.clearTokens();
+              dispatch(logout());
+              console.log('[ProfileScreen] Account deleted successfully');
+            } catch (error) {
+              console.error('[ProfileScreen] Delete account error:', error);
+              Alert.alert('Error', 'Failed to delete account. Please try again or contact support.');
+            }
+          },
+        },
+      ],
+    );
   };
 
   return (
@@ -535,7 +572,11 @@ const ProfileScreen: React.FC = () => {
               <Icon name="chevron-right" size={24} color={colors.text.secondary} />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.settingItem}>
+            <TouchableOpacity
+              testID="delete-account-button"
+              style={styles.settingItem}
+              onPress={handleDeleteAccount}
+            >
               <View style={[styles.settingIcon, { backgroundColor: colors.error + '20' }]}>
                 <Icon name="delete-forever" size={24} color={colors.error} />
               </View>

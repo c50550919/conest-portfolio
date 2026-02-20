@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * ProfileCard Type Definition
  *
  * Purpose: Type-safe profile card data for Discovery Screen
@@ -21,9 +29,10 @@ export interface ProfileCard {
   age: number;
   city: string;
 
-  // Child data - ONLY non-identifying information
-  childrenCount: number;
-  childrenAgeGroups: ('toddler' | 'elementary' | 'teen')[];
+  // CMP-12: Made optional — excluded from discovery response to prevent
+  // FHA familial status discrimination. Still used internally for scoring.
+  childrenCount?: number;
+  childrenAgeGroups?: ('toddler' | 'elementary' | 'teen')[];
 
   // Matching data
   compatibilityScore: number;

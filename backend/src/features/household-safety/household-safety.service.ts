@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Household Safety Disclosure Service
  *
  * Business logic for the mandatory parental disclosure system.
@@ -166,10 +174,15 @@ export const HouseholdSafetyService = {
   /**
    * Validate attestation responses
    * Returns error if any required question is missing or answered incorrectly
+   *
+   * CMP-11: Questions with expectedAnswer === null are informational only (VAWA).
+   * They are required to be answered but neither answer blocks the disclosure.
    */
   validateAttestationResponses(
     responses: AttestationResponse[],
-  ): ValidationResult {
+  ): ValidationResult & { needsConfidentialHandling?: boolean } {
+    let needsConfidentialHandling = false;
+
     for (const question of ATTESTATION_QUESTIONS) {
       const response = responses.find((r) => r.questionId === question.id);
 
@@ -178,6 +191,15 @@ export const HouseholdSafetyService = {
           valid: false,
           error: `Required question "${question.id}" was not answered`,
         };
+      }
+
+      // CMP-11: VAWA — informational questions (expectedAnswer === null) never block
+      if (question.expectedAnswer === null) {
+        // If user has a protective order, flag for confidential address handling
+        if (response && question.id === 'court_orders_protective' && response.response === true) {
+          needsConfidentialHandling = true;
+        }
+        continue;
       }
 
       if (response && response.response !== question.expectedAnswer) {
@@ -192,7 +214,7 @@ export const HouseholdSafetyService = {
       }
     }
 
-    return { valid: true };
+    return { valid: true, needsConfidentialHandling };
   },
 
   /**

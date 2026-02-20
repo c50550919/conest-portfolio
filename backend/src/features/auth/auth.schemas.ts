@@ -1,3 +1,11 @@
+/**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
 import { z } from 'zod';
 
 /**
@@ -87,6 +95,9 @@ export const RegisterRequestSchema = z
         }),
       )
       .min(0, 'Children age groups must be an array'),
+    // CMP-07: ToS/Privacy consent (FTC/CFPB compliance)
+    tosAccepted: z.boolean().optional(),
+    privacyAccepted: z.boolean().optional(),
   })
   .strict() // Reject any additional fields not defined in schema
   .refine(

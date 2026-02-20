@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Authentication Service - T040
  *
  * Constitution Principle I: Child Safety First
@@ -100,6 +108,15 @@ export const AuthService = {
       password_hash,
       phone: phoneToCheck,
     });
+
+    // CMP-07: Store ToS/Privacy consent timestamps
+    if (data.tosAccepted || data.privacyAccepted) {
+      const now = new Date();
+      await UserModel.update(user.id, {
+        ...(data.tosAccepted ? { tos_accepted_at: now } : {}),
+        ...(data.privacyAccepted ? { privacy_accepted_at: now } : {}),
+      } as any);
+    }
 
     // Create verification record
     await VerificationModel.create({ user_id: user.id });
