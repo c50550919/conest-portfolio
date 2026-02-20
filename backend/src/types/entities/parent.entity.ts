@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Parent Entity - Canonical Type Definitions
  *
  * Database Table: parents
@@ -63,6 +71,10 @@ export interface ParentDB {
   looking_for_housing?: boolean;
   school_districts?: string[];
 
+  // Village Living Preferences (Phase 1)
+  open_to_group_living?: boolean;
+  preferred_household_size?: number;
+
   // Verification
   verified_status?: VerificationStatus;
   background_check_status?: BackgroundCheckStatus;
@@ -107,6 +119,8 @@ export interface CreateParentDB {
   zip_code?: string;
   budget_min?: number;
   budget_max?: number;
+  open_to_group_living?: boolean;
+  preferred_household_size?: number;
 }
 
 // =============================================================================
@@ -155,6 +169,10 @@ export interface Parent {
   moveInDate?: string;
   lookingForHousing?: boolean;
   schoolDistricts?: string[];
+
+  // Village Living Preferences (Phase 1)
+  openToGroupLiving?: boolean;
+  preferredHouseholdSize?: number;
 
   // Verification
   verifiedStatus?: VerificationStatus;
@@ -228,6 +246,9 @@ export interface ProfileCard {
   moveInDate?: string;
   bio?: string;
   profilePhoto?: string;
+
+  // Village Living (Phase 1 badge)
+  openToGroupLiving?: boolean;
 }
 
 /**
@@ -311,6 +332,10 @@ export interface ExtendedProfileCard extends ProfileCard {
   lastActive?: string;
   joinedDate?: string;
   responseRate?: number;
+
+  // Village Living Preferences
+  openToGroupLiving?: boolean;
+  preferredHouseholdSize?: number;
 }
 
 // =============================================================================
@@ -351,6 +376,8 @@ export interface UpdateParentRequest {
   moveInDate?: string;
   lookingForHousing?: boolean;
   schoolDistricts?: string[];
+  openToGroupLiving?: boolean;
+  preferredHouseholdSize?: number;
 }
 
 // =============================================================================
@@ -384,4 +411,5 @@ export interface ProfileSearchFilters {
   requireBackgroundCheck?: boolean;
   minCompatibilityScore?: number;
   activeWithinDays?: number;
+  openToGroupLiving?: boolean;
 }

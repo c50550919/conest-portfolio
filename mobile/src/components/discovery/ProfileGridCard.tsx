@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Profile Grid Card Component
  *
  * Purpose: Compact profile card for grid/list view discovery interface
@@ -51,6 +59,7 @@ export const ProfileGridCard: React.FC<ProfileGridCardProps> = ({
     childrenAgeGroups,
     budget,
     housingPreferences,
+    openToGroupLiving,
   } = profile;
 
   // Format age groups for display (child-safe)
@@ -96,6 +105,11 @@ export const ProfileGridCard: React.FC<ProfileGridCardProps> = ({
           {verificationStatus.backgroundCheckComplete && (
             <View style={styles.badge}>
               <MaterialCommunityIcons name="security" size={14} color="#3498DB" />
+            </View>
+          )}
+          {openToGroupLiving && (
+            <View style={[styles.badge, styles.villageBadge]}>
+              <MaterialCommunityIcons name="home-group" size={14} color="#F39C12" />
             </View>
           )}
         </View>
@@ -232,6 +246,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  villageBadge: {
+    backgroundColor: 'rgba(243, 156, 18, 0.15)',
   },
 
   // Compatibility Score

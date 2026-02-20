@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Discovery System Type Definitions
  *
  * Purpose: Comprehensive types for browse-based discovery interface
@@ -134,6 +142,10 @@ export interface ExtendedProfileCard {
   lastActive?: string; // ISO timestamp
   joinedDate?: string; // ISO timestamp
   responseRate?: number; // 0-100, if they've had conversations
+
+  // Village Living Preferences (Phase 1)
+  openToGroupLiving?: boolean;
+  preferredHouseholdSize?: number; // 2, 3, 4+
 }
 
 // ============================================================================
@@ -197,6 +209,9 @@ export interface DiscoveryFilters {
 
   // Activity
   activeWithinDays?: number; // Only show users active in last N days
+
+  // Village Living
+  openToGroupLiving?: boolean; // Filter for village-interested parents
 }
 
 // ============================================================================

@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Work Schedule Screen
  * Collects schedule type and work from home preferences
  * FINAL STEP: Submits all onboarding data to create profile
@@ -18,6 +26,7 @@ import {
   ScrollView,
   Alert,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import { Button, Switch, RadioButton, HelperText } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -68,6 +77,8 @@ const WorkScheduleScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [scheduleType, setScheduleType] = useState<ScheduleType>('flexible');
   const [workFromHome, setWorkFromHome] = useState(false);
+  const [openToGroupLiving, setOpenToGroupLiving] = useState(false);
+  const [preferredHouseholdSize, setPreferredHouseholdSize] = useState(2);
 
   // Get all accumulated onboarding data
   const onboardingData = useSelector((state: RootState) => state.user.onboardingData);
@@ -119,6 +130,8 @@ const WorkScheduleScreen: React.FC<Props> = ({ navigation }) => {
         updateOnboardingData({
           scheduleType,
           workFromHome,
+          openToGroupLiving,
+          preferredHouseholdSize: openToGroupLiving ? preferredHouseholdSize : 2,
         })
       );
       dispatch(setOnboardingStep(3));
@@ -140,6 +153,8 @@ const WorkScheduleScreen: React.FC<Props> = ({ navigation }) => {
         schedule_type: scheduleType,
         work_from_home: workFromHome,
         parenting_style: onboardingData.parentingStyle,
+        open_to_group_living: openToGroupLiving,
+        preferred_household_size: openToGroupLiving ? preferredHouseholdSize : 2,
       };
 
       // Create profile via API
@@ -219,6 +234,8 @@ const WorkScheduleScreen: React.FC<Props> = ({ navigation }) => {
     onboardingData,
     scheduleType,
     workFromHome,
+    openToGroupLiving,
+    preferredHouseholdSize,
     validateOnboardingData,
   ]);
 
@@ -275,6 +292,50 @@ const WorkScheduleScreen: React.FC<Props> = ({ navigation }) => {
             />
           </View>
 
+          {/* Village Living Toggle */}
+          <View style={styles.switchContainer}>
+            <View style={styles.switchTextContainer}>
+              <Text style={styles.switchLabel}>Open to Village Living</Text>
+              <Text style={styles.switchDescription}>
+                Interested in sharing a home with 2+ other parents?
+              </Text>
+            </View>
+            <Switch
+              value={openToGroupLiving}
+              onValueChange={setOpenToGroupLiving}
+              color={colors.tertiary}
+              testID="village-living-switch"
+            />
+          </View>
+
+          {openToGroupLiving && (
+            <View style={styles.householdSizeContainer}>
+              <Text style={styles.switchLabel}>Preferred Household Size</Text>
+              <View style={styles.chipGrid}>
+                {[2, 3, 4].map((size) => (
+                  <TouchableOpacity
+                    key={size}
+                    style={[
+                      styles.sizeChip,
+                      preferredHouseholdSize === size && styles.sizeChipActive,
+                    ]}
+                    onPress={() => setPreferredHouseholdSize(size)}
+                    testID={`household-size-${size}`}
+                  >
+                    <Text
+                      style={[
+                        styles.sizeChipText,
+                        preferredHouseholdSize === size && styles.sizeChipTextActive,
+                      ]}
+                    >
+                      {size === 4 ? '4+' : `${size}`} adults
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
           {/* Info Notice */}
           <View style={styles.infoNotice}>
             <Icon name="information" size={20} color={colors.info} />
@@ -293,6 +354,7 @@ const WorkScheduleScreen: React.FC<Props> = ({ navigation }) => {
               <SummaryRow label="Budget" value={onboardingData.budgetMin && onboardingData.budgetMax ? `$${onboardingData.budgetMin} - $${onboardingData.budgetMax}/mo` : 'Not set'} />
               <SummaryRow label="Children" value={onboardingData.childrenCount !== undefined ? `${onboardingData.childrenCount}` : 'Not specified'} />
               <SummaryRow label="Photo" value={onboardingData.profilePhotoUri ? 'Selected' : 'None'} icon={onboardingData.profilePhotoUri ? 'check-circle' : 'alert-circle-outline'} />
+              <SummaryRow label="Village Living" value={openToGroupLiving ? `Yes (${preferredHouseholdSize === 4 ? '4+' : preferredHouseholdSize} adults)` : 'No'} />
             </View>
           </View>
         </View>
@@ -421,6 +483,37 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.text.secondary,
     marginTop: spacing.xs,
+  },
+  householdSizeContainer: {
+    backgroundColor: colors.surface,
+    padding: spacing.md,
+    borderRadius: 8,
+    marginTop: spacing.sm,
+  },
+  chipGrid: {
+    flexDirection: 'row' as const,
+    gap: 8,
+    marginTop: spacing.sm,
+  },
+  sizeChip: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: '#F5F6F7',
+    borderWidth: 1,
+    borderColor: '#E1E8ED',
+  },
+  sizeChipActive: {
+    backgroundColor: colors.tertiary,
+    borderColor: colors.tertiary,
+  },
+  sizeChipText: {
+    fontSize: 14,
+    color: '#2C3E50',
+  },
+  sizeChipTextActive: {
+    color: '#fff',
+    fontWeight: '600' as const,
   },
   infoNotice: {
     flexDirection: 'row',

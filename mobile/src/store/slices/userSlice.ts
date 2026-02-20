@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * User Slice
  * Manages user profile state and onboarding data
  * CRITICAL: NO child PII stored - parent profiles only (Constitution Principle I)
@@ -64,6 +72,9 @@ export interface OnboardingData {
   scheduleType?: 'flexible' | 'fixed' | 'shift_work';
   workFromHome?: boolean;
   parentingStyle?: string;
+  // Village Living Preferences (Phase 1)
+  openToGroupLiving?: boolean;
+  preferredHouseholdSize?: number;
   // Profile photo (uploaded separately)
   profilePhotoUri?: string;
 }

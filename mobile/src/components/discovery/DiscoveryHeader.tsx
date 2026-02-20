@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * DiscoveryHeader Component
  *
  * Header for the browse discovery screen.
@@ -59,7 +67,7 @@ export const DiscoveryHeader: React.FC<DiscoveryHeaderProps> = ({
         </TouchableOpacity>
 
         {/* Filter Button */}
-        <TouchableOpacity style={styles.button} onPress={onFilterPress}>
+        <TouchableOpacity style={styles.button} onPress={onFilterPress} testID="filter-button">
           <MaterialCommunityIcons name="filter" size={24} color="#3498DB" />
           {activeFilterCount > 0 && (
             <View style={styles.filterBadge}>
@@ -95,6 +103,7 @@ const styles = StyleSheet.create({
   },
   button: {
     padding: 8,
+    paddingVertical: 12,
     position: 'relative',
   },
   filterBadge: {

@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Test Discovery Profiles Seed
  *
  * Purpose: Populate database with test profiles for E2E testing
@@ -47,6 +55,8 @@ export async function seed(knex: Knex): Promise<void> {
       ages_of_children: 'toddler,elementary',
       schedule_type: 'shift_work' as const,
       work_from_home: false,
+      open_to_group_living: true,
+      preferred_household_size: 3,
     },
     {
       email: 'jennifer.lee@test.com',
@@ -77,6 +87,8 @@ export async function seed(knex: Knex): Promise<void> {
       ages_of_children: 'toddler,elementary,teen',
       schedule_type: 'fixed' as const,
       work_from_home: false,
+      open_to_group_living: true,
+      preferred_household_size: 4,
     },
     {
       email: 'amanda.wilson@test.com',
@@ -167,6 +179,8 @@ export async function seed(knex: Knex): Promise<void> {
       ages_of_children: 'toddler',
       schedule_type: 'flexible' as const,
       work_from_home: true,
+      open_to_group_living: true,
+      preferred_household_size: 3,
     },
     {
       email: 'jessica.taylor@test.com',
@@ -212,6 +226,8 @@ export async function seed(knex: Knex): Promise<void> {
       ages_of_children: 'elementary,teen',
       schedule_type: 'fixed' as const,
       work_from_home: true,
+      open_to_group_living: true,
+      preferred_household_size: 3,
     },
     {
       email: 'rebecca.white@test.com',
@@ -242,6 +258,8 @@ export async function seed(knex: Knex): Promise<void> {
       ages_of_children: 'toddler,elementary',
       schedule_type: 'fixed' as const,
       work_from_home: false,
+      open_to_group_living: true,
+      preferred_household_size: 4,
     },
     {
       email: 'ashley.martin@test.com',
@@ -317,6 +335,8 @@ export async function seed(knex: Knex): Promise<void> {
       ages_of_children: 'toddler',
       schedule_type: 'flexible' as const,
       work_from_home: true,
+      open_to_group_living: true,
+      preferred_household_size: 3,
     },
     {
       email: 'samantha.walker@test.com',
@@ -354,9 +374,10 @@ export async function seed(knex: Knex): Promise<void> {
 
       console.log('✅ Created user:', user.email);
 
-      // Create profile
+      // Create parent profile (parents table is the canonical profile table)
       const birthYear = 1985 + Math.floor(Math.random() * 15); // Age 30-45
-      await knex('profiles')
+      const ageGroups = profile.ages_of_children.split(',');
+      await knex('parents')
         .insert({
           user_id: user.id,
           first_name: profile.first_name,
@@ -370,17 +391,18 @@ export async function seed(knex: Knex): Promise<void> {
           budget_max: profile.budget_max,
           move_in_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
           children_count: profile.number_of_children,
-          children_age_groups: profile.ages_of_children,
-          schedule_type: profile.schedule_type,
+          children_age_groups: ageGroups,
+          work_schedule: JSON.stringify({ type: profile.schedule_type }),
           work_from_home: profile.work_from_home,
-          pets: Math.random() > 0.5,
-          smoking: false,
-          verified: true,
-          verification_level: 'full',
+          verified_status: 'verified',
+          background_check_status: 'clear',
+          id_verified: true,
+          open_to_group_living: (profile as any).open_to_group_living ?? false,
+          preferred_household_size: (profile as any).preferred_household_size ?? 2,
         })
         .returning('*');
 
-      console.log('   └─ Created profile for', profile.first_name, profile.last_name);
+      console.log('   └─ Created parent profile for', profile.first_name, profile.last_name);
 
       // Create verification record for ID and background check
       await knex('verifications').insert({

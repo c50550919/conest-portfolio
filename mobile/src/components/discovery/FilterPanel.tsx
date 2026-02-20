@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Filter Panel Component
  *
  * Purpose: Comprehensive filtering interface for browse discovery
@@ -92,13 +100,13 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             <MaterialCommunityIcons name="close" size={24} color="#2C3E50" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Filters</Text>
-          <TouchableOpacity onPress={handleReset} style={styles.resetButton}>
+          <TouchableOpacity onPress={handleReset} style={styles.resetButton} testID="reset-filters-button">
             <Text style={styles.resetText}>Reset</Text>
           </TouchableOpacity>
         </View>
 
         {/* Filter Content */}
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} testID="filter-scroll-view">
           {/* Safety Filters (Always Required) */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Safety (Required)</Text>
@@ -388,6 +396,19 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
                 trackColor={{ false: '#BDC3C7', true: '#2ECC71' }}
               />
             </View>
+
+            <View style={styles.filterRow}>
+              <View style={styles.filterLabel}>
+                <MaterialCommunityIcons name="home-group" size={20} color="#F39C12" />
+                <Text style={styles.filterText}>Open to Village Living</Text>
+              </View>
+              <Switch
+                value={filters.openToGroupLiving ?? false}
+                onValueChange={(value) => updateFilter('openToGroupLiving', value || undefined)}
+                trackColor={{ false: '#BDC3C7', true: '#F39C12' }}
+                testID="village-living-filter-switch"
+              />
+            </View>
           </View>
 
           <View style={styles.bottomSpacing} />
@@ -395,7 +416,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
         {/* Footer */}
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.applyButton} onPress={handleApply}>
+          <TouchableOpacity style={styles.applyButton} onPress={handleApply} testID="apply-filters-button">
             <Text style={styles.applyButtonText}>
               Apply Filters
               {getActiveFilterCount() > 0 && ` (${getActiveFilterCount()})`}
@@ -580,6 +601,6 @@ const styles = StyleSheet.create({
   },
 
   bottomSpacing: {
-    height: 32,
+    height: 80,
   },
 });

@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Discovery Configuration
  *
  * Purpose: Central configuration for browse-based discovery system
@@ -36,6 +44,9 @@ export const DEFAULT_FILTERS: DiscoveryFilters = {
   // Housing Essentials (user can override)
   smokeFree: undefined, // Let user choose
   petFriendly: undefined, // Let user choose
+
+  // Village Living (not filtered by default)
+  openToGroupLiving: undefined, // Let user choose
 };
 
 /**

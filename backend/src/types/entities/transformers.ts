@@ -1,4 +1,12 @@
 /**
+ * CoNest - Single Parent Housing Platform
+ * Copyright (c) 2025-2026 CoNest. All rights reserved.
+ * 
+ * PROPRIETARY AND CONFIDENTIAL
+ * Unauthorized copying, distribution, or use of this file is strictly prohibited.
+ * See LICENSE file in the project root for full license terms.
+ */
+/**
  * Entity Transformers - Convert between database and API formats
  *
  * Purpose: Bidirectional transformation between snake_case (DB) and camelCase (API)
@@ -281,6 +289,9 @@ export function parentDBToAPI(db: ParentDB): Parent {
     lookingForHousing: db.looking_for_housing,
     schoolDistricts: db.school_districts,
 
+    openToGroupLiving: db.open_to_group_living ?? false,
+    preferredHouseholdSize: db.preferred_household_size ?? 2,
+
     verifiedStatus: db.verified_status,
     backgroundCheckStatus: db.background_check_status,
     backgroundCheckDate: dateToISOString(db.background_check_date),
@@ -326,6 +337,7 @@ export function parentDBToProfileCard(
     moveInDate: dateToISOString(db.move_in_date),
     bio: db.bio,
     profilePhoto: db.profile_photo_url,
+    openToGroupLiving: db.open_to_group_living ?? false,
   };
 }
 
