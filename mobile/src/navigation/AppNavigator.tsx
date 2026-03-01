@@ -28,6 +28,8 @@ import { createNavigationContainerRef } from '@react-navigation/native';
 import AuthNavigator from './AuthNavigator';
 import OnboardingNavigator from './OnboardingNavigator';
 import MainNavigator from './MainNavigator';
+import LoadingScreen from '../components/common/LoadingScreen';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 import { theme } from '../theme';
 
 // Deep linking configuration for verification flows
@@ -172,56 +174,58 @@ const AppNavigator: React.FC = () => {
     }
   }, []);
 
-  // Show splash screen while checking auth
+  // Show branded loading screen while checking auth
   if (isLoading) {
-    return null; // TODO: Replace with proper SplashScreen component
+    return <LoadingScreen />;
   }
 
   return (
-    <NavigationContainer
-      ref={navigationRef}
-      linking={linking}
-      theme={{
-        dark: false,
-        colors: {
-          primary: theme.colors.primary,
-          background: theme.colors.background,
-          card: theme.colors.surface,
-          text: theme.colors.onSurface,
-          border: theme.colors.outline,
-          notification: theme.colors.error,
-        },
-      }}
-    >
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
+    <ErrorBoundary>
+      <NavigationContainer
+        ref={navigationRef}
+        linking={linking}
+        theme={{
+          dark: false,
+          colors: {
+            primary: theme.colors.primary,
+            background: theme.colors.background,
+            card: theme.colors.surface,
+            text: theme.colors.onSurface,
+            border: theme.colors.outline,
+            notification: theme.colors.error,
+          },
         }}
       >
-        {!isAuthenticated ? (
-          // Auth Flow: Not authenticated
-          <Stack.Screen
-            name="Auth"
-            component={AuthNavigator}
-            options={{ animationEnabled: false }}
-          />
-        ) : !isOnboardingComplete ? (
-          // Onboarding Flow: Authenticated but profile incomplete
-          <Stack.Screen
-            name="Onboarding"
-            component={OnboardingNavigator}
-            options={{ animationEnabled: false }}
-          />
-        ) : (
-          // Main App: Authenticated and onboarded
-          <Stack.Screen
-            name="Main"
-            component={MainNavigator}
-            options={{ animationEnabled: false }}
-          />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          {!isAuthenticated ? (
+            // Auth Flow: Not authenticated
+            <Stack.Screen
+              name="Auth"
+              component={AuthNavigator}
+              options={{ animationEnabled: false }}
+            />
+          ) : !isOnboardingComplete ? (
+            // Onboarding Flow: Authenticated but profile incomplete
+            <Stack.Screen
+              name="Onboarding"
+              component={OnboardingNavigator}
+              options={{ animationEnabled: false }}
+            />
+          ) : (
+            // Main App: Authenticated and onboarded
+            <Stack.Screen
+              name="Main"
+              component={MainNavigator}
+              options={{ animationEnabled: false }}
+            />
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </ErrorBoundary>
   );
 };
 

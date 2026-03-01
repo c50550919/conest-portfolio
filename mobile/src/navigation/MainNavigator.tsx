@@ -24,6 +24,7 @@ import MessagesNavigator from './MessagesNavigator';
 import HouseholdNavigator from './HouseholdNavigator';
 import ProfileNavigator from './ProfileNavigator';
 
+import ErrorBoundary from '../components/common/ErrorBoundary';
 import { theme } from '../theme';
 
 export type MainTabParamList = {
@@ -42,8 +43,9 @@ const MainNavigator: React.FC = () => {
   const tabBarHeight = Platform.OS === 'ios' ? 56 + insets.bottom : 64;
 
   return (
-    <Tab.Navigator
-      screenOptions={{
+    <ErrorBoundary fallbackMessage="A screen crashed. Tap retry to recover.">
+      <Tab.Navigator
+        screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
@@ -131,6 +133,7 @@ const MainNavigator: React.FC = () => {
         }}
       />
     </Tab.Navigator>
+    </ErrorBoundary>
   );
 };
 
