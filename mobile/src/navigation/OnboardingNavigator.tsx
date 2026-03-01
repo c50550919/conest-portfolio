@@ -13,8 +13,9 @@
 
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
+import ProgressBar from '../components/onboarding/ProgressBar';
 
-// Placeholder screens - will be created in screens folder
+// Onboarding screens
 import WelcomeScreen from '../screens/onboarding/WelcomeScreen';
 import PhoneVerificationScreen from '../screens/onboarding/PhoneVerificationScreen';
 import ProfileSetupScreen from '../screens/onboarding/ProfileSetupScreen';
@@ -39,23 +40,76 @@ export type OnboardingStackParamList = {
 
 const Stack = createStackNavigator<OnboardingStackParamList>();
 
+const TOTAL_STEPS = 8; // Welcome is intro, not counted as a step
+
 const OnboardingNavigator: React.FC = () => {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerShown: false,
         gestureEnabled: false, // Prevent swipe back during onboarding
       }}
     >
-      <Stack.Screen name="Welcome" component={WelcomeScreen} />
-      <Stack.Screen name="PhoneVerification" component={PhoneVerificationScreen} />
-      <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
-      <Stack.Screen name="ChildrenInfo" component={ChildrenInfoScreen} />
-      <Stack.Screen name="WorkSchedule" component={WorkScheduleScreen} />
-      <Stack.Screen name="Preferences" component={PreferencesScreen} />
-      <Stack.Screen name="IDVerification" component={IDVerificationScreen} />
-      <Stack.Screen name="BackgroundCheck" component={BackgroundCheckScreen} />
-      <Stack.Screen name="HouseholdSafetyDisclosure" component={HouseholdSafetyDisclosureScreen} />
+      <Stack.Screen
+        name="Welcome"
+        component={WelcomeScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="PhoneVerification"
+        component={PhoneVerificationScreen}
+        options={{
+          header: () => <ProgressBar currentStep={1} totalSteps={TOTAL_STEPS} />,
+        }}
+      />
+      <Stack.Screen
+        name="ProfileSetup"
+        component={ProfileSetupScreen}
+        options={{
+          header: () => <ProgressBar currentStep={2} totalSteps={TOTAL_STEPS} />,
+        }}
+      />
+      <Stack.Screen
+        name="ChildrenInfo"
+        component={ChildrenInfoScreen}
+        options={{
+          header: () => <ProgressBar currentStep={3} totalSteps={TOTAL_STEPS} />,
+        }}
+      />
+      <Stack.Screen
+        name="WorkSchedule"
+        component={WorkScheduleScreen}
+        options={{
+          header: () => <ProgressBar currentStep={4} totalSteps={TOTAL_STEPS} />,
+        }}
+      />
+      <Stack.Screen
+        name="Preferences"
+        component={PreferencesScreen}
+        options={{
+          header: () => <ProgressBar currentStep={5} totalSteps={TOTAL_STEPS} />,
+        }}
+      />
+      <Stack.Screen
+        name="IDVerification"
+        component={IDVerificationScreen}
+        options={{
+          header: () => <ProgressBar currentStep={6} totalSteps={TOTAL_STEPS} />,
+        }}
+      />
+      <Stack.Screen
+        name="BackgroundCheck"
+        component={BackgroundCheckScreen}
+        options={{
+          header: () => <ProgressBar currentStep={7} totalSteps={TOTAL_STEPS} />,
+        }}
+      />
+      <Stack.Screen
+        name="HouseholdSafetyDisclosure"
+        component={HouseholdSafetyDisclosureScreen}
+        options={{
+          header: () => <ProgressBar currentStep={8} totalSteps={TOTAL_STEPS} />,
+        }}
+      />
     </Stack.Navigator>
   );
 };
