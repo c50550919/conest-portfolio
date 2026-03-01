@@ -110,6 +110,7 @@ const HomeScreen: React.FC = () => {
     avgCompatibility: 0,
   });
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [statsError, setStatsError] = useState(false);
 
   // Recent activities state
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
@@ -118,10 +119,12 @@ const HomeScreen: React.FC = () => {
   // Fetch dashboard stats
   const fetchDashboardStats = useCallback(async () => {
     setIsLoadingStats(true);
+    setStatsError(false);
 
     let pendingConnections = 0;
     let unreadMessages = 0;
     const avgCompatibility = 0; // TODO: Add compatibility score API endpoint
+    let hasError = false;
 
     // Fetch connection request statistics (independent call)
     try {
@@ -129,7 +132,7 @@ const HomeScreen: React.FC = () => {
       pendingConnections = connectionStats.received?.pending ?? 0;
     } catch (err) {
       console.log('[HomeScreen] Could not fetch connection stats:', err);
-      // Continue with 0 value - user may not have any pending requests
+      hasError = true;
     }
 
     // Fetch conversations to count unread messages (independent call)
@@ -139,7 +142,7 @@ const HomeScreen: React.FC = () => {
       unreadMessages = conversations.reduce((total, conv) => total + (conv.unreadCount || 0), 0);
     } catch (err) {
       console.log('[HomeScreen] Could not fetch messages:', err);
-      // Continue with 0 value
+      hasError = true;
     }
 
     setStats({
@@ -147,6 +150,7 @@ const HomeScreen: React.FC = () => {
       unreadMessages,
       avgCompatibility,
     });
+    setStatsError(hasError);
     setIsLoadingStats(false);
   }, []);
 
@@ -304,7 +308,7 @@ const HomeScreen: React.FC = () => {
               <View style={[styles.statIconContainer, { backgroundColor: colors.primary + '20' }]}>
                 <Icon name="account-multiple-plus" size={26} color={colors.primary} />
               </View>
-              <Text style={styles.statNumber}>{isLoadingStats ? '-' : stats.pendingConnections}</Text>
+              <Text style={styles.statNumber}>{isLoadingStats ? '-' : statsError && stats.pendingConnections === 0 ? '\u2014' : stats.pendingConnections}</Text>
               <Text style={styles.statLabel}>Pending{'\n'}Requests</Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -323,7 +327,7 @@ const HomeScreen: React.FC = () => {
               <View style={[styles.statIconContainer, { backgroundColor: colors.secondary + '20' }]}>
                 <Icon name="message-text" size={26} color={colors.secondary} />
               </View>
-              <Text style={styles.statNumber}>{isLoadingStats ? '-' : stats.unreadMessages}</Text>
+              <Text style={styles.statNumber}>{isLoadingStats ? '-' : statsError && stats.unreadMessages === 0 ? '\u2014' : stats.unreadMessages}</Text>
               <Text style={styles.statLabel}>Unread{'\n'}Messages</Text>
             </LinearGradient>
           </TouchableOpacity>
