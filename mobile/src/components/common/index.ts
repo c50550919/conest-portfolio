@@ -17,3 +17,4 @@ export { default as ParentCard } from './ParentCard';
 export { default as TrustIndicator } from './TrustIndicator';
 export { default as LoadingScreen } from './LoadingScreen';
 export { default as ErrorBoundary } from './ErrorBoundary';
+export { default as ErrorState } from './ErrorState';

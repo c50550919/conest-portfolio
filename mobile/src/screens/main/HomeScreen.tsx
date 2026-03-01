@@ -33,6 +33,7 @@ import { colors, spacing, typography, borderRadius } from '../../theme';
 import connectionRequestsAPI from '../../services/api/connectionRequestsAPI';
 import enhancedMessagesAPI from '../../services/api/enhancedMessagesAPI';
 import verificationAPI from '../../services/api/verificationAPI';
+import ErrorState from '../../components/common/ErrorState';
 
 // Shadow utility for consistent elevation across platforms
 const cardShadow = {
@@ -115,6 +116,7 @@ const HomeScreen: React.FC = () => {
   // Recent activities state
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
   const [isLoadingActivities, setIsLoadingActivities] = useState(true);
+  const [activitiesError, setActivitiesError] = useState(false);
 
   // Fetch dashboard stats
   const fetchDashboardStats = useCallback(async () => {
@@ -157,7 +159,10 @@ const HomeScreen: React.FC = () => {
   // Fetch recent activities from multiple sources
   const fetchRecentActivities = useCallback(async () => {
     setIsLoadingActivities(true);
+    setActivitiesError(false);
     const activities: ActivityItem[] = [];
+    let failedSources = 0;
+    const totalSources = 3;
 
     // 1. Fetch pending connection requests (received)
     try {
@@ -176,6 +181,7 @@ const HomeScreen: React.FC = () => {
       });
     } catch (err) {
       console.log('[HomeScreen] Could not fetch connection requests for activities:', err);
+      failedSources++;
     }
 
     // 2. Fetch recent unread messages (from conversations)
@@ -200,6 +206,7 @@ const HomeScreen: React.FC = () => {
         });
     } catch (err) {
       console.log('[HomeScreen] Could not fetch messages for activities:', err);
+      failedSources++;
     }
 
     // 3. Check verification status for completed items
@@ -223,6 +230,12 @@ const HomeScreen: React.FC = () => {
       }
     } catch (err) {
       console.log('[HomeScreen] Could not fetch verification status for activities:', err);
+      failedSources++;
+    }
+
+    // Set error state if all data sources failed
+    if (failedSources === totalSources) {
+      setActivitiesError(true);
     }
 
     // Sort all activities by timestamp (most recent first)
@@ -533,6 +546,12 @@ const HomeScreen: React.FC = () => {
               <ActivityIndicator color={colors.primary} size="small" />
               <Text style={styles.activityLoadingText}>Loading activity...</Text>
             </View>
+          ) : activitiesError && recentActivities.length === 0 ? (
+            <ErrorState
+              message="Couldn't load recent activity"
+              onRetry={fetchRecentActivities}
+              icon="alert-circle-outline"
+            />
           ) : recentActivities.length === 0 ? (
             <View style={styles.emptyActivityCard}>
               <Icon name="bell-off-outline" size={32} color={colors.text.hint} />
