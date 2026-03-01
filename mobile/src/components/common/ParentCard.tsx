@@ -70,14 +70,6 @@ const ParentCard: React.FC<ParentCardProps> = ({
             <Text style={styles.location}>{location}</Text>
           </View>
 
-          {/* Children count - NO specific details */}
-          <View style={styles.childrenRow}>
-            <Icon name="account-child" size={16} color={colors.text.secondary} />
-            <Text style={styles.childrenText}>
-              {childrenCount} {childrenCount === 1 ? 'child' : 'children'}
-            </Text>
-          </View>
-
           {/* Work schedule chip */}
           {workSchedule && (
             <View style={styles.scheduleChip}>

@@ -393,21 +393,6 @@ export default function ProfileDetailsModal({
                 'looking-for-section',
               )}
 
-            {/* Children Info - NO PII */}
-            {renderSection(
-              'human-male-child',
-              'Children',
-              <>
-                <Text testID="children-count" style={styles.detailText}>
-                  {childrenCount} {childrenCount === 1 ? 'child' : 'children'}
-                </Text>
-                <Text testID="children-age-groups" style={styles.detailSubtext}>
-                  Age groups: {formattedAgeGroups}
-                </Text>
-              </>,
-              'children-section',
-            )}
-
             {/* Housing & Budget */}
             {renderSection(
               'home-variant',

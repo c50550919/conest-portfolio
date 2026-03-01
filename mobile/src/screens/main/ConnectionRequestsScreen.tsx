@@ -237,13 +237,6 @@ export const ConnectionRequestsScreen: React.FC = () => {
                 {item.senderProfile?.compatibilityScore || 0}% Match
               </Text>
             </View>
-            <View style={styles.statItem}>
-              <MaterialCommunityIcons name="account-group" size={16} color="#666" />
-              <Text style={styles.statText}>
-                {item.senderProfile?.childrenCount || 0}{' '}
-                {item.senderProfile?.childrenCount === 1 ? 'child' : 'children'}
-              </Text>
-            </View>
           </View>
 
           <TouchableOpacity style={styles.messagePreview} onPress={() => handleViewMessage(item)}>
@@ -334,13 +327,6 @@ export const ConnectionRequestsScreen: React.FC = () => {
               <MaterialCommunityIcons name="star" size={16} color="#FFD700" />
               <Text style={styles.statText}>
                 {item.recipientProfile?.compatibilityScore || 0}% Match
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <MaterialCommunityIcons name="account-group" size={16} color="#666" />
-              <Text style={styles.statText}>
-                {item.recipientProfile?.childrenCount || 0}{' '}
-                {item.recipientProfile?.childrenCount === 1 ? 'child' : 'children'}
               </Text>
             </View>
           </View>

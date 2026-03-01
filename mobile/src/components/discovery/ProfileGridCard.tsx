@@ -174,15 +174,6 @@ export const ProfileGridCard: React.FC<ProfileGridCardProps> = ({
           </Text>
         </View>
 
-        {/* Children Info (NO PII - counts and age groups only) */}
-        <View style={styles.childrenRow}>
-          <MaterialCommunityIcons name="account-group" size={12} color="#95A5A6" />
-          <Text style={styles.childrenText} numberOfLines={1}>
-            {childrenCount} {childrenCount === 1 ? 'child' : 'children'} (
-            {formatAgeGroups(childrenAgeGroups)})
-          </Text>
-        </View>
-
         {/* Budget */}
         <View style={styles.budgetRow}>
           <MaterialCommunityIcons name="currency-usd" size={12} color="#95A5A6" />

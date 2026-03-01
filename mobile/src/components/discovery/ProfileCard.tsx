@@ -150,18 +150,6 @@ export default function ProfileCard({ profile }: ProfileCardProps) {
           )}
         </View>
 
-        {/* Children Info - ONLY count and age groups (NO PII) */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <MaterialCommunityIcons name="human-male-child" size={20} color="#333" />
-            <Text style={styles.sectionTitle}>Children</Text>
-          </View>
-          <Text style={styles.sectionText}>
-            {childrenCount} {childrenCount === 1 ? 'child' : 'children'}
-          </Text>
-          <Text style={styles.sectionSubtext}>Age groups: {formattedAgeGroups}</Text>
-        </View>
-
         {/* Budget */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>

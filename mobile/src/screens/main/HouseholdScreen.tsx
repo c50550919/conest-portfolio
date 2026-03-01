@@ -257,14 +257,6 @@ const HouseholdScreen: React.FC = () => {
             ];
             const avatarColor = avatarColors[index % avatarColors.length];
 
-            // Child safety: Show only count and age groups, NO names or ages
-            const childrenInfo =
-              member.childrenCount > 0
-                ? `${member.childrenCount} ${member.childrenCount === 1 ? 'child' : 'children'}${
-                    member.childrenAgeGroups ? ` (${member.childrenAgeGroups.join(', ')})` : ''
-                  }`
-                : 'No children';
-
             const roleText = member.role === 'lease-holder' ? 'Lease holder' : 'Co-tenant';
             const joinDate = formatDate(member.joinedAt);
 
@@ -292,7 +284,7 @@ const HouseholdScreen: React.FC = () => {
                     )}
                   </View>
                   <Text style={styles.memberDetails}>
-                    {childrenInfo} • {roleText}
+                    {roleText}
                   </Text>
                   <View style={styles.memberStats}>
                     {member.verificationBadges?.backgroundCheckComplete && (

@@ -78,23 +78,6 @@ const COMPARISON_ATTRIBUTES: ComparisonAttribute[] = [
     format: (v) => (typeof v === 'number' ? `$${v.toLocaleString()}/mo` : v),
   },
   {
-    label: 'Children',
-    icon: 'account-child',
-    getValue: (p: CompareProfile) => p.childrenCount || 0,
-    format: (v) => `${v} child${v !== 1 ? 'ren' : ''}`,
-  },
-  {
-    label: 'Age Groups',
-    icon: 'account-group',
-    getValue: (p: CompareProfile) => {
-      const groups = p.childrenAgeGroups;
-      if (!groups || groups.length === 0) {
-        return 'Not specified';
-      }
-      return groups.join(', ');
-    },
-  },
-  {
     label: 'Move-in Date',
     icon: 'calendar',
     getValue: (p: CompareProfile) => p.moveInDate || 'Flexible',

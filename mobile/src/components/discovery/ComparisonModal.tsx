@@ -102,13 +102,6 @@ export const ComparisonModal: React.FC<ComparisonModalProps> = ({
                   </View>
 
                   <View style={styles.attributeList}>
-                    <View style={styles.attribute}>
-                      <Text style={styles.attributeLabel}>Children</Text>
-                      <Text style={styles.attributeValue}>
-                        {profile.childrenCount} child(ren)
-                      </Text>
-                    </View>
-
                     {profile.housingBudget && (
                       <View style={styles.attribute}>
                         <Text style={styles.attributeLabel}>Budget</Text>
