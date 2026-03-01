@@ -172,7 +172,11 @@ const HouseholdScreen: React.FC = () => {
           <Icon name="home-alert" size={64} color={colors.text.secondary} />
           <Text style={styles.emptyTitle}>No Household Found</Text>
           <Text style={styles.emptySubtitle}>You're not currently part of a household.</Text>
-          <TouchableOpacity style={styles.primaryButton} testID="find-roommates-button">
+          <TouchableOpacity
+            style={styles.primaryButton}
+            testID="find-roommates-button"
+            onPress={() => navigation.navigate('Discover' as never)}
+          >
             <Text style={styles.primaryButtonText}>Find Roommates</Text>
           </TouchableOpacity>
         </View>
