@@ -16,6 +16,8 @@ import { Platform, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store';
 
 import HomeNavigator from './HomeNavigator';
 import { BrowseDiscoveryScreen } from '../screens/main/BrowseDiscoveryScreen';
@@ -41,6 +43,15 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 const MainNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
   const tabBarHeight = Platform.OS === 'ios' ? 56 + insets.bottom : 64;
+
+  const unreadMessages = useSelector((state: RootState) => {
+    return state.enhancedMessages?.totalUnreadCount || 0;
+  });
+
+  const pendingRequests = useSelector((state: RootState) => {
+    const requests = state.connectionRequests?.receivedRequests || [];
+    return requests.filter((r: any) => r.status === 'pending').length;
+  });
 
   return (
     <ErrorBoundary fallbackMessage="A screen crashed. Tap retry to recover.">
@@ -82,6 +93,8 @@ const MainNavigator: React.FC = () => {
           tabBarTestID: 'tab-home',
           tabBarAccessibilityLabel: 'Home',
           tabBarIcon: ({ color, size }) => <Icon name="home" size={size} color={color} />,
+          tabBarBadge: pendingRequests > 0 ? pendingRequests : undefined,
+          tabBarBadgeStyle: { backgroundColor: '#E74C3C', fontSize: 10 },
         }}
       />
       <Tab.Screen
@@ -111,7 +124,8 @@ const MainNavigator: React.FC = () => {
           tabBarTestID: 'tab-messages',
           tabBarAccessibilityLabel: 'Messages',
           tabBarIcon: ({ color, size }) => <Icon name="message-text" size={size} color={color} />,
-          tabBarBadge: undefined, // Will be dynamic based on unread count
+          tabBarBadge: unreadMessages > 0 ? unreadMessages : undefined,
+          tabBarBadgeStyle: { backgroundColor: '#E74C3C', fontSize: 10 },
         }}
       />
       <Tab.Screen
