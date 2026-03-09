@@ -73,12 +73,20 @@ export function getApiBaseUrl(): string {
 }
 
 /**
+ * Mapbox public token for map rendering
+ * Set via MAPBOX_PUBLIC_TOKEN env variable or react-native-config
+ * Get a token at https://account.mapbox.com/access-tokens/
+ */
+const MAPBOX_PUBLIC_TOKEN = process.env.MAPBOX_PUBLIC_TOKEN || '';
+
+/**
  * Environment configuration object
  */
 export const environment = {
   isDevelopment,
   isProduction,
   apiBaseUrl: getApiBaseUrl(),
+  mapboxPublicToken: MAPBOX_PUBLIC_TOKEN,
 
   // Feature flags (can be expanded as needed)
   features: {

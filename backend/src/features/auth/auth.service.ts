@@ -26,6 +26,7 @@ import { VerificationModel } from '../../models/Verification';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, JWTPayload } from '../../utils/jwt';
 import { hashPassword, comparePassword } from '../../utils/password';
 import redis, { REDIS_TTL } from '../../config/redis';
+import { getEmailService } from '../../services/emailService';
 
 // CRITICAL: Prohibited child PII fields - Constitution Principle I
 const PROHIBITED_CHILD_FIELDS = [
@@ -126,6 +127,9 @@ export const AuthService = {
 
     // Remove password hash from response (security best practice)
     const { password_hash: _, ...userWithoutPassword } = user;
+
+    // Fire-and-forget welcome email (never throws)
+    getEmailService().sendWelcomeEmail(user.email, data.firstName || 'there');
 
     return { user: userWithoutPassword, tokens };
   },

@@ -42,6 +42,7 @@ export interface ParentProfile {
   budget_min: number | null;
   budget_max: number | null;
   city: string | null;
+  housing_status?: 'has_room' | 'looking' | null;
 }
 
 export interface CompatibilityBreakdown {
@@ -117,6 +118,11 @@ export function calculateCompatibilityBreakdown(
   const locationScore = sameCity ? 50 : 0;
   totalScore += locationScore;
 
+  // 3. Housing seeker/offerer relevance boost (+15 points)
+  // When one user has a room and the other is looking, in the same city with overlapping budgets
+  const housingBoost = calculateHousingBoost(userProfile, targetProfile, sameCity);
+  totalScore += housingBoost;
+
   return {
     totalScore: Math.min(Math.round(totalScore), 100),
     ageGroupScore: 0, // Removed for FHA compliance - was discriminatory
@@ -144,6 +150,35 @@ function calculateAverageBudget(
     return (budgetMin + budgetMax) / 2;
   }
   return budgetMin || budgetMax || 0;
+}
+
+/**
+ * Calculate housing seeker/offerer relevance boost
+ * +15 bonus when one user has a room and the other is looking,
+ * same city, and overlapping budgets.
+ */
+function calculateHousingBoost(
+  userProfile: ParentProfile,
+  targetProfile: ParentProfile,
+  sameCity: boolean,
+): number {
+  if (!sameCity) return 0;
+  if (!userProfile.housing_status || !targetProfile.housing_status) return 0;
+
+  const isComplementary =
+    (userProfile.housing_status === 'has_room' && targetProfile.housing_status === 'looking') ||
+    (userProfile.housing_status === 'looking' && targetProfile.housing_status === 'has_room');
+
+  if (!isComplementary) return 0;
+
+  // Check budget overlap
+  const userMin = userProfile.budget_min ?? 0;
+  const userMax = userProfile.budget_max ?? Infinity;
+  const targetMin = targetProfile.budget_min ?? 0;
+  const targetMax = targetProfile.budget_max ?? Infinity;
+
+  const hasOverlap = userMin <= targetMax && targetMin <= userMax;
+  return hasOverlap ? 15 : 0;
 }
 
 /**

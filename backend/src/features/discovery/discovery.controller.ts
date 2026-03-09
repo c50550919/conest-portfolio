@@ -62,6 +62,7 @@ export class DiscoveryController {
 
       // Get profiles from service
       // FHA COMPLIANCE: Pass request context for audit logging
+      const housingStatus = req.query.housingStatus as 'has_room' | 'looking' | undefined;
       const result = await DiscoveryService.getProfiles(
         userId,
         query.limit,
@@ -70,6 +71,7 @@ export class DiscoveryController {
           ipAddress: req.ip || 'unknown',
           userAgent: req.headers['user-agent'] || 'unknown',
         },
+        housingStatus ? { housingStatus } : undefined,
       );
 
       // Success response with ProfileCard[] + nextCursor

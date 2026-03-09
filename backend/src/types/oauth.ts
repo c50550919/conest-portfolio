@@ -94,6 +94,11 @@ export interface AuthSuccessResponse {
    * Only present when account linking occurred
    */
   linked?: boolean;
+
+  /**
+   * True if user needs to complete slim onboarding (new OAuth user without profile)
+   */
+  onboardingRequired?: boolean;
 }
 
 /**

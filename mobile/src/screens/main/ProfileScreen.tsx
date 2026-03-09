@@ -11,7 +11,7 @@
  * User profile, settings, verification status, and account management
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -31,6 +31,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import type { RootState, AppDispatch } from '../../store';
 import { logout } from '../../store/slices/authSlice';
+import { updateUserProfile } from '../../store/slices/userSlice';
 import {
   fetchVerificationStatus,
   selectVerificationStatus,
@@ -38,6 +39,8 @@ import {
 } from '../../store/slices/verificationSlice';
 import tokenStorage from '../../services/tokenStorage';
 import profileAPI from '../../services/api/profileAPI';
+import { analytics } from '../../services/analytics';
+import PhotoUploadButton from '../../components/profile/PhotoUploadButton';
 import { colors, spacing, typography, borderRadius } from '../../theme';
 import type { ProfileStackParamList } from '../../navigation/ProfileNavigator';
 
@@ -51,14 +54,36 @@ const ProfileScreen: React.FC = () => {
   const verificationScore = useSelector(selectVerificationScore);
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [locationEnabled, setLocationEnabled] = React.useState(true);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null>(null);
 
   // Debug logging
   console.log('[ProfileScreen] User from Redux:', user);
 
-  // Fetch verification status on mount
+  // Fetch verification status and profile photo on mount
   useEffect(() => {
     dispatch(fetchVerificationStatus());
+
+    // Load current profile photo
+    profileAPI
+      .getMyProfile()
+      .then((response) => {
+        if (response.data?.profile_image_url) {
+          setProfilePhotoUrl(response.data.profile_image_url);
+        }
+      })
+      .catch((error) => {
+        console.warn('[ProfileScreen] Failed to load profile photo:', error);
+      });
   }, [dispatch]);
+
+  const handlePhotoUploadSuccess = useCallback(
+    (url: string) => {
+      setProfilePhotoUrl(url);
+      dispatch(updateUserProfile({ profilePhoto: url }));
+      console.log('[ProfileScreen] Profile photo updated:', url);
+    },
+    [dispatch],
+  );
 
   // Show loading state if user data is not yet available
   if (!user) {
@@ -98,6 +123,7 @@ const ProfileScreen: React.FC = () => {
             await tokenStorage.clearTokens();
             // Clear Redux state
             dispatch(logout());
+            analytics.reset();
             console.log('[ProfileScreen] Logged out successfully');
           } catch (error) {
             console.error('[ProfileScreen] Logout error:', error);
@@ -124,6 +150,7 @@ const ProfileScreen: React.FC = () => {
               await profileAPI.deleteProfile();
               await tokenStorage.clearTokens();
               dispatch(logout());
+              analytics.reset();
               console.log('[ProfileScreen] Account deleted successfully');
             } catch (error) {
               console.error('[ProfileScreen] Delete account error:', error);
@@ -147,15 +174,15 @@ const ProfileScreen: React.FC = () => {
           end={{ x: 1, y: 1 }}
         >
           <View style={styles.avatarContainer}>
-            <View testID="profile-photo" style={styles.avatar}>
-              <Text style={styles.avatarText}>{initials}</Text>
-            </View>
+            <PhotoUploadButton
+              currentPhotoUrl={profilePhotoUrl}
+              initials={initials}
+              onUploadSuccess={handlePhotoUploadSuccess}
+              size={100}
+            />
             <View style={styles.verifiedBadge}>
               <Icon name="check-decagram" size={20} color={colors.primary} />
             </View>
-            <TouchableOpacity style={styles.editAvatarButton}>
-              <Icon name="camera" size={18} color="#FFFFFF" />
-            </TouchableOpacity>
           </View>
           <Text testID="profile-name" style={styles.userName}>
             {fullName}
@@ -617,21 +644,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     marginBottom: spacing.md,
   },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-  },
-  avatarText: {
-    ...typography.h4,
-    color: '#FFFFFF',
-    fontWeight: '700',
-  },
+  // avatar styles now handled by PhotoUploadButton component
   verifiedBadge: {
     position: 'absolute',
     bottom: 0,
@@ -645,17 +658,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: colors.primary,
   },
-  editAvatarButton: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    width: 32,
-    height: 32,
-    borderRadius: borderRadius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  // editAvatarButton style removed - camera badge now in PhotoUploadButton
   userName: {
     ...typography.h5,
     color: '#FFFFFF',

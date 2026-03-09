@@ -386,14 +386,13 @@ export class EnhancedPairingService {
     }
 
     // Conflict resolution (50 points)
+    // CMP-19: All styles get partial credit for mismatches. Giving zero points
+    // for 'avoid' penalizes cultural norms of conflict avoidance (disparate impact).
     if (profile1.conflict_resolution_style && profile2.conflict_resolution_style) {
       if (profile1.conflict_resolution_style === profile2.conflict_resolution_style) {
         score += 50;
-      } else if (
-        profile1.conflict_resolution_style !== 'avoid' &&
-        profile2.conflict_resolution_style !== 'avoid'
-      ) {
-        score += 25; // Any active conflict resolution is compatible
+      } else {
+        score += 25; // Different styles still get partial credit
       }
     }
 

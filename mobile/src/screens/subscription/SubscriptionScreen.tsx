@@ -14,7 +14,7 @@
  *              Principle III (Security - secure payment handling)
  *
  * Features:
- * - Display premium plan ($4.99/month)
+ * - Display premium plan ($14.99/month)
  * - Subscribe to premium features
  * - View current subscription status
  * - Restore previous purchases
@@ -248,7 +248,7 @@ const SubscriptionScreen: React.FC = () => {
           </View>
         ) : (
           <View style={styles.pricingCard}>
-            <Text style={styles.priceAmount}>{subscription?.localizedPrice || '$4.99'}</Text>
+            <Text style={styles.priceAmount}>{subscription?.localizedPrice || '$14.99'}</Text>
             <Text style={styles.pricePeriod}>per month</Text>
             <Text style={styles.priceDescription}>Cancel anytime</Text>
           </View>

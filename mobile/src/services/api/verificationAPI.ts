@@ -47,8 +47,8 @@ class VerificationAPI {
    */
   async getVerificationStatus(): Promise<VerificationStatusResponse> {
     try {
-      const response = await apiClient.get<VerificationStatusResponse>('/api/verification/status');
-      return response.data;
+      const response = await apiClient.get<{ success: boolean; data: VerificationStatusResponse }>('/api/verification/status');
+      return response.data.data;
     } catch (error: any) {
       if (error.response?.status === 404) {
         throw new Error('VERIFICATION_NOT_FOUND');

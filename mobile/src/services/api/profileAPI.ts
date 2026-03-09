@@ -111,6 +111,51 @@ export interface ProfileResponse {
 }
 
 /**
+ * Slim onboarding location update
+ */
+export interface UpdateLocationRequest {
+  city: string;
+  state: string;
+  zipCode: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+/**
+ * Slim onboarding budget update
+ */
+export interface UpdateBudgetRequest {
+  budgetMin: number;
+  budgetMax: number;
+}
+
+/**
+ * Housing status update
+ */
+export interface UpdateHousingStatusRequest {
+  housingStatus: 'has_room' | 'looking' | null;
+  roomRentShare?: number;
+  roomAvailableDate?: string;
+  roomDescription?: string;
+  roomPhotoUrl?: string | null;
+}
+
+/**
+ * Progressive profile update (all fields optional)
+ */
+export interface UpdateProgressiveProfileRequest {
+  scheduleType?: 'flexible' | 'fixed' | 'shift_work';
+  workFromHome?: boolean;
+  parentingStyle?: string;
+  bio?: string;
+  occupation?: string;
+  dateOfBirth?: string;
+  childrenCount?: number;
+  childrenAgeGroups?: string[];
+  moveInDate?: string;
+}
+
+/**
  * Search filters for profile discovery
  */
 export interface ProfileSearchFilters {
@@ -292,6 +337,48 @@ class ProfileAPI {
       count: number;
       data: ProfileResponse['data'][];
     }>('/search', { params: filters });
+    return response.data;
+  }
+
+  /**
+   * Update location (slim onboarding step 1)
+   */
+  async updateLocation(data: UpdateLocationRequest): Promise<ProfileResponse> {
+    const response = await this.client.put<ProfileResponse>('/location', {
+      city: data.city.trim(),
+      state: data.state.trim(),
+      zipCode: data.zipCode.trim(),
+      ...(data.latitude != null && { latitude: data.latitude }),
+      ...(data.longitude != null && { longitude: data.longitude }),
+    });
+    return response.data;
+  }
+
+  /**
+   * Update budget (slim onboarding step 2)
+   */
+  async updateBudget(data: UpdateBudgetRequest): Promise<ProfileResponse> {
+    const response = await this.client.put<ProfileResponse>('/budget', data);
+    return response.data;
+  }
+
+  /**
+   * Update housing status
+   */
+  async updateHousingStatus(data: UpdateHousingStatusRequest): Promise<ProfileResponse> {
+    const response = await this.client.put<ProfileResponse>('/housing-status', data);
+    return response.data;
+  }
+
+  /**
+   * Update progressive profile fields
+   */
+  async updateProgressiveProfile(data: UpdateProgressiveProfileRequest): Promise<ProfileResponse> {
+    const sanitizedData: UpdateProgressiveProfileRequest = { ...data };
+    if (sanitizedData.bio) sanitizedData.bio = sanitizedData.bio.trim();
+    if (sanitizedData.occupation) sanitizedData.occupation = sanitizedData.occupation.trim();
+
+    const response = await this.client.put<ProfileResponse>('/progressive', sanitizedData);
     return response.data;
   }
 

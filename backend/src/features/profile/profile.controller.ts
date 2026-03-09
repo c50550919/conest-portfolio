@@ -8,10 +8,38 @@
  */
 import { Response } from 'express';
 import { ProfileModel } from '../../models/Profile';
+import { ParentModel } from '../../models/Parent';
 import { asyncHandler } from '../../middleware/errorHandler';
 import { AuthRequest } from '../../middleware/auth.middleware';
+import { sanitizeHTML } from '../../middleware/sanitization';
 import s3Service from '../../services/s3Service';
 import logger from '../../config/logger';
+import db from '../../config/database';
+import { deleteUserSessions } from '../../services/sessionService';
+import { UserModel } from '../../models/User';
+import { getEmailService } from '../../services/emailService';
+
+/**
+ * Calculate profile completion percentage based on filled fields.
+ * Weights: base(10) + location(15) + budget(15) + dob(10) + bio(10)
+ *   + occupation(10) + schedule(10) + parenting(5) + children(5)
+ *   + housing(5) + moveIn(5) = 100
+ */
+function calculateProfileCompletion(parent: Record<string, unknown>): number {
+  let pct = 10; // base: account exists
+  if (parent.city && parent.state && parent.zip_code) pct += 15;
+  if (parent.budget_min != null && parent.budget_max != null &&
+      (parent.budget_min as number) > 0 || (parent.budget_max as number) > 0) pct += 15;
+  if (parent.date_of_birth) pct += 10;
+  if (parent.bio) pct += 10;
+  if (parent.occupation) pct += 10;
+  if (parent.work_schedule || parent.work_from_home != null) pct += 10;
+  if (parent.parenting_style) pct += 5;
+  if ((parent.children_count as number) > 0) pct += 5;
+  if (parent.housing_status) pct += 5;
+  if (parent.move_in_date) pct += 5;
+  return Math.min(pct, 100);
+}
 
 export const profileController = {
   createProfile: asyncHandler(async (req: AuthRequest, res: Response) => {
@@ -134,25 +162,86 @@ export const profileController = {
     });
   }),
 
+  /**
+   * CMP-08: GDPR-compliant account deletion
+   *
+   * Cascade deletes all user data within a transaction.
+   * Payment/audit records are anonymized (not deleted) for financial compliance.
+   * Messages are anonymized for child safety audit trail.
+   */
   deleteProfile: asyncHandler(async (req: AuthRequest, res: Response) => {
     if (!req.userId) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
     }
 
-    const profile = await ProfileModel.findByUserId(req.userId);
+    const userId = req.userId;
 
-    if (!profile) {
-      res.status(404).json({ error: 'Profile not found' });
-      return;
+    logger.info('Account deletion initiated', { userId });
+
+    // Capture user email BEFORE cascade delete (needed for confirmation email)
+    const user = await UserModel.findById(userId);
+    const userEmail = user?.email;
+
+    try {
+      await db.transaction(async (trx) => {
+        // Delete tables without CASCADE FKs first (manual cleanup).
+        // Tables with onDelete('CASCADE') on user FK will be auto-deleted
+        // when the user row is removed in the final step.
+
+        // 1. DELETE data from tables that may lack CASCADE FKs
+        await trx('pre_qualification_responses').where('user_id', userId).delete();
+        await trx('saved_profiles').where('user_id', userId).delete();
+        await trx('swipes').where('user_id', userId).orWhere('target_user_id', userId).delete();
+        await trx('connection_requests').where('sender_id', userId).orWhere('recipient_id', userId).delete();
+        await trx('matches').where('user_id_1', userId).orWhere('user_id_2', userId).delete();
+        await trx('household_members').where('user_id', userId).delete();
+        await trx('match_group_members').where('user_id', userId).delete();
+        await trx('verification_webhook_events').where('user_id', userId).delete();
+        await trx('verifications').where('user_id', userId).delete();
+        await trx('verification_payments').where('user_id', userId).delete();
+        await trx('billing_transactions').where('user_id', userId).delete();
+        await trx('subscriptions').where('user_id', userId).delete();
+
+        // 2. DELETE profile and parent records
+        await trx('parents').where('user_id', userId).delete();
+        await trx('profiles').where('user_id', userId).delete();
+
+        // 3. DELETE user record last — triggers CASCADE for any remaining
+        // FK references (messages, conversations, etc.)
+        await trx('users').where('id', userId).delete();
+      });
+
+      // 7. Clear Redis sessions (outside transaction — non-critical)
+      try {
+        await deleteUserSessions(userId);
+      } catch (sessionError) {
+        logger.warn('Failed to clear Redis sessions during account deletion', {
+          userId,
+          error: sessionError instanceof Error ? sessionError.message : 'Unknown',
+        });
+      }
+
+      logger.info('Account deleted successfully', { userId });
+
+      // Fire-and-forget deletion confirmation email (never throws)
+      if (userEmail) {
+        getEmailService().sendAccountDeletionConfirmation(userEmail);
+      }
+
+      res.json({
+        success: true,
+        message: 'Account and all associated data have been permanently deleted.',
+      });
+    } catch (error) {
+      logger.error('Account deletion failed', {
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown',
+      });
+      res.status(500).json({
+        error: 'Account deletion failed. Please contact support.',
+      });
     }
-
-    await ProfileModel.delete(profile.id);
-
-    res.json({
-      success: true,
-      message: 'Profile deleted successfully',
-    });
   }),
 
   /**
@@ -246,6 +335,185 @@ export const profileController = {
         error: 'Failed to upload photo. Please try again.',
       });
     }
+  }),
+
+  // =========================================================================
+  // Slim Onboarding Endpoints (parents table)
+  // =========================================================================
+
+  /**
+   * PUT /api/profile/location
+   * Slim onboarding step 2: Set location from map picker
+   */
+  updateLocation: asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const parent = await ParentModel.findByUserId(req.userId);
+    if (!parent) {
+      res.status(404).json({ error: 'Parent profile not found' });
+      return;
+    }
+
+    const { city, state, zipCode } = req.body;
+
+    await ParentModel.update(parent.id, {
+      city,
+      state,
+      zip_code: zipCode,
+    });
+
+    res.json({
+      success: true,
+      profile: { city, state, zipCode },
+    });
+  }),
+
+  /**
+   * PUT /api/profile/budget
+   * Slim onboarding step 3: Set budget range
+   * Side effect: marks profile as complete (minimum viable) at 40%
+   */
+  updateBudget: asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const parent = await ParentModel.findByUserId(req.userId);
+    if (!parent) {
+      res.status(404).json({ error: 'Parent profile not found' });
+      return;
+    }
+
+    const { budgetMin, budgetMax } = req.body;
+
+    await ParentModel.update(parent.id, {
+      budget_min: budgetMin,
+      budget_max: budgetMax,
+      profile_completed: true,
+      profile_completion_percentage: 40,
+    });
+
+    res.json({
+      success: true,
+      profile: {
+        budgetMin,
+        budgetMax,
+        profileComplete: true,
+      },
+    });
+  }),
+
+  /**
+   * PUT /api/profile/housing-status
+   * Set or clear housing status and room details.
+   * When clearing (null), all room_* fields are also cleared.
+   */
+  updateHousingStatus: asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const parent = await ParentModel.findByUserId(req.userId);
+    if (!parent) {
+      res.status(404).json({ error: 'Parent profile not found' });
+      return;
+    }
+
+    const { housingStatus, roomRentShare, roomAvailableDate, roomDescription, roomPhotoUrl } = req.body;
+
+    // When clearing housing status, clear all room fields
+    if (housingStatus === null) {
+      await ParentModel.update(parent.id, {
+        housing_status: null,
+        room_rent_share: null as unknown as number,
+        room_available_date: null as unknown as Date,
+        room_description: null as unknown as string,
+        room_photo_url: null as unknown as string,
+      });
+
+      res.json({
+        success: true,
+        profile: { housingStatus: null },
+      });
+      return;
+    }
+
+    const updateData: Record<string, unknown> = {
+      housing_status: housingStatus,
+    };
+
+    if (roomRentShare !== undefined) updateData.room_rent_share = roomRentShare;
+    if (roomAvailableDate !== undefined) updateData.room_available_date = roomAvailableDate;
+    if (roomDescription !== undefined) updateData.room_description = sanitizeHTML(roomDescription);
+    if (roomPhotoUrl !== undefined) updateData.room_photo_url = roomPhotoUrl;
+
+    await ParentModel.update(parent.id, updateData);
+
+    res.json({
+      success: true,
+      profile: {
+        housingStatus,
+        roomRentShare: roomRentShare ?? parent.room_rent_share,
+        roomAvailableDate: roomAvailableDate ?? parent.room_available_date,
+        roomDescription: roomDescription ?? parent.room_description,
+      },
+    });
+  }),
+
+  /**
+   * PUT /api/profile/progressive
+   * Update profile with additional data from contextual prompts.
+   * Recalculates profile_completion_percentage after update.
+   */
+  updateProgressiveProfile: asyncHandler(async (req: AuthRequest, res: Response) => {
+    if (!req.userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    const parent = await ParentModel.findByUserId(req.userId);
+    if (!parent) {
+      res.status(404).json({ error: 'Parent profile not found' });
+      return;
+    }
+
+    const {
+      scheduleType, workFromHome, parentingStyle, bio,
+      occupation, dateOfBirth, childrenCount, childrenAgeGroups, moveInDate,
+    } = req.body;
+
+    const updateData: Record<string, unknown> = {};
+
+    if (scheduleType !== undefined) updateData.work_schedule = { type: scheduleType };
+    if (workFromHome !== undefined) updateData.work_from_home = workFromHome;
+    if (parentingStyle !== undefined) updateData.parenting_style = parentingStyle;
+    if (bio !== undefined) updateData.bio = sanitizeHTML(bio);
+    if (occupation !== undefined) updateData.occupation = occupation;
+    if (dateOfBirth !== undefined) updateData.date_of_birth = dateOfBirth;
+    if (childrenCount !== undefined) updateData.children_count = childrenCount;
+    if (childrenAgeGroups !== undefined) updateData.children_age_groups = childrenAgeGroups;
+    if (moveInDate !== undefined) updateData.move_in_date = moveInDate;
+
+    // Apply updates
+    const updated = await ParentModel.update(parent.id, updateData);
+
+    // Recalculate completion percentage
+    const completionPct = calculateProfileCompletion(updated as unknown as Record<string, unknown>);
+    if (completionPct !== updated.profile_completion_percentage) {
+      await ParentModel.update(parent.id, { profile_completion_percentage: completionPct });
+    }
+
+    res.json({
+      success: true,
+      profile: {
+        profileCompletionPercentage: completionPct,
+      },
+    });
   }),
 
   /**

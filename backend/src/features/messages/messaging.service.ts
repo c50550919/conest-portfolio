@@ -8,6 +8,7 @@
  */
 import { MessageModel } from '../../models/Message';
 import { MatchModel } from '../../models/Match';
+import db from '../../config/database';
 import logger from '../../config/logger';
 
 // Placeholder for encryption - in production use crypto library
@@ -77,10 +78,10 @@ export const MessagingService = {
     // Get messages
     let messages = await MessageModel.getConversationMessages(conversation.id, limit);
 
-    // Decrypt messages
+    // Map message_encrypted to content field
     messages = messages.map(msg => ({
       ...msg,
-      content: decryptMessage(msg.content),
+      content: msg.message_encrypted || '',
     }));
 
     return {
@@ -93,22 +94,26 @@ export const MessagingService = {
   async getUserConversations(userId: string): Promise<any[]> {
     const conversations = await MessageModel.getUserConversations(userId);
 
+    // Look up parent ID for comparison (conversations use parent IDs)
+    const parent = await db('parents').where('user_id', userId).select('id').first();
+    const parentId = parent?.id;
+
     // Get last message for each conversation
     const conversationsWithMessages = await Promise.all(
       conversations.map(async (conv) => {
         const messages = await MessageModel.getConversationMessages(conv.id, 1);
         const lastMessage = messages[0];
 
-        // Get other participant ID
+        // Get other participant ID (using parent ID for comparison)
         const otherParticipantId =
-          conv.participant1_id === userId ? conv.participant2_id : conv.participant1_id;
+          conv.participant1_id === parentId ? conv.participant2_id : conv.participant1_id;
 
         return {
           ...conv,
           otherParticipantId,
           lastMessage: lastMessage ? {
             ...lastMessage,
-            content: decryptMessage(lastMessage.content),
+            content: lastMessage.message_encrypted || '',
           } : null,
         };
       }),

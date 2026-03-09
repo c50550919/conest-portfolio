@@ -50,6 +50,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import authAPI from '@services/api/auth';
 import { registerSuccess, setLoading, setError } from '@store/slices/authSlice';
 import { theme } from '@theme';
+import { analytics, AnalyticsEvents } from '../../services/analytics';
 
 type SignupScreenNavigationProp = StackNavigationProp<any, 'Signup'>;
 
@@ -177,6 +178,7 @@ const SignupScreen: React.FC = () => {
 
     setLoadingState(true);
     dispatch(setLoading(true));
+    analytics.track(AnalyticsEvents.SIGNUP_STARTED, { method: 'email' });
 
     try {
       const response = await authAPI.register({
@@ -204,6 +206,8 @@ const SignupScreen: React.FC = () => {
           },
         })
       );
+
+      analytics.track(AnalyticsEvents.SIGNUP_COMPLETED, { method: 'email' });
 
       // Navigate to phone verification
       navigation.navigate('PhoneVerification', { phone: phone.replace(/\D/g, '') });

@@ -12,7 +12,8 @@
  * Purpose: Calculate age from date of birth
  */
 
-export function calculateAge(dateOfBirth: Date | string): number {
+export function calculateAge(dateOfBirth: Date | string | null | undefined): number | undefined {
+  if (!dateOfBirth) return undefined;
   const dob = new Date(dateOfBirth);
   const today = new Date();
 

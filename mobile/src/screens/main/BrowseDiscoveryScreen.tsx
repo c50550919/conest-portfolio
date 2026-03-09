@@ -24,7 +24,7 @@
  * Refactored: 2025-12-08 - Decomposed into smaller components
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   FlatList,
@@ -78,6 +78,13 @@ import { adaptProfiles } from '../../services/adapters/discoveryAdapter';
 import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../config/discoveryConfig';
 import { canSaveProfile } from '../../utils/rateLimits';
 import { ExtendedProfileCard, BrowseViewMode, SortOption } from '../../types/discovery';
+import { analytics, AnalyticsEvents } from '../../services/analytics';
+
+// Housing & profile completion components
+import HousingBadge from '../../components/common/HousingBadge';
+import ProfileCompletionBar from '../../components/common/ProfileCompletionBar';
+import VerificationGateModal from '../../components/gates/VerificationGateModal';
+import { useVerificationGate } from '../../hooks/useVerificationGate';
 
 export const BrowseDiscoveryScreen: React.FC = () => {
   const dispatch = useDispatch();
@@ -97,6 +104,13 @@ export const BrowseDiscoveryScreen: React.FC = () => {
   const { savedProfiles: persistedSavedProfiles } = useSelector(
     (state: RootState) => state.savedProfiles
   );
+
+  // Profile completion for inline card
+  const userProfile = useSelector((state: RootState) => state.user.profile);
+  const profileCompletion = userProfile?.profileCompletionPercentage ?? 0;
+
+  // Verification gate for gated actions (connections)
+  const { withGate, gateModalProps } = useVerificationGate();
 
   // UI State
   const [filterPanelVisible, setFilterPanelVisible] = useState(false);
@@ -169,12 +183,22 @@ export const BrowseDiscoveryScreen: React.FC = () => {
     [filters, sortBy, nextCursor, dispatch]
   );
 
+  const isInitialMount = useRef(true);
+
+  // Initial load
   useEffect(() => {
-    if (profiles.length === 0) {
-      fetchProfiles();
-    }
+    fetchProfiles(true);
     dispatch(fetchSavedProfiles() as any);
   }, [dispatch]);
+
+  // Re-fetch when filters or sort changes (skip initial mount)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    fetchProfiles(true);
+  }, [filters, sortBy]);
 
   // Profile save handlers
   const handleSaveProfile = (profile: ExtendedProfileCard) => {
@@ -196,6 +220,10 @@ export const BrowseDiscoveryScreen: React.FC = () => {
         notes: '',
       }) as any
     );
+    analytics.track(AnalyticsEvents.PROFILE_SAVED, {
+      profileId: selectedProfileForSave.userId,
+      folder,
+    });
     Alert.alert('Profile Saved', SUCCESS_MESSAGES.PROFILE_SAVED.replace('{folder}', folder));
     setSelectedProfileForSave(null);
     setFolderModalVisible(false);
@@ -284,6 +312,10 @@ export const BrowseDiscoveryScreen: React.FC = () => {
     <ProfileGridCard
       profile={item}
       onPress={() => {
+        analytics.track(AnalyticsEvents.PROFILE_VIEWED, {
+          profileId: item.userId,
+          compatibilityScore: item.compatibilityScore,
+        });
         setSelectedProfile(item);
         setIsProfileModalVisible(true);
       }}
@@ -296,11 +328,25 @@ export const BrowseDiscoveryScreen: React.FC = () => {
     />
   );
 
+  const renderListHeader = () => (
+    <>
+      {profileCompletion < 100 && (
+        <View style={styles.completionBarContainer}>
+          <ProfileCompletionBar
+            percentage={profileCompletion}
+            variant="inline-card"
+            nextField={!userProfile?.bio ? 'bio' : !userProfile?.occupation ? 'occupation' : 'schedule'}
+          />
+        </View>
+      )}
+    </>
+  );
+
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <MaterialCommunityIcons name="home-search" size={80} color="#BDC3C7" />
-      <Text style={styles.emptyTitle}>No profiles found</Text>
-      <Text style={styles.emptySubtitle}>Try adjusting your filters to see more results</Text>
+      <Text style={styles.emptyTitle}>No parents in your area yet</Text>
+      <Text style={styles.emptySubtitle}>Try adjusting your filters or check back soon</Text>
       <TouchableOpacity style={styles.emptyButton} onPress={() => setFilterPanelVisible(true)}>
         <Text style={styles.emptyButtonText}>Adjust Filters</Text>
       </TouchableOpacity>
@@ -353,6 +399,7 @@ export const BrowseDiscoveryScreen: React.FC = () => {
           numColumns={2}
           columnWrapperStyle={styles.gridRow}
           contentContainerStyle={styles.gridContent}
+          ListHeaderComponent={renderListHeader}
           ListEmptyComponent={renderEmptyState}
           ListFooterComponent={renderFooter}
           refreshControl={
@@ -383,20 +430,25 @@ export const BrowseDiscoveryScreen: React.FC = () => {
             setIsProfileModalVisible(false);
             setSelectedProfile(null);
           }}
-          onInterested={async () => {
+          onInterested={() => {
             if (!selectedProfile) return;
-            try {
-              await connectionRequestsAPI.sendConnectionRequest(
-                selectedProfile.userId,
-                `Hi ${selectedProfile.firstName}! I'm interested in connecting with you as a potential housing partner. I think we'd be compatible based on your profile. Would you like to chat?`
-              );
-              Alert.alert(
-                'Request Sent!',
-                `Your connection request has been sent to ${selectedProfile.firstName}. They'll be notified and can respond when they're ready.`
-              );
-            } catch (error: any) {
-              Alert.alert('Request Failed', error.message || 'Failed to send connection request.');
-            }
+            withGate('connect', async () => {
+              try {
+                await connectionRequestsAPI.sendConnectionRequest(
+                  selectedProfile.userId,
+                  `Hi ${selectedProfile.firstName}! I'm interested in connecting with you as a potential housing partner. I think we'd be compatible based on your profile. Would you like to chat?`
+                );
+                analytics.track(AnalyticsEvents.CONNECTION_REQUESTED, {
+                  recipientId: selectedProfile.userId,
+                });
+                Alert.alert(
+                  'Request Sent!',
+                  `Your connection request has been sent to ${selectedProfile.firstName}. They'll be notified and can respond when they're ready.`
+                );
+              } catch (error: any) {
+                Alert.alert('Request Failed', error.message || 'Failed to send connection request.');
+              }
+            });
           }}
         />
 
@@ -417,6 +469,9 @@ export const BrowseDiscoveryScreen: React.FC = () => {
           onSelectFolder={handleFolderSelect}
           profileName={selectedProfileForSave?.firstName || 'this profile'}
         />
+
+        {/* Verification Gate Modal */}
+        <VerificationGateModal {...gateModalProps} />
 
         {/* Compatibility Breakdown Modal */}
         <CompatibilityBreakdownModal
@@ -484,6 +539,9 @@ const styles = StyleSheet.create({
   footerLoader: {
     paddingVertical: 20,
     alignItems: 'center',
+  },
+  completionBarContainer: {
+    marginBottom: 12,
   },
 });
 

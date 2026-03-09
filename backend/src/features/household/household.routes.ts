@@ -8,7 +8,7 @@
  */
 import express from 'express';
 import { HouseholdController } from './household.controller';
-import { authMiddleware } from '../../middleware/auth.middleware';
+import { authMiddleware, requireBackgroundCheck } from '../../middleware/auth.middleware';
 
 /**
  * Household Routes
@@ -59,7 +59,7 @@ router.use(authMiddleware);
  *
  * Security: Authenticated user automatically becomes household admin
  */
-router.post('/', HouseholdController.createHousehold);
+router.post('/', requireBackgroundCheck, HouseholdController.createHousehold);
 
 /**
  * GET /api/household/me

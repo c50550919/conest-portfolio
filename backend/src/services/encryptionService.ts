@@ -22,7 +22,7 @@ const scrypt = promisify(crypto.scrypt);
  * - Message authentication tags
  */
 
-interface EncryptedData {
+export interface EncryptedData {
   encryptedContent: string; // Base64 encoded
   iv: string; // Base64 encoded initialization vector
   salt: string; // Base64 encoded salt

@@ -32,7 +32,7 @@ export interface AuthRequest extends Request {
   user?: any;
   email?: string;
   jwtPayload?: JWTPayload;
-  file?: Express.Multer.File; // For multer file uploads
+  file?: { fieldname: string; originalname: string; mimetype: string; size: number; buffer: Buffer; path?: string };
 }
 
 /**
@@ -278,6 +278,82 @@ export function requireAdmin(
     res.status(403).json({
       error: 'Admin access required',
       message: 'You do not have permission to access this resource',
+    });
+    return;
+  }
+
+  next();
+}
+
+// =========================================================================
+// Verification Gate Middleware (Slim Onboarding)
+// =========================================================================
+
+/**
+ * Require phone verified for messaging gate
+ */
+export function requirePhoneVerified(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): void {
+  if (!req.user) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+
+  if (!req.user.phone_verified) {
+    res.status(403).json({
+      error: 'Phone verification required',
+      gate: 'phone',
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Require ID verified for connection requests gate
+ */
+export function requireIdVerified(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): void {
+  if (!req.user) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+
+  if (!req.user.id_verified) {
+    res.status(403).json({
+      error: 'ID verification required',
+      gate: 'id',
+    });
+    return;
+  }
+
+  next();
+}
+
+/**
+ * Require background check for household gate
+ */
+export function requireBackgroundCheck(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): void {
+  if (!req.user) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+
+  if (!req.user.background_check_complete) {
+    res.status(403).json({
+      error: 'Background check required',
+      gate: 'background',
     });
     return;
   }

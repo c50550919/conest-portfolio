@@ -8,7 +8,7 @@
  */
 import { Router } from 'express';
 import connectionRequestController from './connection-request.controller';
-import { authenticate } from '../../middleware/auth.middleware';
+import { authenticate, requireIdVerified } from '../../middleware/auth.middleware';
 import { validate } from '../../middleware/validation';
 import {
   createConnectionRequestSchema,
@@ -40,6 +40,7 @@ router.use(authenticate);
  */
 router.post(
   '/',
+  requireIdVerified,
   validate(createConnectionRequestSchema),
   connectionRequestController.sendRequest,
 );

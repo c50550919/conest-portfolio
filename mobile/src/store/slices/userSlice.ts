@@ -43,6 +43,13 @@ export interface UserProfile {
   householdPreferences?: Record<string, unknown>;
   budgetMin?: number;
   budgetMax?: number;
+  // Housing status fields
+  housingStatus?: 'has_room' | 'looking' | null;
+  roomRentShare?: number;
+  roomAvailableDate?: string;
+  roomDescription?: string;
+  // Profile completion tracking
+  profileCompletionPercentage?: number;
   verifiedStatus: 'pending' | 'partial' | 'verified';
   backgroundCheckStatus: 'pending' | 'approved' | 'expired';
 }
@@ -134,6 +141,64 @@ const userSlice = createSlice({
     },
 
     /**
+     * Set housing status on user profile
+     */
+    setHousingStatus: (state, action: PayloadAction<{
+      housingStatus: 'has_room' | 'looking' | null;
+      roomRentShare?: number;
+      roomAvailableDate?: string;
+      roomDescription?: string;
+    }>) => {
+      if (state.profile) {
+        state.profile.housingStatus = action.payload.housingStatus;
+        state.profile.roomRentShare = action.payload.roomRentShare;
+        state.profile.roomAvailableDate = action.payload.roomAvailableDate;
+        state.profile.roomDescription = action.payload.roomDescription;
+      }
+    },
+
+    /**
+     * Set profile completion percentage
+     */
+    setProfileCompletion: (state, action: PayloadAction<number>) => {
+      if (state.profile) {
+        state.profile.profileCompletionPercentage = action.payload;
+      }
+    },
+
+    /**
+     * Set location data from slim onboarding
+     */
+    setLocationData: (state, action: PayloadAction<{
+      city: string;
+      state: string;
+      zipCode: string;
+    }>) => {
+      if (state.profile) {
+        state.profile.city = action.payload.city;
+        state.profile.state = action.payload.state;
+        state.profile.zipCode = action.payload.zipCode;
+      }
+    },
+
+    /**
+     * Set budget data from slim onboarding
+     */
+    setBudgetData: (state, action: PayloadAction<{
+      budgetMin: number;
+      budgetMax: number;
+      profileCompletionPercentage?: number;
+    }>) => {
+      if (state.profile) {
+        state.profile.budgetMin = action.payload.budgetMin;
+        state.profile.budgetMax = action.payload.budgetMax;
+        if (action.payload.profileCompletionPercentage != null) {
+          state.profile.profileCompletionPercentage = action.payload.profileCompletionPercentage;
+        }
+      }
+    },
+
+    /**
      * Clear onboarding data (on cancel or completion)
      */
     clearOnboardingData: (state) => {
@@ -166,6 +231,10 @@ export const {
   updateUserProfile,
   updateOnboardingData,
   setOnboardingStep,
+  setHousingStatus,
+  setProfileCompletion,
+  setLocationData,
+  setBudgetData,
   clearOnboardingData,
   setLoading,
   setError,

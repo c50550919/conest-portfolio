@@ -42,8 +42,8 @@ export interface ParentDB {
   date_of_birth: Date;
 
   // Children info (NO PII - Constitution Principle I)
-  children_count: number;
-  children_age_groups: ChildAgeGroup[];
+  children_count: number; // Default 0 for slim onboarding
+  children_age_groups: ChildAgeGroup[]; // Default [] for slim onboarding
 
   // Location
   city?: string;
@@ -68,7 +68,11 @@ export interface ParentDB {
   budget_min?: number;
   budget_max?: number;
   move_in_date?: Date;
-  looking_for_housing?: boolean;
+  housing_status?: 'has_room' | 'looking' | null;
+  room_rent_share?: number;
+  room_available_date?: Date;
+  room_description?: string;
+  room_photo_url?: string;
   school_districts?: string[];
 
   // Village Living Preferences (Phase 1)
@@ -112,13 +116,18 @@ export interface CreateParentDB {
   first_name: string;
   last_name: string;
   date_of_birth?: string | Date;
-  children_count: number;
-  children_age_groups: ChildAgeGroup[];
+  children_count?: number; // Default 0 for slim onboarding
+  children_age_groups?: ChildAgeGroup[]; // Default [] for slim onboarding
   city?: string;
   state?: string;
   zip_code?: string;
   budget_min?: number;
   budget_max?: number;
+  housing_status?: 'has_room' | 'looking' | null;
+  room_rent_share?: number;
+  room_available_date?: Date;
+  room_description?: string;
+  room_photo_url?: string;
   open_to_group_living?: boolean;
   preferred_household_size?: number;
 }
@@ -137,8 +146,8 @@ export interface Parent {
   lastName: string;
   bio?: string;
   profilePhotoUrl?: string;
-  dateOfBirth: string; // ISO date string
-  age: number; // Computed from dateOfBirth
+  dateOfBirth?: string; // ISO date string — optional for slim onboarding
+  age?: number; // Computed from dateOfBirth — optional when DOB missing
 
   // Children info
   childrenCount: number;
@@ -167,7 +176,11 @@ export interface Parent {
   budgetMax?: number;
   housingBudget?: { min: number; max: number }; // Convenience alias
   moveInDate?: string;
-  lookingForHousing?: boolean;
+  housingStatus?: 'has_room' | 'looking' | null;
+  roomRentShare?: number;
+  roomAvailableDate?: string;
+  roomDescription?: string;
+  roomPhotoUrl?: string;
   schoolDistricts?: string[];
 
   // Village Living Preferences (Phase 1)
@@ -228,8 +241,8 @@ export interface VerificationStatusObject {
 export interface ProfileCard {
   userId: string;
   firstName: string;
-  age: number;
-  city: string;
+  age?: number; // Optional when DOB not yet provided
+  city?: string; // Optional for slim onboarding users still setting up
   state?: string;
 
   // Children info (aggregated only)
@@ -239,6 +252,14 @@ export interface ProfileCard {
   // Matching data
   compatibilityScore: number;
   verificationStatus: VerificationStatusObject;
+
+  // Housing status
+  housingStatus?: 'has_room' | 'looking' | null;
+  roomRentShare?: number;
+  roomAvailableDate?: string;
+
+  // Profile completion
+  profileCompletion?: number; // Percentage 0-100
 
   // Optional fields
   budget?: number;
@@ -346,8 +367,8 @@ export interface CreateParentRequest {
   firstName: string;
   lastName: string;
   dateOfBirth?: string;
-  childrenCount: number;
-  childrenAgeGroups: ChildAgeGroup[];
+  childrenCount?: number; // Default 0 for slim onboarding
+  childrenAgeGroups?: ChildAgeGroup[]; // Default [] for slim onboarding
   city?: string;
   state?: string;
   zipCode?: string;
@@ -374,7 +395,11 @@ export interface UpdateParentRequest {
   budgetMin?: number;
   budgetMax?: number;
   moveInDate?: string;
-  lookingForHousing?: boolean;
+  housingStatus?: 'has_room' | 'looking' | null;
+  roomRentShare?: number;
+  roomAvailableDate?: string;
+  roomDescription?: string;
+  roomPhotoUrl?: string;
   schoolDistricts?: string[];
   openToGroupLiving?: boolean;
   preferredHouseholdSize?: number;
@@ -407,6 +432,7 @@ export interface ProfileSearchFilters {
   smokeFree?: boolean;
   workSchedules?: ('flexible' | 'standard' | 'shift' | 'remote' | 'evening')[];
   parentingPhilosophy?: string[];
+  housingStatus?: 'has_room' | 'looking';
   requireIdVerified?: boolean;
   requireBackgroundCheck?: boolean;
   minCompatibilityScore?: number;

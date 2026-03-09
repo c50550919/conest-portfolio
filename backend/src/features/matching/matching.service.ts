@@ -264,13 +264,9 @@ export const PairingService = {
       }
     }
 
-    // Dietary preferences similarity
-    if ((profile1 as any).dietary_preferences && (profile2 as any).dietary_preferences) {
-      factors++;
-      if ((profile1 as any).dietary_preferences === (profile2 as any).dietary_preferences) {
-        matches++;
-      }
-    }
+    // CMP-18: dietary_preferences removed from scoring.
+    // Halal/kosher are religion proxies — FHA prohibits religion as a housing factor.
+    // Dietary info is kept on profile for display only, not matching.
 
     if (factors > 0) {
       score = (matches / factors) * 100;

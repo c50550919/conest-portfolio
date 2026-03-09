@@ -14,6 +14,7 @@ import type {
 } from '../../models/ConnectionRequest';
 import { getSocketIO } from '../../config/socket';
 import SocketService from '../../services/SocketService';
+import { getPushService } from '../../services/pushNotificationService';
 
 /**
  * ConnectionRequestService
@@ -65,6 +66,13 @@ export class ConnectionRequestService {
     } catch (err) {
       console.warn('Socket.io not available for real-time notification:', err);
     }
+
+    // Fire-and-forget push notification to recipient
+    getPushService().sendToUser(recipientId, {
+      title: 'New Connection Request',
+      body: 'Someone wants to connect with you',
+      data: { type: 'connection_request' },
+    }).catch(() => { /* fire-and-forget */ });
 
     return request;
   }

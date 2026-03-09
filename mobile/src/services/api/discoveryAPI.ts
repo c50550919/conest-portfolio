@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -19,12 +19,10 @@
  * Note: Browse-based discovery uses connection requests, not swipe actions
  * Created: 2025-10-06
  * Updated: 2025-10-13 - Removed swipe functionality
+ * Updated: 2026-03-01 - Use shared apiClient for JWT refresh support
  */
 
-import axios, { AxiosInstance } from 'axios';
-import tokenStorage from '../tokenStorage';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+import apiClient from '../../config/api';
 
 export interface VerificationStatus {
   idVerified: boolean;
@@ -60,107 +58,39 @@ export interface ScreenshotResponse {
   message: string;
 }
 
-class DiscoveryAPI {
-  private client: AxiosInstance;
-
-  constructor() {
-    this.client = axios.create({
-      baseURL: API_BASE_URL,
-      timeout: 15000,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    this.setupInterceptors();
+/**
+ * Get discovery profiles with cursor-based pagination
+ * @param cursor - Pagination cursor (UUID of last profile)
+ * @param limit - Number of profiles to fetch (1-50, default 10)
+ * @returns Discovery profiles and next cursor
+ */
+async function getProfiles(cursor?: string, limit: number = 10): Promise<DiscoveryResponse> {
+  const params: Record<string, string | number> = { limit };
+  if (cursor) {
+    params.cursor = cursor;
   }
 
-  private setupInterceptors() {
-    // Request interceptor for adding auth token
-    this.client.interceptors.request.use(
-      async (config) => {
-        const token = await tokenStorage.getAccessToken();
-        console.log(
-          '[DiscoveryAPI] Token from storage:',
-          token ? `${token.substring(0, 20)}...` : 'NOT FOUND',
-        );
-        if (token && config.headers) {
-          config.headers.Authorization = `Bearer ${token}`;
-          console.log('[DiscoveryAPI] Request:', config.method?.toUpperCase(), config.url);
-        } else {
-          console.warn('[DiscoveryAPI] No auth token - request will fail');
-        }
-        return config;
-      },
-      (error) => {
-        console.error('[DiscoveryAPI] Request interceptor error:', error);
-        return Promise.reject(error);
-      }
-    );
+  const response = await apiClient.get<{ success: boolean; data: DiscoveryResponse }>(
+    '/api/discovery/profiles',
+    { params },
+  );
 
-    // Response interceptor for error handling
-    this.client.interceptors.response.use(
-      (response) => {
-        console.log('[DiscoveryAPI] Response:', response.status, response.config.url);
-        return response;
-      },
-      async (error) => {
-        console.error('[DiscoveryAPI] Response error:', {
-          status: error.response?.status,
-          message: error.message,
-          url: error.config?.url,
-          data: error.response?.data,
-        });
-        // Note: 401/403 token refresh is handled by authAPI interceptor
-        // Only clear tokens if it's a true authentication failure (not token expiry)
-        if (
-          error.response?.status === 401 &&
-          error.response?.data?.error === 'Access token required'
-        ) {
-          console.warn('[DiscoveryAPI] 401 No token - clearing tokens');
-          await tokenStorage.clearTokens();
-        }
-        return Promise.reject(error);
-      }
-    );
-  }
-
-  /**
-   * Get discovery profiles with cursor-based pagination
-   * @param cursor - Pagination cursor (UUID of last profile)
-   * @param limit - Number of profiles to fetch (1-50, default 10)
-   * @returns Discovery profiles and next cursor
-   */
-  async getProfiles(cursor?: string, limit: number = 10): Promise<DiscoveryResponse> {
-    const params: Record<string, string | number> = { limit };
-    if (cursor) {
-      params.cursor = cursor;
-    }
-
-    const response = await this.client.get<{ success: boolean; data: DiscoveryResponse }>(
-      '/discovery/profiles',
-      {
-        params,
-      },
-    );
-
-    return response.data.data; // Backend wraps response in {success, data}
-  }
-
-  // REMOVED: recordSwipe() - Browse-based discovery uses connection requests via /api/connections endpoint
-
-  /**
-   * Report screenshot detection (child safety feature)
-   * @param targetUserId - UUID of user whose profile was screenshot
-   * @returns Success status
-   */
-  async reportScreenshot(targetUserId: string): Promise<ScreenshotResponse> {
-    const response = await this.client.post<ScreenshotResponse>('/discovery/screenshot', {
-      targetUserId,
-    });
-
-    return response.data;
-  }
+  return response.data.data; // Backend wraps response in {success, data}
 }
 
-export default new DiscoveryAPI();
+// REMOVED: recordSwipe() - Browse-based discovery uses connection requests via /api/connections endpoint
+
+/**
+ * Report screenshot detection (child safety feature)
+ * @param targetUserId - UUID of user whose profile was screenshot
+ * @returns Success status
+ */
+async function reportScreenshot(targetUserId: string): Promise<ScreenshotResponse> {
+  const response = await apiClient.post<ScreenshotResponse>('/api/discovery/screenshot', {
+    targetUserId,
+  });
+
+  return response.data;
+}
+
+export default { getProfiles, reportScreenshot };

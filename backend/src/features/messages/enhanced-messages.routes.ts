@@ -20,7 +20,7 @@
  */
 
 import { Router } from 'express';
-import { authenticateToken, requireAdmin } from '../../middleware/auth.middleware';
+import { authenticateToken, requireAdmin, requirePhoneVerified } from '../../middleware/auth.middleware';
 import { messageRateLimit, adminRateLimiter } from '../../middleware/rateLimit';
 import EnhancedMessagingService from './enhanced-messaging.service';
 import logger from '../../config/logger';
@@ -42,10 +42,10 @@ router.use(authenticateToken);
  * - fileUrl?: string
  * - metadata?: object
  */
-router.post('/verified', messageRateLimit, async (req, res) => {
+router.post('/verified', requirePhoneVerified, messageRateLimit, async (req, res) => {
   try {
     const { conversationId, recipientId, content, messageType, fileUrl, metadata } = req.body;
-    const senderId = req.user!.userId;
+    const senderId = (req as any).userId;
 
     if (!conversationId || !recipientId || !content) {
       return res.status(400).json({
@@ -104,7 +104,7 @@ router.post('/:messageId/report', messageRateLimit, async (req, res) => {
   try {
     const { messageId } = req.params;
     const { reportType, description } = req.body;
-    const reportedBy = req.user!.userId;
+    const reportedBy = (req as any).userId;
 
     const validReportTypes = [
       'inappropriate_content',
@@ -157,7 +157,7 @@ router.post('/:messageId/report', messageRateLimit, async (req, res) => {
  */
 router.get('/conversations', async (req, res) => {
   try {
-    const userId = req.user!.userId;
+    const userId = (req as any).userId;
 
     const conversations = await EnhancedMessagingService.getUserConversations(userId);
 
@@ -183,7 +183,7 @@ router.get('/conversations', async (req, res) => {
 router.post('/conversations/:conversationId/block', async (req, res) => {
   try {
     const { conversationId } = req.params;
-    const userId = req.user!.userId;
+    const userId = (req as any).userId;
 
     await EnhancedMessagingService.blockConversation(conversationId, userId);
 
@@ -257,7 +257,7 @@ router.get('/verification-status/:userId', async (req, res) => {
 router.get('/conversations/:conversationId/gated', async (req, res) => {
   try {
     const { conversationId } = req.params;
-    const userId = req.user!.userId;
+    const userId = (req as any).userId;
 
     const result = await EnhancedMessagingService.getMessagesGated(conversationId, userId);
 
@@ -284,7 +284,7 @@ router.get('/conversations/:conversationId/gated', async (req, res) => {
  */
 router.get('/unread-count', async (req, res) => {
   try {
-    const userId = req.user!.userId;
+    const userId = (req as any).userId;
 
     const result = await EnhancedMessagingService.getTotalUnreadCount(userId);
 
@@ -315,7 +315,7 @@ router.get('/unread-count', async (req, res) => {
  */
 router.get('/admin/reports/pending', requireAdmin, adminRateLimiter, async (req, res) => {
   try {
-    const adminId = req.user!.userId;
+    const adminId = (req as any).userId;
     const { severity } = req.query;
 
     const reports = await EnhancedMessagingService.getPendingReports(
@@ -353,7 +353,7 @@ router.post('/admin/moderate/:messageId', requireAdmin, adminRateLimiter, async 
   try {
     const { messageId } = req.params;
     const { action, reason, actionTaken } = req.body;
-    const adminId = req.user!.userId;
+    const adminId = (req as any).userId;
 
     const validActions = ['approve', 'reject', 'delete', 'flag'];
     if (!action || !validActions.includes(action)) {

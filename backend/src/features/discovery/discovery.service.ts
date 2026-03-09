@@ -52,15 +52,29 @@ export class DiscoveryService {
     );
 
     // Get users already matched with current user
-    // Note: matches table uses user_id_1/user_id_2 which directly reference users.id
-    const matches = await db('matches')
-      .where('user_id_1', userId)
-      .orWhere('user_id_2', userId)
-      .select('user_id_1', 'user_id_2');
+    // Note: matches table uses parent1_id/parent2_id which reference parents(id), not users(id)
+    // We need to look up the parent record first, then query matches
+    const parentRecord = await db('parents').where('user_id', userId).select('id').first();
+    let matchedUserIds: string[] = [];
 
-    const matchedUserIds = matches.map(m =>
-      m.user_id_1 === userId ? m.user_id_2 : m.user_id_1,
-    );
+    if (parentRecord) {
+      const matches = await db('matches')
+        .where('parent1_id', parentRecord.id)
+        .orWhere('parent2_id', parentRecord.id)
+        .select('parent1_id', 'parent2_id');
+
+      // Convert parent IDs back to user IDs for exclusion
+      const matchedParentIds = matches.map(m =>
+        m.parent1_id === parentRecord.id ? m.parent2_id : m.parent1_id,
+      );
+
+      if (matchedParentIds.length > 0) {
+        const matchedUsers = await db('parents')
+          .whereIn('id', matchedParentIds)
+          .select('user_id');
+        matchedUserIds = matchedUsers.map(u => u.user_id);
+      }
+    }
 
     // Combine and deduplicate
     const excludedIds = [...new Set([...connectionUserIds, ...matchedUserIds])];
@@ -73,6 +87,7 @@ export class DiscoveryService {
     limit: number = 10,
     cursor?: string,
     requestContext?: { ipAddress?: string; userAgent?: string },
+    filters?: { housingStatus?: 'has_room' | 'looking' },
   ): Promise<DiscoveryResponse> {
     // Get users to exclude (connection requests + matches)
     const excludedUserIds = await this.getExcludedUserIds(userId);
@@ -99,14 +114,24 @@ export class DiscoveryService {
         'p.profile_photo_url as profilePhoto',
         'p.open_to_group_living as openToGroupLiving',
         'v.id_verification_status',
-        'v.background_check_status',
+        // CMP-24: background_check_status removed from discovery — exposes criminal
+        // history status to other users. Only fullyVerified badge is shown.
         'v.phone_verified',
         'v.fully_verified',
+        'p.housing_status as housingStatus',
+        'p.room_rent_share as roomRentShare',
+        'p.room_available_date as roomAvailableDate',
+        'p.profile_completion_percentage as profileCompletion',
       );
 
     // Exclude users with existing connections or matches
     if (excludedUserIds.length > 0) {
       query = query.whereNotIn('u.id', excludedUserIds);
+    }
+
+    // Filter by housing status if provided
+    if (filters?.housingStatus) {
+      query = query.where('p.housing_status', filters.housingStatus);
     }
 
     if (cursor) {
@@ -130,15 +155,21 @@ export class DiscoveryService {
         userId: p.userId,
         firstName: p.firstName,
         age,
-        city: p.city,
+        city: p.city || undefined,
         // CMP-12: childrenCount and childrenAgeGroups excluded from discovery response (FHA compliance)
         compatibilityScore,
         verificationStatus: {
           idVerified: p.id_verification_status === 'approved',
-          backgroundCheckComplete: p.background_check_status === 'clear',
+          // CMP-24: backgroundCheckComplete derived from fullyVerified to avoid
+          // exposing criminal history status to other users independently.
+          backgroundCheckComplete: p.fully_verified ?? false,
           phoneVerified: p.phone_verified ?? false, // null-safe for LEFT JOIN
           fullyVerified: p.fully_verified ?? false, // for badge display
         },
+        housingStatus: p.housingStatus || undefined,
+        roomRentShare: p.roomRentShare || undefined,
+        roomAvailableDate: p.roomAvailableDate ? new Date(p.roomAvailableDate).toISOString() : undefined,
+        profileCompletion: p.profileCompletion ?? 0,
         budget,
         moveInDate: p.moveInDate ? new Date(p.moveInDate).toISOString() : undefined,
         bio: p.bio || undefined,
@@ -175,6 +206,15 @@ export class DiscoveryService {
     } catch (auditError) {
       // Log audit errors but don't fail the discovery request
       logger.error('Failed to create audit log for discovery request:', auditError);
+    }
+
+    // Empty feed fallback message
+    if (profileCards.length === 0) {
+      return {
+        profiles: [],
+        nextCursor: null,
+        fallbackMessage: 'No parents in your area yet. We\'ll notify you when someone joins.',
+      };
     }
 
     return { profiles: profileCards, nextCursor };

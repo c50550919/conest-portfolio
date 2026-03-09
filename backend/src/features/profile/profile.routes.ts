@@ -30,6 +30,12 @@ router.get('/:id', profileController.getProfile);
 router.put('/me', validate(schemas.updateProfile), profileController.updateProfile);
 router.delete('/me', profileController.deleteProfile);
 
+// Slim Onboarding Endpoints
+router.put('/location', validate(schemas.updateLocation), profileController.updateLocation);
+router.put('/budget', validate(schemas.updateBudget), profileController.updateBudget);
+router.put('/housing-status', validate(schemas.updateHousingStatus), profileController.updateHousingStatus);
+router.put('/progressive', validate(schemas.updateProgressiveProfile), profileController.updateProgressiveProfile);
+
 // Profile photo upload
 // POST /api/profiles/photo - Upload profile photo
 // Field name must be "photo" in the multipart form data

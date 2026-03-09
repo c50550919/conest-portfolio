@@ -165,6 +165,14 @@ const envSchema = z.object({
     .transform((val) => val === 'true')
     .default('false'),
   TOKEN_ROTATION_THRESHOLD_DAYS: z.string().regex(/^\d+$/).transform(Number).default('3'),
+
+  // Email Service (SendGrid)
+  SENDGRID_API_KEY: z.string().default('SG.not_configured'),
+  SENDGRID_FROM_EMAIL: z.string().email().default('noreply@conest.app'),
+  SENDGRID_FROM_NAME: z.string().default('CoNest'),
+
+  // Push Notifications (Firebase Cloud Messaging)
+  FIREBASE_SERVICE_ACCOUNT_PATH: z.string().default(''),
 });
 
 /**

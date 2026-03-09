@@ -23,6 +23,7 @@ import logger from '../../config/logger';
 import crypto from 'crypto';
 import { queueMessageForModeration } from '../moderation/moderation.worker';
 import ContentModerationService from '../moderation/content-moderation.service';
+import { getPushService } from '../../services/pushNotificationService';
 
 interface VerificationStatus {
   isVerified: boolean;
@@ -204,6 +205,14 @@ export class EnhancedMessagingService {
       });
     }
 
+    // Fire-and-forget push notification to recipient
+    const truncatedBody = content.length > 100 ? content.substring(0, 100) + '...' : content;
+    getPushService().sendToUser(recipientId, {
+      title: 'New Message',
+      body: truncatedBody,
+      data: { type: 'message', conversationId: String(conversationId) },
+    }).catch(() => { /* fire-and-forget */ });
+
     logger.info(`Verified message sent: ${message.id} from ${senderId} to ${recipientId}`);
 
     return {
@@ -369,10 +378,15 @@ export class EnhancedMessagingService {
    * Get conversation list for a user with verification status
    */
   async getUserConversations(userId: string): Promise<ConversationListItem[]> {
+    // Conversations use parent IDs, not user IDs — look up parent record first
+    const parentRecord = await this.knex('parents').where('user_id', userId).select('id').first();
+    if (!parentRecord) return [];
+    const parentId = parentRecord.id;
+
     const conversations = await this.knex('conversations')
       .where((builder) => {
-        void builder.where('participant1_id', userId)
-          .orWhere('participant2_id', userId);
+        void builder.where('participant1_id', parentId)
+          .orWhere('participant2_id', parentId);
       })
       .where('archived', false)
       .orderBy('last_message_at', 'desc')
@@ -380,35 +394,37 @@ export class EnhancedMessagingService {
 
     const conversationList = await Promise.all(
       conversations.map(async (conv) => {
-        const participantId = conv.participant1_id === userId
+        const otherParentId = conv.participant1_id === parentId
           ? conv.participant2_id
           : conv.participant1_id;
 
-        const isParticipant1 = conv.participant1_id === userId;
+        const isParticipant1 = conv.participant1_id === parentId;
         const unreadCount = isParticipant1 ? conv.unread_count_p1 : conv.unread_count_p2;
         const isMuted = isParticipant1 ? conv.muted_by_p1 : conv.muted_by_p2;
 
-        // Get participant info
-        const participant = await this.knex('users')
-          .join('parents', 'users.id', 'parents.user_id')
-          .where('users.id', participantId)
-          .select('users.id', 'parents.first_name', 'parents.photos')
+        // Get participant info (otherParentId is a parents.id)
+        const participant = await this.knex('parents')
+          .where('id', otherParentId)
+          .select('id', 'first_name', 'profile_photo_url')
           .first();
 
-        // Get verification status
-        const verification = await this.getUserVerification(participantId);
+        // Get verification status using the other parent's user_id
+        const otherParent = await this.knex('parents').where('id', otherParentId).select('user_id').first();
+        const verification = otherParent ? await this.getUserVerification(otherParent.user_id) : null;
 
         return {
           id: conv.id,
-          participantId,
+          participantId: otherParentId,
           participantName: participant?.first_name || 'Unknown',
-          participantPhoto: participant?.photos?.[0] || '',
+          participantPhoto: participant?.profile_photo_url || '',
           lastMessage: conv.last_message_preview || '',
           lastMessageAt: conv.last_message_at,
           unreadCount,
           isVerified: verification?.isVerified || false,
+          participantVerified: verification?.isVerified || false,
           isBlocked: conv.blocked || false,
           isMuted: isMuted || false,
+          bothVerified: false, // Will be computed when needed
         };
       }),
     );
@@ -494,7 +510,7 @@ export class EnhancedMessagingService {
     locked: boolean;
     unreadCount?: number;
     message?: string;
-    messages?: any[];
+    data?: any[];
     nextCursor?: string | null;
   }> {
     // Check if user is verified
@@ -505,7 +521,7 @@ export class EnhancedMessagingService {
       const unreadResult = await this.knex('messages')
         .where('conversation_id', conversationId)
         .where('sender_id', '!=', userId)
-        .where('read', false)
+        .whereNull('read_at')
         .count('id as count')
         .first();
 
@@ -523,20 +539,21 @@ export class EnhancedMessagingService {
     // User is verified - return full messages
     const messages = await this.knex('messages')
       .where('conversation_id', conversationId)
-      .where('deleted', false)
+      .where('deleted_by_sender', false)
+      .where('deleted_by_recipient', false)
       .orderBy('created_at', 'desc')
       .limit(50)
       .select('*');
 
-    // Decrypt message content for verified user
+    // Map message content for verified user
     const decryptedMessages = messages.map(msg => ({
       id: msg.id,
       conversationId: msg.conversation_id,
       senderId: msg.sender_id,
-      content: decrypt(msg.content),
+      content: msg.message_encrypted || '',
       messageType: msg.message_type,
       fileUrl: msg.file_url,
-      read: msg.read,
+      read: msg.read_at != null,
       readAt: msg.read_at,
       createdAt: msg.created_at,
       moderationStatus: msg.moderation_status,
@@ -544,7 +561,7 @@ export class EnhancedMessagingService {
 
     return {
       locked: false,
-      messages: decryptedMessages.reverse(), // Return in chronological order
+      data: decryptedMessages.reverse(), // Return in chronological order
       nextCursor: null,
     };
   }
@@ -558,11 +575,16 @@ export class EnhancedMessagingService {
     unreadCount: number;
     message?: string;
   }> {
+    // Conversations use parent IDs, not user IDs
+    const parentRecord = await this.knex('parents').where('user_id', userId).select('id').first();
+    if (!parentRecord) return { locked: false, unreadCount: 0 };
+    const parentId = parentRecord.id;
+
     // Get total unread count across all conversations
     const result = await this.knex('conversations')
       .where((builder) => {
-        void builder.where('participant1_id', userId)
-          .orWhere('participant2_id', userId);
+        void builder.where('participant1_id', parentId)
+          .orWhere('participant2_id', parentId);
       })
       .select(
         this.knex.raw(`
@@ -570,7 +592,7 @@ export class EnhancedMessagingService {
             WHEN participant1_id = ? THEN unread_count_p1
             ELSE unread_count_p2
           END) as total_unread
-        `, [userId]),
+        `, [parentId]),
       )
       .first();
 

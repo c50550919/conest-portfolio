@@ -8,6 +8,7 @@
  */
 import db from '../config/database';
 import { getEncryptionService, EncryptedData } from '../services/encryptionService';
+import { HUDIndividualizedAssessment } from '../types/entities/verification.entity';
 
 export interface Verification {
   id: string;
@@ -164,22 +165,30 @@ export const VerificationModel = {
    * 48h SLA for admin review
    *
    * CMP-03: Sets retention_expires_at to 30 days from now
+   * CMP-14: Accepts structured HUD individualized assessment
    * Criminal record data will be purged after retention period
    */
   async adminApprove(
     userId: string,
     adminUserId: string,
     notes?: string,
+    hudAssessment?: HUDIndividualizedAssessment,
   ): Promise<Verification> {
     const retentionDate = new Date();
     retentionDate.setDate(retentionDate.getDate() + 30);
+
+    // CMP-14: Store structured HUD assessment as JSON if provided,
+    // otherwise fall back to plain notes for backward compatibility
+    const reviewNotes = hudAssessment
+      ? JSON.stringify({ hudAssessment, notes })
+      : notes;
 
     const verification = await this.update(userId, {
       background_check_status: 'approved',
       admin_review_required: false,
       admin_reviewed_by: adminUserId,
       admin_review_date: db.fn.now() as any,
-      admin_review_notes: notes,
+      admin_review_notes: reviewNotes,
       retention_expires_at: retentionDate,
     });
 
@@ -191,21 +200,32 @@ export const VerificationModel = {
    * Admin reject verification after review
    * CMP-04: Initiates FCRA pre-adverse action (does NOT directly reject)
    * CMP-03: Sets retention_expires_at to 30 days from now
+   * CMP-14: REQUIRES structured HUD individualized assessment for denials
+   *
+   * HUD guidance mandates documented individualized assessment when
+   * denying housing based on criminal history. Rejections without
+   * assessment are legally vulnerable.
    */
   async adminReject(
     userId: string,
     adminUserId: string,
     notes?: string,
+    hudAssessment?: HUDIndividualizedAssessment,
   ): Promise<Verification> {
     const retentionDate = new Date();
     retentionDate.setDate(retentionDate.getDate() + 30);
+
+    // CMP-14: Store structured HUD assessment as JSON if provided
+    const reviewNotes = hudAssessment
+      ? JSON.stringify({ hudAssessment, notes })
+      : notes;
 
     return await this.update(userId, {
       background_check_status: 'rejected',
       admin_review_required: false,
       admin_reviewed_by: adminUserId,
       admin_review_date: db.fn.now() as any,
-      admin_review_notes: notes,
+      admin_review_notes: reviewNotes,
       retention_expires_at: retentionDate,
     });
   },

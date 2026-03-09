@@ -17,6 +17,9 @@ import { getSentryRequestHandler, getSentryErrorHandler } from './config/sentry'
 import storageService from './services/s3Service';
 import { setupSwagger } from './config/swagger';
 
+// Well-known routes (Universal Links / App Links - no auth, no rate limiting)
+import wellKnownRoutes from './features/well-known/well-known.routes';
+
 // Import routes
 // Auth feature (migrated to feature-based structure)
 import authRoutes from './features/auth/auth.routes';
@@ -51,6 +54,8 @@ import comparisonRoutes from './features/comparison/comparison.routes';
 import { verificationWebhookRoutes } from './features/verification';
 // Admin feature (migrated to feature-based structure)
 import { adminRoutes } from './features/admin';
+// Notifications feature (push notification device tokens)
+import notificationRoutes from './features/notifications/notification.routes';
 
 // Load environment variables
 dotenv.config();
@@ -97,13 +102,17 @@ app.get('/health', (_req, res) => {
   });
 });
 
+// Well-known routes for iOS Universal Links and Android App Links
+// These must be unauthenticated and publicly accessible
+app.use('/.well-known', wellKnownRoutes);
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profiles', profileRoutes);
 app.use('/api/verification', verificationRoutes);
 app.use('/api/matches', matchRoutes);
-app.use('/api/messages', messageRoutes);
-app.use('/api/messages', enhancedMessageRoutes); // Enhanced messaging with verification & moderation
+app.use('/api/messages', enhancedMessageRoutes); // Enhanced messaging with verification & moderation (registered first for priority)
+app.use('/api/messages', messageRoutes); // Legacy fallback for endpoints not in enhanced routes
 app.use('/api/payments', paymentRoutes);
 app.use('/api/billing', billingRoutes); // Mobile IAP (iOS/Android)
 app.use('/api/discovery', discoveryRoutes);
@@ -116,6 +125,7 @@ app.use('/api/saved-profiles', savedProfileRoutes);
 app.use('/api/connection-requests', connectionRequestRoutes);
 app.use('/api/compatibility', comparisonRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Development-only routes (test token generation, etc.)
 // SECURITY: Only registered in development/test environments

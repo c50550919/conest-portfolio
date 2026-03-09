@@ -250,7 +250,7 @@ export function buildVerificationStatus(db: ParentDB): VerificationStatusObject 
  * Transform ParentDB to Parent API response
  */
 export function parentDBToAPI(db: ParentDB): Parent {
-  const age = db.date_of_birth ? calculateAge(db.date_of_birth) : 0;
+  const age = db.date_of_birth ? calculateAge(db.date_of_birth) : undefined;
 
   return {
     id: db.id,
@@ -259,11 +259,11 @@ export function parentDBToAPI(db: ParentDB): Parent {
     lastName: db.last_name,
     bio: db.bio,
     profilePhotoUrl: db.profile_photo_url,
-    dateOfBirth: dateToISOString(db.date_of_birth)!,
+    dateOfBirth: dateToISOString(db.date_of_birth),
     age,
 
-    childrenCount: db.children_count,
-    childrenAgeGroups: db.children_age_groups,
+    childrenCount: db.children_count ?? 0,
+    childrenAgeGroups: db.children_age_groups ?? [],
 
     city: db.city,
     state: db.state,
@@ -286,7 +286,11 @@ export function parentDBToAPI(db: ParentDB): Parent {
       ? { min: db.budget_min, max: db.budget_max }
       : undefined,
     moveInDate: dateToISOString(db.move_in_date),
-    lookingForHousing: db.looking_for_housing,
+    housingStatus: db.housing_status,
+    roomRentShare: db.room_rent_share,
+    roomAvailableDate: dateToISOString(db.room_available_date),
+    roomDescription: db.room_description,
+    roomPhotoUrl: db.room_photo_url,
     schoolDistricts: db.school_districts,
 
     openToGroupLiving: db.open_to_group_living ?? false,
@@ -318,18 +322,22 @@ export function parentDBToProfileCard(
   db: ParentDB,
   compatibilityScore: number = 0,
 ): ProfileCard {
-  const age = db.date_of_birth ? calculateAge(db.date_of_birth) : 0;
+  const age = db.date_of_birth ? calculateAge(db.date_of_birth) : undefined;
 
   return {
     userId: db.user_id,
     firstName: db.first_name,
     age,
-    city: db.city ?? '',
+    city: db.city,
     state: db.state,
-    childrenCount: db.children_count,
-    childrenAgeGroups: db.children_age_groups,
+    childrenCount: db.children_count ?? 0,
+    childrenAgeGroups: db.children_age_groups ?? [],
     compatibilityScore,
     verificationStatus: buildVerificationStatus(db),
+    housingStatus: db.housing_status,
+    roomRentShare: db.room_rent_share,
+    roomAvailableDate: dateToISOString(db.room_available_date),
+    profileCompletion: db.profile_completion_percentage,
     budget: db.budget_max ?? db.budget_min,
     housingBudget: db.budget_min !== undefined && db.budget_max !== undefined
       ? { min: db.budget_min, max: db.budget_max }
@@ -657,8 +665,8 @@ export function createParentRequestToDB(
     firstName: string;
     lastName: string;
     dateOfBirth?: string;
-    childrenCount: number;
-    childrenAgeGroups: string[];
+    childrenCount?: number;
+    childrenAgeGroups?: string[];
     city?: string;
     state?: string;
     zipCode?: string;
@@ -684,8 +692,8 @@ export function createParentRequestToDB(
     first_name: request.firstName,
     last_name: request.lastName,
     date_of_birth: request.dateOfBirth,
-    children_count: request.childrenCount,
-    children_age_groups: request.childrenAgeGroups,
+    children_count: request.childrenCount ?? 0,
+    children_age_groups: request.childrenAgeGroups ?? [],
     city: request.city,
     state: request.state,
     zip_code: request.zipCode,

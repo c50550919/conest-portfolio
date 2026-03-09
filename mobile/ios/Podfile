@@ -17,6 +17,12 @@ end
 target 'conest' do
   config = use_native_modules!
 
+  # Certificate pinning for MITM protection (Constitution Principle III)
+  pod 'TrustKit', '~> 3.0'
+
+  # Push notifications via Firebase Cloud Messaging
+  pod 'FirebaseMessaging', :modular_headers => true
+
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.

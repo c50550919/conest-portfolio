@@ -27,6 +27,7 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as Keychain from 'react-native-keychain';
 import { getApiBaseUrl, isDevelopment } from './environment';
+import { isCertificatePinningError, handlePinningFailure, shouldBlockInsecureRequests, isLockedOut, resetPinningFailures } from '../utils/certificatePinning';
 
 // Get environment-aware API URL
 const API_BASE_URL = getApiBaseUrl();
@@ -52,9 +53,26 @@ const apiClient: AxiosInstance = axios.create({
 
 /**
  * Request interceptor: Attach JWT access token
+ * Also blocks requests when certificate pinning is required but not configured.
  */
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
+    // Block API requests if certificate pinning is required but pins aren't configured
+    if (shouldBlockInsecureRequests()) {
+      return Promise.reject(new Error(
+        'Certificate pinning is not configured. API requests are blocked in production ' +
+        'to prevent unprotected communication. Configure SPKI pin hashes before release.',
+      ));
+    }
+
+    // Block if too many consecutive pinning failures (potential MITM)
+    if (isLockedOut()) {
+      return Promise.reject(new Error(
+        'Too many certificate pinning failures. Connection blocked for security. ' +
+        'Please switch to a trusted network and restart the app.',
+      ));
+    }
+
     try {
       // Skip auth for login/register endpoints
       if (config.url?.includes('/auth/login') || config.url?.includes('/auth/register')) {
@@ -113,7 +131,11 @@ function onTokenRefreshed(token: string): void {
 }
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Successful response — reset pinning failure counter
+    resetPinningFailures();
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;
@@ -183,6 +205,12 @@ apiClient.interceptors.response.use(
         // TODO: Dispatch Redux action to navigate to login screen
         return Promise.reject(refreshError);
       }
+    }
+
+    // Detect certificate pinning failures and handle separately
+    if (isCertificatePinningError(error)) {
+      handlePinningFailure(error.config?.baseURL || 'unknown', error);
+      return Promise.reject(new Error('Certificate pinning validation failed. Connection blocked for security.'));
     }
 
     return Promise.reject(error);

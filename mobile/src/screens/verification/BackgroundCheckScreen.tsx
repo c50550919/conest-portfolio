@@ -69,7 +69,7 @@ const CONSENT_ITEMS: ConsentCheckItem[] = [
   },
 ];
 
-type Step = 'disclosure' | 'consent' | 'signature' | 'submitted';
+type Step = 'disclosure' | 'fcra_disclosure' | 'consent' | 'signature' | 'submitted';
 
 export const BackgroundCheckScreen: React.FC<BackgroundCheckProps> = ({ navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
@@ -134,6 +134,8 @@ export const BackgroundCheckScreen: React.FC<BackgroundCheckProps> = ({ navigati
   // Navigate to next step
   const handleNext = () => {
     if (step === 'disclosure') {
+      setStep('fcra_disclosure');
+    } else if (step === 'fcra_disclosure') {
       setStep('consent');
     } else if (step === 'consent' && allConsentsGiven) {
       setStep('signature');
@@ -142,8 +144,10 @@ export const BackgroundCheckScreen: React.FC<BackgroundCheckProps> = ({ navigati
 
   // Navigate to previous step
   const handleBack = () => {
-    if (step === 'consent') {
+    if (step === 'fcra_disclosure') {
       setStep('disclosure');
+    } else if (step === 'consent') {
+      setStep('fcra_disclosure');
     } else if (step === 'signature') {
       setStep('consent');
     } else {
@@ -398,6 +402,59 @@ export const BackgroundCheckScreen: React.FC<BackgroundCheckProps> = ({ navigati
           </Button>
           <Button mode="text" onPress={handleBack} style={styles.backButton}>
             Cancel
+          </Button>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // CMP-13: Standalone FCRA Disclosure — 15 U.S.C. § 1681b(b)(2)(A)
+  // This must be a document consisting SOLELY of the disclosure, separate from consent.
+  if (step === 'fcra_disclosure') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Disclosure Regarding Background Investigation</Text>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.fcraDisclosureText}>
+              CoNest, Inc. ("the Company") may obtain information about you from a third-party
+              consumer reporting agency for housing eligibility purposes. Thus, you may be the
+              subject of a "consumer report" which may include information about your character,
+              general reputation, personal characteristics, and mode of living. These reports may
+              contain information regarding your criminal history, social security verification,
+              motor vehicle records, credit history, and other background information.
+            </Text>
+
+            <Text style={[styles.fcraDisclosureText, { marginTop: spacing.md }]}>
+              The consumer report will be obtained from Certn, Inc. You may contact them at:
+            </Text>
+            <Text style={styles.fcraDisclosureText}>
+              Certn, Inc.{'\n'}
+              Website: www.certn.co{'\n'}
+              Email: support@certn.co{'\n'}
+              Phone: 1-888-902-3786
+            </Text>
+
+            <Text style={[styles.fcraDisclosureText, { marginTop: spacing.md }]}>
+              Under the Fair Credit Reporting Act ("FCRA"), before we can obtain a consumer report
+              about you for housing purposes, we must have your written authorization. By proceeding
+              to the next step, you will be asked to provide that authorization.
+            </Text>
+          </View>
+
+          <Button
+            mode="contained"
+            onPress={handleNext}
+            style={styles.button}
+            contentStyle={styles.buttonContent}
+          >
+            I Have Read This Disclosure
+          </Button>
+          <Button mode="text" onPress={handleBack} style={styles.backButton}>
+            Back
           </Button>
         </ScrollView>
       </SafeAreaView>
@@ -742,6 +799,12 @@ const styles = StyleSheet.create({
     fontWeight: '500' as const,
     color: colors.info,
     marginTop: 4,
+  },
+  // CMP-13: FCRA standalone disclosure text style
+  fcraDisclosureText: {
+    ...typography.body1,
+    color: colors.text.primary,
+    lineHeight: 24,
   },
 });
 

@@ -19,6 +19,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector, useDispatch } from 'react-redux';
@@ -27,18 +28,38 @@ import { createNavigationContainerRef } from '@react-navigation/native';
 
 import AuthNavigator from './AuthNavigator';
 import OnboardingNavigator from './OnboardingNavigator';
+import SlimOnboardingNavigator from './SlimOnboardingNavigator';
 import MainNavigator from './MainNavigator';
 import LoadingScreen from '../components/common/LoadingScreen';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import { theme } from '../theme';
 
-// Deep linking configuration for verification flows
+// Deep linking configuration for Universal Links (iOS) and App Links (Android)
+// Screen names must match the actual navigator screen names exactly
 const linking = {
   prefixes: ['conest://', 'safenest://', 'https://conest.app', 'https://safenest.app'],
   config: {
     screens: {
       Main: {
         screens: {
+          Home: {
+            screens: {
+              ConnectionRequests: 'connections',
+            },
+          },
+          Discover: 'discover',
+          Messages: {
+            screens: {
+              ConversationsList: 'messages',
+              Chat: 'messages/:conversationId',
+            },
+          },
+          Household: {
+            screens: {
+              HouseholdMain: 'household',
+              ViewInvitation: 'household/invite/:invitationId',
+            },
+          },
           Profile: {
             screens: {
               Verification: {
@@ -58,6 +79,7 @@ const linking = {
     },
   },
 };
+import { analytics } from '../services/analytics';
 import tokenStorage from '../services/tokenStorage';
 import { loginSuccess } from '../store/slices/authSlice';
 import socketService from '../services/socket';
@@ -69,6 +91,8 @@ import {
   initializeModerationSocket,
   cleanupModerationSocket,
 } from '../services/moderation/moderationSocketIntegration';
+import { mobilePushService } from '../services/pushNotificationService';
+import { notificationAPI } from '../services/api/notificationAPI';
 
 // Navigation reference for programmatic navigation (including E2E tests)
 export const navigationRef = createNavigationContainerRef();
@@ -76,6 +100,7 @@ export const navigationRef = createNavigationContainerRef();
 export type RootStackParamList = {
   Auth: undefined;
   Onboarding: undefined;
+  SlimOnboarding: undefined;
   Main: undefined;
 };
 
@@ -83,8 +108,13 @@ const Stack = createStackNavigator<RootStackParamList>();
 
 const AppNavigator: React.FC = () => {
   const dispatch = useDispatch();
-  const { isAuthenticated, isOnboardingComplete } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, isOnboardingComplete, isOAuthUser } = useSelector((state: RootState) => state.auth);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Initialize PostHog analytics (fire-and-forget, non-blocking)
+  useEffect(() => {
+    analytics.init();
+  }, []);
 
   /**
    * Check for existing auth tokens on app launch
@@ -129,6 +159,9 @@ const AppNavigator: React.FC = () => {
    * Cleanup when user logs out
    */
   useEffect(() => {
+    let unsubscribeForeground: (() => void) | null = null;
+    let unsubscribeTokenRefresh: (() => void) | null = null;
+
     if (isAuthenticated && isOnboardingComplete) {
       console.log('[AppNavigator] Initializing Socket.io (non-blocking)...');
 
@@ -145,12 +178,29 @@ const AppNavigator: React.FC = () => {
           // Socket has built-in reconnection, log and continue
           console.warn('[AppNavigator] Socket connection failed, will retry:', error);
         });
+
+      // Register push notification token (non-blocking)
+      mobilePushService.registerToken();
+      unsubscribeForeground = mobilePushService.setupForegroundHandler();
+      unsubscribeTokenRefresh = mobilePushService.onTokenRefresh(async (newToken) => {
+        try {
+          await notificationAPI.registerDeviceToken(
+            newToken,
+            Platform.OS as 'ios' | 'android',
+          );
+        } catch (error) {
+          console.warn('[AppNavigator] Token refresh registration failed:', error);
+        }
+      });
     } else {
       // User logged out or onboarding incomplete, cleanup socket connections
       console.log('[AppNavigator] Cleaning up socket connections...');
       cleanupMessagingSocket();
       cleanupModerationSocket();
       socketService.disconnect();
+
+      // Remove push token on logout
+      mobilePushService.unregisterToken();
     }
 
     // Cleanup on unmount
@@ -158,6 +208,8 @@ const AppNavigator: React.FC = () => {
       cleanupMessagingSocket();
       cleanupModerationSocket();
       socketService.disconnect();
+      if (unsubscribeForeground) unsubscribeForeground();
+      if (unsubscribeTokenRefresh) unsubscribeTokenRefresh();
     };
   }, [isAuthenticated, isOnboardingComplete]);
 
@@ -184,6 +236,12 @@ const AppNavigator: React.FC = () => {
       <NavigationContainer
         ref={navigationRef}
         linking={linking}
+        onStateChange={() => {
+          const currentRoute = navigationRef.current?.getCurrentRoute();
+          if (currentRoute) {
+            analytics.screen(currentRoute.name);
+          }
+        }}
         theme={{
           dark: false,
           colors: {
@@ -208,8 +266,15 @@ const AppNavigator: React.FC = () => {
               component={AuthNavigator}
               options={{ animationEnabled: false }}
             />
+          ) : !isOnboardingComplete && isOAuthUser ? (
+            // Slim Onboarding: OAuth user with incomplete profile (2 steps)
+            <Stack.Screen
+              name="SlimOnboarding"
+              component={SlimOnboardingNavigator}
+              options={{ animationEnabled: false }}
+            />
           ) : !isOnboardingComplete ? (
-            // Onboarding Flow: Authenticated but profile incomplete
+            // Full Onboarding: Email/password user with incomplete profile (8 steps)
             <Stack.Screen
               name="Onboarding"
               component={OnboardingNavigator}

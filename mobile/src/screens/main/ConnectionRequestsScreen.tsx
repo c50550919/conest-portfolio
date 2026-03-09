@@ -58,6 +58,7 @@ import {
   clearError,
 } from '../../store/slices/connectionRequestsSlice';
 import { ConnectionRequest } from '../../services/api/connectionRequestsAPI';
+import { analytics, AnalyticsEvents } from '../../services/analytics';
 
 type TabType = 'received' | 'sent';
 
@@ -178,6 +179,12 @@ export const ConnectionRequestsScreen: React.FC = () => {
         : declineConnectionRequest({ id: selectedRequest.id, reason: responseMessage });
 
     dispatch(action as any).then(() => {
+      analytics.track(
+        responseType === 'accept'
+          ? AnalyticsEvents.CONNECTION_ACCEPTED
+          : AnalyticsEvents.CONNECTION_DECLINED,
+        { requestId: selectedRequest.id }
+      );
       setResponseModalVisible(false);
       setSelectedRequest(null);
       setResponseMessage('');

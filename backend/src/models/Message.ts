@@ -13,6 +13,7 @@ export interface Message {
   conversation_id: string;
   sender_id: string;
   content: string; // Encrypted content
+  message_encrypted?: string; // Raw DB column alias used by legacy messaging service
   message_type: 'text' | 'image' | 'file';
   file_url?: string;
   read: boolean;
@@ -73,9 +74,13 @@ export const MessageModel = {
   },
 
   async getUserConversations(userId: string): Promise<Conversation[]> {
+    // Conversations use parent IDs, not user IDs — look up parent record first
+    const parent = await db('parents').where('user_id', userId).select('id').first();
+    if (!parent) return [];
+
     return await db('conversations')
-      .where({ participant1_id: userId })
-      .orWhere({ participant2_id: userId })
+      .where({ participant1_id: parent.id })
+      .orWhere({ participant2_id: parent.id })
       .orderBy('last_message_at', 'desc');
   },
 
@@ -83,8 +88,6 @@ export const MessageModel = {
     const messageData = {
       ...data,
       message_type: data.message_type || 'text',
-      read: false,
-      deleted: false,
     };
 
     const [message] = await db('messages').insert(messageData).returning('*');
@@ -99,7 +102,7 @@ export const MessageModel = {
 
   async getConversationMessages(conversationId: string, limit: number = 50): Promise<Message[]> {
     return await db('messages')
-      .where({ conversation_id: conversationId, deleted: false })
+      .where({ conversation_id: conversationId, deleted_by_sender: false, deleted_by_recipient: false })
       .orderBy('created_at', 'desc')
       .limit(limit);
   },
@@ -107,30 +110,34 @@ export const MessageModel = {
   async markAsRead(messageId: string): Promise<void> {
     await db('messages')
       .where({ id: messageId })
-      .update({ read: true, read_at: db.fn.now() });
+      .update({ read_at: db.fn.now() });
   },
 
   async markConversationAsRead(conversationId: string, userId: string): Promise<void> {
     await db('messages')
       .where({ conversation_id: conversationId })
       .whereNot({ sender_id: userId })
-      .update({ read: true, read_at: db.fn.now() });
+      .whereNull('read_at')
+      .update({ read_at: db.fn.now() });
   },
 
   async deleteMessage(messageId: string): Promise<void> {
     await db('messages')
       .where({ id: messageId })
-      .update({ deleted: true, updated_at: db.fn.now() });
+      .update({ deleted_by_sender: true });
   },
 
   async getUnreadCount(userId: string): Promise<number> {
     const conversations = await this.getUserConversations(userId);
     const conversationIds = conversations.map(c => c.id);
 
+    if (conversationIds.length === 0) return 0;
+
     const result = await db('messages')
       .whereIn('conversation_id', conversationIds)
       .whereNot({ sender_id: userId })
-      .where({ read: false, deleted: false })
+      .whereNull('read_at')
+      .where({ deleted_by_recipient: false })
       .count('* as count')
       .first();
 

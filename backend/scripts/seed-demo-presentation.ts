@@ -57,21 +57,21 @@ const DEMO_USERS = [
     profileImageUrl: 'https://i.pravatar.cc/300?img=47', // Friendly woman
   },
   {
-    email: 'demo.mike@conest.app',
+    email: 'demo.maria@conest.app',
     password: 'Demo1234!',
-    firstName: 'Mike',
-    lastName: 'Johnson',
-    phone: '+15559990002',
-    dateOfBirth: '1986-09-22',
+    firstName: 'Maria',
+    lastName: 'Garcia',
+    phone: '+15559990003',
+    dateOfBirth: '1990-03-12',
     city: 'Austin',
     state: 'TX',
-    zipCode: '78702',
+    zipCode: '78703',
     childrenCount: 1,
-    childrenAgeGroups: 'elementary',
-    bio: 'Single dad working in healthcare. My daughter is my world. Looking for a safe, stable co-living situation with another parent.',
-    budgetMin: 1100,
-    budgetMax: 1700,
-    profileImageUrl: 'https://i.pravatar.cc/300?img=68', // Friendly man
+    childrenAgeGroups: 'toddler',
+    bio: 'Nurse and single mom. My little one keeps me busy but I love it. Looking for a safe household with another parent who gets the juggle.',
+    budgetMin: 1000,
+    budgetMax: 1600,
+    profileImageUrl: 'https://i.pravatar.cc/300?img=48', // Friendly woman
   },
 ];
 
@@ -191,7 +191,7 @@ async function createVerification(db: Knex, userId: string, email: string): Prom
     await db('verifications').where({ user_id: userId }).update({
       id_verification_status: 'approved',
       id_verification_date: db.fn.now(),
-      background_check_status: 'clear',
+      background_check_status: 'approved',
       background_check_date: db.fn.now(),
       phone_verified: true,
       phone_verification_date: db.fn.now(),
@@ -206,7 +206,7 @@ async function createVerification(db: Knex, userId: string, email: string): Prom
       user_id: userId,
       id_verification_status: 'approved',
       id_verification_date: db.fn.now(),
-      background_check_status: 'clear',
+      background_check_status: 'approved',
       background_check_date: db.fn.now(),
       phone_verified: true,
       phone_verification_date: db.fn.now(),

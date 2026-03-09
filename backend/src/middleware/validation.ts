@@ -93,4 +93,66 @@ export const schemas = {
       message_type: z.enum(['text', 'image', 'file']).optional(),
     }),
   }),
+
+  // Slim Onboarding Endpoints
+  updateLocation: z.object({
+    body: z.object({
+      city: z.string().min(2, 'City must be at least 2 characters').max(100, 'City must be at most 100 characters'),
+      state: z.string().length(2, 'State must be a 2-letter code'),
+      zipCode: z.string().regex(/^\d{5}$/, 'Zip code must be 5 digits'),
+      latitude: z.number().min(-90).max(90).optional(),
+      longitude: z.number().min(-180).max(180).optional(),
+    }),
+  }),
+
+  updateBudget: z.object({
+    body: z.object({
+      budgetMin: z.number().int().min(0, 'Budget minimum must be non-negative').max(50000),
+      budgetMax: z.number().int().min(0, 'Budget maximum must be non-negative').max(50000),
+    }).refine((data) => data.budgetMax >= data.budgetMin, {
+      message: 'Budget maximum must be greater than or equal to minimum',
+      path: ['budgetMax'],
+    }),
+  }),
+
+  updateHousingStatus: z.object({
+    body: z.object({
+      housingStatus: z.enum(['has_room', 'looking']).nullable(),
+      roomRentShare: z.number().int().min(0).max(50000).optional(),
+      roomAvailableDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format').optional(),
+      roomDescription: z.string().max(200, 'Room description must be at most 200 characters').optional(),
+      roomPhotoUrl: z.string().url().nullable().optional(),
+    }).refine((data) => {
+      if (data.housingStatus === 'has_room' && (data.roomRentShare === undefined || data.roomRentShare === null)) {
+        return false;
+      }
+      return true;
+    }, {
+      message: 'roomRentShare is required when housingStatus is has_room',
+      path: ['roomRentShare'],
+    }),
+  }),
+
+  updateProgressiveProfile: z.object({
+    body: z.object({
+      scheduleType: z.enum(['flexible', 'fixed', 'shift']).optional(),
+      workFromHome: z.boolean().optional(),
+      parentingStyle: z.string().max(100).optional(),
+      bio: z.string().min(20, 'Bio must be at least 20 characters').max(500, 'Bio must be at most 500 characters').optional(),
+      occupation: z.string().min(2).max(100).optional(),
+      dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format').optional()
+        .refine((val) => {
+          if (!val) return true;
+          const dob = new Date(val);
+          const now = new Date();
+          const age = now.getFullYear() - dob.getFullYear();
+          const monthDiff = now.getMonth() - dob.getMonth();
+          const adjustedAge = monthDiff < 0 || (monthDiff === 0 && now.getDate() < dob.getDate()) ? age - 1 : age;
+          return adjustedAge >= 18;
+        }, { message: 'Must be at least 18 years old' }),
+      childrenCount: z.number().int().min(0).max(10).optional(),
+      childrenAgeGroups: z.array(z.enum(['toddler', 'elementary', 'teen'])).optional(),
+      moveInDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format').optional(),
+    }),
+  }),
 };

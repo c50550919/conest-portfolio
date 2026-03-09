@@ -226,6 +226,72 @@ export interface VerificationItem {
 }
 
 // =============================================================================
+// HUD Individualized Assessment (CMP-14)
+// =============================================================================
+
+/**
+ * CMP-14: HUD-compliant individualized assessment for criminal record review
+ *
+ * Per HUD Office of General Counsel guidance (2016), housing providers must
+ * conduct an individualized assessment considering these factors before
+ * denying housing based on criminal history. This replaces free-text notes
+ * with structured, auditable assessment fields.
+ *
+ * Reference: HUD OGC Guidance on Application of FHA Standards to the
+ * Use of Criminal Records by Providers of Housing and Real Estate-Related
+ * Transactions (April 4, 2016)
+ */
+
+export type OffenseNature =
+  | 'violent_felony'
+  | 'non_violent_felony'
+  | 'misdemeanor'
+  | 'drug_related'
+  | 'property_crime'
+  | 'fraud_financial'
+  | 'other';
+
+export type OffenseSeverity = 'high' | 'medium' | 'low';
+
+export type AssessmentDecision = 'approve' | 'deny' | 'request_more_info';
+
+export interface HUDIndividualizedAssessment {
+  // Factor 1: Nature of criminal conduct
+  offenseNature: OffenseNature;
+  offenseDescription: string; // Free-text description of the offense(s)
+
+  // Factor 2: Severity
+  offenseSeverity: OffenseSeverity;
+
+  // Factor 3: Time elapsed since offense/sentence completion
+  yearsSinceOffense: number;
+  sentenceCompleted: boolean;
+
+  // Factor 4: Rehabilitation evidence
+  rehabilitationEvidence: {
+    hasCompletedPrograms: boolean;
+    programDetails?: string;
+    hasStableEmployment: boolean;
+    employmentDetails?: string;
+    hasCharacterReferences: boolean;
+    referenceDetails?: string;
+    additionalEvidence?: string;
+  };
+
+  // Factor 5: Nexus to housing safety
+  nexusToHousingSafety: string; // Explanation of how offense relates to shared housing risk
+
+  // Admin decision
+  decision: AssessmentDecision;
+  decisionRationale: string; // Required explanation for the decision
+  additionalNotes?: string; // Optional free-text notes
+
+  // Metadata
+  assessedAt: string; // ISO timestamp
+  assessedBy: string; // Admin user ID
+}
+
+// =============================================================================
 // Constants
 // =============================================================================
 

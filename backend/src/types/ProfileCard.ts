@@ -26,8 +26,8 @@ export interface VerificationStatus {
 export interface ProfileCard {
   userId: string;
   firstName: string;
-  age: number;
-  city: string;
+  age?: number; // Optional when DOB not yet provided (slim onboarding)
+  city?: string; // Optional for slim onboarding users still setting up
 
   // CMP-12: Made optional — excluded from discovery response to prevent
   // FHA familial status discrimination. Still used internally for scoring.
@@ -38,14 +38,24 @@ export interface ProfileCard {
   compatibilityScore: number;
   verificationStatus: VerificationStatus;
 
+  // Housing status
+  housingStatus?: 'has_room' | 'looking' | null;
+  roomRentShare?: number;
+  roomAvailableDate?: string;
+
+  // Profile completion
+  profileCompletion?: number;
+
   // Optional additional fields
   budget?: number;
   moveInDate?: string;
   bio?: string;
   profilePhoto?: string;
+  openToGroupLiving?: boolean;
 }
 
 export interface DiscoveryResponse {
   profiles: ProfileCard[];
   nextCursor: string | null;
+  fallbackMessage?: string;
 }

@@ -77,6 +77,7 @@ export class OAuthController {
         tokens: result.tokens,
         isNew: result.isNew,
         linked: result.linked,
+        onboardingRequired: result.onboardingRequired,
       };
 
       res.status(200).json(successResponse);
@@ -161,6 +162,7 @@ export class OAuthController {
         tokens: result.tokens,
         isNew: result.isNew,
         linked: result.linked,
+        onboardingRequired: result.onboardingRequired,
       };
 
       res.status(200).json(successResponse);

@@ -33,6 +33,7 @@ import axios from 'axios';
 import tokenStorage from '../tokenStorage';
 import type { GoogleAuthRequest, AppleAuthRequest, AuthSuccessResponse } from '../../types/oauth';
 import { OAuthError } from '../../types/oauth';
+import { analytics, AnalyticsEvents } from '../analytics';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
 
@@ -77,6 +78,8 @@ configureGoogleSignIn();
  * @throws OAuthError with code and message
  */
 export const signInWithGoogle = async (): Promise<AuthSuccessResponse> => {
+  analytics.track(AnalyticsEvents.OAUTH_STARTED, { provider: 'google' });
+
   try {
     // Step 1: Check Google Play Services
     await GoogleSignin.hasPlayServices();
@@ -112,6 +115,7 @@ export const signInWithGoogle = async (): Promise<AuthSuccessResponse> => {
     }
 
     // Step 6: Return user and metadata
+    analytics.track(AnalyticsEvents.OAUTH_COMPLETED, { provider: 'google' });
     return response.data;
   } catch (error: any) {
     // Handle Google Sign In cancellation
@@ -179,6 +183,8 @@ export const signInWithGoogle = async (): Promise<AuthSuccessResponse> => {
  * @throws OAuthError with code and message
  */
 export const signInWithApple = async (): Promise<AuthSuccessResponse> => {
+  analytics.track(AnalyticsEvents.OAUTH_STARTED, { provider: 'apple' });
+
   // Step 1: Platform check (Apple Sign In is iOS-only)
   if (Platform.OS !== 'ios') {
     throw new OAuthError('platform_not_supported', 'Apple Sign In is only available on iOS', 400);
@@ -242,6 +248,7 @@ export const signInWithApple = async (): Promise<AuthSuccessResponse> => {
     }
 
     // Step 8: Return user and metadata
+    analytics.track(AnalyticsEvents.OAUTH_COMPLETED, { provider: 'apple' });
     return response.data;
   } catch (error: any) {
     // Handle Apple Sign In cancellation
@@ -301,15 +308,13 @@ export const signInWithApple = async (): Promise<AuthSuccessResponse> => {
  * @returns 32-character random string
  */
 const generateNonce = (): string => {
-  const charset = '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
-  let result = '';
-
-  // Generate 32 random characters
-  for (let i = 0; i < 32; i++) {
-    result += charset.charAt(Math.floor(Math.random() * charset.length));
-  }
-
-  return result;
+  // Use crypto.getRandomValues (available in Hermes since RN 0.73+)
+  // instead of Math.random() which is not cryptographically secure
+  const randomBytes = new Uint8Array(16);
+  crypto.getRandomValues(randomBytes);
+  return Array.from(randomBytes)
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('');
 };
 
 /**

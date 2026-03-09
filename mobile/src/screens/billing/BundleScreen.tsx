@@ -82,7 +82,8 @@ const BundleScreen: React.FC = () => {
   const [bundleProduct, setBundleProduct] = useState<BillingProduct | null>(null);
   const [verificationProduct, setVerificationProduct] = useState<BillingProduct | null>(null);
   const [purchasing, setPurchasing] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<'bundle' | 'individual'>('bundle');
+  // CMP-20: Default to cheaper option — FTC dark patterns guidance
+  const [selectedOption, setSelectedOption] = useState<'bundle' | 'individual'>('individual');
 
   // Initialize billing
   useEffect(() => {

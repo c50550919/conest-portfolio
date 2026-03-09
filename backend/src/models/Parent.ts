@@ -54,7 +54,11 @@ export interface Parent {
   budget_min?: number;
   budget_max?: number;
   move_in_date?: Date;
-  looking_for_housing?: boolean;
+  housing_status?: 'has_room' | 'looking' | null;
+  room_rent_share?: number;
+  room_available_date?: Date;
+  room_description?: string;
+  room_photo_url?: string;
   school_districts?: string[];
 
   // Verification
@@ -81,13 +85,18 @@ export interface CreateParentData {
   first_name: string;
   last_name: string;
   date_of_birth?: string | Date; // Optional for OAuth users (can be added later)
-  children_count: number;
-  children_age_groups: string[];
+  children_count?: number; // Default 0 for slim onboarding
+  children_age_groups?: string[]; // Default [] for slim onboarding
   city?: string;
   state?: string;
   zip_code?: string;
   budget_min?: number;
   budget_max?: number;
+  housing_status?: 'has_room' | 'looking' | null;
+  room_rent_share?: number;
+  room_available_date?: Date;
+  room_description?: string;
+  room_photo_url?: string;
 }
 
 export const ParentModel = {
@@ -102,8 +111,8 @@ export const ParentModel = {
       first_name: data.first_name,
       last_name: data.last_name,
       date_of_birth: data.date_of_birth || null, // Optional for OAuth signups
-      children_count: data.children_count,
-      children_age_groups: data.children_age_groups,
+      children_count: data.children_count ?? 0,
+      children_age_groups: data.children_age_groups ?? [],
       city: data.city,
       state: data.state,
       zip_code: data.zip_code,
@@ -114,9 +123,9 @@ export const ParentModel = {
       id_verified: false,
       income_verified: false,
       references_count: 0,
-      looking_for_housing: true,
+      housing_status: data.housing_status ?? null,
       profile_completed: false,
-      profile_completion_percentage: 30, // Basic info provided
+      profile_completion_percentage: 0, // Slim onboarding starts at 0
       trust_score: 0.50,
       response_rate: 0.00,
       preferred_radius: 10,
@@ -171,7 +180,7 @@ export const ParentModel = {
     state?: string;
     budgetMin?: number;
     budgetMax?: number;
-    lookingForHousing?: boolean;
+    housingStatus?: 'has_room' | 'looking';
   }): Promise<Parent[]> {
     let query = db('parents').select('*');
 
@@ -187,8 +196,8 @@ export const ParentModel = {
     if (filters.budgetMax) {
       query = query.where('budget_min', '<=', filters.budgetMax);
     }
-    if (filters.lookingForHousing !== undefined) {
-      query = query.where({ looking_for_housing: filters.lookingForHousing });
+    if (filters.housingStatus) {
+      query = query.where({ housing_status: filters.housingStatus });
     }
 
     return await query;

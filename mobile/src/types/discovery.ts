@@ -146,6 +146,12 @@ export interface ExtendedProfileCard {
   // Village Living Preferences (Phase 1)
   openToGroupLiving?: boolean;
   preferredHouseholdSize?: number; // 2, 3, 4+
+
+  // Housing Status (Slim Onboarding)
+  housingStatus?: 'has_room' | 'looking' | null;
+  roomRentShare?: number;
+  roomAvailableDate?: string;
+  profileCompletion?: number; // 0-100
 }
 
 // ============================================================================
@@ -212,6 +218,9 @@ export interface DiscoveryFilters {
 
   // Village Living
   openToGroupLiving?: boolean; // Filter for village-interested parents
+
+  // Housing Status
+  housingStatus?: 'has_room' | 'looking';
 }
 
 // ============================================================================

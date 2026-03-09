@@ -52,6 +52,7 @@ import MessageInput from '../../components/messaging/MessageInput';
 import VerificationBadge from '../../components/messaging/VerificationBadge';
 import ReportModal from '../../components/messaging/ReportModal';
 import { colors, spacing, borderRadius, typography } from '../../theme';
+import { analytics, AnalyticsEvents } from '../../services/analytics';
 
 interface RouteParams {
   conversationId: string;
@@ -142,6 +143,7 @@ const ChatScreen: React.FC = () => {
             content,
           })
         );
+        analytics.track(AnalyticsEvents.MESSAGE_SENT, { conversationId });
 
         // Scroll to bottom after sending
         setTimeout(() => {

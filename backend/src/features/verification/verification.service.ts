@@ -6,6 +6,7 @@
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
  */
+import crypto from 'crypto';
 import { VerificationModel } from '../../models/Verification';
 import { UserModel } from '../../models/User';
 import { VerificationPaymentModel } from '../../models/VerificationPayment';
@@ -13,6 +14,8 @@ import logger from '../../config/logger';
 import VeriffClient from './veriff/VeriffClient';
 import CertnClient from './certn/CertnClient';
 import TelnyxVerifyClient from './telnyx/TelnyxVerifyClient';
+import { getEmailService } from '../../services/emailService';
+import { getPushService } from '../../services/pushNotificationService';
 
 /**
  * Phone Verification Configuration
@@ -218,31 +221,20 @@ export const VerificationService = {
       throw new Error('User not found');
     }
 
-    // Generate verification token
-    const token = Math.random().toString(36).substring(2, 15);
+    // Generate cryptographically secure verification token
+    const token = crypto.randomBytes(32).toString('hex');
 
     // In production, store token in Redis
     // await redisClient.setEx(`email_verify:${userId}`, 3600, token);
 
-    // TODO: Integrate with email service (SendGrid/SES) for production
-    const verificationLink = `${process.env.API_URL}/verify-email?token=${token}`;
+    // Fire-and-forget verification email via SendGrid (never throws)
+    getEmailService().sendEmailVerification(user.email, token);
 
-    if (!IS_PRODUCTION) {
-      logger.info('[MOCK] Email verification link generated', {
-        userId,
-        email: user.email.replace(/(.{2}).*(@.*)/, '$1***$2'),
-        verificationLink,
-        event: 'email_verification_sent',
-        mode: 'mock',
-      });
-    } else {
-      // In production, this should send via email service
-      logger.warn('Email verification attempted but email service not configured', {
-        userId,
-        event: 'email_verification_failed',
-        reason: 'email_service_not_configured',
-      });
-    }
+    logger.info('Email verification sent', {
+      userId,
+      email: user.email.replace(/(.{2}).*(@.*)/, '$1***$2'),
+      event: 'email_verification_sent',
+    });
   },
 
   async verifyEmail(userId: string): Promise<void> {
@@ -341,6 +333,17 @@ export const VerificationService = {
 
       // Recalculate verification score
       await VerificationModel.updateVerificationScore(userId);
+
+      // Fire-and-forget push notification for ID verification result
+      if (internalStatus === 'approved' || internalStatus === 'rejected') {
+        getPushService().sendToUser(userId, {
+          title: 'Verification Update',
+          body: internalStatus === 'approved'
+            ? 'Your ID verification has been approved!'
+            : 'Your ID verification requires attention',
+          data: { type: 'verification', status: internalStatus },
+        }).catch(() => { /* fire-and-forget */ });
+      }
 
       logger.info(`ID verification completed for user ${userId}`, {
         sessionId,
@@ -501,7 +504,16 @@ export const VerificationService = {
           note: 'FCRA requires 5 business day wait before final adverse action',
         });
 
-        // TODO: Send pre-adverse notice email/push notification to user
+        // CMP-04: Send FCRA pre-adverse notice email (fire-and-forget)
+        const user = await UserModel.findById(userId);
+        if (user) {
+          getEmailService().sendFCRAPreAdverseNotice(user.email, {
+            firstName: (user as any).first_name || 'Applicant',
+            reportAgency: 'Certn',
+            reportAgencyPhone: '1-888-452-3786',
+            reportAgencyAddress: '300-1050 Homer Street, Vancouver, BC V6B 2W9, Canada',
+          });
+        }
         // The dataRetentionWorker will finalize after 5 business days
         // Refund is NOT processed until final adverse action
       } else {
@@ -514,6 +526,18 @@ export const VerificationService = {
         if (internalStatus === 'approved') {
           await VerificationModel.updateVerificationScore(userId);
         }
+      }
+
+      // Fire-and-forget push notification for background check result
+      if (internalStatus === 'approved' || internalStatus === 'rejected' || internalStatus === 'consider') {
+        const pushStatus = internalStatus === 'approved' ? 'approved' : 'requires_attention';
+        getPushService().sendToUser(userId, {
+          title: 'Verification Update',
+          body: pushStatus === 'approved'
+            ? 'Your background check has been approved!'
+            : 'Your verification requires attention',
+          data: { type: 'verification', status: pushStatus },
+        }).catch(() => { /* fire-and-forget */ });
       }
 
       logger.info(`Background check processed for user ${userId}`, {

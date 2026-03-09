@@ -34,6 +34,12 @@ import { asyncHandler } from '../../middleware/errorHandler';
 import { AuthRequest } from '../../middleware/auth.middleware';
 import logger from '../../config/logger';
 import { db } from '../../config/database';
+import {
+  HUDIndividualizedAssessment,
+  OffenseNature,
+  OffenseSeverity,
+  AssessmentDecision,
+} from '../../types/entities/verification.entity';
 
 /**
  * Calculate SLA hours remaining
@@ -49,6 +55,84 @@ export function calculateSLARemaining(checkDate: Date | undefined): number {
   return Math.round(remaining * 10) / 10;
 }
 
+/**
+ * CMP-14: Validate HUD individualized assessment structure
+ *
+ * Ensures all required factors are present per HUD OGC guidance (2016):
+ * - Nature of criminal conduct
+ * - Severity classification
+ * - Time elapsed since offense
+ * - Rehabilitation evidence
+ * - Nexus to housing safety
+ * - Decision with rationale
+ */
+const VALID_OFFENSE_NATURES: OffenseNature[] = [
+  'violent_felony', 'non_violent_felony', 'misdemeanor',
+  'drug_related', 'property_crime', 'fraud_financial', 'other',
+];
+const VALID_SEVERITIES: OffenseSeverity[] = ['high', 'medium', 'low'];
+const VALID_DECISIONS: AssessmentDecision[] = ['approve', 'deny', 'request_more_info'];
+
+function validateHUDAssessment(assessment: any): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  if (!assessment || typeof assessment !== 'object') {
+    return { valid: false, errors: ['hudAssessment must be an object'] };
+  }
+
+  // Factor 1: Nature of criminal conduct
+  if (!VALID_OFFENSE_NATURES.includes(assessment.offenseNature)) {
+    errors.push(`offenseNature must be one of: ${VALID_OFFENSE_NATURES.join(', ')}`);
+  }
+  if (!assessment.offenseDescription || typeof assessment.offenseDescription !== 'string' || assessment.offenseDescription.trim().length < 10) {
+    errors.push('offenseDescription must be a string with at least 10 characters');
+  }
+
+  // Factor 2: Severity
+  if (!VALID_SEVERITIES.includes(assessment.offenseSeverity)) {
+    errors.push(`offenseSeverity must be one of: ${VALID_SEVERITIES.join(', ')}`);
+  }
+
+  // Factor 3: Time elapsed
+  if (typeof assessment.yearsSinceOffense !== 'number' || assessment.yearsSinceOffense < 0) {
+    errors.push('yearsSinceOffense must be a non-negative number');
+  }
+  if (typeof assessment.sentenceCompleted !== 'boolean') {
+    errors.push('sentenceCompleted must be a boolean');
+  }
+
+  // Factor 4: Rehabilitation evidence
+  if (!assessment.rehabilitationEvidence || typeof assessment.rehabilitationEvidence !== 'object') {
+    errors.push('rehabilitationEvidence must be an object');
+  } else {
+    const rehab = assessment.rehabilitationEvidence;
+    if (typeof rehab.hasCompletedPrograms !== 'boolean') {
+      errors.push('rehabilitationEvidence.hasCompletedPrograms must be a boolean');
+    }
+    if (typeof rehab.hasStableEmployment !== 'boolean') {
+      errors.push('rehabilitationEvidence.hasStableEmployment must be a boolean');
+    }
+    if (typeof rehab.hasCharacterReferences !== 'boolean') {
+      errors.push('rehabilitationEvidence.hasCharacterReferences must be a boolean');
+    }
+  }
+
+  // Factor 5: Nexus to housing safety
+  if (!assessment.nexusToHousingSafety || typeof assessment.nexusToHousingSafety !== 'string' || assessment.nexusToHousingSafety.trim().length < 10) {
+    errors.push('nexusToHousingSafety must be a string with at least 10 characters');
+  }
+
+  // Decision
+  if (!VALID_DECISIONS.includes(assessment.decision)) {
+    errors.push(`decision must be one of: ${VALID_DECISIONS.join(', ')}`);
+  }
+  if (!assessment.decisionRationale || typeof assessment.decisionRationale !== 'string' || assessment.decisionRationale.trim().length < 10) {
+    errors.push('decisionRationale must be a string with at least 10 characters');
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
 export const verificationReviewController = {
   /**
    * Get verification review queue
@@ -60,6 +144,7 @@ export const verificationReviewController = {
 
     const enrichedQueue = await Promise.all(
       queue.map(async (verification) => {
+        if (!verification.user_id) return { ...verification, user: null, payment_status: null, sla_hours_remaining: null };
         const user = await UserModel.findById(verification.user_id);
         const payment = await VerificationPaymentModel.findByUserId(verification.user_id, 1);
 
@@ -124,18 +209,41 @@ export const verificationReviewController = {
 
   /**
    * Approve verification after manual review
+   *
+   * CMP-14: Accepts optional HUD individualized assessment.
+   * For approvals, assessment is recommended but not required.
    */
   approveVerification: asyncHandler(async (req: AuthRequest, res: Response) => {
     const { userId } = req.params;
-    const { notes } = req.body;
+    const { notes, hudAssessment } = req.body;
     const adminUserId = req.userId!;
 
-    const verification = await VerificationModel.adminApprove(adminUserId, userId, notes);
+    // CMP-14: Validate HUD assessment if provided
+    let validatedAssessment: HUDIndividualizedAssessment | undefined;
+    if (hudAssessment) {
+      const validation = validateHUDAssessment(hudAssessment);
+      if (!validation.valid) {
+        res.status(400).json({
+          error: 'Invalid HUD individualized assessment',
+          details: validation.errors,
+        });
+        return;
+      }
+      validatedAssessment = {
+        ...hudAssessment,
+        assessedAt: new Date().toISOString(),
+        assessedBy: adminUserId,
+      };
+    }
+
+    const verification = await VerificationModel.adminApprove(
+      userId, adminUserId, notes, validatedAssessment,
+    );
 
     logger.info('Admin approved verification', {
       userId,
       adminUserId,
-      notes,
+      hasHUDAssessment: !!validatedAssessment,
     });
 
     res.json({
@@ -148,13 +256,44 @@ export const verificationReviewController = {
   /**
    * Reject verification after manual review
    * Triggers automatic 100% refund
+   *
+   * CMP-14: REQUIRES structured HUD individualized assessment for all denials.
+   * Per HUD OGC guidance (2016), housing denials based on criminal history
+   * without documented individualized assessment are legally vulnerable to
+   * disparate impact claims under the Fair Housing Act.
    */
   rejectVerification: asyncHandler(async (req: AuthRequest, res: Response) => {
     const { userId } = req.params;
-    const { notes } = req.body;
+    const { notes, hudAssessment } = req.body;
     const adminUserId = req.userId!;
 
-    const verification = await VerificationModel.adminReject(adminUserId, userId, notes);
+    // CMP-14: HUD assessment is REQUIRED for rejections
+    if (!hudAssessment) {
+      res.status(400).json({
+        error: 'HUD individualized assessment required for denials',
+        message: 'Per HUD guidance, all housing denials based on criminal history must include a documented individualized assessment considering: nature of offense, severity, recency, rehabilitation evidence, and nexus to housing safety.',
+      });
+      return;
+    }
+
+    const validation = validateHUDAssessment(hudAssessment);
+    if (!validation.valid) {
+      res.status(400).json({
+        error: 'Invalid HUD individualized assessment',
+        details: validation.errors,
+      });
+      return;
+    }
+
+    const validatedAssessment: HUDIndividualizedAssessment = {
+      ...hudAssessment,
+      assessedAt: new Date().toISOString(),
+      assessedBy: adminUserId,
+    };
+
+    const verification = await VerificationModel.adminReject(
+      userId, adminUserId, notes, validatedAssessment,
+    );
 
     // Process automatic refund for rejection
     const payments = await VerificationPaymentModel.findByUserId(userId, 1);
@@ -165,17 +304,20 @@ export const verificationReviewController = {
       });
     }
 
-    logger.info('Admin rejected verification', {
+    logger.info('Admin rejected verification with HUD assessment', {
       userId,
       adminUserId,
-      notes,
+      assessmentDecision: validatedAssessment.decision,
+      offenseNature: validatedAssessment.offenseNature,
+      offenseSeverity: validatedAssessment.offenseSeverity,
+      yearsSinceOffense: validatedAssessment.yearsSinceOffense,
       refund_processed: !!payments[0],
     });
 
     res.json({
       success: true,
       data: verification,
-      message: 'Verification rejected and refund processed',
+      message: 'Verification rejected with HUD individualized assessment. Refund processed.',
     });
   }),
 

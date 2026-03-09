@@ -11,13 +11,15 @@
  * Bottom tab navigation for authenticated users
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Platform, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '../store';
+import { fetchReceivedRequests } from '../store/slices/connectionRequestsSlice';
+import { fetchConversations } from '../store/slices/enhancedMessagesSlice';
 
 import HomeNavigator from './HomeNavigator';
 import { BrowseDiscoveryScreen } from '../screens/main/BrowseDiscoveryScreen';
@@ -43,6 +45,13 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 const MainNavigator: React.FC = () => {
   const insets = useSafeAreaInsets();
   const tabBarHeight = Platform.OS === 'ios' ? 56 + insets.bottom : 64;
+  const dispatch = useDispatch<AppDispatch>();
+
+  // Populate Redux state on mount so tab badges show immediately
+  useEffect(() => {
+    dispatch(fetchReceivedRequests());
+    dispatch(fetchConversations());
+  }, [dispatch]);
 
   const unreadMessages = useSelector((state: RootState) => {
     return state.enhancedMessages?.totalUnreadCount || 0;

@@ -13,6 +13,7 @@ import { UserModel } from '../../models/User';
 import { ParentModel } from '../../models/Parent';
 import { AuthService } from './auth.service';
 import { db } from '../../config/database';
+import { getEmailService } from '../../services/emailService';
 
 /**
  * OAuth Service
@@ -179,6 +180,7 @@ export class OAuthService {
     tokens: { accessToken: string; refreshToken: string; expiresIn: number };
     isNew: boolean;
     linked: boolean;
+    onboardingRequired: boolean;
   }> {
     // Override profile names if fullName provided (Apple specific)
     if (fullName) {
@@ -240,6 +242,7 @@ export class OAuthService {
     tokens: { accessToken: string; refreshToken: string; expiresIn: number };
     isNew: boolean;
     linked: boolean;
+    onboardingRequired: boolean;
   }> {
     return await db.transaction(async (_trx) => {
       // Create user record
@@ -272,6 +275,9 @@ export class OAuthService {
       // Generate JWT tokens
       const tokenPair = await AuthService.generateTokenPair(user.id, profile.email);
 
+      // Fire-and-forget welcome email for new OAuth users (never throws)
+      getEmailService().sendWelcomeEmail(profile.email, profile.firstName || 'there');
+
       return {
         user: user,
         tokens: {
@@ -281,6 +287,7 @@ export class OAuthService {
         },
         isNew: true,
         linked: false,
+        onboardingRequired: true,
       };
     });
   }
@@ -293,6 +300,7 @@ export class OAuthService {
     tokens: { accessToken: string; refreshToken: string; expiresIn: number };
     isNew: boolean;
     linked: boolean;
+    onboardingRequired: boolean;
   }> {
     // Check account status
     if (user.account_status === 'suspended') {
@@ -306,6 +314,10 @@ export class OAuthService {
     // Update last_login
     await UserModel.updateLastLogin(user.id);
 
+    // Check profile completion for onboarding routing
+    const parent = await ParentModel.findByUserId(user.id);
+    const profileComplete = parent?.profile_completed ?? false;
+
     // Generate new JWT tokens
     const tokenPair = await AuthService.generateTokenPair(user.id, user.email);
 
@@ -318,6 +330,7 @@ export class OAuthService {
       },
       isNew: false,
       linked: false,
+      onboardingRequired: !profileComplete,
     };
   }
 
@@ -332,6 +345,7 @@ export class OAuthService {
     tokens: { accessToken: string; refreshToken: string; expiresIn: number };
     isNew: boolean;
     linked: boolean;
+    onboardingRequired: boolean;
   }> {
     // Update user record with OAuth fields
     const updatedUser = await UserModel.update(existingUser.id, {
@@ -339,6 +353,10 @@ export class OAuthService {
       ...(profile.providerId ? { oauth_provider_id: profile.providerId } : {}),
       oauth_profile_picture: profile.photo || null,
     } as any);
+
+    // Check profile completion for onboarding routing
+    const parent = await ParentModel.findByUserId(existingUser.id);
+    const profileComplete = parent?.profile_completed ?? false;
 
     // Update last_login
     await UserModel.updateLastLogin(existingUser.id);
@@ -355,6 +373,7 @@ export class OAuthService {
       },
       isNew: false,
       linked: true, // OAuth provider was linked
+      onboardingRequired: !profileComplete,
     };
   }
 }

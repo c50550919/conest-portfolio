@@ -33,11 +33,14 @@ export interface User {
   phoneVerified: boolean;
   idVerified: boolean;
   backgroundCheckVerified: boolean;
+  isOAuthUser?: boolean;
+  onboardingRequired?: boolean;
 }
 
 interface AuthState {
   isAuthenticated: boolean;
   isOnboardingComplete: boolean;
+  isOAuthUser: boolean;
   user: User | null;
   loading: boolean;
   error: string | null;
@@ -46,6 +49,7 @@ interface AuthState {
 const initialState: AuthState = {
   isAuthenticated: false,
   isOnboardingComplete: false,
+  isOAuthUser: false,
   user: null,
   loading: false,
   error: null,
@@ -55,16 +59,26 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    loginSuccess: (state, action: PayloadAction<{ user: User }>) => {
+    loginSuccess: (state, action: PayloadAction<{ user: User; isOAuthUser?: boolean }>) => {
       state.isAuthenticated = true;
       state.user = action.payload.user;
+      state.isOAuthUser = action.payload.isOAuthUser ?? false;
       state.isOnboardingComplete = action.payload.user.profileComplete;
+      state.loading = false;
+      state.error = null;
+    },
+    oauthLoginSuccess: (state, action: PayloadAction<{ user: User; onboardingRequired: boolean }>) => {
+      state.isAuthenticated = true;
+      state.user = action.payload.user;
+      state.isOAuthUser = true;
+      state.isOnboardingComplete = !action.payload.onboardingRequired;
       state.loading = false;
       state.error = null;
     },
     registerSuccess: (state, action: PayloadAction<{ user: User }>) => {
       state.isAuthenticated = true;
       state.user = action.payload.user;
+      state.isOAuthUser = false;
       state.isOnboardingComplete = false;
       state.loading = false;
       state.error = null;
@@ -96,6 +110,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.isAuthenticated = false;
       state.isOnboardingComplete = false;
+      state.isOAuthUser = false;
       state.user = null;
       state.loading = false;
       state.error = null;
@@ -111,6 +126,7 @@ const authSlice = createSlice({
 
 export const {
   loginSuccess,
+  oauthLoginSuccess,
   registerSuccess,
   setOnboardingComplete,
   updateUser,

@@ -79,22 +79,24 @@ export const RegisterRequestSchema = z
     lastName: z.string().min(1, 'Last name is required'),
     dateOfBirth: z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format'),
-    city: z.string().min(1, 'City is required'),
-    state: z.string().length(2, 'State must be a 2-letter code'),
-    zipCode: z.string().regex(/^\d{5}$/, 'Zip code must be 5 digits'),
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date of birth must be in YYYY-MM-DD format')
+      .optional(),
+    city: z.string().min(1, 'City is required').optional(),
+    state: z.string().length(2, 'State must be a 2-letter code').optional(),
+    zipCode: z.string().regex(/^\d{5}$/, 'Zip code must be 5 digits').optional(),
     childrenCount: z
       .number()
       .int('Children count must be an integer')
       .min(0, 'Children count cannot be negative')
-      .max(10, 'Children count cannot exceed 10'),
+      .max(10, 'Children count cannot exceed 10')
+      .default(0),
     childrenAgeGroups: z
       .array(
         z.enum(['toddler', 'elementary', 'teen'], {
           errorMap: () => ({ message: 'Age group must be toddler, elementary, or teen' }),
         }),
       )
-      .min(0, 'Children age groups must be an array'),
+      .default([]),
     // CMP-07: ToS/Privacy consent (FTC/CFPB compliance)
     tosAccepted: z.boolean().optional(),
     privacyAccepted: z.boolean().optional(),

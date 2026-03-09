@@ -60,7 +60,7 @@ export function adaptProfileCard(backend: ProfileCard): ExtendedProfileCard {
   // Map backend childrenAgeGroups to frontend format
   // Backend uses: 'toddler' | 'elementary' | 'teen'
   // Frontend allows: 'infant' | 'toddler' | 'elementary' | 'middle-school' | 'high-school' | 'teen'
-  const mappedAgeGroups = backend.childrenAgeGroups.map((group) => {
+  const mappedAgeGroups = (backend.childrenAgeGroups || []).map((group) => {
     // Direct mapping - backend types are subset of frontend types
     return group as ExtendedProfileCard['childrenAgeGroups'][number];
   });
@@ -82,7 +82,7 @@ export function adaptProfileCard(backend: ProfileCard): ExtendedProfileCard {
     firstName: backend.firstName,
     age: backend.age,
     city: backend.city,
-    childrenCount: backend.childrenCount,
+    childrenCount: backend.childrenCount || 0,
     childrenAgeGroups: mappedAgeGroups,
     compatibilityScore: backend.compatibilityScore,
     budget: backend.budget || 0,
@@ -115,6 +115,12 @@ export function adaptProfileCard(backend: ProfileCard): ExtendedProfileCard {
           max: Math.round(backend.budget * 1.2),
         }
       : undefined,
+
+    // Housing status fields (from slim onboarding)
+    housingStatus: (backend as any).housingStatus || null,
+    roomRentShare: (backend as any).roomRentShare,
+    roomAvailableDate: (backend as any).roomAvailableDate,
+    profileCompletion: (backend as any).profileCompletion,
   };
 }
 
