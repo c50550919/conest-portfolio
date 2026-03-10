@@ -11,17 +11,22 @@
 
 import request from 'supertest';
 import app from '../../src/app';
-import { setupTestDatabase, teardownTestDatabase, createTestUser, getAuthToken } from '../helpers/test-utils';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+  createTestUser,
+  getAuthToken,
+} from '../helpers/test-utils';
 
 /**
  * Performance Test Configuration
  */
 const PERF_CONFIG = {
-  warmupRequests: 10,       // Warm up cache before measurement
+  warmupRequests: 10, // Warm up cache before measurement
   measurementRequests: 100, // Number of requests to measure
-  targetP95: 100,           // Target P95 latency in milliseconds
-  targetP99: 200,           // Target P99 latency in milliseconds
-  targetMedian: 50,         // Target median latency in milliseconds
+  targetP95: 100, // Target P95 latency in milliseconds
+  targetP99: 200, // Target P99 latency in milliseconds
+  targetMedian: 50, // Target median latency in milliseconds
 };
 
 /**
@@ -169,7 +174,9 @@ describe('PERFORMANCE TEST: GET /api/discovery/profiles', () => {
       // Log performance metrics
       console.log('\n📊 Performance Metrics (Warm Cache - Redis):');
       console.log(`   Min:     ${stats.min}ms`);
-      console.log(`   Median:  ${stats.median}ms ${stats.median <= PERF_CONFIG.targetMedian ? '✅' : '❌'}`);
+      console.log(
+        `   Median:  ${stats.median}ms ${stats.median <= PERF_CONFIG.targetMedian ? '✅' : '❌'}`,
+      );
       console.log(`   Mean:    ${Math.round(stats.mean)}ms`);
       console.log(`   P95:     ${stats.p95}ms ${stats.p95 <= PERF_CONFIG.targetP95 ? '✅' : '❌'}`);
       console.log(`   P99:     ${stats.p99}ms ${stats.p99 <= PERF_CONFIG.targetP99 ? '✅' : '❌'}`);
@@ -210,7 +217,9 @@ describe('PERFORMANCE TEST: GET /api/discovery/profiles', () => {
       const stats = calculateStats(responseTimes);
 
       // Calculate variance
-      const variance = responseTimes.reduce((sum, time) => sum + Math.pow(time - stats.mean, 2), 0) / responseTimes.length;
+      const variance =
+        responseTimes.reduce((sum, time) => sum + Math.pow(time - stats.mean, 2), 0) /
+        responseTimes.length;
 
       const standardDeviation = Math.sqrt(variance);
 
@@ -267,7 +276,7 @@ describe('PERFORMANCE TEST: GET /api/discovery/profiles', () => {
       });
 
       // Pages should have similar performance (no degradation)
-      const pageTimes = pageTimings.map(p => p.time);
+      const pageTimes = pageTimings.map((p) => p.time);
       const stats = calculateStats(pageTimes);
       const maxDeviation = Math.max(...pageTimes) - Math.min(...pageTimes);
 
@@ -310,7 +319,7 @@ describe('PERFORMANCE TEST: GET /api/discovery/profiles', () => {
 
       // All requests should succeed
       expect(results.length).toBe(concurrentRequests);
-      results.forEach(response => {
+      results.forEach((response) => {
         expect(response.status).toBe(200);
       });
 
@@ -387,8 +396,8 @@ describe('PERFORMANCE TEST: GET /api/discovery/profiles', () => {
       });
 
       // Time should scale roughly linearly (not exponentially)
-      const time5 = limitTimings.find(t => t.limit === 5)!.time;
-      const time50 = limitTimings.find(t => t.limit === 50)!.time;
+      const time5 = limitTimings.find((t) => t.limit === 5)!.time;
+      const time50 = limitTimings.find((t) => t.limit === 50)!.time;
 
       // 50 items shouldn't take more than 3x as long as 5 items
       expect(time50).toBeLessThan(time5 * 3);

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -293,9 +293,7 @@ export const PaymentAuditLogModel = {
         query = query.where('created_at', '>=', options.since);
       }
 
-      return await query
-        .orderBy('created_at', 'desc')
-        .limit(options.limit || 100);
+      return await query.orderBy('created_at', 'desc').limit(options.limit || 100);
     } catch (error: any) {
       if (error.code === '42P01') return [];
       throw error;

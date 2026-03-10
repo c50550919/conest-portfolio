@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -12,8 +12,18 @@ export async function up(knex: Knex): Promise<void> {
   // Create conversations table
   await knex.schema.createTable('conversations', (table) => {
     table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
-    table.uuid('participant_1_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
-    table.uuid('participant_2_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
+    table
+      .uuid('participant_1_id')
+      .references('id')
+      .inTable('users')
+      .onDelete('CASCADE')
+      .notNullable();
+    table
+      .uuid('participant_2_id')
+      .references('id')
+      .inTable('users')
+      .onDelete('CASCADE')
+      .notNullable();
     table.timestamp('last_message_at');
     table.timestamps(true, true);
 
@@ -25,7 +35,12 @@ export async function up(knex: Knex): Promise<void> {
   // Create messages table
   return knex.schema.createTable('messages', (table) => {
     table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
-    table.uuid('conversation_id').references('id').inTable('conversations').onDelete('CASCADE').notNullable();
+    table
+      .uuid('conversation_id')
+      .references('id')
+      .inTable('conversations')
+      .onDelete('CASCADE')
+      .notNullable();
     table.uuid('sender_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
     table.text('content').notNullable(); // Encrypted
     table.enum('message_type', ['text', 'image', 'file']).defaultTo('text');

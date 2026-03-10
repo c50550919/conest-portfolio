@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -74,15 +74,11 @@ export const PaymentModel = {
   },
 
   async findByHousehold(householdId: string): Promise<Payment[]> {
-    return await db('payments')
-      .where({ household_id: householdId })
-      .orderBy('created_at', 'desc');
+    return await db('payments').where({ household_id: householdId }).orderBy('created_at', 'desc');
   },
 
   async findByUser(userId: string): Promise<Payment[]> {
-    return await db('payments')
-      .where({ payer_id: userId })
-      .orderBy('created_at', 'desc');
+    return await db('payments').where({ payer_id: userId }).orderBy('created_at', 'desc');
   },
 
   async updatePayment(id: string, data: Partial<Payment>): Promise<Payment> {
@@ -92,17 +88,12 @@ export const PaymentModel = {
       updateData.paid_at = db.fn.now();
     }
 
-    const [payment] = await db('payments')
-      .where({ id })
-      .update(updateData)
-      .returning('*');
+    const [payment] = await db('payments').where({ id }).update(updateData).returning('*');
     return payment;
   },
 
   async getOverduePayments(householdId?: string): Promise<Payment[]> {
-    let query = db('payments')
-      .where({ status: 'pending' })
-      .where('due_date', '<', db.fn.now());
+    let query = db('payments').where({ status: 'pending' }).where('due_date', '<', db.fn.now());
 
     if (householdId) {
       query = query.where({ household_id: householdId });
@@ -132,7 +123,12 @@ export const HouseholdModel = {
     return household;
   },
 
-  async addMember(householdId: string, userId: string, rentShare: number, role: 'admin' | 'member' = 'member'): Promise<HouseholdMember> {
+  async addMember(
+    householdId: string,
+    userId: string,
+    rentShare: number,
+    role: 'admin' | 'member' = 'member',
+  ): Promise<HouseholdMember> {
     const [member] = await db('household_members')
       .insert({
         household_id: householdId,
@@ -146,8 +142,7 @@ export const HouseholdModel = {
   },
 
   async getMembers(householdId: string): Promise<HouseholdMember[]> {
-    return await db('household_members')
-      .where({ household_id: householdId, status: 'active' });
+    return await db('household_members').where({ household_id: householdId, status: 'active' });
   },
 
   async removeMember(householdId: string, userId: string): Promise<void> {

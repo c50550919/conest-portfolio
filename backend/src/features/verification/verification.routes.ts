@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -45,17 +45,21 @@ router.post(
 
 // OTP verification with attempt limiting:
 // 5 wrong attempts per phone per 15 minutes (prevents brute force)
-router.post(
-  '/phone/verify',
-  otpAttemptRateLimit,
-  verificationController.verifyPhone,
-);
+router.post('/phone/verify', otpAttemptRateLimit, verificationController.verifyPhone);
 
 router.post('/email/send', verificationLimiter, verificationController.sendEmailVerification);
 router.get('/email/verify/:userId', verificationController.verifyEmail);
 router.post('/id/initiate', verificationLimiter, verificationController.initiateIDVerification);
 router.post('/id/complete', verificationController.completeIDVerification);
-router.post('/background/initiate', verificationLimiter, verificationController.initiateBackgroundCheck);
-router.post('/income/initiate', verificationLimiter, verificationController.initiateIncomeVerification);
+router.post(
+  '/background/initiate',
+  verificationLimiter,
+  verificationController.initiateBackgroundCheck,
+);
+router.post(
+  '/income/initiate',
+  verificationLimiter,
+  verificationController.initiateIncomeVerification,
+);
 
 export default router;

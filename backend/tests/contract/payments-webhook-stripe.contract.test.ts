@@ -122,9 +122,7 @@ describe('POST /api/stripe/webhook - Contract Tests', () => {
 
   describe('Error Response Format Validation', () => {
     it('should return consistent error response structure', async () => {
-      const response = await request(app)
-        .post('/api/stripe/webhook')
-        .send({ invalid: 'payload' });
+      const response = await request(app).post('/api/stripe/webhook').send({ invalid: 'payload' });
 
       // All error responses should have error and message
       expect(response.body).toHaveProperty('error');

@@ -20,10 +20,7 @@
 
 import request from 'supertest';
 import app from '../../src/app';
-import {
-  db,
-  createIntegrationTestUser,
-} from '../setup-integration';
+import { db, createIntegrationTestUser } from '../setup-integration';
 
 describe('Phone Verification Integration', () => {
   describe('Complete Phone Verification Flow', () => {
@@ -40,9 +37,7 @@ describe('Phone Verification Integration', () => {
       const userBefore = await db('users').where({ id: testUser.id }).first();
       expect(userBefore.phone_verified).toBe(false);
 
-      const verificationBefore = await db('verifications')
-        .where({ user_id: testUser.id })
-        .first();
+      const verificationBefore = await db('verifications').where({ user_id: testUser.id }).first();
       expect(verificationBefore.phone_verified).toBe(false);
 
       // 2. Send phone verification code
@@ -69,14 +64,14 @@ describe('Phone Verification Integration', () => {
       expect(userAfter.phone_verified).toBe(true);
 
       // 5. Assert: verifications.phone_verified = true
-      const verificationAfter = await db('verifications')
-        .where({ user_id: testUser.id })
-        .first();
+      const verificationAfter = await db('verifications').where({ user_id: testUser.id }).first();
       expect(verificationAfter.phone_verified).toBe(true);
       expect(verificationAfter.phone_verification_date).not.toBeNull();
 
       // Verification score should have been recalculated
-      expect(verificationAfter.verification_score).toBeGreaterThan(verificationBefore.verification_score);
+      expect(verificationAfter.verification_score).toBeGreaterThan(
+        verificationBefore.verification_score,
+      );
     });
 
     it('should reject invalid verification code', async () => {
@@ -126,9 +121,7 @@ describe('Phone Verification Integration', () => {
 
     it('should require authentication for phone verification', async () => {
       // Try without token
-      const sendResponse = await request(app)
-        .post('/api/verification/phone/send')
-        .expect(401);
+      const sendResponse = await request(app).post('/api/verification/phone/send').expect(401);
 
       expect(sendResponse.body.error).toBeDefined();
 
@@ -245,7 +238,7 @@ describe('Phone Verification Integration', () => {
       const token = jwt.sign(
         { userId: user.id, email: user.email },
         process.env.JWT_SECRET || 'test-secret-key-for-testing-only',
-        { expiresIn: '1h' }
+        { expiresIn: '1h' },
       );
 
       // Try to send code - should fail gracefully

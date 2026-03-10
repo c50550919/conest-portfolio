@@ -14,7 +14,9 @@ describe.skip('POST /api/auth/refresh - Contract Tests (TDD Stubs)', () => {
   beforeAll(() => {
     app = express();
     app.use(express.json());
-    app.post('/api/auth/refresh', (_req, res) => res.status(501).json({ error: 'Not implemented' }));
+    app.post('/api/auth/refresh', (_req, res) =>
+      res.status(501).json({ error: 'Not implemented' }),
+    );
   });
 
   it('should return 200 with new tokens for valid refresh token', async () => {

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -59,10 +59,7 @@ export class SavedProfileService {
   /**
    * Get all saved profiles for a user, optionally filtered by folder
    */
-  async getSavedProfiles(
-    userId: string,
-    folder?: string,
-  ): Promise<SavedProfileWithProfile[]> {
+  async getSavedProfiles(userId: string, folder?: string): Promise<SavedProfileWithProfile[]> {
     return await SavedProfileModel.findByUserId(userId, folder);
   }
 
@@ -72,8 +69,8 @@ export class SavedProfileService {
   async getSavedProfilesByFolder(userId: string): Promise<{
     'Top Choice': SavedProfileWithProfile[];
     'Strong Maybe': SavedProfileWithProfile[];
-    'Considering': SavedProfileWithProfile[];
-    'Backup': SavedProfileWithProfile[];
+    Considering: SavedProfileWithProfile[];
+    Backup: SavedProfileWithProfile[];
   }> {
     const [topChoice, strongMaybe, considering, backup] = await Promise.all([
       SavedProfileModel.findByUserId(userId, 'Top Choice'),
@@ -85,8 +82,8 @@ export class SavedProfileService {
     return {
       'Top Choice': topChoice,
       'Strong Maybe': strongMaybe,
-      'Considering': considering,
-      'Backup': backup,
+      Considering: considering,
+      Backup: backup,
     };
   }
 
@@ -111,11 +108,7 @@ export class SavedProfileService {
   /**
    * Update notes for a saved profile
    */
-  async updateNotes(
-    id: string,
-    userId: string,
-    notes: string | null,
-  ): Promise<SavedProfile> {
+  async updateNotes(id: string, userId: string, notes: string | null): Promise<SavedProfile> {
     // Validate notes length if provided
     if (notes && notes.length > 500) {
       throw new Error('NOTES_TOO_LONG');
@@ -134,10 +127,7 @@ export class SavedProfileService {
   /**
    * Compare 2-4 saved profiles side-by-side
    */
-  async compareProfiles(
-    userId: string,
-    ids: string[],
-  ): Promise<SavedProfileWithProfile[]> {
+  async compareProfiles(userId: string, ids: string[]): Promise<SavedProfileWithProfile[]> {
     if (ids.length < 2 || ids.length > 4) {
       throw new Error('INVALID_COMPARISON_COUNT');
     }

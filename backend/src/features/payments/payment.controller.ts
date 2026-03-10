@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -354,11 +354,7 @@ export const PaymentController = {
 
     try {
       // Verify webhook signature
-      event = stripe.webhooks.constructEvent(
-        req.body,
-        sig,
-        webhookSecret,
-      );
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
     } catch (err: any) {
       res.status(400).json({
         error: 'Webhook signature verification failed',
@@ -565,7 +561,6 @@ export const PaymentController = {
       data: payments,
     });
   }),
-
 
   /**
    * Legacy splitRent - kept for backward compatibility

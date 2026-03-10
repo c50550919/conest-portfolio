@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -140,7 +140,7 @@ Respond with JSON only.`;
         contents: [
           {
             role: 'user',
-            parts: [{ text: `${SYSTEM_PROMPT  }\n\n${  userPrompt}` }],
+            parts: [{ text: `${SYSTEM_PROMPT}\n\n${userPrompt}` }],
           },
         ],
         generationConfig: {
@@ -381,7 +381,16 @@ export const ContentModerationService = {
     const action = config.shadowMode ? 'auto_approved' : determineAction(result!, config);
 
     // Log the moderation
-    await this.logModeration({ input, result: result!, provider, model, latencyMs, action, usedFallback, error });
+    await this.logModeration({
+      input,
+      result: result!,
+      provider,
+      model,
+      latencyMs,
+      action,
+      usedFallback,
+      error,
+    });
 
     // Track patterns if signals detected
     if (!config.shadowMode && hasSignals(result!.signals)) {
@@ -429,7 +438,10 @@ export const ContentModerationService = {
         used_fallback: usedFallback,
       });
     } catch (logError) {
-      logger.error('Failed to log moderation result', { error: logError, messageId: input.messageId });
+      logger.error('Failed to log moderation result', {
+        error: logError,
+        messageId: input.messageId,
+      });
     }
   },
 
@@ -616,7 +628,12 @@ export const ContentModerationService = {
     // Log admin action
     await db('admin_actions').insert({
       admin_id: adminId || null,
-      action_type: action === 'permanent_ban' ? 'user_banned' : action === 'warning' ? 'user_warned' : 'user_suspended',
+      action_type:
+        action === 'permanent_ban'
+          ? 'user_banned'
+          : action === 'warning'
+            ? 'user_warned'
+            : 'user_suspended',
       target_user_id: userId,
       reason,
       is_ai_escalation: !adminId,
@@ -639,20 +656,16 @@ export const ContentModerationService = {
     const notifications = getModerationNotificationContent(action, reason);
 
     // Send email notification
-    await queueNotification(
-      userId,
-      'email',
-      notifications.emailBody,
-      { title: notifications.subject, data: { action, reason } },
-    );
+    await queueNotification(userId, 'email', notifications.emailBody, {
+      title: notifications.subject,
+      data: { action, reason },
+    });
 
     // Send push notification for immediate visibility
-    await queueNotification(
-      userId,
-      'push',
-      notifications.pushBody,
-      { title: notifications.pushTitle, data: { action, reason } },
-    );
+    await queueNotification(userId, 'push', notifications.pushBody, {
+      title: notifications.pushTitle,
+      data: { action, reason },
+    });
 
     logger.info('Moderation notification sent', { userId, action });
   },
@@ -660,10 +673,7 @@ export const ContentModerationService = {
   /**
    * Update message with moderation results
    */
-  async updateMessageModeration(
-    messageId: string,
-    response: ModerationResponse,
-  ): Promise<void> {
+  async updateMessageModeration(messageId: string, response: ModerationResponse): Promise<void> {
     const updates: Record<string, any> = {
       ai_moderation_result: JSON.stringify(response.result),
       ai_confidence_score: response.result.confidence,
@@ -752,7 +762,8 @@ Thank you for helping us maintain a safe community.
 
 The ${appName} Safety Team`,
         pushTitle: 'Community Guidelines Reminder',
-        pushBody: 'Your account has received a warning. Please review your recent messages and our community guidelines.',
+        pushBody:
+          'Your account has received a warning. Please review your recent messages and our community guidelines.',
       };
 
     case 'suspension_24h':
@@ -775,7 +786,8 @@ If you believe this suspension was made in error, please contact ${supportEmail}
 
 The ${appName} Safety Team`,
         pushTitle: 'Account Suspended - 24 Hours',
-        pushBody: 'Your account has been suspended for 24 hours due to community guideline concerns.',
+        pushBody:
+          'Your account has been suspended for 24 hours due to community guideline concerns.',
       };
 
     case 'suspension_7d':
@@ -825,7 +837,8 @@ If you believe this action was taken in error, you may submit a formal appeal to
 
 The ${appName} Safety Team`,
         pushTitle: 'Account Deactivated',
-        pushBody: 'Your CoNest account has been permanently deactivated. Check your email for details.',
+        pushBody:
+          'Your CoNest account has been permanently deactivated. Check your email for details.',
       };
 
     default:

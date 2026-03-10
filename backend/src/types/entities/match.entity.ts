@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -141,12 +141,12 @@ export interface MatchUserProfile {
  * FHA Compliant: All factors are user preferences, not protected characteristics
  */
 export const COMPATIBILITY_WEIGHTS = {
-  location: 0.20, // 20%
+  location: 0.2, // 20%
   houseRules: 0.15, // 15%
   lifestyle: 0.15, // 15%
   schedule: 0.15, // 15%
   budget: 0.15, // 15%
-  moveInTiming: 0.10, // 10%
+  moveInTiming: 0.1, // 10%
   leaseTerm: 0.05, // 5%
   communication: 0.05, // 5%
 } as const;

@@ -134,9 +134,7 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
       expect(response.body.user.phoneVerified).toBe(true);
 
       // Verify database state
-      const dbUser = await db('users')
-        .where({ id: existingUserId })
-        .first();
+      const dbUser = await db('users').where({ id: existingUserId }).first();
 
       expect(dbUser.oauth_provider).toBe('google');
       expect(dbUser.oauth_provider_id).toBe('123456789012345678901');
@@ -150,9 +148,7 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
         .send({ idToken: mockGoogleToken })
         .expect(200);
 
-      const dbParent = await db('parents')
-        .where({ user_id: existingUserId })
-        .first();
+      const dbParent = await db('parents').where({ user_id: existingUserId }).first();
 
       // Original parent data should be preserved
       expect(dbParent.first_name).toBe('Verified');
@@ -231,9 +227,7 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
       expect(response.body.user.oauthProviderId).toBe('005678.linking.apple.3456');
 
       // Verify database
-      const dbUser = await db('users')
-        .where({ id: existingUserId })
-        .first();
+      const dbUser = await db('users').where({ id: existingUserId }).first();
 
       expect(dbUser.oauth_provider).toBe('apple');
       expect(dbUser.oauth_provider_id).toBe('005678.linking.apple.3456');
@@ -253,9 +247,7 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
         })
         .expect(200);
 
-      const dbParent = await db('parents')
-        .where({ user_id: existingUserId })
-        .first();
+      const dbParent = await db('parents').where({ user_id: existingUserId }).first();
 
       // Original name should be preserved
       expect(dbParent.first_name).toBe('Verified');
@@ -350,9 +342,7 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
   describe('Account Verification Status', () => {
     it('should maintain verification badges after OAuth linking', async () => {
       // User has phone verification badge
-      expect(
-        (await db('users').where({ id: existingUserId }).first()).phone_verified,
-      ).toBe(true);
+      expect((await db('users').where({ id: existingUserId }).first()).phone_verified).toBe(true);
 
       // Link Google account
       await request(app)
@@ -361,9 +351,7 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
         .expect(200);
 
       // Phone verification should still be active
-      const dbUser = await db('users')
-        .where({ id: existingUserId })
-        .first();
+      const dbUser = await db('users').where({ id: existingUserId }).first();
 
       expect(dbUser.phone_verified).toBe(true);
       expect(dbUser.email_verified).toBe(true);
@@ -380,9 +368,7 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
         .send({ idToken: mockGoogleToken })
         .expect(200);
 
-      const dbUser = await db('users')
-        .where({ id: existingUserId })
-        .first();
+      const dbUser = await db('users').where({ id: existingUserId }).first();
 
       // created_at should NOT change
       expect(new Date(dbUser.created_at).toISOString()).toBe(originalCreatedAt.toISOString());
@@ -400,11 +386,11 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
         .send({ idToken: mockGoogleToken })
         .expect(200);
 
-      const dbUser = await db('users')
-        .where({ id: existingUserId })
-        .first();
+      const dbUser = await db('users').where({ id: existingUserId }).first();
 
-      expect(dbUser.oauth_profile_picture).toBe('https://lh3.googleusercontent.com/a/verified-user');
+      expect(dbUser.oauth_profile_picture).toBe(
+        'https://lh3.googleusercontent.com/a/verified-user',
+      );
     });
 
     it('should NOT add profile picture when linking Apple (Apple provides none)', async () => {
@@ -416,9 +402,7 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
         })
         .expect(200);
 
-      const dbUser = await db('users')
-        .where({ id: existingUserId })
-        .first();
+      const dbUser = await db('users').where({ id: existingUserId }).first();
 
       expect(dbUser.oauth_profile_picture).toBeNull();
     });
@@ -431,9 +415,7 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
         .send({ idToken: mockGoogleToken })
         .expect(200);
 
-      const dbUser = await db('users')
-        .where({ id: existingUserId })
-        .first();
+      const dbUser = await db('users').where({ id: existingUserId }).first();
 
       // Both provider and provider_id should be set (constraint satisfied)
       expect(dbUser.oauth_provider).toBe('google');
@@ -448,9 +430,7 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
         .send({ idToken: mockGoogleToken })
         .expect(200);
 
-      const dbUser = await db('users')
-        .where({ id: existingUserId })
-        .first();
+      const dbUser = await db('users').where({ id: existingUserId }).first();
 
       // User should have BOTH password AND OAuth (valid state)
       expect(dbUser.password_hash).not.toBeNull();
@@ -471,13 +451,11 @@ describe('T018: OAuth Account Linking (Verified Email) - Integration Test', () =
       expect(dbUser.oauth_provider).toBe('google');
 
       // Unlink OAuth (admin operation or user request)
-      await db('users')
-        .where({ id: existingUserId })
-        .update({
-          oauth_provider: null,
-          oauth_provider_id: null,
-          oauth_profile_picture: null,
-        });
+      await db('users').where({ id: existingUserId }).update({
+        oauth_provider: null,
+        oauth_provider_id: null,
+        oauth_profile_picture: null,
+      });
 
       // Verify unlinked
       dbUser = await db('users').where({ id: existingUserId }).first();

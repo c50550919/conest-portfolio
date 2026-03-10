@@ -166,9 +166,7 @@ describe('T017: OAuth Returning User Signin - Integration Test', () => {
         .send({ idToken: mockGoogleToken })
         .expect(200);
 
-      const dbUser = await db('users')
-        .where({ id: existingGoogleUserId })
-        .first();
+      const dbUser = await db('users').where({ id: existingGoogleUserId }).first();
 
       expect(dbUser.last_login).toBeDefined();
       expect(new Date(dbUser.last_login).getTime()).toBeGreaterThanOrEqual(beforeSignin.getTime());
@@ -275,9 +273,7 @@ describe('T017: OAuth Returning User Signin - Integration Test', () => {
         })
         .expect(200);
 
-      const dbUser = await db('users')
-        .where({ id: existingAppleUserId })
-        .first();
+      const dbUser = await db('users').where({ id: existingAppleUserId }).first();
 
       expect(dbUser.last_login).toBeDefined();
       expect(new Date(dbUser.last_login).getTime()).toBeGreaterThanOrEqual(beforeSignin.getTime());
@@ -298,9 +294,7 @@ describe('T017: OAuth Returning User Signin - Integration Test', () => {
         .expect(200);
 
       // Parent name should NOT change
-      const dbParent = await db('parents')
-        .where({ user_id: existingAppleUserId })
-        .first();
+      const dbParent = await db('parents').where({ user_id: existingAppleUserId }).first();
 
       expect(dbParent.first_name).toBe('Returning'); // Original name preserved
       expect(dbParent.last_name).toBe('AppleUser'); // Original name preserved
@@ -338,9 +332,7 @@ describe('T017: OAuth Returning User Signin - Integration Test', () => {
   describe('Suspended Account Handling', () => {
     it('should reject signin for suspended Google OAuth account', async () => {
       // Suspend the Google user account
-      await db('users')
-        .where({ id: existingGoogleUserId })
-        .update({ account_status: 'suspended' });
+      await db('users').where({ id: existingGoogleUserId }).update({ account_status: 'suspended' });
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -379,7 +371,7 @@ describe('T017: OAuth Returning User Signin - Integration Test', () => {
   describe('OAuth Profile Updates', () => {
     it('should update Google profile picture if changed', async () => {
       // Mock Google returns new profile picture URL
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
         getPayload: () => ({
           ...mockGooglePayload,
@@ -392,11 +384,11 @@ describe('T017: OAuth Returning User Signin - Integration Test', () => {
         .send({ idToken: mockGoogleToken })
         .expect(200);
 
-      const dbUser = await db('users')
-        .where({ id: existingGoogleUserId })
-        .first();
+      const dbUser = await db('users').where({ id: existingGoogleUserId }).first();
 
-      expect(dbUser.oauth_profile_picture).toBe('https://lh3.googleusercontent.com/a/new-profile-pic');
+      expect(dbUser.oauth_profile_picture).toBe(
+        'https://lh3.googleusercontent.com/a/new-profile-pic',
+      );
     });
 
     it('should NOT overwrite verified data with OAuth updates', async () => {
@@ -411,9 +403,7 @@ describe('T017: OAuth Returning User Signin - Integration Test', () => {
         .expect(200);
 
       // Phone verification should remain unchanged
-      const dbUser = await db('users')
-        .where({ id: existingGoogleUserId })
-        .first();
+      const dbUser = await db('users').where({ id: existingGoogleUserId }).first();
 
       expect(dbUser.phone_verified).toBe(true);
       expect(dbUser.phone).toBe('+15551234567');
@@ -457,7 +447,7 @@ describe('T017: OAuth Returning User Signin - Integration Test', () => {
   describe('Cross-Provider Edge Cases', () => {
     it('should NOT allow Google signin for user who signed up with Apple', async () => {
       // Attempt Google signin with Apple user's email
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
         getPayload: () => ({
           sub: 'different_google_sub_123',
@@ -482,7 +472,7 @@ describe('T017: OAuth Returning User Signin - Integration Test', () => {
 
     it('should NOT allow Apple signin for user who signed up with Google', async () => {
       // Attempt Apple signin with Google user's email
-    // @ts-expect-error - Mocking Apple signin for testing
+      // @ts-expect-error - Mocking Apple signin for testing
       jest.spyOn(appleSignin, 'verifyIdToken').mockResolvedValue({
         sub: 'different_apple_sub_456',
         email: 'returning@gmail.com', // Google user's email

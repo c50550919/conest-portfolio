@@ -25,12 +25,10 @@ describe('Profile Management', () => {
     await db('users').del();
 
     // Create and login test user
-    const registerRes = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'profiletest@test.com',
-        password: 'SecurePass123!',
-      });
+    const registerRes = await request(app).post('/api/auth/register').send({
+      email: 'profiletest@test.com',
+      password: 'SecurePass123!',
+    });
 
     authToken = registerRes.body.accessToken;
     userId = registerRes.body.user.id;
@@ -232,18 +230,16 @@ describe('Profile Management', () => {
 
     it('should prevent unauthorized profile updates', async () => {
       // Create another user
-      const otherUser = await request(app)
-        .post('/api/auth/register')
-        .send({
-          email: 'other@test.com',
-          password: 'SecurePass123!',
-        });
+      const otherUser = await request(app).post('/api/auth/register').send({
+        email: 'other@test.com',
+        password: 'SecurePass123!',
+      });
 
       await request(app)
         .put(`/api/profiles/${profileId}`)
         .set('Authorization', `Bearer ${otherUser.body.accessToken}`)
         .send({
-          bio: 'Trying to update someone else\'s profile',
+          bio: "Trying to update someone else's profile",
         })
         .expect(403);
     });
@@ -286,12 +282,10 @@ describe('Profile Management', () => {
     });
 
     it('should prevent unauthorized profile deletion', async () => {
-      const otherUser = await request(app)
-        .post('/api/auth/register')
-        .send({
-          email: 'other@test.com',
-          password: 'SecurePass123!',
-        });
+      const otherUser = await request(app).post('/api/auth/register').send({
+        email: 'other@test.com',
+        password: 'SecurePass123!',
+      });
 
       await request(app)
         .delete(`/api/profiles/${profileId}`)
@@ -349,21 +343,18 @@ describe('Profile Management', () => {
   describe('GET /api/profiles/search', () => {
     beforeEach(async () => {
       // Create multiple profiles for search testing
-      await request(app)
-        .post('/api/profiles')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          first_name: 'Sarah',
-          last_name: 'Johnson',
-          bio: 'Working mom',
-          location_city: 'Austin',
-          location_state: 'TX',
-          location_zip: '78701',
-          children_count: 2,
-          children_ages_range: '5-10',
-          budget_min: 800,
-          budget_max: 1200,
-        });
+      await request(app).post('/api/profiles').set('Authorization', `Bearer ${authToken}`).send({
+        first_name: 'Sarah',
+        last_name: 'Johnson',
+        bio: 'Working mom',
+        location_city: 'Austin',
+        location_state: 'TX',
+        location_zip: '78701',
+        children_count: 2,
+        children_ages_range: '5-10',
+        budget_min: 800,
+        budget_max: 1200,
+      });
     });
 
     it('should search profiles by location', async () => {

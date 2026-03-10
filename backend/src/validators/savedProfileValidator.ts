@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -23,11 +23,7 @@ export const createSavedProfileSchema = z.object({
   body: z.object({
     profile_id: z.string().uuid('Invalid profile ID format'),
     folder: folderSchema.nullable(),
-    notes: z
-      .string()
-      .max(500, 'Notes must be 500 characters or less')
-      .optional()
-      .nullable(),
+    notes: z.string().max(500, 'Notes must be 500 characters or less').optional().nullable(),
   }),
 });
 
@@ -38,11 +34,7 @@ export const updateSavedProfileSchema = z.object({
   }),
   body: z.object({
     folder: folderSchema.optional(),
-    notes: z
-      .string()
-      .max(500, 'Notes must be 500 characters or less')
-      .optional()
-      .nullable(),
+    notes: z.string().max(500, 'Notes must be 500 characters or less').optional().nullable(),
   }),
 });
 
@@ -55,9 +47,11 @@ export const deleteSavedProfileSchema = z.object({
 
 // Get saved profiles schema
 export const getSavedProfilesSchema = z.object({
-  query: z.object({
-    folder: folderSchema.optional(),
-  }).optional(),
+  query: z
+    .object({
+      folder: folderSchema.optional(),
+    })
+    .optional(),
 });
 
 // Compare profiles schema

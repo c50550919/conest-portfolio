@@ -82,15 +82,11 @@ describe('Contract: Connection Request Response Endpoints', () => {
 
   describe('Authorization Cases', () => {
     it('should reject accept without authentication token', async () => {
-      await request(app)
-        .patch(`/api/connection-requests/${requestId}/accept`)
-        .expect(401);
+      await request(app).patch(`/api/connection-requests/${requestId}/accept`).expect(401);
     });
 
     it('should reject decline without authentication token', async () => {
-      await request(app)
-        .patch(`/api/connection-requests/${requestId}/decline`)
-        .expect(401);
+      await request(app).patch(`/api/connection-requests/${requestId}/decline`).expect(401);
     });
   });
 

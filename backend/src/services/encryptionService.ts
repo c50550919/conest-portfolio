@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -85,7 +85,7 @@ export class EncryptionService {
       const salt = crypto.randomBytes(this.saltLength);
 
       // Derive encryption key from master key using PBKDF2
-      const derivedKey = await scrypt(this.masterKey, salt, this.keyLength) as Buffer;
+      const derivedKey = (await scrypt(this.masterKey, salt, this.keyLength)) as Buffer;
 
       // Create cipher
       const cipher = crypto.createCipheriv(this.algorithm, derivedKey, iv, {
@@ -132,7 +132,7 @@ export class EncryptionService {
       const authTag = Buffer.from(encryptedData.authTag, 'base64');
 
       // Derive the same key using the stored salt
-      const derivedKey = await scrypt(this.masterKey, salt, this.keyLength) as Buffer;
+      const derivedKey = (await scrypt(this.masterKey, salt, this.keyLength)) as Buffer;
 
       // Create decipher
       const decipher = crypto.createDecipheriv(this.algorithm, derivedKey, iv, {
@@ -148,7 +148,10 @@ export class EncryptionService {
 
       return { content: decrypted };
     } catch (error) {
-      if (error instanceof Error && error.message.includes('Unsupported state or unable to authenticate data')) {
+      if (
+        error instanceof Error &&
+        error.message.includes('Unsupported state or unable to authenticate data')
+      ) {
         throw new Error('Message authentication failed - data may have been tampered with');
       }
       console.error('Decryption error:', error);
@@ -176,10 +179,7 @@ export class EncryptionService {
    * Generate a secure hash for message verification
    */
   generateHash(data: string): string {
-    return crypto
-      .createHash('sha256')
-      .update(data)
-      .digest('base64');
+    return crypto.createHash('sha256').update(data).digest('base64');
   }
 
   /**
@@ -187,10 +187,7 @@ export class EncryptionService {
    */
   verifyHash(data: string, hash: string): boolean {
     const computedHash = this.generateHash(data);
-    return crypto.timingSafeEqual(
-      Buffer.from(computedHash, 'base64'),
-      Buffer.from(hash, 'base64'),
-    );
+    return crypto.timingSafeEqual(Buffer.from(computedHash, 'base64'), Buffer.from(hash, 'base64'));
   }
 
   /**

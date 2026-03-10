@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -59,20 +59,18 @@ export const errorHandler = (
   });
 };
 
-export const notFoundHandler = (
-  req: Request,
-  _res: Response,
-  next: NextFunction,
-): void => {
-  const error = new AppError(
-    `Route ${req.originalUrl} not found`,
-    404,
-  );
+export const notFoundHandler = (req: Request, _res: Response, next: NextFunction): void => {
+  const error = new AppError(`Route ${req.originalUrl} not found`, 404);
   next(error);
 };
 
 // Async error wrapper - wraps async route handlers to catch errors
-type AsyncRequestHandler = (req: Request, res: Response, next: NextFunction) => Promise<void> | void;
-export const asyncHandler = (fn: AsyncRequestHandler) => (req: Request, res: Response, next: NextFunction) => {
-  Promise.resolve(fn(req, res, next)).catch(next);
-};
+type AsyncRequestHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => Promise<void> | void;
+export const asyncHandler =
+  (fn: AsyncRequestHandler) => (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };

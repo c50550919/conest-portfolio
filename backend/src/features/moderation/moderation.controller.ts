@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -145,11 +145,9 @@ export const moderationController = {
       .where('messages.flagged_for_review', true)
       .whereIn('messages.moderation_status', ['pending', 'pending_ai_review'])
       .where((builder) => {
-        void builder.where('messages.ai_category', 'child_predatory_risk').orWhere(
-          'messages.ai_confidence_score',
-          '>=',
-          0.7,
-        );
+        void builder
+          .where('messages.ai_category', 'child_predatory_risk')
+          .orWhere('messages.ai_confidence_score', '>=', 0.7);
       })
       .orderBy('messages.ai_confidence_score', 'desc')
       .orderBy('messages.created_at', 'asc')
@@ -302,21 +300,25 @@ export const moderationController = {
       return;
     }
 
-    await db('messages').where('id', messageId).update({
-      moderation_status: 'approved',
-      flagged_for_review: false,
-      reviewed_by: adminId,
-      reviewed_at: db.fn.now(),
-      moderation_notes: notes || 'Admin approved - false positive',
-    });
+    await db('messages')
+      .where('id', messageId)
+      .update({
+        moderation_status: 'approved',
+        flagged_for_review: false,
+        reviewed_by: adminId,
+        reviewed_at: db.fn.now(),
+        moderation_notes: notes || 'Admin approved - false positive',
+      });
 
-    await db('message_reports').where('message_id', messageId).update({
-      status: 'resolved',
-      resolved_by: adminId,
-      resolved_at: db.fn.now(),
-      resolution_notes: notes || 'Message approved by admin',
-      action_taken: 'none',
-    });
+    await db('message_reports')
+      .where('message_id', messageId)
+      .update({
+        status: 'resolved',
+        resolved_by: adminId,
+        resolved_at: db.fn.now(),
+        resolution_notes: notes || 'Message approved by admin',
+        action_taken: 'none',
+      });
 
     await db('admin_actions').insert({
       admin_id: adminId,
@@ -351,28 +353,32 @@ export const moderationController = {
       return;
     }
 
-    await db('messages').where('id', messageId).update({
-      moderation_status: 'rejected',
-      flagged_for_review: false,
-      reviewed_by: adminId,
-      reviewed_at: db.fn.now(),
-      moderation_notes: notes || 'Violation confirmed by admin',
-      deleted: true,
-    });
+    await db('messages')
+      .where('id', messageId)
+      .update({
+        moderation_status: 'rejected',
+        flagged_for_review: false,
+        reviewed_by: adminId,
+        reviewed_at: db.fn.now(),
+        moderation_notes: notes || 'Violation confirmed by admin',
+        deleted: true,
+      });
 
-    await db('message_reports').where('message_id', messageId).update({
-      status: 'resolved',
-      resolved_by: adminId,
-      resolved_at: db.fn.now(),
-      resolution_notes: notes || 'Violation confirmed',
-      action_taken: accountAction
-        ? accountAction === 'permanent_ban'
-          ? 'user_banned'
-          : accountAction.startsWith('suspension')
-            ? 'user_suspended'
-            : 'warning_issued'
-        : 'message_deleted',
-    });
+    await db('message_reports')
+      .where('message_id', messageId)
+      .update({
+        status: 'resolved',
+        resolved_by: adminId,
+        resolved_at: db.fn.now(),
+        resolution_notes: notes || 'Violation confirmed',
+        action_taken: accountAction
+          ? accountAction === 'permanent_ban'
+            ? 'user_banned'
+            : accountAction.startsWith('suspension')
+              ? 'user_suspended'
+              : 'warning_issued'
+          : 'message_deleted',
+      });
 
     if (accountAction && accountAction !== 'none') {
       await ContentModerationService.applyAccountAction(
@@ -421,13 +427,15 @@ export const moderationController = {
       return;
     }
 
-    await db('messages').where('id', messageId).update({
-      moderation_status: 'approved',
-      flagged_for_review: false,
-      reviewed_by: adminId,
-      reviewed_at: db.fn.now(),
-      moderation_notes: `FALSE POSITIVE: ${notes || 'No notes provided'}`,
-    });
+    await db('messages')
+      .where('id', messageId)
+      .update({
+        moderation_status: 'approved',
+        flagged_for_review: false,
+        reviewed_by: adminId,
+        reviewed_at: db.fn.now(),
+        moderation_notes: `FALSE POSITIVE: ${notes || 'No notes provided'}`,
+      });
 
     await db('ai_moderation_logs')
       .where('message_id', messageId)
@@ -439,13 +447,15 @@ export const moderationController = {
         admin_feedback_category: feedbackCategory,
       });
 
-    await db('message_reports').where('message_id', messageId).update({
-      status: 'dismissed',
-      resolved_by: adminId,
-      resolved_at: db.fn.now(),
-      resolution_notes: `False positive: ${notes || 'AI flagged incorrectly'}`,
-      action_taken: 'none',
-    });
+    await db('message_reports')
+      .where('message_id', messageId)
+      .update({
+        status: 'dismissed',
+        resolved_by: adminId,
+        resolved_at: db.fn.now(),
+        resolution_notes: `False positive: ${notes || 'AI flagged incorrectly'}`,
+        action_taken: 'none',
+      });
 
     await db('admin_actions').insert({
       admin_id: adminId,
@@ -635,10 +645,10 @@ export const moderationController = {
         falsePositiveRate:
           totalReviewed?.count && parseInt(totalReviewed.count as string) > 0
             ? `${(
-              (parseInt((falsePositiveRate?.count as string) || '0') /
+                (parseInt((falsePositiveRate?.count as string) || '0') /
                   parseInt(totalReviewed.count as string)) *
                 100
-            ).toFixed(2)  }%`
+              ).toFixed(2)}%`
             : '0%',
         recentActions,
       },

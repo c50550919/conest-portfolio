@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -37,7 +37,15 @@ void notificationQueue.process('email', async (job) => {
   try {
     // MOCK: In production, integrate with SendGrid, Mailgun, etc.
     logger.info('[MOCK] Email sent to user', { userId, message });
-    console.log('\n📧 MOCK Email notification:\nTo: User', userId, '\nMessage:', message, '\nData:', data, '\n');
+    console.log(
+      '\n📧 MOCK Email notification:\nTo: User',
+      userId,
+      '\nMessage:',
+      message,
+      '\nData:',
+      data,
+      '\n',
+    );
 
     return { success: true };
   } catch (error) {
@@ -71,7 +79,17 @@ void notificationQueue.process('push', async (job) => {
   try {
     // MOCK: In production, integrate with Firebase Cloud Messaging
     logger.info('[MOCK] Push notification sent to user', { userId, title, message });
-    console.log('\n🔔 MOCK Push notification:\nTo: User', userId, '\nTitle:', title, '\nMessage:', message, '\nData:', data, '\n');
+    console.log(
+      '\n🔔 MOCK Push notification:\nTo: User',
+      userId,
+      '\nTitle:',
+      title,
+      '\nMessage:',
+      message,
+      '\nData:',
+      data,
+      '\n',
+    );
 
     return { success: true };
   } catch (error) {
@@ -87,19 +105,23 @@ export const queueNotification = async (
   message: string,
   options?: { title?: string; data?: any },
 ) => {
-  await notificationQueue.add(type, {
-    userId,
+  await notificationQueue.add(
     type,
-    title: options?.title,
-    message,
-    data: options?.data,
-  }, {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000,
+    {
+      userId,
+      type,
+      title: options?.title,
+      message,
+      data: options?.data,
     },
-  });
+    {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 2000,
+      },
+    },
+  );
 
   logger.info(`Queued ${type} notification for user ${userId}`);
 };

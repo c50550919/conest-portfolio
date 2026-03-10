@@ -23,11 +23,7 @@ import { Server } from 'http';
 import { io as ioClient, Socket } from 'socket.io-client';
 import app from '../../src/app';
 import { initializeWebSocket } from '../../src/websockets/socketHandler';
-import {
-  db,
-  createIntegrationTestUser,
-  createConversation,
-} from '../setup-integration';
+import { db, createIntegrationTestUser, createConversation } from '../setup-integration';
 
 // Track server and socket instances for cleanup
 let server: Server;
@@ -87,7 +83,7 @@ describe('Messaging + Socket.io Integration', () => {
 
   afterAll(async () => {
     // Cleanup sockets
-    connectedSockets.forEach(socket => {
+    connectedSockets.forEach((socket) => {
       if (socket.connected) {
         socket.disconnect();
       }
@@ -302,10 +298,10 @@ describe('Messaging + Socket.io Integration', () => {
 
       // Verify no conversation exists yet
       const convBefore = await db('conversations')
-        .where(function() {
+        .where(function () {
           this.where('participant1_id', user1.id).andWhere('participant2_id', user2.id);
         })
-        .orWhere(function() {
+        .orWhere(function () {
           this.where('participant1_id', user2.id).andWhere('participant2_id', user1.id);
         })
         .first();
@@ -325,10 +321,10 @@ describe('Messaging + Socket.io Integration', () => {
 
       // Verify conversation was created
       const convAfter = await db('conversations')
-        .where(function() {
+        .where(function () {
           this.where('participant1_id', user1.id).andWhere('participant2_id', user2.id);
         })
-        .orWhere(function() {
+        .orWhere(function () {
           this.where('participant1_id', user2.id).andWhere('participant2_id', user1.id);
         })
         .first();
@@ -396,7 +392,7 @@ describe('Messaging + Socket.io Integration', () => {
           });
 
           setTimeout(() => resolve(), 2000); // Timeout is success (connection rejected)
-        })
+        }),
       ).resolves.toBeUndefined();
     });
 
@@ -420,7 +416,7 @@ describe('Messaging + Socket.io Integration', () => {
           });
 
           setTimeout(() => resolve(), 2000);
-        })
+        }),
       ).resolves.toBeUndefined();
     });
 

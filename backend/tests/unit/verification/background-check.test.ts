@@ -466,9 +466,9 @@ describe('Background Check Integration', () => {
         response: { data: { error: 'Internal server error' } },
       });
 
-      await expect(
-        client.createApplicant({ email: 'test@example.com' }),
-      ).rejects.toThrow('Certn applicant creation failed: Network error');
+      await expect(client.createApplicant({ email: 'test@example.com' })).rejects.toThrow(
+        'Certn applicant creation failed: Network error',
+      );
 
       expect(logger.error).toHaveBeenCalledWith(
         'Failed to create Certn applicant',

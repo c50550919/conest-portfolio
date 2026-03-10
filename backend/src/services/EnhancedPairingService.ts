@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -77,7 +77,10 @@ export class EnhancedPairingService {
         );
       } catch (auditError) {
         // Log audit errors but don't fail the compatibility calculation
-        logger.error('Failed to create audit log for enhanced compatibility calculation:', auditError);
+        logger.error(
+          'Failed to create audit log for enhanced compatibility calculation:',
+          auditError,
+        );
       }
     }
 
@@ -183,11 +186,12 @@ export class EnhancedPairingService {
 
     // Noise tolerance compatibility (25 points)
     if (profile1.noise_tolerance && profile2.noise_tolerance) {
-      const noiseMatch = this.getOrdinalMatch(
-        profile1.noise_tolerance,
-        profile2.noise_tolerance,
-        ['very_quiet', 'moderate', 'okay_with_noise', 'lively'],
-      );
+      const noiseMatch = this.getOrdinalMatch(profile1.noise_tolerance, profile2.noise_tolerance, [
+        'very_quiet',
+        'moderate',
+        'okay_with_noise',
+        'lively',
+      ]);
       score += noiseMatch * 25;
     }
 
@@ -334,7 +338,7 @@ export class EnhancedPairingService {
     );
 
     // Same week = 100 points, decreasing by ~3 points per week
-    const score = Math.max(0, 100 - daysDiff / 7 * 3);
+    const score = Math.max(0, 100 - (daysDiff / 7) * 3);
 
     return Math.round(score);
   }
@@ -419,7 +423,7 @@ export class EnhancedPairingService {
     const maxDiff = orderedList.length - 1;
 
     // Linear decay: 1 step away = 0.7, 2 steps = 0.3, 3+ steps = 0
-    return Math.max(0, 1 - diff / maxDiff * 1.3);
+    return Math.max(0, 1 - (diff / maxDiff) * 1.3);
   }
 
   /**

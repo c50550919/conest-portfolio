@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -95,7 +95,7 @@ export async function up(knex: Knex): Promise<void> {
       'chk_housing_documents_type',
     );
     table.check(
-      'verification_status IN (\'pending\', \'approved\', \'rejected\', \'needs_more_info\')',
+      "verification_status IN ('pending', 'approved', 'rejected', 'needs_more_info')",
       [],
       'chk_housing_documents_verification_status',
     );
@@ -121,7 +121,12 @@ export async function up(knex: Knex): Promise<void> {
     // Foreign keys
     table.uuid('user_a_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
     table.uuid('user_b_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
-    table.uuid('connection_request_id').nullable().references('id').inTable('connection_requests').onDelete('SET NULL');
+    table
+      .uuid('connection_request_id')
+      .nullable()
+      .references('id')
+      .inTable('connection_requests')
+      .onDelete('SET NULL');
 
     // Tier determination
     table.integer('tier').notNullable();
@@ -146,9 +151,21 @@ export async function up(knex: Knex): Promise<void> {
 
     // Add check constraints using raw SQL
     table.check('tier IN (1, 2, 3)', [], 'chk_success_fees_tier');
-    table.check('confidence_score >= 0 AND confidence_score <= 100', [], 'chk_success_fees_confidence');
-    table.check('user_a_claimed_tier IS NULL OR user_a_claimed_tier IN (1, 2, 3)', [], 'chk_user_a_tier');
-    table.check('user_b_claimed_tier IS NULL OR user_b_claimed_tier IN (1, 2, 3)', [], 'chk_user_b_tier');
+    table.check(
+      'confidence_score >= 0 AND confidence_score <= 100',
+      [],
+      'chk_success_fees_confidence',
+    );
+    table.check(
+      'user_a_claimed_tier IS NULL OR user_a_claimed_tier IN (1, 2, 3)',
+      [],
+      'chk_user_a_tier',
+    );
+    table.check(
+      'user_b_claimed_tier IS NULL OR user_b_claimed_tier IN (1, 2, 3)',
+      [],
+      'chk_user_b_tier',
+    );
 
     // Document evidence
     table.uuid('document_user_a_id').nullable(); // References housing_documents
@@ -193,7 +210,11 @@ export async function up(knex: Knex): Promise<void> {
     );
     table.check('amount_per_user >= 0', [], 'chk_success_fees_amount');
     table.check('total_amount >= 0', [], 'chk_success_fees_total');
-    table.check('refund_amount >= 0 AND refund_amount <= total_amount', [], 'chk_success_fees_refund');
+    table.check(
+      'refund_amount >= 0 AND refund_amount <= total_amount',
+      [],
+      'chk_success_fees_refund',
+    );
   });
 
   // Indexes for success_fees

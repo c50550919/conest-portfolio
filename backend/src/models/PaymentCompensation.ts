@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -103,9 +103,7 @@ export const PaymentCompensationModel = {
    */
   async findById(id: string): Promise<PaymentCompensation | undefined> {
     try {
-      return await db('payment_compensation_events')
-        .where({ id })
-        .first();
+      return await db('payment_compensation_events').where({ id }).first();
     } catch (error: any) {
       if (error.code === '42P01') return undefined;
       throw error;
@@ -225,7 +223,8 @@ export const PaymentCompensationModel = {
       return await db('payment_compensation_events')
         .where('status', 'pending')
         .orWhere((builder) => {
-          void builder.where('status', 'failed')
+          void builder
+            .where('status', 'failed')
             .where('retry_count', '<', 3)
             .where('last_retry_at', '<', db.raw("NOW() - INTERVAL '5 minutes'"));
         })

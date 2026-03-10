@@ -237,7 +237,8 @@ describe('Stripe Live Mode Configuration', () => {
         condition: (env) =>
           env.STRIPE_SECRET_KEY.startsWith('sk_test_') ||
           env.STRIPE_SECRET_KEY === 'sk_test_not_configured',
-        warning: 'STRIPE_SECRET_KEY is using test key (sk_test_) - payments will not process real charges',
+        warning:
+          'STRIPE_SECRET_KEY is using test key (sk_test_) - payments will not process real charges',
       },
       {
         condition: (env) =>
@@ -255,7 +256,9 @@ describe('Stripe Live Mode Configuration', () => {
     ];
 
     function getStagingWarnings(env: Record<string, string>): string[] {
-      return STAGING_WARNING_CHECKS.filter((check) => check.condition(env)).map((check) => check.warning);
+      return STAGING_WARNING_CHECKS.filter((check) => check.condition(env)).map(
+        (check) => check.warning,
+      );
     }
 
     it('should warn about test secret key in staging', () => {
@@ -355,7 +358,8 @@ describe('Stripe Live Mode Configuration', () => {
       const stripeConfigured = {
         liveMode: stripeSecretKey.startsWith('sk_live_'),
         webhookConfigured:
-          stripeWebhookSecret !== 'whsec_not_configured' && stripeWebhookSecret !== 'whsec_placeholder',
+          stripeWebhookSecret !== 'whsec_not_configured' &&
+          stripeWebhookSecret !== 'whsec_placeholder',
       };
 
       expect(stripeConfigured).toEqual({
@@ -371,7 +375,8 @@ describe('Stripe Live Mode Configuration', () => {
       const stripeConfigured = {
         liveMode: stripeSecretKey.startsWith('sk_live_'),
         webhookConfigured:
-          stripeWebhookSecret !== 'whsec_not_configured' && stripeWebhookSecret !== 'whsec_placeholder',
+          stripeWebhookSecret !== 'whsec_not_configured' &&
+          stripeWebhookSecret !== 'whsec_placeholder',
       };
 
       expect(stripeConfigured).toEqual({

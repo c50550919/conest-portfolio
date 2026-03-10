@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -119,22 +119,14 @@ export async function checkRedisHealth(): Promise<boolean> {
 /**
  * Helper: Set value with TTL
  */
-export async function setWithTTL(
-  key: string,
-  value: string,
-  ttl: number,
-): Promise<'OK'> {
+export async function setWithTTL(key: string, value: string, ttl: number): Promise<'OK'> {
   return redis.setex(key, ttl, value);
 }
 
 /**
  * Helper: Set JSON value with TTL
  */
-export async function setJSONWithTTL<T>(
-  key: string,
-  value: T,
-  ttl: number,
-): Promise<'OK'> {
+export async function setJSONWithTTL<T>(key: string, value: T, ttl: number): Promise<'OK'> {
   return redis.setex(key, ttl, JSON.stringify(value));
 }
 
@@ -160,13 +152,7 @@ export async function deleteByPattern(pattern: string): Promise<number> {
   let deletedCount = 0;
 
   do {
-    const [nextCursor, keys] = await redis.scan(
-      cursor,
-      'MATCH',
-      pattern,
-      'COUNT',
-      100,
-    );
+    const [nextCursor, keys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
     cursor = nextCursor;
 
     if (keys.length > 0) {

@@ -432,7 +432,7 @@ describe('Phone Verification Integration', () => {
       const client = new (TelnyxVerifyClient as any).constructor();
 
       // Access private method for testing
-      const normalizeMethod = (client).normalizePhoneNumber.bind(client);
+      const normalizeMethod = client.normalizePhoneNumber.bind(client);
 
       expect(normalizeMethod('5551234567')).toBe('+15551234567');
       expect(normalizeMethod('(555) 123-4567')).toBe('+15551234567');
@@ -441,7 +441,7 @@ describe('Phone Verification Integration', () => {
 
     it('should preserve existing + prefix', () => {
       const client = new (TelnyxVerifyClient as any).constructor();
-      const normalizeMethod = (client).normalizePhoneNumber.bind(client);
+      const normalizeMethod = client.normalizePhoneNumber.bind(client);
 
       expect(normalizeMethod('+15551234567')).toBe('+15551234567');
       expect(normalizeMethod('+44123456789')).toBe('+44123456789');
@@ -449,7 +449,7 @@ describe('Phone Verification Integration', () => {
 
     it('should handle 11-digit US numbers with leading 1', () => {
       const client = new (TelnyxVerifyClient as any).constructor();
-      const normalizeMethod = (client).normalizePhoneNumber.bind(client);
+      const normalizeMethod = client.normalizePhoneNumber.bind(client);
 
       expect(normalizeMethod('15551234567')).toBe('+15551234567');
     });

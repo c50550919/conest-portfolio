@@ -20,11 +20,7 @@
 
 import request from 'supertest';
 import app from '../../src/app';
-import {
-  db,
-  createIntegrationTestUser,
-  createStripeSignature,
-} from '../setup-integration';
+import { db, createIntegrationTestUser, createStripeSignature } from '../setup-integration';
 import { VerificationPaymentModel } from '../../src/models/VerificationPayment';
 
 describe('Stripe Webhook Integration', () => {

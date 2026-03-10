@@ -22,10 +22,7 @@
 
 import request from 'supertest';
 import app from '../../src/app';
-import {
-  db,
-  createIntegrationTestUser,
-} from '../setup-integration';
+import { db, createIntegrationTestUser } from '../setup-integration';
 
 describe('Moderation Workflow Integration', () => {
   /**
@@ -111,9 +108,7 @@ describe('Moderation Workflow Integration', () => {
       expect(response.body.success).toBe(true);
 
       // 4. Verify report was created in database
-      const report = await db('message_reports')
-        .where({ message_id: messageId })
-        .first();
+      const report = await db('message_reports').where({ message_id: messageId }).first();
 
       expect(report).toBeDefined();
       expect(report.reported_by).toBe(reporter.id);
@@ -146,9 +141,7 @@ describe('Moderation Workflow Integration', () => {
 
       expect(response.status).toBe(200);
 
-      const report = await db('message_reports')
-        .where({ message_id: messageId })
-        .first();
+      const report = await db('message_reports').where({ message_id: messageId }).first();
 
       expect(report.report_type).toBe('child_safety_concern');
     });
@@ -207,9 +200,7 @@ describe('Moderation Workflow Integration', () => {
       expect(response.body.message).toContain('banned');
 
       // 4. Verify user moderation_status is 'banned'
-      const bannedUser = await db('users')
-        .where({ id: userToBan.id })
-        .first();
+      const bannedUser = await db('users').where({ id: userToBan.id }).first();
 
       expect(bannedUser.moderation_status).toBe('banned');
       expect(bannedUser.suspension_reason).toBe('Repeated harassment violations');
@@ -287,9 +278,7 @@ describe('Moderation Workflow Integration', () => {
       expect(response.status).toBe(200);
       expect(response.body.message).toContain('24h');
 
-      const suspendedUser = await db('users')
-        .where({ id: userToSuspend.id })
-        .first();
+      const suspendedUser = await db('users').where({ id: userToSuspend.id }).first();
 
       expect(suspendedUser.moderation_status).toBe('suspended');
       expect(suspendedUser.suspension_until).not.toBeNull();
@@ -323,9 +312,7 @@ describe('Moderation Workflow Integration', () => {
       expect(response.status).toBe(200);
       expect(response.body.message).toContain('7d');
 
-      const suspendedUser = await db('users')
-        .where({ id: userToSuspend.id })
-        .first();
+      const suspendedUser = await db('users').where({ id: userToSuspend.id }).first();
 
       // Verify suspension is ~7 days from now
       const suspensionTime = new Date(suspendedUser.suspension_until).getTime();
@@ -378,12 +365,10 @@ describe('Moderation Workflow Integration', () => {
       expect(reportResponse.status).toBe(200);
 
       // 4. Verify offender can still login (before ban)
-      const loginBeforeBan = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: offenderEmail,
-          password: offenderPassword,
-        });
+      const loginBeforeBan = await request(app).post('/api/auth/login').send({
+        email: offenderEmail,
+        password: offenderPassword,
+      });
 
       expect(loginBeforeBan.status).toBe(200);
       expect(loginBeforeBan.body.success).toBe(true);
@@ -402,25 +387,19 @@ describe('Moderation Workflow Integration', () => {
       // 6. Update account_status to enforce login block
       // Note: applyAccountAction currently only sets moderation_status
       // For full workflow, account_status should also be updated
-      await db('users')
-        .where({ id: offender.id })
-        .update({ account_status: 'suspended' });
+      await db('users').where({ id: offender.id }).update({ account_status: 'suspended' });
 
       // 7. Banned user attempts login → should fail
-      const loginAfterBan = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: offenderEmail,
-          password: offenderPassword,
-        });
+      const loginAfterBan = await request(app).post('/api/auth/login').send({
+        email: offenderEmail,
+        password: offenderPassword,
+      });
 
       expect(loginAfterBan.status).toBe(403);
       expect(loginAfterBan.body.error).toContain('not active');
 
       // 8. Verify the report was updated with action taken
-      const updatedReport = await db('message_reports')
-        .where({ message_id: messageId })
-        .first();
+      const updatedReport = await db('message_reports').where({ message_id: messageId }).first();
 
       expect(updatedReport.action_taken).toBe('user_banned');
     });
@@ -436,9 +415,7 @@ describe('Moderation Workflow Integration', () => {
       });
 
       // Initial state
-      const initialUser = await db('users')
-        .where({ id: userWithStrikes.id })
-        .first();
+      const initialUser = await db('users').where({ id: userWithStrikes.id }).first();
       expect(initialUser.moderation_strike_count).toBe(0);
 
       // First suspension
@@ -450,18 +427,14 @@ describe('Moderation Workflow Integration', () => {
           duration: '24h',
         });
 
-      const afterFirstStrike = await db('users')
-        .where({ id: userWithStrikes.id })
-        .first();
+      const afterFirstStrike = await db('users').where({ id: userWithStrikes.id }).first();
       expect(afterFirstStrike.moderation_strike_count).toBe(1);
 
       // Reset suspension for second test
-      await db('users')
-        .where({ id: userWithStrikes.id })
-        .update({
-          moderation_status: 'good_standing',
-          suspension_until: null,
-        });
+      await db('users').where({ id: userWithStrikes.id }).update({
+        moderation_status: 'good_standing',
+        suspension_until: null,
+      });
 
       // Second suspension
       await request(app)
@@ -472,9 +445,7 @@ describe('Moderation Workflow Integration', () => {
           duration: '7d',
         });
 
-      const afterSecondStrike = await db('users')
-        .where({ id: userWithStrikes.id })
-        .first();
+      const afterSecondStrike = await db('users').where({ id: userWithStrikes.id }).first();
       expect(afterSecondStrike.moderation_strike_count).toBe(2);
     });
   });
@@ -503,13 +474,11 @@ describe('Moderation Workflow Integration', () => {
         );
 
         // Flag the message for review (simulating AI detection)
-        await db('messages')
-          .where({ id: messageId })
-          .update({
-            flagged_for_review: true,
-            ai_category: 'child_safety_questionable',
-            ai_confidence_score: 0.75,
-          });
+        await db('messages').where({ id: messageId }).update({
+          flagged_for_review: true,
+          ai_category: 'child_safety_questionable',
+          ai_confidence_score: 0.75,
+        });
       }
 
       // Check moderation queue

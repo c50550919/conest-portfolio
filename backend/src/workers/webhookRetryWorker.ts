@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -83,7 +83,10 @@ export interface WebhookAlert {
  * Registry of webhook processors by source
  * These are the actual functions that process webhook events
  */
-const webhookProcessors: Record<WebhookSource, (payload: Record<string, unknown>) => Promise<void>> = {
+const webhookProcessors: Record<
+  WebhookSource,
+  (payload: Record<string, unknown>) => Promise<void>
+> = {
   stripe: async (payload) => {
     // Dynamic import to avoid circular dependencies
     const { PaymentService } = await import('../features/payments/payment.service');
@@ -155,7 +158,11 @@ void webhookRetryQueue.process('webhook-retry', async (job: Job<WebhookRetryJob>
     // Check if we've exhausted retries
     if (retryCount >= MAX_RETRY_ATTEMPTS - 1) {
       // Move to dead letter queue
-      await moveToDeadLetter(source, eventId, `Max retries (${MAX_RETRY_ATTEMPTS}) exceeded: ${error.message}`);
+      await moveToDeadLetter(
+        source,
+        eventId,
+        `Max retries (${MAX_RETRY_ATTEMPTS}) exceeded: ${error.message}`,
+      );
 
       // Create alert
       await createAlert({
@@ -193,7 +200,12 @@ export async function queueWebhookRetry(
   currentRetryCount: number = 0,
 ): Promise<void> {
   if (currentRetryCount >= MAX_RETRY_ATTEMPTS) {
-    logger.warn('Max retries exceeded, not queueing', { eventId, source, eventType, currentRetryCount });
+    logger.warn('Max retries exceeded, not queueing', {
+      eventId,
+      source,
+      eventType,
+      currentRetryCount,
+    });
     return;
   }
 
@@ -376,13 +388,11 @@ export async function getUnacknowledgedAlerts(limit: number = 50): Promise<Webho
  * Acknowledge an alert
  */
 export async function acknowledgeAlert(alertId: string, acknowledgedBy: string): Promise<void> {
-  await db('webhook_retry_alerts')
-    .where('id', alertId)
-    .update({
-      acknowledged: true,
-      acknowledged_at: new Date(),
-      acknowledged_by: acknowledgedBy,
-    });
+  await db('webhook_retry_alerts').where('id', alertId).update({
+    acknowledged: true,
+    acknowledged_at: new Date(),
+    acknowledged_by: acknowledgedBy,
+  });
 }
 
 /**
@@ -418,7 +428,9 @@ export async function getDeadLetterEvents(
     }
 
     const verificationEvents = await query;
-    results.push(...verificationEvents.map((e: Record<string, unknown>) => ({ ...e, source: e.provider })));
+    results.push(
+      ...verificationEvents.map((e: Record<string, unknown>) => ({ ...e, source: e.provider })),
+    );
   }
 
   return results.slice(0, limit);
@@ -443,18 +455,16 @@ export async function replayDeadLetterEvent(
     }
 
     // Reset event status
-    await db(table)
-      .where('id', eventId)
-      .update({
-        processing_status: 'pending',
-        dead_letter: false,
-        dead_letter_at: null,
-        dead_letter_reason: null,
-        retry_count: 0,
-        last_retry_at: null,
-        next_retry_at: null,
-        error_message: null,
-      });
+    await db(table).where('id', eventId).update({
+      processing_status: 'pending',
+      dead_letter: false,
+      dead_letter_at: null,
+      dead_letter_reason: null,
+      retry_count: 0,
+      last_retry_at: null,
+      next_retry_at: null,
+      error_message: null,
+    });
 
     // Queue for processing
     await queueWebhookRetry(
@@ -477,17 +487,19 @@ export async function replayDeadLetterEvent(
 // Internal Helpers
 // ============================================================================
 
-async function markEventCompleted(source: WebhookSource, eventId: string, retryCount: number): Promise<void> {
+async function markEventCompleted(
+  source: WebhookSource,
+  eventId: string,
+  retryCount: number,
+): Promise<void> {
   const table = source === 'stripe' ? 'stripe_webhook_events' : 'verification_webhook_events';
 
-  await db(table)
-    .where('id', eventId)
-    .update({
-      processing_status: 'completed',
-      processed_at: new Date(),
-      retry_count: retryCount,
-      last_retry_at: new Date(),
-    });
+  await db(table).where('id', eventId).update({
+    processing_status: 'completed',
+    processed_at: new Date(),
+    retry_count: retryCount,
+    last_retry_at: new Date(),
+  });
 }
 
 async function incrementRetryCount(source: WebhookSource, eventId: string): Promise<void> {
@@ -501,27 +513,31 @@ async function incrementRetryCount(source: WebhookSource, eventId: string): Prom
     });
 }
 
-async function updateNextRetryAt(source: WebhookSource, eventId: string, nextRetryAt: Date): Promise<void> {
+async function updateNextRetryAt(
+  source: WebhookSource,
+  eventId: string,
+  nextRetryAt: Date,
+): Promise<void> {
   const table = source === 'stripe' ? 'stripe_webhook_events' : 'verification_webhook_events';
 
-  await db(table)
-    .where('id', eventId)
-    .update({
-      next_retry_at: nextRetryAt,
-    });
+  await db(table).where('id', eventId).update({
+    next_retry_at: nextRetryAt,
+  });
 }
 
-async function moveToDeadLetter(source: WebhookSource, eventId: string, reason: string): Promise<void> {
+async function moveToDeadLetter(
+  source: WebhookSource,
+  eventId: string,
+  reason: string,
+): Promise<void> {
   const table = source === 'stripe' ? 'stripe_webhook_events' : 'verification_webhook_events';
 
-  await db(table)
-    .where('id', eventId)
-    .update({
-      dead_letter: true,
-      dead_letter_at: new Date(),
-      dead_letter_reason: reason,
-      processing_status: 'failed',
-    });
+  await db(table).where('id', eventId).update({
+    dead_letter: true,
+    dead_letter_at: new Date(),
+    dead_letter_reason: reason,
+    processing_status: 'failed',
+  });
 
   logger.warn('Moved webhook to dead letter queue', { eventId, source, reason });
 }

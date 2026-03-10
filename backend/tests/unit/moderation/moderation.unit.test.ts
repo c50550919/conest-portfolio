@@ -130,10 +130,7 @@ describe('Moderation Result Validation', () => {
 });
 
 describe('Action Determination Logic', () => {
-  const determineAction = (
-    category: ModerationCategory,
-    confidence: number,
-  ): string => {
+  const determineAction = (category: ModerationCategory, confidence: number): string => {
     const thresholds = DEFAULT_THRESHOLDS;
 
     if (
@@ -220,13 +217,12 @@ describe('Action Determination Logic', () => {
 });
 
 describe('Signal Detection', () => {
-  const hasSignals = (signals: ModerationSignals): boolean => (
+  const hasSignals = (signals: ModerationSignals): boolean =>
     signals.child_focus ||
-      signals.asks_schedule ||
-      signals.asks_location_school ||
-      signals.offers_unsolicited_access_to_child ||
-      signals.probes_security_details
-  );
+    signals.asks_schedule ||
+    signals.asks_location_school ||
+    signals.offers_unsolicited_access_to_child ||
+    signals.probes_security_details;
 
   it('should detect no signals when all false', () => {
     const signals: ModerationSignals = {
@@ -280,24 +276,28 @@ describe('API Response Parsing', () => {
 
   it('should parse valid Gemini response', () => {
     const mockGeminiResponse = {
-      candidates: [{
-        content: {
-          parts: [{
-            text: JSON.stringify({
-              category: 'normal',
-              confidence: 0.95,
-              signals: {
-                child_focus: false,
-                asks_schedule: false,
-                asks_location_school: false,
-                offers_unsolicited_access_to_child: false,
-                probes_security_details: false,
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                text: JSON.stringify({
+                  category: 'normal',
+                  confidence: 0.95,
+                  signals: {
+                    child_focus: false,
+                    asks_schedule: false,
+                    asks_location_school: false,
+                    offers_unsolicited_access_to_child: false,
+                    probes_security_details: false,
+                  },
+                  reasoning: 'Normal housing discussion',
+                }),
               },
-              reasoning: 'Normal housing discussion',
-            }),
-          }],
+            ],
+          },
         },
-      }],
+      ],
     };
 
     const text = mockGeminiResponse.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -310,22 +310,24 @@ describe('API Response Parsing', () => {
 
   it('should parse valid OpenAI response', () => {
     const mockOpenAIResponse = {
-      choices: [{
-        message: {
-          content: JSON.stringify({
-            category: 'child_safety_questionable',
-            confidence: 0.65,
-            signals: {
-              child_focus: true,
-              asks_schedule: false,
-              asks_location_school: false,
-              offers_unsolicited_access_to_child: false,
-              probes_security_details: false,
-            },
-            reasoning: 'Shows interest in children details',
-          }),
+      choices: [
+        {
+          message: {
+            content: JSON.stringify({
+              category: 'child_safety_questionable',
+              confidence: 0.65,
+              signals: {
+                child_focus: true,
+                asks_schedule: false,
+                asks_location_school: false,
+                offers_unsolicited_access_to_child: false,
+                probes_security_details: false,
+              },
+              reasoning: 'Shows interest in children details',
+            }),
+          },
         },
-      }],
+      ],
     };
 
     const text = mockOpenAIResponse.choices?.[0]?.message?.content;

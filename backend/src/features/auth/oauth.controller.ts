@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -112,11 +112,7 @@ export class OAuthController {
       // Validate request body
       const { identityToken, nonce, fullName } = req.body;
 
-      if (
-        !identityToken ||
-        typeof identityToken !== 'string' ||
-        identityToken.trim() === ''
-      ) {
+      if (!identityToken || typeof identityToken !== 'string' || identityToken.trim() === '') {
         const errorResponse: AuthErrorResponse = {
           success: false,
           error: 'validation_error',
@@ -225,10 +221,7 @@ export class OAuthController {
     }
 
     // Account status errors (403 Forbidden)
-    if (
-      errorMessage.includes('suspended') ||
-      errorMessage.includes('deactivated')
-    ) {
+    if (errorMessage.includes('suspended') || errorMessage.includes('deactivated')) {
       const errorResponse: AuthErrorResponse = {
         success: false,
         error: 'forbidden',

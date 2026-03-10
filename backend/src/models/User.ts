@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -69,9 +69,7 @@ export const UserModel = {
   },
 
   async updateLastLogin(id: string): Promise<void> {
-    await db('users')
-      .where({ id })
-      .update({ last_login_at: db.fn.now() });
+    await db('users').where({ id }).update({ last_login_at: db.fn.now() });
   },
 
   async delete(id: string): Promise<void> {

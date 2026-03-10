@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -181,13 +181,10 @@ export const PaymentCompensationService = {
           await SplitRentOperationModel.addPaymentId(operationId, payment.id);
 
           // Log payment creation
-          await PaymentAuditLogModel.logPaymentCreated(
-            payment.id,
-            null,
-            'system',
-            operationId,
-            { member_user_id: member.user_id, rent_share: member.rent_share },
-          );
+          await PaymentAuditLogModel.logPaymentCreated(payment.id, null, 'system', operationId, {
+            member_user_id: member.user_id,
+            rent_share: member.rent_share,
+          });
 
           results.push({ payment });
         }
@@ -370,11 +367,15 @@ export const PaymentCompensationService = {
 
       if (payment.stripe_payment_intent_id) {
         // Retrieve payment intent from Stripe
-        const paymentIntent = await stripe.paymentIntents.retrieve(payment.stripe_payment_intent_id);
+        const paymentIntent = await stripe.paymentIntents.retrieve(
+          payment.stripe_payment_intent_id,
+        );
 
-        if (paymentIntent.status === 'requires_payment_method' ||
-            paymentIntent.status === 'requires_confirmation' ||
-            paymentIntent.status === 'requires_action') {
+        if (
+          paymentIntent.status === 'requires_payment_method' ||
+          paymentIntent.status === 'requires_confirmation' ||
+          paymentIntent.status === 'requires_action'
+        ) {
           // Cancel the intent (not yet charged)
           await stripe.paymentIntents.cancel(payment.stripe_payment_intent_id);
           action = 'cancelled';
@@ -511,7 +512,10 @@ export const PaymentCompensationService = {
           await PaymentCompensationModel.markAsCompleted(compensation.id);
           compensatedPayments++;
         } else {
-          await PaymentCompensationModel.markAsFailed(compensation.id, result.error || 'Unknown error');
+          await PaymentCompensationModel.markAsFailed(
+            compensation.id,
+            result.error || 'Unknown error',
+          );
           errors.push(`Payment ${paymentId}: ${result.error}`);
         }
       } catch (error: any) {
@@ -586,9 +590,17 @@ export const PaymentCompensationService = {
    * Get operation status
    */
   async getOperationStatus(operationId: string): Promise<{
-    operation: ReturnType<typeof SplitRentOperationModel.findByOperationId> extends Promise<infer T> ? T : never;
-    compensations: ReturnType<typeof PaymentCompensationModel.getOperationStats> extends Promise<infer T> ? T : never;
-    auditLog: ReturnType<typeof PaymentAuditLogModel.findByOperationId> extends Promise<infer T> ? T : never;
+    operation: ReturnType<typeof SplitRentOperationModel.findByOperationId> extends Promise<infer T>
+      ? T
+      : never;
+    compensations: ReturnType<typeof PaymentCompensationModel.getOperationStats> extends Promise<
+      infer T
+    >
+      ? T
+      : never;
+    auditLog: ReturnType<typeof PaymentAuditLogModel.findByOperationId> extends Promise<infer T>
+      ? T
+      : never;
   } | null> {
     const operation = await SplitRentOperationModel.findByOperationId(operationId);
     if (!operation) {

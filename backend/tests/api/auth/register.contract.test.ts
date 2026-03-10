@@ -62,7 +62,9 @@ describe.skip('POST /api/auth/register - Contract Tests (TDD Stubs)', () => {
 
       // Ensure tokens are JWTs (basic format check)
       expect(response.body.accessToken).toMatch(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/);
-      expect(response.body.refreshToken).toMatch(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/);
+      expect(response.body.refreshToken).toMatch(
+        /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/,
+      );
     });
 
     it('should NOT return password hash in response', async () => {
@@ -80,10 +82,7 @@ describe.skip('POST /api/auth/register - Contract Tests (TDD Stubs)', () => {
         childrenAgeGroups: ['toddler'],
       };
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(validPayload)
-        .expect(201);
+      const response = await request(app).post('/api/auth/register').send(validPayload).expect(201);
 
       expect(response.body).not.toHaveProperty('password');
       expect(response.body).not.toHaveProperty('passwordHash');
@@ -107,10 +106,7 @@ describe.skip('POST /api/auth/register - Contract Tests (TDD Stubs)', () => {
         childrenAgeGroups: ['toddler', 'elementary', 'teen'],
       };
 
-      await request(app)
-        .post('/api/auth/register')
-        .send(payload)
-        .expect(201);
+      await request(app).post('/api/auth/register').send(payload).expect(201);
     });
 
     it('should REJECT childrenNames (prohibited child PII)', async () => {
@@ -129,10 +125,7 @@ describe.skip('POST /api/auth/register - Contract Tests (TDD Stubs)', () => {
         childrenNames: ['Alice', 'Bob'], // PROHIBITED
       };
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(payload)
-        .expect(400);
+      const response = await request(app).post('/api/auth/register').send(payload).expect(400);
 
       expect(response.body.error).toContain('childrenNames');
     });
@@ -153,10 +146,7 @@ describe.skip('POST /api/auth/register - Contract Tests (TDD Stubs)', () => {
         childrenAges: [3, 7], // PROHIBITED
       };
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(payload)
-        .expect(400);
+      const response = await request(app).post('/api/auth/register').send(payload).expect(400);
 
       expect(response.body.error).toContain('childrenAges');
     });
@@ -177,10 +167,7 @@ describe.skip('POST /api/auth/register - Contract Tests (TDD Stubs)', () => {
         childrenAgeGroups: ['toddler'],
       };
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(payload)
-        .expect(400);
+      const response = await request(app).post('/api/auth/register').send(payload).expect(400);
 
       expect(response.body.error).toContain('email');
     });
@@ -200,10 +187,7 @@ describe.skip('POST /api/auth/register - Contract Tests (TDD Stubs)', () => {
         childrenAgeGroups: ['toddler'],
       };
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(payload)
-        .expect(400);
+      const response = await request(app).post('/api/auth/register').send(payload).expect(400);
 
       expect(response.body.error).toContain('email');
     });
@@ -223,10 +207,7 @@ describe.skip('POST /api/auth/register - Contract Tests (TDD Stubs)', () => {
         childrenAgeGroups: ['toddler'],
       };
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(payload)
-        .expect(400);
+      const response = await request(app).post('/api/auth/register').send(payload).expect(400);
 
       expect(response.body.error).toContain('password');
     });
@@ -246,10 +227,7 @@ describe.skip('POST /api/auth/register - Contract Tests (TDD Stubs)', () => {
         childrenAgeGroups: ['invalid-age-group'], // Not toddler/elementary/teen
       };
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(payload)
-        .expect(400);
+      const response = await request(app).post('/api/auth/register').send(payload).expect(400);
 
       expect(response.body.error).toContain('childrenAgeGroups');
     });
@@ -275,10 +253,7 @@ describe.skip('POST /api/auth/register - Contract Tests (TDD Stubs)', () => {
       await request(app).post('/api/auth/register').send(payload).expect(201);
 
       // Second registration with same email should fail
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(payload)
-        .expect(409);
+      const response = await request(app).post('/api/auth/register').send(payload).expect(409);
 
       expect(response.body.error).toContain('email');
     });

@@ -45,7 +45,8 @@ describe('Webhook Retry Queue Implementation', () => {
   });
 
   describe('Backoff Strategy', () => {
-    const calculateDelay = (retryCount: number): number => BACKOFF_DELAYS[retryCount] || BACKOFF_DELAYS[BACKOFF_DELAYS.length - 1];
+    const calculateDelay = (retryCount: number): number =>
+      BACKOFF_DELAYS[retryCount] || BACKOFF_DELAYS[BACKOFF_DELAYS.length - 1];
 
     it('should return 2s delay for first retry', () => {
       expect(calculateDelay(0)).toBe(2000);
@@ -161,7 +162,8 @@ describe('Webhook Retry Queue Implementation', () => {
         source: 'stripe',
         event_type: 'payment_intent.succeeded',
         failure_count: 3,
-        message: 'Stripe webhook type "payment_intent.succeeded" has failed 3 times in the last hour',
+        message:
+          'Stripe webhook type "payment_intent.succeeded" has failed 3 times in the last hour',
       };
 
       const result = alertSchema.safeParse(alert);
@@ -331,10 +333,7 @@ describe('Webhook Retry Queue Implementation', () => {
     const shouldMoveToDeadLetter = (
       retryCount: number,
       maxRetries: number = MAX_RETRY_ATTEMPTS,
-    ): boolean => 
-      retryCount >= maxRetries - 1 // Move after last retry fails
-    ;
-
+    ): boolean => retryCount >= maxRetries - 1; // Move after last retry fails
     it('should not move to dead letter on first failure', () => {
       expect(shouldMoveToDeadLetter(0)).toBe(false);
     });

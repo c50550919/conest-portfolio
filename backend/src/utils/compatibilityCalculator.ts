@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -93,14 +93,8 @@ export function calculateCompatibilityBreakdown(
   let totalScore = 0;
 
   // 1. Budget compatibility (50 points max) - User preference, not family composition
-  const userBudget = calculateAverageBudget(
-    userProfile.budget_min,
-    userProfile.budget_max,
-  );
-  const targetBudget = calculateAverageBudget(
-    targetProfile.budget_min,
-    targetProfile.budget_max,
-  );
+  const userBudget = calculateAverageBudget(userProfile.budget_min, userProfile.budget_max);
+  const targetBudget = calculateAverageBudget(targetProfile.budget_min, targetProfile.budget_max);
 
   let budgetScore = 0;
   let budgetDiff = 0;
@@ -142,10 +136,7 @@ export function calculateCompatibilityBreakdown(
  * @param budgetMax - Maximum budget
  * @returns Average budget, or 0 if both are null
  */
-function calculateAverageBudget(
-  budgetMin: number | null,
-  budgetMax: number | null,
-): number {
+function calculateAverageBudget(budgetMin: number | null, budgetMax: number | null): number {
   if (budgetMin !== null && budgetMax !== null) {
     return (budgetMin + budgetMax) / 2;
   }

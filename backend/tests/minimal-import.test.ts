@@ -10,13 +10,15 @@ describe('Minimal Import Test', () => {
       done(new Error('Import timed out after 5 seconds'));
     }, 5000);
 
-    import('../src/server').then((module) => {
-      console.log('Import successful!');
-      console.log('App type:', typeof module.default);
-      done();
-    }).catch((err) => {
-      console.error('Import failed:', err);
-      done(err);
-    });
+    import('../src/server')
+      .then((module) => {
+        console.log('Import successful!');
+        console.log('App type:', typeof module.default);
+        done();
+      })
+      .catch((err) => {
+        console.error('Import failed:', err);
+        done(err);
+      });
   });
 });

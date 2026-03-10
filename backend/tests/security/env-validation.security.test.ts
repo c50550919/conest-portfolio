@@ -15,7 +15,11 @@
  * Created: 2025-11-10 (Security Hardening Initiative)
  */
 
-import { validateEnvironment, validateProductionSecurity, getValidationSummary } from '../../config/validation';
+import {
+  validateEnvironment,
+  validateProductionSecurity,
+  getValidationSummary,
+} from '../../config/validation';
 
 // Store original environment
 const originalEnv = { ...process.env };
@@ -44,12 +48,12 @@ describe('Environment Variable Validation Security Tests', () => {
       process.env.REDIS_PORT = '6379';
       process.env.JWT_SECRET = 'a'.repeat(32); // 32 chars minimum
       process.env.JWT_REFRESH_SECRET = 'b'.repeat(32);
-      process.env.STRIPE_SECRET_KEY = `sk_test_${  'a'.repeat(24)}`;
-      process.env.STRIPE_PUBLISHABLE_KEY = `pk_test_${  'a'.repeat(24)}`;
-      process.env.STRIPE_WEBHOOK_SECRET = `whsec_${  'a'.repeat(24)}`;
+      process.env.STRIPE_SECRET_KEY = `sk_test_${'a'.repeat(24)}`;
+      process.env.STRIPE_PUBLISHABLE_KEY = `pk_test_${'a'.repeat(24)}`;
+      process.env.STRIPE_WEBHOOK_SECRET = `whsec_${'a'.repeat(24)}`;
       process.env.VERIFF_API_KEY = 'a'.repeat(20);
       process.env.CERTN_API_KEY = 'a'.repeat(20);
-      process.env.TWILIO_ACCOUNT_SID = `AC${  'a'.repeat(32)}`;
+      process.env.TWILIO_ACCOUNT_SID = `AC${'a'.repeat(32)}`;
       process.env.TWILIO_AUTH_TOKEN = 'a'.repeat(32);
       process.env.TWILIO_PHONE_NUMBER = '+15555555555';
       process.env.AWS_ACCESS_KEY_ID = 'a'.repeat(20);
@@ -138,7 +142,7 @@ describe('Environment Variable Validation Security Tests', () => {
     it('should accept valid NODE_ENV values', () => {
       const validValues = ['development', 'production', 'test'];
 
-      validValues.forEach(value => {
+      validValues.forEach((value) => {
         process.env.NODE_ENV = value;
         try {
           validateEnvironment();
@@ -155,7 +159,7 @@ describe('Environment Variable Validation Security Tests', () => {
     });
 
     it('should accept valid Stripe secret key format', () => {
-      process.env.STRIPE_SECRET_KEY = `sk_test_${  'a'.repeat(24)}`;
+      process.env.STRIPE_SECRET_KEY = `sk_test_${'a'.repeat(24)}`;
 
       try {
         validateEnvironment();
@@ -171,7 +175,7 @@ describe('Environment Variable Validation Security Tests', () => {
     });
 
     it('should accept valid Stripe publishable key format', () => {
-      process.env.STRIPE_PUBLISHABLE_KEY = `pk_test_${  'a'.repeat(24)}`;
+      process.env.STRIPE_PUBLISHABLE_KEY = `pk_test_${'a'.repeat(24)}`;
 
       try {
         validateEnvironment();
@@ -181,7 +185,7 @@ describe('Environment Variable Validation Security Tests', () => {
     });
 
     it('should accept valid Stripe webhook secret format', () => {
-      process.env.STRIPE_WEBHOOK_SECRET = `whsec_${  'a'.repeat(24)}`;
+      process.env.STRIPE_WEBHOOK_SECRET = `whsec_${'a'.repeat(24)}`;
 
       try {
         validateEnvironment();
@@ -197,7 +201,7 @@ describe('Environment Variable Validation Security Tests', () => {
     });
 
     it('should accept valid Twilio Account SID format', () => {
-      process.env.TWILIO_ACCOUNT_SID = `AC${  'a'.repeat(32)}`;
+      process.env.TWILIO_ACCOUNT_SID = `AC${'a'.repeat(32)}`;
 
       try {
         validateEnvironment();
@@ -231,7 +235,7 @@ describe('Environment Variable Validation Security Tests', () => {
     it('should accept valid AWS region format', () => {
       const validRegions = ['us-east-1', 'us-west-2', 'eu-west-1', 'ap-south-1'];
 
-      validRegions.forEach(region => {
+      validRegions.forEach((region) => {
         process.env.AWS_REGION = region;
         try {
           validateEnvironment();
@@ -273,7 +277,7 @@ describe('Environment Variable Validation Security Tests', () => {
         'jwt_secret',
       ];
 
-      insecurePlaceholders.forEach(placeholder => {
+      insecurePlaceholders.forEach((placeholder) => {
         process.env.JWT_SECRET = placeholder + 'a'.repeat(32); // Add length to pass minLength
         expect(() => validateEnvironment()).toThrow();
       });
@@ -287,7 +291,7 @@ describe('Environment Variable Validation Security Tests', () => {
         'refresh_secret',
       ];
 
-      insecurePlaceholders.forEach(placeholder => {
+      insecurePlaceholders.forEach((placeholder) => {
         process.env.JWT_REFRESH_SECRET = placeholder + 'a'.repeat(32);
         expect(() => validateEnvironment()).toThrow();
       });
@@ -296,7 +300,7 @@ describe('Environment Variable Validation Security Tests', () => {
     it('should accept valid PORT numbers', () => {
       const validPorts = ['80', '443', '3000', '8080', '65535'];
 
-      validPorts.forEach(port => {
+      validPorts.forEach((port) => {
         process.env.PORT = port;
         try {
           validateEnvironment();
@@ -309,7 +313,7 @@ describe('Environment Variable Validation Security Tests', () => {
     it('should reject invalid PORT numbers', () => {
       const invalidPorts = ['0', '-1', '70000', 'invalid'];
 
-      invalidPorts.forEach(port => {
+      invalidPorts.forEach((port) => {
         process.env.PORT = port;
         expect(() => validateEnvironment()).toThrow();
       });
@@ -318,7 +322,7 @@ describe('Environment Variable Validation Security Tests', () => {
     it('should accept valid BCRYPT_ROUNDS', () => {
       const validRounds = ['10', '12', '14', '15'];
 
-      validRounds.forEach(rounds => {
+      validRounds.forEach((rounds) => {
         process.env.BCRYPT_ROUNDS = rounds;
         try {
           validateEnvironment();
@@ -331,7 +335,7 @@ describe('Environment Variable Validation Security Tests', () => {
     it('should reject invalid BCRYPT_ROUNDS', () => {
       const invalidRounds = ['5', '20', 'invalid'];
 
-      invalidRounds.forEach(rounds => {
+      invalidRounds.forEach((rounds) => {
         process.env.BCRYPT_ROUNDS = rounds;
         expect(() => validateEnvironment()).toThrow();
       });
@@ -351,16 +355,16 @@ describe('Environment Variable Validation Security Tests', () => {
       process.env.DB_PASSWORD = 'a'.repeat(16);
       process.env.REDIS_HOST = 'prod-redis.example.com';
       process.env.REDIS_PORT = '6379';
-      process.env.JWT_SECRET = `production_secret_${  'a'.repeat(32)}`;
-      process.env.JWT_REFRESH_SECRET = `production_refresh_${  'a'.repeat(32)}`;
-      process.env.STRIPE_SECRET_KEY = `sk_live_${  'a'.repeat(24)}`;
-      process.env.STRIPE_PUBLISHABLE_KEY = `pk_live_${  'a'.repeat(24)}`;
-      process.env.STRIPE_WEBHOOK_SECRET = `whsec_${  'a'.repeat(24)}`;
+      process.env.JWT_SECRET = `production_secret_${'a'.repeat(32)}`;
+      process.env.JWT_REFRESH_SECRET = `production_refresh_${'a'.repeat(32)}`;
+      process.env.STRIPE_SECRET_KEY = `sk_live_${'a'.repeat(24)}`;
+      process.env.STRIPE_PUBLISHABLE_KEY = `pk_live_${'a'.repeat(24)}`;
+      process.env.STRIPE_WEBHOOK_SECRET = `whsec_${'a'.repeat(24)}`;
       process.env.VERIFF_API_KEY = 'a'.repeat(20);
       process.env.VERIFF_BASE_URL = 'https://stationapi.veriff.com';
       process.env.CERTN_API_KEY = 'a'.repeat(20);
       process.env.CERTN_BASE_URL = 'https://api.certn.co/v1';
-      process.env.TWILIO_ACCOUNT_SID = `AC${  'a'.repeat(32)}`;
+      process.env.TWILIO_ACCOUNT_SID = `AC${'a'.repeat(32)}`;
       process.env.TWILIO_AUTH_TOKEN = 'a'.repeat(32);
       process.env.TWILIO_PHONE_NUMBER = '+15555555555';
       process.env.AWS_ACCESS_KEY_ID = 'a'.repeat(20);
@@ -371,8 +375,8 @@ describe('Environment Variable Validation Security Tests', () => {
     });
 
     it('should pass production validation with live Stripe keys', () => {
-      process.env.STRIPE_SECRET_KEY = `sk_live_${  'a'.repeat(24)}`;
-      process.env.STRIPE_PUBLISHABLE_KEY = `pk_live_${  'a'.repeat(24)}`;
+      process.env.STRIPE_SECRET_KEY = `sk_live_${'a'.repeat(24)}`;
+      process.env.STRIPE_PUBLISHABLE_KEY = `pk_live_${'a'.repeat(24)}`;
 
       expect(() => {
         validateEnvironment();
@@ -381,7 +385,7 @@ describe('Environment Variable Validation Security Tests', () => {
     });
 
     it('should warn about test Stripe keys in production', () => {
-      process.env.STRIPE_SECRET_KEY = `sk_test_${  'a'.repeat(24)}`;
+      process.env.STRIPE_SECRET_KEY = `sk_test_${'a'.repeat(24)}`;
 
       // Should not throw but should log warning
       expect(() => {

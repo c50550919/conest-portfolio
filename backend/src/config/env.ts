@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -193,12 +193,17 @@ export function validateEnv(): Env {
 
     // Auto-generate encryption key if not provided in development
     if (!validatedEnv.ENCRYPTION_MASTER_KEY) {
-      if (validatedEnv.SECURITY_MODE === 'development' || validatedEnv.SECURITY_MODE === 'testing') {
+      if (
+        validatedEnv.SECURITY_MODE === 'development' ||
+        validatedEnv.SECURITY_MODE === 'testing'
+      ) {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const cryptoModule = require('crypto');
         const key = cryptoModule.randomBytes(32).toString('base64');
         validatedEnv.ENCRYPTION_MASTER_KEY = key;
-        logger.warn('⚠️  Auto-generated ENCRYPTION_MASTER_KEY for development (DO NOT USE IN PRODUCTION)');
+        logger.warn(
+          '⚠️  Auto-generated ENCRYPTION_MASTER_KEY for development (DO NOT USE IN PRODUCTION)',
+        );
       } else {
         throw new Error('ENCRYPTION_MASTER_KEY is required in staging/production modes');
       }
@@ -243,7 +248,9 @@ export function validateEnv(): Env {
       certnConfigured: !!(validatedEnv.CERTN_API_KEY && validatedEnv.CERTN_WEBHOOK_SECRET),
       stripeConfigured: {
         liveMode: validatedEnv.STRIPE_SECRET_KEY.startsWith('sk_live_'),
-        webhookConfigured: validatedEnv.STRIPE_WEBHOOK_SECRET !== 'whsec_not_configured' && validatedEnv.STRIPE_WEBHOOK_SECRET !== 'whsec_placeholder',
+        webhookConfigured:
+          validatedEnv.STRIPE_WEBHOOK_SECRET !== 'whsec_not_configured' &&
+          validatedEnv.STRIPE_WEBHOOK_SECRET !== 'whsec_placeholder',
       },
       securityFeatures: {
         rateLimiting: validatedEnv.ENABLE_RATE_LIMITING,
@@ -287,7 +294,10 @@ interface ProductionSecurityRule {
  */
 const FORBIDDEN_DEV_DEFAULTS: Array<{ key: keyof Env; values: string[] }> = [
   { key: 'DB_PASSWORD', values: ['', 'your_secure_password_here'] },
-  { key: 'JWT_SECRET', values: ['dev-secret-change-in-production-2024', 'your_jwt_secret_here_change_in_production'] },
+  {
+    key: 'JWT_SECRET',
+    values: ['dev-secret-change-in-production-2024', 'your_jwt_secret_here_change_in_production'],
+  },
   { key: 'JWT_REFRESH_SECRET', values: ['dev-refresh-secret-change-in-production-2024'] },
 ];
 
@@ -297,42 +307,92 @@ const FORBIDDEN_DEV_DEFAULTS: Array<{ key: keyof Env; values: string[] }> = [
  */
 const PRODUCTION_SECURITY_RULES: ProductionSecurityRule[] = [
   // JWT strength requirements
-  { check: (env) => env.JWT_SECRET.length >= 32, error: 'JWT_SECRET must be at least 32 characters in production' },
-  { check: (env) => env.JWT_REFRESH_SECRET.length >= 32, error: 'JWT_REFRESH_SECRET must be at least 32 characters in production' },
+  {
+    check: (env) => env.JWT_SECRET.length >= 32,
+    error: 'JWT_SECRET must be at least 32 characters in production',
+  },
+  {
+    check: (env) => env.JWT_REFRESH_SECRET.length >= 32,
+    error: 'JWT_REFRESH_SECRET must be at least 32 characters in production',
+  },
 
   // Stripe live mode requirements
-  { check: (env) => env.STRIPE_SECRET_KEY.startsWith('sk_live_'), error: 'STRIPE_SECRET_KEY must use live key (sk_live_) in production' },
-  { check: (env) => env.STRIPE_PUBLISHABLE_KEY.startsWith('pk_live_'), error: 'STRIPE_PUBLISHABLE_KEY must use live key (pk_live_) in production' },
-  { check: (env) => env.STRIPE_WEBHOOK_SECRET.startsWith('whsec_') && env.STRIPE_WEBHOOK_SECRET !== 'whsec_not_configured' && env.STRIPE_WEBHOOK_SECRET !== 'whsec_placeholder', error: 'STRIPE_WEBHOOK_SECRET must be configured with real webhook secret in production (get from Stripe dashboard)' },
+  {
+    check: (env) => env.STRIPE_SECRET_KEY.startsWith('sk_live_'),
+    error: 'STRIPE_SECRET_KEY must use live key (sk_live_) in production',
+  },
+  {
+    check: (env) => env.STRIPE_PUBLISHABLE_KEY.startsWith('pk_live_'),
+    error: 'STRIPE_PUBLISHABLE_KEY must use live key (pk_live_) in production',
+  },
+  {
+    check: (env) =>
+      env.STRIPE_WEBHOOK_SECRET.startsWith('whsec_') &&
+      env.STRIPE_WEBHOOK_SECRET !== 'whsec_not_configured' &&
+      env.STRIPE_WEBHOOK_SECRET !== 'whsec_placeholder',
+    error:
+      'STRIPE_WEBHOOK_SECRET must be configured with real webhook secret in production (get from Stripe dashboard)',
+  },
 
   // No mock providers in production
-  { check: (env) => env.ID_PROVIDER !== 'mock', error: 'ID_PROVIDER cannot be "mock" in production' },
-  { check: (env) => env.BG_CHECK_PROVIDER !== 'mock', error: 'BG_CHECK_PROVIDER cannot be "mock" in production' },
+  {
+    check: (env) => env.ID_PROVIDER !== 'mock',
+    error: 'ID_PROVIDER cannot be "mock" in production',
+  },
+  {
+    check: (env) => env.BG_CHECK_PROVIDER !== 'mock',
+    error: 'BG_CHECK_PROVIDER cannot be "mock" in production',
+  },
 
   // API keys required for real providers
-  { check: (env) => env.ID_PROVIDER !== 'veriff' || !!env.VERIFF_API_KEY, error: 'VERIFF_API_KEY is required when using Veriff in production' },
-  { check: (env) => env.BG_CHECK_PROVIDER !== 'certn' || !!env.CERTN_API_KEY, error: 'CERTN_API_KEY is required when using Certn in production' },
+  {
+    check: (env) => env.ID_PROVIDER !== 'veriff' || !!env.VERIFF_API_KEY,
+    error: 'VERIFF_API_KEY is required when using Veriff in production',
+  },
+  {
+    check: (env) => env.BG_CHECK_PROVIDER !== 'certn' || !!env.CERTN_API_KEY,
+    error: 'CERTN_API_KEY is required when using Certn in production',
+  },
   // Certn webhook secret required for secure webhook processing (prevents spoofing attacks)
-  { check: (env) => env.BG_CHECK_PROVIDER !== 'certn' || !!env.CERTN_WEBHOOK_SECRET, error: 'CERTN_WEBHOOK_SECRET is required when using Certn in production (generate from Certn dashboard)' },
+  {
+    check: (env) => env.BG_CHECK_PROVIDER !== 'certn' || !!env.CERTN_WEBHOOK_SECRET,
+    error:
+      'CERTN_WEBHOOK_SECRET is required when using Certn in production (generate from Certn dashboard)',
+  },
 
   // Telnyx required in production for phone verification (no mock fallback allowed)
-  { check: (env) => !!env.TELNYX_API_KEY, error: 'TELNYX_API_KEY is required in production for phone verification' },
-  { check: (env) => !!env.TELNYX_VERIFY_PROFILE_ID, error: 'TELNYX_VERIFY_PROFILE_ID is required in production for phone verification' },
+  {
+    check: (env) => !!env.TELNYX_API_KEY,
+    error: 'TELNYX_API_KEY is required in production for phone verification',
+  },
+  {
+    check: (env) => !!env.TELNYX_VERIFY_PROFILE_ID,
+    error: 'TELNYX_VERIFY_PROFILE_ID is required in production for phone verification',
+  },
 
   // Required security features
-  { check: (env) => env.ENABLE_RATE_LIMITING, error: 'ENABLE_RATE_LIMITING must be true in production' },
-  { check: (env) => env.ENABLE_JWT_VALIDATION, error: 'ENABLE_JWT_VALIDATION must be true in production' },
+  {
+    check: (env) => env.ENABLE_RATE_LIMITING,
+    error: 'ENABLE_RATE_LIMITING must be true in production',
+  },
+  {
+    check: (env) => env.ENABLE_JWT_VALIDATION,
+    error: 'ENABLE_JWT_VALIDATION must be true in production',
+  },
   { check: (env) => env.ENABLE_ENCRYPTION, error: 'ENABLE_ENCRYPTION must be true in production' },
-  { check: (env) => env.ENABLE_VERIFICATION_CHECKS, error: 'ENABLE_VERIFICATION_CHECKS must be true in production' },
+  {
+    check: (env) => env.ENABLE_VERIFICATION_CHECKS,
+    error: 'ENABLE_VERIFICATION_CHECKS must be true in production',
+  },
 ];
 
 /**
  * Check for forbidden development default values
  */
 function checkDevDefaults(env: Env): string[] {
-  return FORBIDDEN_DEV_DEFAULTS
-    .filter(({ key, values }) => values.includes(String(env[key])))
-    .map(({ key }) => `${key} cannot use development default in production`);
+  return FORBIDDEN_DEV_DEFAULTS.filter(({ key, values }) => values.includes(String(env[key]))).map(
+    ({ key }) => `${key} cannot use development default in production`,
+  );
 }
 
 /**
@@ -377,23 +437,42 @@ function enforceStagingSecurity(env: Env): void {
 
   // Warn about missing Telnyx configuration (phone verification will use mock)
   if (!env.TELNYX_API_KEY || !env.TELNYX_VERIFY_PROFILE_ID) {
-    warnings.push('Telnyx not configured - phone verification will use mock mode (not recommended for staging)');
+    warnings.push(
+      'Telnyx not configured - phone verification will use mock mode (not recommended for staging)',
+    );
   }
 
   // Warn about missing Certn webhook secret (webhooks will be insecure)
   if (env.BG_CHECK_PROVIDER === 'certn' && !env.CERTN_WEBHOOK_SECRET) {
-    warnings.push('CERTN_WEBHOOK_SECRET not configured - webhook signature verification disabled (security risk)');
+    warnings.push(
+      'CERTN_WEBHOOK_SECRET not configured - webhook signature verification disabled (security risk)',
+    );
   }
 
   // Warn about Stripe test keys in staging
-  if (env.STRIPE_SECRET_KEY.startsWith('sk_test_') || env.STRIPE_SECRET_KEY === 'sk_test_not_configured') {
-    warnings.push('STRIPE_SECRET_KEY is using test key (sk_test_) - payments will not process real charges');
+  if (
+    env.STRIPE_SECRET_KEY.startsWith('sk_test_') ||
+    env.STRIPE_SECRET_KEY === 'sk_test_not_configured'
+  ) {
+    warnings.push(
+      'STRIPE_SECRET_KEY is using test key (sk_test_) - payments will not process real charges',
+    );
   }
-  if (env.STRIPE_PUBLISHABLE_KEY.startsWith('pk_test_') || env.STRIPE_PUBLISHABLE_KEY === 'pk_test_not_configured') {
-    warnings.push('STRIPE_PUBLISHABLE_KEY is using test key (pk_test_) - payments will not process real charges');
+  if (
+    env.STRIPE_PUBLISHABLE_KEY.startsWith('pk_test_') ||
+    env.STRIPE_PUBLISHABLE_KEY === 'pk_test_not_configured'
+  ) {
+    warnings.push(
+      'STRIPE_PUBLISHABLE_KEY is using test key (pk_test_) - payments will not process real charges',
+    );
   }
-  if (env.STRIPE_WEBHOOK_SECRET === 'whsec_not_configured' || env.STRIPE_WEBHOOK_SECRET === 'whsec_placeholder') {
-    warnings.push('STRIPE_WEBHOOK_SECRET not configured - webhook signature verification will fail');
+  if (
+    env.STRIPE_WEBHOOK_SECRET === 'whsec_not_configured' ||
+    env.STRIPE_WEBHOOK_SECRET === 'whsec_placeholder'
+  ) {
+    warnings.push(
+      'STRIPE_WEBHOOK_SECRET not configured - webhook signature verification will fail',
+    );
   }
 
   // Warn about disabled security features

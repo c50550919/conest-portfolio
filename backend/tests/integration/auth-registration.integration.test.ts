@@ -43,7 +43,7 @@ describe('Integration Test: Registration Flow', () => {
   });
 
   describe('Complete Registration Flow', () => {
-    it('should register ’ login ’ verify token ’ access protected endpoint', async () => {
+    it('should register ï¿½ login ï¿½ verify token ï¿½ access protected endpoint', async () => {
       const userData = {
         email: 'integration-test@example.com',
         password: 'SecurePass123!',
@@ -59,9 +59,7 @@ describe('Integration Test: Registration Flow', () => {
       };
 
       // STEP 1: Register new user
-      const registerResponse = await request(app)
-        .post('/api/auth/register')
-        .send(userData);
+      const registerResponse = await request(app).post('/api/auth/register').send(userData);
 
       expect(registerResponse.status).toBe(201);
       expect(registerResponse.body.success).toBe(true);
@@ -91,12 +89,10 @@ describe('Integration Test: Registration Flow', () => {
       expect(verification).toBeDefined();
 
       // STEP 2: Login with same credentials
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: userData.email,
-          password: userData.password,
-        });
+      const loginResponse = await request(app).post('/api/auth/login').send({
+        email: userData.email,
+        password: userData.password,
+      });
 
       expect(loginResponse.status).toBe(200);
       expect(loginResponse.body.success).toBe(true);
@@ -140,16 +136,12 @@ describe('Integration Test: Registration Flow', () => {
       };
 
       // First registration
-      const firstResponse = await request(app)
-        .post('/api/auth/register')
-        .send(userData);
+      const firstResponse = await request(app).post('/api/auth/register').send(userData);
 
       expect(firstResponse.status).toBe(201);
 
       // Second registration with same email
-      const secondResponse = await request(app)
-        .post('/api/auth/register')
-        .send(userData);
+      const secondResponse = await request(app).post('/api/auth/register').send(userData);
 
       expect(secondResponse.status).toBe(400);
       expect(secondResponse.body.error).toContain('email');
@@ -177,16 +169,12 @@ describe('Integration Test: Registration Flow', () => {
       };
 
       // First registration
-      const firstResponse = await request(app)
-        .post('/api/auth/register')
-        .send(firstUserData);
+      const firstResponse = await request(app).post('/api/auth/register').send(firstUserData);
 
       expect(firstResponse.status).toBe(201);
 
       // Second registration with same phone
-      const secondResponse = await request(app)
-        .post('/api/auth/register')
-        .send(secondUserData);
+      const secondResponse = await request(app).post('/api/auth/register').send(secondUserData);
 
       expect(secondResponse.status).toBe(400);
       expect(secondResponse.body.error).toContain('phone');
@@ -212,9 +200,7 @@ describe('Integration Test: Registration Flow', () => {
         childrenAges: [3, 7],
       };
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(invalidData);
+      const response = await request(app).post('/api/auth/register').send(invalidData);
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Prohibited child PII');
@@ -241,9 +227,7 @@ describe('Integration Test: Registration Flow', () => {
         childrenAgeGroups: ['toddler'],
       };
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(userData);
+      const response = await request(app).post('/api/auth/register').send(userData);
 
       expect(response.status).toBe(201);
 
@@ -263,11 +247,11 @@ describe('Integration Test: Registration Flow', () => {
 
     it('should reject weak passwords', async () => {
       const weakPasswords = [
-        'short',           // Too short
-        'nouppercase1!',   // No uppercase
-        'NOLOWERCASE1!',   // No lowercase
-        'NoNumbers!',      // No numbers
-        'NoSpecial123',    // No special characters
+        'short', // Too short
+        'nouppercase1!', // No uppercase
+        'NOLOWERCASE1!', // No lowercase
+        'NoNumbers!', // No numbers
+        'NoSpecial123', // No special characters
       ];
 
       for (const weakPassword of weakPasswords) {
@@ -309,9 +293,7 @@ describe('Integration Test: Registration Flow', () => {
         childrenAgeGroups: ['toddler'],
       };
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(userData);
+      const response = await request(app).post('/api/auth/register').send(userData);
 
       expect(response.status).toBe(201);
 
@@ -342,9 +324,7 @@ describe('Integration Test: Registration Flow', () => {
         childrenAgeGroups: ['toddler'],
       };
 
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send(userData);
+      const response = await request(app).post('/api/auth/register').send(userData);
 
       expect(response.status).toBe(201);
 
@@ -373,19 +353,15 @@ describe('Integration Test: Registration Flow', () => {
       };
 
       // Register user
-      const registerResponse = await request(app)
-        .post('/api/auth/register')
-        .send(userData);
+      const registerResponse = await request(app).post('/api/auth/register').send(userData);
 
       expect(registerResponse.status).toBe(201);
 
       // Attempt login with wrong password
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: userData.email,
-          password: 'WrongPassword123!',
-        });
+      const loginResponse = await request(app).post('/api/auth/login').send({
+        email: userData.email,
+        password: 'WrongPassword123!',
+      });
 
       expect(loginResponse.status).toBe(401);
       expect(loginResponse.body.error).toContain('Invalid credentials');
@@ -407,25 +383,19 @@ describe('Integration Test: Registration Flow', () => {
       };
 
       // Register user
-      await request(app)
-        .post('/api/auth/register')
-        .send(userData);
+      await request(app).post('/api/auth/register').send(userData);
 
       // Login with non-existent email
-      const response1 = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'nonexistent@example.com',
-          password: 'SomePassword123!',
-        });
+      const response1 = await request(app).post('/api/auth/login').send({
+        email: 'nonexistent@example.com',
+        password: 'SomePassword123!',
+      });
 
       // Login with existing email but wrong password
-      const response2 = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: userData.email,
-          password: 'WrongPassword123!',
-        });
+      const response2 = await request(app).post('/api/auth/login').send({
+        email: userData.email,
+        password: 'WrongPassword123!',
+      });
 
       // Both should return same error message
       expect(response1.status).toBe(401);

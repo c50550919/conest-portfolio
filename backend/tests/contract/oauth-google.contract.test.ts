@@ -29,9 +29,7 @@ import app from '../app';
 describe('POST /api/auth/oauth/google - Contract Tests', () => {
   describe('Request Schema Validation - 400 Errors', () => {
     it('should reject request without idToken (or return 404 if not implemented)', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/google')
-        .send({});
+      const response = await request(app).post('/api/auth/oauth/google').send({});
 
       // Accept 400 (validation error) or 404 (endpoint not implemented)
       expect([400, 404]).toContain(response.status);
@@ -43,9 +41,7 @@ describe('POST /api/auth/oauth/google - Contract Tests', () => {
     });
 
     it('should reject request with invalid idToken type (or return 404)', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/google')
-        .send({ idToken: 123 });
+      const response = await request(app).post('/api/auth/oauth/google').send({ idToken: 123 });
 
       expect([400, 404]).toContain(response.status);
 
@@ -56,9 +52,7 @@ describe('POST /api/auth/oauth/google - Contract Tests', () => {
     });
 
     it('should reject request with empty idToken (or return 404)', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/google')
-        .send({ idToken: '' });
+      const response = await request(app).post('/api/auth/oauth/google').send({ idToken: '' });
 
       expect([400, 404]).toContain(response.status);
 
@@ -69,7 +63,8 @@ describe('POST /api/auth/oauth/google - Contract Tests', () => {
     });
 
     it('should accept request with valid idToken format (may fail auth or return 404)', async () => {
-      const mockValidToken = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjEyMzQ1Njc4OTAifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20ifQ.signature';
+      const mockValidToken =
+        'eyJhbGciOiJSUzI1NiIsImtpZCI6IjEyMzQ1Njc4OTAifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20ifQ.signature';
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -82,12 +77,10 @@ describe('POST /api/auth/oauth/google - Contract Tests', () => {
     it('should accept optional state parameter (may fail auth or return 404)', async () => {
       const mockValidToken = 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjEyMzQ1Njc4OTAifQ.payload.signature';
 
-      const response = await request(app)
-        .post('/api/auth/oauth/google')
-        .send({
-          idToken: mockValidToken,
-          state: 'a3c5f8e2b1d4a7f9c6e0b8d2',
-        });
+      const response = await request(app).post('/api/auth/oauth/google').send({
+        idToken: mockValidToken,
+        state: 'a3c5f8e2b1d4a7f9c6e0b8d2',
+      });
 
       // Should pass validation, may fail auth, or return 404 if not implemented
       expect([400, 401, 404, 500]).toContain(response.status);
@@ -125,9 +118,7 @@ describe('POST /api/auth/oauth/google - Contract Tests', () => {
 
   describe('Response Format Validation', () => {
     it('should return proper error format for validation errors (or 404)', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/google')
-        .send({});
+      const response = await request(app).post('/api/auth/oauth/google').send({});
 
       expect([400, 404]).toContain(response.status);
 
@@ -168,9 +159,7 @@ describe('POST /api/auth/oauth/google - Contract Tests', () => {
     it('should respond within 2 seconds', async () => {
       const start = Date.now();
 
-      await request(app)
-        .post('/api/auth/oauth/google')
-        .send({});
+      await request(app).post('/api/auth/oauth/google').send({});
 
       const duration = Date.now() - start;
 

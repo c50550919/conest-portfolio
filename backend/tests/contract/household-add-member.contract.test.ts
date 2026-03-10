@@ -249,7 +249,7 @@ describe('POST /api/household/:id/members - Contract Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           userId: newUserId,
-          rentShare: 500.50, // Should be in cents (integer)
+          rentShare: 500.5, // Should be in cents (integer)
         });
 
       // Mock token may not be recognized (401), or may round/fail

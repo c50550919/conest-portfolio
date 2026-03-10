@@ -2,7 +2,7 @@ import type { Knex } from 'knex';
 
 // Only load .env if DB_NAME isn't already set (allows dotenv-cli to override)
 if (!process.env.DB_NAME) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  // eslint-disable-next-line @typescript-eslint/no-var-requires, @typescript-eslint/no-require-imports
   require('dotenv').config();
 }
 

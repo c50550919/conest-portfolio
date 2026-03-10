@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -89,9 +89,7 @@ export const VerificationPaymentModel = {
       paid_at: null,
     };
 
-    const [payment] = await db('verification_payments')
-      .insert(paymentData)
-      .returning('*');
+    const [payment] = await db('verification_payments').insert(paymentData).returning('*');
 
     return payment;
   },
@@ -100,9 +98,7 @@ export const VerificationPaymentModel = {
    * Find payment by ID
    */
   async findById(id: string): Promise<VerificationPayment | undefined> {
-    return await db('verification_payments')
-      .where({ id })
-      .first();
+    return await db('verification_payments').where({ id }).first();
   },
 
   /**
@@ -132,10 +128,7 @@ export const VerificationPaymentModel = {
    * Find all payments for a user
    * Ordered by most recent first
    */
-  async findByUserId(
-    userId: string,
-    limit: number = 50,
-  ): Promise<VerificationPayment[]> {
+  async findByUserId(userId: string, limit: number = 50): Promise<VerificationPayment[]> {
     return await db('verification_payments')
       .where({ user_id: userId })
       .orderBy('created_at', 'desc')
@@ -249,10 +242,10 @@ export const VerificationPaymentModel = {
       .where({ user_id: userId })
       .select(
         db.raw('COUNT(*) as total_payments'),
-        db.raw('SUM(CASE WHEN status = \'succeeded\' THEN amount ELSE 0 END) as total_amount_paid'),
+        db.raw("SUM(CASE WHEN status = 'succeeded' THEN amount ELSE 0 END) as total_amount_paid"),
         db.raw('SUM(refund_amount) as total_refunded'),
-        db.raw('COUNT(CASE WHEN status = \'succeeded\' THEN 1 END) as successful_payments'),
-        db.raw('COUNT(CASE WHEN status = \'failed\' THEN 1 END) as failed_payments'),
+        db.raw("COUNT(CASE WHEN status = 'succeeded' THEN 1 END) as successful_payments"),
+        db.raw("COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_payments"),
       )
       .first();
 
@@ -293,7 +286,7 @@ export const VerificationPaymentModel = {
       .where('vp.status', 'succeeded')
       .where('v.background_check_status', 'rejected')
       .whereNull('vp.refunded_at')
-      .where('vp.created_at', '>', db.raw('NOW() - INTERVAL \'90 days\''))
+      .where('vp.created_at', '>', db.raw("NOW() - INTERVAL '90 days'"))
       .select('vp.*')
       .orderBy('vp.created_at', 'asc');
   },

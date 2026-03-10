@@ -17,9 +17,7 @@ describe('Contract Test: GET /api/discovery/profiles', () => {
 
   describe('Authentication', () => {
     it('should return 401 without JWT token', async () => {
-      const response = await request(app)
-        .get('/api/discovery/profiles')
-        .expect(401);
+      const response = await request(app).get('/api/discovery/profiles').expect(401);
 
       expect(response.body).toHaveProperty('error');
     });

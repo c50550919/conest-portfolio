@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -165,7 +165,12 @@ export const InvitationsService = {
         .first();
 
       const members = await db('household_members as hm')
-        .select('hm.parent_id as userId', 'p.first_name as firstName', 'p.last_name as lastName', 'hm.role')
+        .select(
+          'hm.parent_id as userId',
+          'p.first_name as firstName',
+          'p.last_name as lastName',
+          'hm.role',
+        )
         .join('parents as p', 'hm.parent_id', 'p.id')
         .where({ 'hm.household_id': invitation.householdId });
 
@@ -251,13 +256,11 @@ export const InvitationsService = {
       });
 
       // Update invitation status
-      await trx('household_invitations')
-        .where({ id: invitationId })
-        .update({
-          status: 'accepted',
-          responded_at: trx.fn.now(),
-          updated_at: trx.fn.now(),
-        });
+      await trx('household_invitations').where({ id: invitationId }).update({
+        status: 'accepted',
+        responded_at: trx.fn.now(),
+        updated_at: trx.fn.now(),
+      });
 
       await trx.commit();
 
@@ -375,7 +378,12 @@ export const InvitationsService = {
 
     // Get current members
     const members = await db('household_members as hm')
-      .select('hm.parent_id as userId', 'p.first_name as firstName', 'p.last_name as lastName', 'hm.role')
+      .select(
+        'hm.parent_id as userId',
+        'p.first_name as firstName',
+        'p.last_name as lastName',
+        'hm.role',
+      )
       .join('parents as p', 'hm.parent_id', 'p.id')
       .where({ 'hm.household_id': invitation.householdId });
 

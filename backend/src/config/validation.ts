@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -116,9 +116,7 @@ const ENV_VALIDATION_RULES: Record<string, ValidationRule> = {
         'secret',
         'jwt_secret',
       ];
-      return !insecurePlaceholders.some(placeholder =>
-        value.toLowerCase().includes(placeholder),
-      );
+      return !insecurePlaceholders.some((placeholder) => value.toLowerCase().includes(placeholder));
     },
   },
   JWT_REFRESH_SECRET: {
@@ -133,9 +131,7 @@ const ENV_VALIDATION_RULES: Record<string, ValidationRule> = {
         'secret',
         'refresh_secret',
       ];
-      return !insecurePlaceholders.some(placeholder =>
-        value.toLowerCase().includes(placeholder),
-      );
+      return !insecurePlaceholders.some((placeholder) => value.toLowerCase().includes(placeholder));
     },
   },
   JWT_EXPIRES_IN: {
@@ -158,7 +154,8 @@ const ENV_VALIDATION_RULES: Record<string, ValidationRule> = {
   STRIPE_PUBLISHABLE_KEY: {
     required: true,
     pattern: /^pk_(test|live)_[A-Za-z0-9]{24,}$/,
-    errorMessage: 'STRIPE_PUBLISHABLE_KEY must be a valid Stripe publishable key (pk_test_* or pk_live_*)',
+    errorMessage:
+      'STRIPE_PUBLISHABLE_KEY must be a valid Stripe publishable key (pk_test_* or pk_live_*)',
   },
   STRIPE_WEBHOOK_SECRET: {
     required: true,
@@ -194,7 +191,8 @@ const ENV_VALIDATION_RULES: Record<string, ValidationRule> = {
   TWILIO_ACCOUNT_SID: {
     required: true,
     pattern: /^AC[a-f0-9]{32}$/,
-    errorMessage: 'TWILIO_ACCOUNT_SID must be a valid Twilio Account SID (AC followed by 32 hex chars)',
+    errorMessage:
+      'TWILIO_ACCOUNT_SID must be a valid Twilio Account SID (AC followed by 32 hex chars)',
   },
   TWILIO_AUTH_TOKEN: {
     required: true,
@@ -311,10 +309,7 @@ function truncateForDisplay(value: string, maxLen = 20): string {
  * Validate a single environment variable
  * Refactored to reduce cyclomatic complexity using validation pipeline
  */
-function validateVariable(
-  varName: string,
-  rule: ValidationRule,
-): ValidationError | null {
+function validateVariable(varName: string, rule: ValidationRule): ValidationError | null {
   const value = process.env[varName];
 
   // Check required first (special case: value may not exist)
@@ -400,7 +395,7 @@ export function getValidationSummary(): {
   requiredVariables: string[];
   optionalVariables: string[];
   missingRequired: string[];
-  } {
+} {
   const requiredVariables: string[] = [];
   const optionalVariables: string[] = [];
   const missingRequired: string[] = [];
@@ -457,7 +452,7 @@ export function validateProductionSecurity(): void {
 
   // Ensure TLS/HTTPS for external URLs
   const httpsRequiredVars = ['VERIFF_BASE_URL', 'CERTN_BASE_URL'];
-  httpsRequiredVars.forEach(varName => {
+  httpsRequiredVars.forEach((varName) => {
     const value = process.env[varName];
     if (value && !value.startsWith('https://')) {
       productionChecks.push({

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -43,10 +43,7 @@ export const CreateHouseholdSchema = z
       .string()
       .min(1, 'Address is required')
       .max(200, 'Address cannot exceed 200 characters'),
-    city: z
-      .string()
-      .min(1, 'City is required')
-      .max(100, 'City cannot exceed 100 characters'),
+    city: z.string().min(1, 'City is required').max(100, 'City cannot exceed 100 characters'),
     state: z.string().length(2, 'State must be a 2-letter code (e.g., CA, NY)'),
     zipCode: z.string().regex(/^\d{5}$/, 'Zip code must be exactly 5 digits'),
     monthlyRent: z
@@ -93,9 +90,11 @@ export const AddMemberSchema = z
       .int('Rent share must be an integer (cents)')
       .positive('Rent share must be positive')
       .max(99999999, 'Rent share cannot exceed $999,999.99'),
-    role: z.enum(['admin', 'member'], {
-      errorMap: () => ({ message: 'Role must be either "admin" or "member"' }),
-    }).optional(),
+    role: z
+      .enum(['admin', 'member'], {
+        errorMap: () => ({ message: 'Role must be either "admin" or "member"' }),
+      })
+      .optional(),
   })
   .strict();
 
@@ -129,10 +128,7 @@ export const UpdateHouseholdSchema = z
       .min(1, 'City cannot be empty')
       .max(100, 'City cannot exceed 100 characters')
       .optional(),
-    state: z
-      .string()
-      .length(2, 'State must be a 2-letter code')
-      .optional(),
+    state: z.string().length(2, 'State must be a 2-letter code').optional(),
     zipCode: z
       .string()
       .regex(/^\d{5}$/, 'Zip code must be exactly 5 digits')
@@ -154,10 +150,9 @@ export const UpdateHouseholdSchema = z
   })
   .strict()
   .refine(
-    (data) => 
+    (data) =>
       // At least one field must be provided
-      Object.keys(data).length > 0
-    ,
+      Object.keys(data).length > 0,
     {
       message: 'At least one field must be provided for update',
     },
@@ -200,10 +195,7 @@ export const CreateExpenseSchema = z
       .int('Amount must be an integer (cents)')
       .positive('Amount must be positive')
       .max(99999999, 'Amount cannot exceed $999,999.99'),
-    description: z
-      .string()
-      .max(500, 'Description cannot exceed 500 characters')
-      .optional(),
+    description: z.string().max(500, 'Description cannot exceed 500 characters').optional(),
     dueDate: z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be in YYYY-MM-DD format')
@@ -223,8 +215,7 @@ export const ExpenseQuerySchema = z
     status: z
       .enum(['pending', 'processing', 'completed', 'failed', 'refunded'], {
         errorMap: () => ({
-          message:
-            'Status must be one of: pending, processing, completed, failed, refunded',
+          message: 'Status must be one of: pending, processing, completed, failed, refunded',
         }),
       })
       .optional(),

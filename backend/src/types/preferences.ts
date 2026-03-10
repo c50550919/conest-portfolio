@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -208,12 +208,12 @@ export interface CompatibilityBreakdown {
 // SCORING WEIGHTS
 // ============================================
 export const SCORING_WEIGHTS = {
-  location: 0.20, // 20%
+  location: 0.2, // 20%
   house_rules: 0.15, // 15%
   lifestyle: 0.15, // 15%
   schedule: 0.15, // 15%
   budget: 0.15, // 15%
-  move_in_timing: 0.10, // 10%
+  move_in_timing: 0.1, // 10%
   lease_terms: 0.05, // 5%
   communication: 0.05, // 5%
 } as const;

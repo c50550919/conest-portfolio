@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -9,28 +9,30 @@
 import { Request, Response, NextFunction } from 'express';
 import { z, ZodSchema } from 'zod';
 
-export const validate = (schema: ZodSchema) => async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    await schema.parseAsync({
-      body: req.body,
-      query: req.query,
-      params: req.params,
-    });
-    next();
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      res.status(400).json({
-        error: 'Validation failed',
-        details: error.errors.map((err) => ({
-          field: err.path.join('.'),
-          message: err.message,
-        })),
+export const validate =
+  (schema: ZodSchema) =>
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      await schema.parseAsync({
+        body: req.body,
+        query: req.query,
+        params: req.params,
       });
-      return;
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          error: 'Validation failed',
+          details: error.errors.map((err) => ({
+            field: err.path.join('.'),
+            message: err.message,
+          })),
+        });
+        return;
+      }
+      res.status(500).json({ error: 'Validation error' });
     }
-    res.status(500).json({ error: 'Validation error' });
-  }
-};
+  };
 
 // Common validation schemas
 export const schemas = {
@@ -97,7 +99,10 @@ export const schemas = {
   // Slim Onboarding Endpoints
   updateLocation: z.object({
     body: z.object({
-      city: z.string().min(2, 'City must be at least 2 characters').max(100, 'City must be at most 100 characters'),
+      city: z
+        .string()
+        .min(2, 'City must be at least 2 characters')
+        .max(100, 'City must be at most 100 characters'),
       state: z.string().length(2, 'State must be a 2-letter code'),
       zipCode: z.string().regex(/^\d{5}$/, 'Zip code must be 5 digits'),
       latitude: z.number().min(-90).max(90).optional(),
@@ -106,31 +111,47 @@ export const schemas = {
   }),
 
   updateBudget: z.object({
-    body: z.object({
-      budgetMin: z.number().int().min(0, 'Budget minimum must be non-negative').max(50000),
-      budgetMax: z.number().int().min(0, 'Budget maximum must be non-negative').max(50000),
-    }).refine((data) => data.budgetMax >= data.budgetMin, {
-      message: 'Budget maximum must be greater than or equal to minimum',
-      path: ['budgetMax'],
-    }),
+    body: z
+      .object({
+        budgetMin: z.number().int().min(0, 'Budget minimum must be non-negative').max(50000),
+        budgetMax: z.number().int().min(0, 'Budget maximum must be non-negative').max(50000),
+      })
+      .refine((data) => data.budgetMax >= data.budgetMin, {
+        message: 'Budget maximum must be greater than or equal to minimum',
+        path: ['budgetMax'],
+      }),
   }),
 
   updateHousingStatus: z.object({
-    body: z.object({
-      housingStatus: z.enum(['has_room', 'looking']).nullable(),
-      roomRentShare: z.number().int().min(0).max(50000).optional(),
-      roomAvailableDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format').optional(),
-      roomDescription: z.string().max(200, 'Room description must be at most 200 characters').optional(),
-      roomPhotoUrl: z.string().url().nullable().optional(),
-    }).refine((data) => {
-      if (data.housingStatus === 'has_room' && (data.roomRentShare === undefined || data.roomRentShare === null)) {
-        return false;
-      }
-      return true;
-    }, {
-      message: 'roomRentShare is required when housingStatus is has_room',
-      path: ['roomRentShare'],
-    }),
+    body: z
+      .object({
+        housingStatus: z.enum(['has_room', 'looking']).nullable(),
+        roomRentShare: z.number().int().min(0).max(50000).optional(),
+        roomAvailableDate: z
+          .string()
+          .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format')
+          .optional(),
+        roomDescription: z
+          .string()
+          .max(200, 'Room description must be at most 200 characters')
+          .optional(),
+        roomPhotoUrl: z.string().url().nullable().optional(),
+      })
+      .refine(
+        (data) => {
+          if (
+            data.housingStatus === 'has_room' &&
+            (data.roomRentShare === undefined || data.roomRentShare === null)
+          ) {
+            return false;
+          }
+          return true;
+        },
+        {
+          message: 'roomRentShare is required when housingStatus is has_room',
+          path: ['roomRentShare'],
+        },
+      ),
   }),
 
   updateProgressiveProfile: z.object({
@@ -138,21 +159,35 @@ export const schemas = {
       scheduleType: z.enum(['flexible', 'fixed', 'shift']).optional(),
       workFromHome: z.boolean().optional(),
       parentingStyle: z.string().max(100).optional(),
-      bio: z.string().min(20, 'Bio must be at least 20 characters').max(500, 'Bio must be at most 500 characters').optional(),
+      bio: z
+        .string()
+        .min(20, 'Bio must be at least 20 characters')
+        .max(500, 'Bio must be at most 500 characters')
+        .optional(),
       occupation: z.string().min(2).max(100).optional(),
-      dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format').optional()
-        .refine((val) => {
-          if (!val) return true;
-          const dob = new Date(val);
-          const now = new Date();
-          const age = now.getFullYear() - dob.getFullYear();
-          const monthDiff = now.getMonth() - dob.getMonth();
-          const adjustedAge = monthDiff < 0 || (monthDiff === 0 && now.getDate() < dob.getDate()) ? age - 1 : age;
-          return adjustedAge >= 18;
-        }, { message: 'Must be at least 18 years old' }),
+      dateOfBirth: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format')
+        .optional()
+        .refine(
+          (val) => {
+            if (!val) return true;
+            const dob = new Date(val);
+            const now = new Date();
+            const age = now.getFullYear() - dob.getFullYear();
+            const monthDiff = now.getMonth() - dob.getMonth();
+            const adjustedAge =
+              monthDiff < 0 || (monthDiff === 0 && now.getDate() < dob.getDate()) ? age - 1 : age;
+            return adjustedAge >= 18;
+          },
+          { message: 'Must be at least 18 years old' },
+        ),
       childrenCount: z.number().int().min(0).max(10).optional(),
       childrenAgeGroups: z.array(z.enum(['toddler', 'elementary', 'teen'])).optional(),
-      moveInDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format').optional(),
+      moveInDate: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD format')
+        .optional(),
     }),
   }),
 };

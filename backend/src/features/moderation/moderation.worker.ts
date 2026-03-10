@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -194,11 +194,13 @@ void moderationQueue.process('moderate', async (job) => {
       );
     } else {
       // Mark for manual review after max retries
-      await db('messages').where('id', data.messageId).update({
-        moderation_status: 'pending',
-        flagged_for_review: true,
-        moderation_notes: `AI moderation failed after ${MAX_RETRIES} attempts: ${error.message}`,
-      });
+      await db('messages')
+        .where('id', data.messageId)
+        .update({
+          moderation_status: 'pending',
+          flagged_for_review: true,
+          moderation_notes: `AI moderation failed after ${MAX_RETRIES} attempts: ${error.message}`,
+        });
     }
 
     throw error;
@@ -320,11 +322,13 @@ export class ModerationPollingWorker {
             });
 
             // Mark for manual review on persistent failure
-            await db('messages').where('id', message.id).update({
-              moderation_status: 'pending',
-              flagged_for_review: true,
-              moderation_notes: `Moderation error: ${error.message}`,
-            });
+            await db('messages')
+              .where('id', message.id)
+              .update({
+                moderation_status: 'pending',
+                flagged_for_review: true,
+                moderation_notes: `Moderation error: ${error.message}`,
+              });
           }
         }
       }

@@ -97,9 +97,7 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
     it('should include Retry-After header in rate limit response', async () => {
       // Make 5 allowed requests
       for (let i = 0; i < 5; i++) {
-        await request(app)
-          .post('/api/auth/oauth/google')
-          .send({ idToken: mockGoogleToken });
+        await request(app).post('/api/auth/oauth/google').send({ idToken: mockGoogleToken });
       }
 
       // 6th request should be rate limited with Retry-After header
@@ -119,9 +117,7 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
     it('should return appropriate status message on rate limit', async () => {
       // Exhaust rate limit
       for (let i = 0; i < 5; i++) {
-        await request(app)
-          .post('/api/auth/oauth/google')
-          .send({ idToken: mockGoogleToken });
+        await request(app).post('/api/auth/oauth/google').send({ idToken: mockGoogleToken });
       }
 
       const response = await request(app)
@@ -136,12 +132,10 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
   describe('Apple OAuth Rate Limiting', () => {
     it('should allow requests within rate limit (5 requests)', async () => {
       for (let i = 0; i < 5; i++) {
-        const response = await request(app)
-          .post('/api/auth/oauth/apple')
-          .send({
-            identityToken: mockAppleToken,
-            nonce: mockAppleNonce,
-          });
+        const response = await request(app).post('/api/auth/oauth/apple').send({
+          identityToken: mockAppleToken,
+          nonce: mockAppleNonce,
+        });
 
         expect(response.status).toBe(200);
       }
@@ -175,12 +169,10 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
     it('should include Retry-After header for Apple OAuth', async () => {
       // Exhaust rate limit
       for (let i = 0; i < 5; i++) {
-        await request(app)
-          .post('/api/auth/oauth/apple')
-          .send({
-            identityToken: mockAppleToken,
-            nonce: mockAppleNonce,
-          });
+        await request(app).post('/api/auth/oauth/apple').send({
+          identityToken: mockAppleToken,
+          nonce: mockAppleNonce,
+        });
       }
 
       const response = await request(app)
@@ -219,7 +211,6 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
       // Note: In real tests, this would use different IP addresses
       // Mock implementation would need to simulate multiple IPs
       // This is a structural test for the requirement
-
       // In production: IP1 makes 5 requests, IP2 makes 5 requests
       // Both should succeed because rate limiting is per-IP
       // Implementation depends on rate limiter configuration
@@ -240,10 +231,9 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
 
       // Mock to reject all tokens
       // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token'),
-        );
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token'));
 
       // First 5 attempts return 401 (invalid token)
       for (let i = 0; i < 5; i++) {
@@ -343,9 +333,7 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
     it('should maintain rate limit until window expires', async () => {
       // Exhaust rate limit
       for (let i = 0; i < 5; i++) {
-        await request(app)
-          .post('/api/auth/oauth/google')
-          .send({ idToken: mockGoogleToken });
+        await request(app).post('/api/auth/oauth/google').send({ idToken: mockGoogleToken });
       }
 
       // Verify rate limited
@@ -377,9 +365,7 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
     it('should return consistent error format for rate limit violations', async () => {
       // Exhaust rate limit
       for (let i = 0; i < 5; i++) {
-        await request(app)
-          .post('/api/auth/oauth/google')
-          .send({ idToken: mockGoogleToken });
+        await request(app).post('/api/auth/oauth/google').send({ idToken: mockGoogleToken });
       }
 
       const response = await request(app)
@@ -397,9 +383,7 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
     it('should NOT leak sensitive information in rate limit error', async () => {
       // Exhaust rate limit
       for (let i = 0; i < 5; i++) {
-        await request(app)
-          .post('/api/auth/oauth/google')
-          .send({ idToken: mockGoogleToken });
+        await request(app).post('/api/auth/oauth/google').send({ idToken: mockGoogleToken });
       }
 
       const response = await request(app)
@@ -418,9 +402,7 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
     it('should provide clear guidance for client retry behavior', async () => {
       // Exhaust rate limit
       for (let i = 0; i < 5; i++) {
-        await request(app)
-          .post('/api/auth/oauth/google')
-          .send({ idToken: mockGoogleToken });
+        await request(app).post('/api/auth/oauth/google').send({ idToken: mockGoogleToken });
       }
 
       const response = await request(app)
@@ -442,9 +424,7 @@ describe('T021: OAuth Rate Limiting - Security Test', () => {
 
       // Exhaust rate limit
       for (let i = 0; i < 5; i++) {
-        await request(app)
-          .post('/api/auth/oauth/google')
-          .send({ idToken: mockGoogleToken });
+        await request(app).post('/api/auth/oauth/google').send({ idToken: mockGoogleToken });
       }
 
       const response = await request(app)

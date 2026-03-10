@@ -1,6 +1,11 @@
 import request from 'supertest';
 import app from '../../src/app';
-import { setupTestDatabase, teardownTestDatabase, createTestUser, getAuthToken } from '../helpers/test-utils';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+  createTestUser,
+  getAuthToken,
+} from '../helpers/test-utils';
 
 /**
  * COMPLIANCE TEST: Child Safety (Constitution Principle I)
@@ -140,14 +145,14 @@ describe('COMPLIANCE TEST: Child Safety (Constitution Principle I)', () => {
 
       profiles.forEach((profile: any) => {
         // Get all keys that contain 'child' or 'kid'
-        const childRelatedKeys = Object.keys(profile).filter(key =>
-          key.toLowerCase().includes('child') || key.toLowerCase().includes('kid'),
+        const childRelatedKeys = Object.keys(profile).filter(
+          (key) => key.toLowerCase().includes('child') || key.toLowerCase().includes('kid'),
         );
 
         // ONLY these two keys are allowed
         const allowedKeys = ['childrenCount', 'childrenAgeGroups'];
 
-        childRelatedKeys.forEach(key => {
+        childRelatedKeys.forEach((key) => {
           expect(allowedKeys).toContain(key);
         });
 
@@ -251,7 +256,6 @@ describe('COMPLIANCE TEST: Child Safety (Constitution Principle I)', () => {
       // - children_ages
       // - children_schools
       // - Or any similar variations
-
       // This test will be implemented when we have direct database access
       // For now, we validate through API responses
     });

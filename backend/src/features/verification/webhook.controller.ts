@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -205,7 +205,10 @@ export const webhookController = {
       }
 
       // Idempotency check - prevent duplicate processing
-      const isProcessed = await VerificationWebhookEventModel.isEventProcessed('certn', applicationId);
+      const isProcessed = await VerificationWebhookEventModel.isEventProcessed(
+        'certn',
+        applicationId,
+      );
       if (isProcessed) {
         logger.info('Certn webhook already processed (idempotency)', { applicationId });
         res.status(200).json({ received: true, duplicate: true });
@@ -248,7 +251,10 @@ export const webhookController = {
             applicationId,
             applicantId: data.applicant_id,
           });
-          await VerificationWebhookEventModel.markAsFailed(webhookEventId, 'Verification record not found');
+          await VerificationWebhookEventModel.markAsFailed(
+            webhookEventId,
+            'Verification record not found',
+          );
           res.status(404).json({ error: 'Verification not found' });
           return;
         }

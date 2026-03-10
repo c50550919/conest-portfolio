@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -35,10 +35,7 @@ export interface AuditLogEntry {
 // Winston logger for audit logs
 const auditLogger = winston.createLogger({
   level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json(),
-  ),
+  format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
   transports: [
     new winston.transports.File({
       filename: 'logs/audit.log',
@@ -56,9 +53,11 @@ const auditLogger = winston.createLogger({
 
 // Add console transport in development
 if (process.env.NODE_ENV !== 'production') {
-  auditLogger.add(new winston.transports.Console({
-    format: winston.format.simple(),
-  }));
+  auditLogger.add(
+    new winston.transports.Console({
+      format: winston.format.simple(),
+    }),
+  );
 }
 
 /**
@@ -73,7 +72,9 @@ export async function initializeAuditRedis(): Promise<void> {
 /**
  * Create audit log entry
  */
-export async function createAuditLog(entry: Omit<AuditLogEntry, 'id' | 'timestamp'>): Promise<void> {
+export async function createAuditLog(
+  entry: Omit<AuditLogEntry, 'id' | 'timestamp'>,
+): Promise<void> {
   const auditEntry: AuditLogEntry = {
     id: generateCorrelationId(),
     timestamp: Date.now(),
@@ -97,19 +98,11 @@ export async function createAuditLog(entry: Omit<AuditLogEntry, 'id' | 'timestam
 
     // Add to user's audit trail
     if (auditEntry.userId) {
-      await redis.zadd(
-        `audit:user:${auditEntry.userId}`,
-        auditEntry.timestamp,
-        auditEntry.id,
-      );
+      await redis.zadd(`audit:user:${auditEntry.userId}`, auditEntry.timestamp, auditEntry.id);
 
       // Expire old entries
-      const cutoff = Date.now() - (ttl * 1000);
-      await redis.zremrangebyscore(
-        `audit:user:${auditEntry.userId}`,
-        0,
-        cutoff,
-      );
+      const cutoff = Date.now() - ttl * 1000;
+      await redis.zremrangebyscore(`audit:user:${auditEntry.userId}`, 0, cutoff);
     }
 
     // Add to operation index
@@ -269,11 +262,7 @@ export async function getUserAuditLogs(
 ): Promise<AuditLogEntry[]> {
   try {
     // Get audit log IDs from sorted set (most recent first)
-    const logIds = await redis.zrevrange(
-      `audit:user:${userId}`,
-      offset,
-      offset + limit - 1,
-    );
+    const logIds = await redis.zrevrange(`audit:user:${userId}`, offset, offset + limit - 1);
 
     // Fetch full log entries
     const logs: AuditLogEntry[] = [];
@@ -299,11 +288,7 @@ export async function getOperationAuditLogs(
   limit: number = 100,
 ): Promise<AuditLogEntry[]> {
   try {
-    const logIds = await redis.zrevrange(
-      `audit:operation:${operation}`,
-      0,
-      limit - 1,
-    );
+    const logIds = await redis.zrevrange(`audit:operation:${operation}`, 0, limit - 1);
 
     const logs: AuditLogEntry[] = [];
     for (const logId of logIds) {
@@ -333,12 +318,12 @@ export async function detectSuspiciousPatterns(
   const logs = await getUserAuditLogs(userId, 1000);
   const patterns: string[] = [];
 
-  const cutoff = Date.now() - (windowMinutes * 60 * 1000);
-  const recentLogs = logs.filter(log => log.timestamp >= cutoff);
+  const cutoff = Date.now() - windowMinutes * 60 * 1000;
+  const recentLogs = logs.filter((log) => log.timestamp >= cutoff);
 
   // Multiple failed login attempts
   const failedLogins = recentLogs.filter(
-    log => log.operation === 'user.login' && log.status === 'failure',
+    (log) => log.operation === 'user.login' && log.status === 'failure',
   );
   if (failedLogins.length >= securityConfig.suspiciousActivity.multipleFailedLogins) {
     patterns.push(`${failedLogins.length} failed login attempts`);
@@ -346,20 +331,20 @@ export async function detectSuspiciousPatterns(
 
   // Rapid account changes
   const accountChanges = recentLogs.filter(
-    log => log.operation.includes('user.') && log.action === 'update',
+    (log) => log.operation.includes('user.') && log.action === 'update',
   );
   if (accountChanges.length >= securityConfig.suspiciousActivity.rapidAccountChanges) {
     patterns.push(`${accountChanges.length} rapid account changes`);
   }
 
   // Multiple IP addresses
-  const uniqueIPs = new Set(recentLogs.map(log => log.ipAddress));
+  const uniqueIPs = new Set(recentLogs.map((log) => log.ipAddress));
   if (uniqueIPs.size > 3) {
     patterns.push(`Access from ${uniqueIPs.size} different IP addresses`);
   }
 
   // Access from multiple devices
-  const uniqueUserAgents = new Set(recentLogs.map(log => log.userAgent));
+  const uniqueUserAgents = new Set(recentLogs.map((log) => log.userAgent));
   if (uniqueUserAgents.size > 3) {
     patterns.push(`Access from ${uniqueUserAgents.size} different devices`);
   }
@@ -455,7 +440,8 @@ export interface LogPairingCreatedOptions {
  * that led to the pairing. Essential for demonstrating preference-based matching.
  */
 export async function logPairingCreated(options: LogPairingCreatedOptions): Promise<void> {
-  const { userId1, userId2, matchId, compatibilityScore, ipAddress, userAgent, breakdown } = options;
+  const { userId1, userId2, matchId, compatibilityScore, ipAddress, userAgent, breakdown } =
+    options;
   await createAuditLog({
     userId: userId1,
     operation: 'pairing.created',

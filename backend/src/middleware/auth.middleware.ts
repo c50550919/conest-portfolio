@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -32,7 +32,14 @@ export interface AuthRequest extends Request {
   user?: any;
   email?: string;
   jwtPayload?: JWTPayload;
-  file?: { fieldname: string; originalname: string; mimetype: string; size: number; buffer: Buffer; path?: string };
+  file?: {
+    fieldname: string;
+    originalname: string;
+    mimetype: string;
+    size: number;
+    buffer: Buffer;
+    path?: string;
+  };
 }
 
 /**
@@ -161,7 +168,7 @@ export async function authenticateJWTOptional(
       const user = await UserModel.findById(payload.userId);
 
       // Note: database column is 'status', not 'account_status'
-      const userStatus = user ? ((user as any).status || (user as any).account_status) : null;
+      const userStatus = user ? (user as any).status || (user as any).account_status : null;
       if (user && userStatus === 'active') {
         req.userId = payload.userId;
         req.user = user;
@@ -234,11 +241,7 @@ export function requirePhoneVerification(
 /**
  * Require full verification (ID + background check)
  */
-export function requireFullVerification(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requireFullVerification(req: AuthRequest, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({
       error: 'Authentication required',
@@ -261,11 +264,7 @@ export function requireFullVerification(
 /**
  * Require admin role middleware
  */
-export function requireAdmin(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({
       error: 'Authentication required',
@@ -292,11 +291,7 @@ export function requireAdmin(
 /**
  * Require phone verified for messaging gate
  */
-export function requirePhoneVerified(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requirePhoneVerified(req: AuthRequest, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({ error: 'Authentication required' });
     return;
@@ -316,11 +311,7 @@ export function requirePhoneVerified(
 /**
  * Require ID verified for connection requests gate
  */
-export function requireIdVerified(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requireIdVerified(req: AuthRequest, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({ error: 'Authentication required' });
     return;
@@ -340,11 +331,7 @@ export function requireIdVerified(
 /**
  * Require background check for household gate
  */
-export function requireBackgroundCheck(
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requireBackgroundCheck(req: AuthRequest, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({ error: 'Authentication required' });
     return;

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -20,7 +20,9 @@ export async function up(knex: Knex): Promise<void> {
     table.boolean('flagged_for_review').defaultTo(false);
     table.uuid('reviewed_by').references('id').inTable('users').onDelete('SET NULL');
     table.timestamp('reviewed_at');
-    table.enum('moderation_status', ['pending', 'approved', 'rejected', 'auto_approved']).defaultTo('auto_approved');
+    table
+      .enum('moderation_status', ['pending', 'approved', 'rejected', 'auto_approved'])
+      .defaultTo('auto_approved');
     table.text('moderation_notes');
 
     // Metadata
@@ -66,19 +68,28 @@ export async function up(knex: Knex): Promise<void> {
     table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
     table.uuid('message_id').references('id').inTable('messages').onDelete('CASCADE').notNullable();
     table.uuid('reported_by').references('id').inTable('users').onDelete('CASCADE').notNullable();
-    table.uuid('reported_user_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
+    table
+      .uuid('reported_user_id')
+      .references('id')
+      .inTable('users')
+      .onDelete('CASCADE')
+      .notNullable();
 
-    table.enum('report_type', [
-      'inappropriate_content',
-      'harassment',
-      'spam',
-      'scam',
-      'child_safety_concern',
-      'other',
-    ]).notNullable();
+    table
+      .enum('report_type', [
+        'inappropriate_content',
+        'harassment',
+        'spam',
+        'scam',
+        'child_safety_concern',
+        'other',
+      ])
+      .notNullable();
 
     table.text('description');
-    table.enum('status', ['pending', 'investigating', 'resolved', 'dismissed']).defaultTo('pending');
+    table
+      .enum('status', ['pending', 'investigating', 'resolved', 'dismissed'])
+      .defaultTo('pending');
     table.enum('severity', ['low', 'medium', 'high', 'critical']).defaultTo('medium');
 
     // Admin action tracking
@@ -126,21 +137,31 @@ export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable('admin_actions', (table) => {
     table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
     table.uuid('admin_id').references('id').inTable('users').onDelete('SET NULL').notNullable();
-    table.enum('action_type', [
-      'message_deleted',
-      'message_approved',
-      'message_rejected',
-      'user_warned',
-      'user_suspended',
-      'user_banned',
-      'conversation_closed',
-      'report_resolved',
-    ]).notNullable();
+    table
+      .enum('action_type', [
+        'message_deleted',
+        'message_approved',
+        'message_rejected',
+        'user_warned',
+        'user_suspended',
+        'user_banned',
+        'conversation_closed',
+        'report_resolved',
+      ])
+      .notNullable();
 
     table.uuid('target_user_id').references('id').inTable('users').onDelete('SET NULL');
     table.uuid('target_message_id').references('id').inTable('messages').onDelete('SET NULL');
-    table.uuid('target_conversation_id').references('id').inTable('conversations').onDelete('SET NULL');
-    table.uuid('related_report_id').references('id').inTable('message_reports').onDelete('SET NULL');
+    table
+      .uuid('target_conversation_id')
+      .references('id')
+      .inTable('conversations')
+      .onDelete('SET NULL');
+    table
+      .uuid('related_report_id')
+      .references('id')
+      .inTable('message_reports')
+      .onDelete('SET NULL');
 
     table.text('reason').notNullable();
     table.jsonb('metadata'); // Additional context

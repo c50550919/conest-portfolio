@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -83,7 +83,10 @@ export const RegisterRequestSchema = z
       .optional(),
     city: z.string().min(1, 'City is required').optional(),
     state: z.string().length(2, 'State must be a 2-letter code').optional(),
-    zipCode: z.string().regex(/^\d{5}$/, 'Zip code must be 5 digits').optional(),
+    zipCode: z
+      .string()
+      .regex(/^\d{5}$/, 'Zip code must be 5 digits')
+      .optional(),
     childrenCount: z
       .number()
       .int('Children count must be an integer')
@@ -105,8 +108,7 @@ export const RegisterRequestSchema = z
   .refine(
     (data) =>
       // CRITICAL CHILD SAFETY: Reject if ANY prohibited child PII fields are present
-      PROHIBITED_CHILD_PII_FIELDS.every((field) => !(field in data))
-    ,
+      PROHIBITED_CHILD_PII_FIELDS.every((field) => !(field in data)),
     {
       message:
         'CHILD SAFETY VIOLATION: Prohibited child PII fields detected (childrenNames, childrenPhotos, childrenAges, childrenSchools)',

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -35,11 +35,7 @@ router.use(authenticateJWT);
  * @desc    Save a profile to a folder with optional notes
  * @access  Private
  */
-router.post(
-  '/',
-  validate(createSavedProfileSchema),
-  savedProfileController.saveProfile,
-);
+router.post('/', validate(createSavedProfileSchema), savedProfileController.saveProfile);
 
 /**
  * @route   GET /api/saved-profiles
@@ -47,31 +43,21 @@ router.post(
  * @access  Private
  * @query   folder - Optional folder name to filter by
  */
-router.get(
-  '/',
-  validate(getSavedProfilesSchema),
-  savedProfileController.getSavedProfiles,
-);
+router.get('/', validate(getSavedProfilesSchema), savedProfileController.getSavedProfiles);
 
 /**
  * @route   GET /api/saved-profiles/folders
  * @desc    Get saved profiles grouped by folder
  * @access  Private
  */
-router.get(
-  '/folders',
-  savedProfileController.getSavedProfilesByFolder,
-);
+router.get('/folders', savedProfileController.getSavedProfilesByFolder);
 
 /**
  * @route   GET /api/saved-profiles/limit-status
  * @desc    Get saved profile limit status (count and remaining)
  * @access  Private
  */
-router.get(
-  '/limit-status',
-  savedProfileController.getLimitStatus,
-);
+router.get('/limit-status', savedProfileController.getLimitStatus);
 
 /**
  * @route   GET /api/saved-profiles/compare
@@ -79,42 +65,28 @@ router.get(
  * @access  Private
  * @query   ids - Comma-separated list of 2-4 profile IDs
  */
-router.get(
-  '/compare',
-  validate(compareProfilesSchema),
-  savedProfileController.compareProfiles,
-);
+router.get('/compare', validate(compareProfilesSchema), savedProfileController.compareProfiles);
 
 /**
  * @route   GET /api/saved-profiles/check/:profileId
  * @desc    Check if a profile is saved
  * @access  Private
  */
-router.get(
-  '/check/:profileId',
-  savedProfileController.checkIfSaved,
-);
+router.get('/check/:profileId', savedProfileController.checkIfSaved);
 
 /**
  * @route   GET /api/saved-profiles/:id/notes
  * @desc    Get decrypted notes for a saved profile
  * @access  Private
  */
-router.get(
-  '/:id/notes',
-  savedProfileController.getNotes,
-);
+router.get('/:id/notes', savedProfileController.getNotes);
 
 /**
  * @route   PATCH /api/saved-profiles/:id
  * @desc    Update folder or notes for a saved profile
  * @access  Private
  */
-router.patch(
-  '/:id',
-  validate(updateSavedProfileSchema),
-  savedProfileController.updateSavedProfile,
-);
+router.patch('/:id', validate(updateSavedProfileSchema), savedProfileController.updateSavedProfile);
 
 /**
  * @route   DELETE /api/saved-profiles/:id

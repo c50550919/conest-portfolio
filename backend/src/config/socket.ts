@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -41,7 +41,9 @@ const subClient = pubClient.duplicate();
 
 // JWT secret for authentication - MUST be set in environment
 if (!process.env.JWT_SECRET) {
-  throw new Error('CRITICAL: JWT_SECRET environment variable is required for WebSocket authentication');
+  throw new Error(
+    'CRITICAL: JWT_SECRET environment variable is required for WebSocket authentication',
+  );
 }
 const JWT_SECRET: string = process.env.JWT_SECRET;
 
@@ -88,7 +90,8 @@ export function initializeSocketIO(httpServer: HTTPServer): Server {
   // JWT authentication middleware
   io.use(async (socket: AuthenticatedSocket, next) => {
     try {
-      const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
+      const token =
+        socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
 
       if (!token) {
         return next(new Error('Authentication token required'));

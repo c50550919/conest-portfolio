@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -43,31 +43,33 @@ const router = Router();
  * @param schema - Zod schema to validate against
  * @returns Express middleware function
  */
-const validateBody = (schema: z.ZodSchema) => async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    // Parse and validate request body
-    req.body = await schema.parseAsync(req.body);
-    next();
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      // Format Zod validation errors
-      res.status(400).json({
+const validateBody =
+  (schema: z.ZodSchema) =>
+  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      // Parse and validate request body
+      req.body = await schema.parseAsync(req.body);
+      next();
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        // Format Zod validation errors
+        res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: error.errors.map((err) => ({
+            field: err.path.join('.'),
+            message: err.message,
+          })),
+        });
+        return;
+      }
+      // Unexpected validation error
+      res.status(500).json({
         success: false,
-        error: 'Validation failed',
-        details: error.errors.map((err) => ({
-          field: err.path.join('.'),
-          message: err.message,
-        })),
+        error: 'Validation error',
       });
-      return;
     }
-    // Unexpected validation error
-    res.status(500).json({
-      success: false,
-      error: 'Validation error',
-    });
-  }
-};
+  };
 
 /**
  * @swagger
@@ -171,12 +173,7 @@ const validateBody = (schema: z.ZodSchema) => async (req: Request, res: Response
  *       429:
  *         description: Rate limit exceeded (5 requests per 15 minutes)
  */
-router.post(
-  '/register',
-  authLimiter,
-  validateBody(RegisterRequestSchema),
-  AuthController.register,
-);
+router.post('/register', authLimiter, validateBody(RegisterRequestSchema), AuthController.register);
 
 /**
  * @swagger
@@ -229,12 +226,7 @@ router.post(
  *       429:
  *         description: Rate limit exceeded (5 requests per 15 minutes)
  */
-router.post(
-  '/login',
-  authLimiter,
-  validateBody(LoginRequestSchema),
-  AuthController.login,
-);
+router.post('/login', authLimiter, validateBody(LoginRequestSchema), AuthController.login);
 
 /**
  * @swagger
@@ -277,11 +269,7 @@ router.post(
  *       401:
  *         description: Invalid or expired refresh token
  */
-router.post(
-  '/refresh',
-  validateBody(RefreshTokenSchema),
-  AuthController.refresh,
-);
+router.post('/refresh', validateBody(RefreshTokenSchema), AuthController.refresh);
 
 /**
  * @swagger

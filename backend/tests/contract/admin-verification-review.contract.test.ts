@@ -355,9 +355,7 @@ describe('Admin Verification Review - Contract Tests', () => {
     it('should return consistent error format for all error types', async () => {
       const responses = await Promise.all([
         // 401 - No auth
-        request(app)
-          .post(`/api/admin/verifications/${validUuid}/approve`)
-          .send({}),
+        request(app).post(`/api/admin/verifications/${validUuid}/approve`).send({}),
         // 400 - Invalid UUID
         request(app)
           .post(`/api/admin/verifications/${invalidUuid}/approve`)

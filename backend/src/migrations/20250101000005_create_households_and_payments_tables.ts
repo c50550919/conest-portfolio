@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -30,7 +30,12 @@ export async function up(knex: Knex): Promise<void> {
   // Create household_members table
   await knex.schema.createTable('household_members', (table) => {
     table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
-    table.uuid('household_id').references('id').inTable('households').onDelete('CASCADE').notNullable();
+    table
+      .uuid('household_id')
+      .references('id')
+      .inTable('households')
+      .onDelete('CASCADE')
+      .notNullable();
     table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
     table.enum('role', ['admin', 'member']).defaultTo('member');
     table.integer('rent_share').notNullable(); // Amount in cents
@@ -47,11 +52,18 @@ export async function up(knex: Knex): Promise<void> {
   // Create payments table
   return knex.schema.createTable('payments', (table) => {
     table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
-    table.uuid('household_id').references('id').inTable('households').onDelete('CASCADE').notNullable();
+    table
+      .uuid('household_id')
+      .references('id')
+      .inTable('households')
+      .onDelete('CASCADE')
+      .notNullable();
     table.uuid('payer_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
     table.integer('amount').notNullable(); // Amount in cents
     table.enum('type', ['rent', 'utilities', 'deposit', 'other']).notNullable();
-    table.enum('status', ['pending', 'processing', 'completed', 'failed', 'refunded']).defaultTo('pending');
+    table
+      .enum('status', ['pending', 'processing', 'completed', 'failed', 'refunded'])
+      .defaultTo('pending');
     table.string('stripe_payment_intent_id');
     table.string('stripe_charge_id');
     table.text('description');

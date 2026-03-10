@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -140,7 +140,7 @@ export function requirePermission(...permissions: Permission[]) {
     }
 
     const userPermissions = rolePermissions[user.role as Role] || [];
-    const hasPermission = permissions.every(p => userPermissions.includes(p));
+    const hasPermission = permissions.every((p) => userPermissions.includes(p));
 
     if (!hasPermission) {
       res.status(403).json({
@@ -340,35 +340,100 @@ export async function requireHouseholdAdmin(
  */
 const CHILD_DATA_BLOCKLIST = new Set([
   // Direct child references
-  'child', 'children', 'child_id', 'child_ids', 'childid', 'childids',
-  'child_name', 'child_names', 'childname', 'childnames',
-  'child_age', 'child_ages', 'childage', 'childages',
-  'child_dob', 'child_birthday', 'childdob', 'childbirthday',
-  'child_photo', 'child_photos', 'childphoto', 'childphotos',
-  'child_profile', 'child_profiles', 'childprofile', 'childprofiles',
-  'child_info', 'child_data', 'childinfo', 'childdata',
-  'child_school', 'child_schools', 'childschool', 'childschools',
-  'child_medical', 'childmedical',
+  'child',
+  'children',
+  'child_id',
+  'child_ids',
+  'childid',
+  'childids',
+  'child_name',
+  'child_names',
+  'childname',
+  'childnames',
+  'child_age',
+  'child_ages',
+  'childage',
+  'childages',
+  'child_dob',
+  'child_birthday',
+  'childdob',
+  'childbirthday',
+  'child_photo',
+  'child_photos',
+  'childphoto',
+  'childphotos',
+  'child_profile',
+  'child_profiles',
+  'childprofile',
+  'childprofiles',
+  'child_info',
+  'child_data',
+  'childinfo',
+  'childdata',
+  'child_school',
+  'child_schools',
+  'childschool',
+  'childschools',
+  'child_medical',
+  'childmedical',
 
   // Kid variations
-  'kid', 'kids', 'kid_id', 'kid_ids', 'kidid', 'kidids',
-  'kid_name', 'kid_names', 'kidname', 'kidnames',
-  'kid_age', 'kid_ages', 'kidage', 'kidages',
-  'kid_photo', 'kid_photos', 'kidphoto', 'kidphotos',
+  'kid',
+  'kids',
+  'kid_id',
+  'kid_ids',
+  'kidid',
+  'kidids',
+  'kid_name',
+  'kid_names',
+  'kidname',
+  'kidnames',
+  'kid_age',
+  'kid_ages',
+  'kidage',
+  'kidages',
+  'kid_photo',
+  'kid_photos',
+  'kidphoto',
+  'kidphotos',
 
   // Minor variations
-  'minor', 'minors', 'minor_id', 'minor_ids', 'minorid', 'minorids',
-  'minor_name', 'minor_names', 'minorname', 'minornames',
-  'minor_age', 'minor_ages', 'minorage', 'minorages',
+  'minor',
+  'minors',
+  'minor_id',
+  'minor_ids',
+  'minorid',
+  'minorids',
+  'minor_name',
+  'minor_names',
+  'minorname',
+  'minornames',
+  'minor_age',
+  'minor_ages',
+  'minorage',
+  'minorages',
 
   // Dependent variations
-  'dependent_name', 'dependent_names', 'dependentname', 'dependentnames',
-  'dependent_age', 'dependent_ages', 'dependentage', 'dependentages',
-  'dependent_dob', 'dependentdob',
+  'dependent_name',
+  'dependent_names',
+  'dependentname',
+  'dependentnames',
+  'dependent_age',
+  'dependent_ages',
+  'dependentage',
+  'dependentages',
+  'dependent_dob',
+  'dependentdob',
 
   // Son/daughter explicit references
-  'son_name', 'daughter_name', 'sonname', 'daughtername',
-  'son_age', 'daughter_age', 'sonage', 'daughterage',
+  'son_name',
+  'daughter_name',
+  'sonname',
+  'daughtername',
+  'son_age',
+  'daughter_age',
+  'sonage',
+  'daughterage',
 ]);
 
 /**
@@ -412,7 +477,7 @@ function isChildDataKey(key: string): boolean {
   }
 
   // Pattern matching for variations
-  return CHILD_DATA_PATTERNS.some(pattern => pattern.test(normalizedKey));
+  return CHILD_DATA_PATTERNS.some((pattern) => pattern.test(normalizedKey));
 }
 
 /**
@@ -457,7 +522,7 @@ export function preventChildDataAccess(req: Request, res: Response, next: NextFu
   ];
 
   // Check each key against blocklist and patterns
-  const blockedKey = allKeys.find(key => isChildDataKey(key));
+  const blockedKey = allKeys.find((key) => isChildDataKey(key));
 
   if (blockedKey) {
     // Log attempt for security monitoring (tokenized)
@@ -466,7 +531,8 @@ export function preventChildDataAccess(req: Request, res: Response, next: NextFu
     res.status(400).json({
       error: 'Child data access forbidden',
       code: 'CHILD_DATA_FORBIDDEN',
-      message: 'This platform does not store or process child-specific data. Only aggregate family information (children_count, children_age_groups) is permitted.',
+      message:
+        'This platform does not store or process child-specific data. Only aggregate family information (children_count, children_age_groups) is permitted.',
     });
     return;
   }

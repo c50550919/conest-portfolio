@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -28,7 +28,9 @@ import { randomUUID } from 'crypto';
 function getJWTSecret(): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error('JWT_SECRET environment variable is required. Cannot start without a secure secret.');
+    throw new Error(
+      'JWT_SECRET environment variable is required. Cannot start without a secure secret.',
+    );
   }
   return secret;
 }
@@ -66,11 +68,9 @@ export function generateAccessToken(payload: JWTPayload): string {
  * @returns JWT refresh token with 7 day expiry and unique jti
  */
 export function generateRefreshToken(payload: JWTPayload): string {
-  return jwt.sign(
-    { ...payload, jti: randomUUID() },
-    JWT_SECRET,
-    { expiresIn: REFRESH_TOKEN_EXPIRY },
-  );
+  return jwt.sign({ ...payload, jti: randomUUID() }, JWT_SECRET, {
+    expiresIn: REFRESH_TOKEN_EXPIRY,
+  });
 }
 
 /**

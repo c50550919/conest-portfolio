@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -60,7 +60,7 @@ export function tokenizePhone(phone: string): string {
   // Token generation for audit logging (prefix with underscore as currently unused)
   const _token = tokenizePII(cleaned.slice(0, -4));
 
-  return `${countryCode ? `+${  countryCode}` : ''}***${last4}`;
+  return `${countryCode ? `+${countryCode}` : ''}***${last4}`;
 }
 
 /**
@@ -89,7 +89,7 @@ export function tokenizeAddress(address: {
   }
 
   if (address.zipCode) {
-    parts.push(`***${  address.zipCode.slice(-2)}`);
+    parts.push(`***${address.zipCode.slice(-2)}`);
   }
 
   if (address.country) {

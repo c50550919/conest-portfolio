@@ -135,7 +135,7 @@ describe('GET /api/household/:id/members - Contract Tests', () => {
         .expect(200);
 
       response.body.members.forEach((member: any, index: number) => {
-        FORBIDDEN_CHILD_PII_FIELDS.forEach(forbiddenField => {
+        FORBIDDEN_CHILD_PII_FIELDS.forEach((forbiddenField) => {
           expect(member).not.toHaveProperty(forbiddenField);
         });
       });
@@ -149,10 +149,11 @@ describe('GET /api/household/:id/members - Contract Tests', () => {
 
       response.body.members.forEach((member: any) => {
         const memberKeys = Object.keys(member);
-        const hasChildPII = memberKeys.some(key =>
-          key.toLowerCase().includes('childname') ||
-          key.toLowerCase().includes('childphoto') ||
-          key.toLowerCase().includes('childschool'),
+        const hasChildPII = memberKeys.some(
+          (key) =>
+            key.toLowerCase().includes('childname') ||
+            key.toLowerCase().includes('childphoto') ||
+            key.toLowerCase().includes('childschool'),
         );
         expect(hasChildPII).toBe(false);
       });
@@ -169,7 +170,7 @@ describe('GET /api/household/:id/members - Contract Tests', () => {
 
       // Verify no child-related keys beyond what's explicitly allowed (NONE)
       response.body.members.forEach((member: any) => {
-        const childRelatedKeys = Object.keys(member).filter(key =>
+        const childRelatedKeys = Object.keys(member).filter((key) =>
           key.toLowerCase().includes('child'),
         );
         expect(childRelatedKeys).toEqual([]);
@@ -179,9 +180,7 @@ describe('GET /api/household/:id/members - Contract Tests', () => {
 
   describe('Authorization & Error Cases', () => {
     it('should return 401 if not authenticated', async () => {
-      const response = await request(app)
-        .get(`/api/household/${householdId}/members`)
-        .expect(401);
+      const response = await request(app).get(`/api/household/${householdId}/members`).expect(401);
 
       expect(response.body).toHaveProperty('error');
       // Response body format may vary - just check we got the right status code
@@ -229,9 +228,7 @@ describe('GET /api/household/:id/members - Contract Tests', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
-      const adminMembers = response.body.members.filter(
-        (member: any) => member.role === 'admin',
-      );
+      const adminMembers = response.body.members.filter((member: any) => member.role === 'admin');
       expect(adminMembers.length).toBeGreaterThanOrEqual(1);
     });
 

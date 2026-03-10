@@ -122,15 +122,11 @@ describe('Contract: GET /api/connection-requests', () => {
 
   describe('Authorization Cases', () => {
     it('should reject received requests without authentication token', async () => {
-      await request(app)
-        .get('/api/connection-requests/received')
-        .expect(401);
+      await request(app).get('/api/connection-requests/received').expect(401);
     });
 
     it('should reject sent requests without authentication token', async () => {
-      await request(app)
-        .get('/api/connection-requests/sent')
-        .expect(401);
+      await request(app).get('/api/connection-requests/sent').expect(401);
     });
   });
 

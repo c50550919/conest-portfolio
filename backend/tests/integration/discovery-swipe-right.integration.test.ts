@@ -57,15 +57,13 @@ describe('Discovery Swipe Right Flow - Integration Tests', () => {
     currentUserId = viewerRes.body.user.id;
 
     // Mark as verified
-    await db('verifications')
-      .where({ user_id: currentUserId })
-      .update({
-        id_verification_status: 'verified',
-        background_check_status: 'verified',
-        phone_verified: true,
-        email_verified: true,
-        fully_verified: true,
-      });
+    await db('verifications').where({ user_id: currentUserId }).update({
+      id_verification_status: 'verified',
+      background_check_status: 'verified',
+      phone_verified: true,
+      email_verified: true,
+      fully_verified: true,
+    });
 
     // Create 3 target users
     const createTargetUser = async (index: number) => {
@@ -87,15 +85,13 @@ describe('Discovery Swipe Right Flow - Integration Tests', () => {
 
       const userId = res.body.user.id;
 
-      await db('verifications')
-        .where({ user_id: userId })
-        .update({
-          id_verification_status: 'verified',
-          background_check_status: 'verified',
-          phone_verified: true,
-          email_verified: true,
-          fully_verified: true,
-        });
+      await db('verifications').where({ user_id: userId }).update({
+        id_verification_status: 'verified',
+        background_check_status: 'verified',
+        phone_verified: true,
+        email_verified: true,
+        fully_verified: true,
+      });
 
       return {
         userId,
@@ -342,7 +338,7 @@ describe('Discovery Swipe Right Flow - Integration Tests', () => {
       expect(swipes[0].target_user_id).toBe(targetUser1.userId);
       expect(swipes[1].target_user_id).toBe(targetUser2.userId);
       expect(swipes[2].target_user_id).toBe(targetUser3.userId);
-      expect(swipes.every(s => s.direction === 'right')).toBe(true);
+      expect(swipes.every((s) => s.direction === 'right')).toBe(true);
     });
   });
 
@@ -554,7 +550,7 @@ describe('Discovery Swipe Right Flow - Integration Tests', () => {
         });
 
       // Small delay to ensure different timestamps
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       await request(app)
         .post('/api/discovery/swipe')

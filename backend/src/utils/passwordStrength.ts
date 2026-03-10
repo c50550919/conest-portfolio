@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -75,10 +75,30 @@ const PASSWORD_RULES: PasswordRule[] = [
  * Quality checks that affect score but don't fail validation
  */
 const QUALITY_CHECKS = [
-  { test: isCommonPassword, suggestion: 'Password is too common. Please choose a more unique password', scorePenalty: 30, isError: true },
-  { test: (pwd: string) => /(.)\1{2,}/.test(pwd), suggestion: 'Avoid repeating characters', scorePenalty: 10, isError: false },
-  { test: hasSequentialChars, suggestion: 'Avoid sequential characters (e.g., abc, 123)', scorePenalty: 10, isError: false },
-  { test: hasKeyboardPattern, suggestion: 'Avoid keyboard patterns (e.g., qwerty, asdf)', scorePenalty: 10, isError: false },
+  {
+    test: isCommonPassword,
+    suggestion: 'Password is too common. Please choose a more unique password',
+    scorePenalty: 30,
+    isError: true,
+  },
+  {
+    test: (pwd: string) => /(.)\1{2,}/.test(pwd),
+    suggestion: 'Avoid repeating characters',
+    scorePenalty: 10,
+    isError: false,
+  },
+  {
+    test: hasSequentialChars,
+    suggestion: 'Avoid sequential characters (e.g., abc, 123)',
+    scorePenalty: 10,
+    isError: false,
+  },
+  {
+    test: hasKeyboardPattern,
+    suggestion: 'Avoid keyboard patterns (e.g., qwerty, asdf)',
+    scorePenalty: 10,
+    isError: false,
+  },
 ];
 
 /**
@@ -152,7 +172,7 @@ function calculateDiversityBonus(password: string): number {
  */
 function isCommonPassword(password: string): boolean {
   const lowerPassword = password.toLowerCase();
-  return commonPasswords.some(common => lowerPassword.includes(common.toLowerCase()));
+  return commonPasswords.some((common) => lowerPassword.includes(common.toLowerCase()));
 }
 
 /**
@@ -185,11 +205,15 @@ function hasSequentialChars(password: string): boolean {
  */
 function hasKeyboardPattern(password: string): boolean {
   const patterns = [
-    'qwerty', 'asdfgh', 'zxcvbn',
-    'qwertz', 'azerty', // International keyboards
-    'qweasd', 'asdzxc', // Vertical patterns
+    'qwerty',
+    'asdfgh',
+    'zxcvbn',
+    'qwertz',
+    'azerty', // International keyboards
+    'qweasd',
+    'asdzxc', // Vertical patterns
   ];
 
   const lowerPassword = password.toLowerCase();
-  return patterns.some(pattern => lowerPassword.includes(pattern));
+  return patterns.some((pattern) => lowerPassword.includes(pattern));
 }

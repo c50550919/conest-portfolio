@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -42,12 +42,7 @@ export class SavedProfileController {
 
       const { profile_id, folder, notes } = req.body;
 
-      const savedProfile = await SavedProfileService.saveProfile(
-        userId,
-        profile_id,
-        folder,
-        notes,
-      );
+      const savedProfile = await SavedProfileService.saveProfile(userId, profile_id, folder, notes);
 
       res.status(201).json({
         success: true,
@@ -88,10 +83,7 @@ export class SavedProfileController {
 
       const { folder } = req.query;
 
-      const savedProfiles = await SavedProfileService.getSavedProfiles(
-        userId,
-        folder as string,
-      );
+      const savedProfiles = await SavedProfileService.getSavedProfiles(userId, folder as string);
 
       res.status(200).json({
         success: true,
@@ -107,7 +99,11 @@ export class SavedProfileController {
    * Get saved profiles grouped by folder
    * GET /api/saved-profiles/folders
    */
-  async getSavedProfilesByFolder(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  async getSavedProfilesByFolder(
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> {
     try {
       const userId = req.user?.id;
       if (!userId) {

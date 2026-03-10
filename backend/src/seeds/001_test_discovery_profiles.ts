@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -425,7 +425,7 @@ export async function seed(knex: Knex): Promise<void> {
         // Unique constraint violation - user already exists
         console.log('⏭️  Skipped', profile.email, '(already exists)');
       } else {
-        console.error('❌ Error creating profile for', `${profile.email  }:`, error.message);
+        console.error('❌ Error creating profile for', `${profile.email}:`, error.message);
       }
     }
   }

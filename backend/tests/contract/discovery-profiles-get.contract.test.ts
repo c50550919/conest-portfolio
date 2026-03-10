@@ -28,9 +28,7 @@ describe('GET /api/discovery/profiles - Contract Tests', () => {
 
   describe('Authentication Enforcement', () => {
     it('should reject request without auth token', async () => {
-      const response = await request(app)
-        .get('/api/discovery/profiles')
-        .expect(401);
+      const response = await request(app).get('/api/discovery/profiles').expect(401);
 
       expect(response.body).toHaveProperty('error');
     });
@@ -222,9 +220,7 @@ describe('GET /api/discovery/profiles - Contract Tests', () => {
       // Skipped: Requires database fixtures with verified users
       const start = Date.now();
 
-      await request(app)
-        .get('/api/discovery/profiles')
-        .set('Authorization', mockAuthToken);
+      await request(app).get('/api/discovery/profiles').set('Authorization', mockAuthToken);
 
       const duration = Date.now() - start;
 

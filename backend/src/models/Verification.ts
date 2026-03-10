@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -24,7 +24,14 @@ export interface Verification {
   id_verification_data?: string; // JSON encrypted data
 
   // Background Check (Certn/Checkr)
-  background_check_status: 'not_started' | 'pending' | 'approved' | 'rejected' | 'consider' | 'expired' | 'pre_adverse';
+  background_check_status:
+    | 'not_started'
+    | 'pending'
+    | 'approved'
+    | 'rejected'
+    | 'consider'
+    | 'expired'
+    | 'pre_adverse';
   background_check_date?: Date;
   background_check_report_id?: string;
 
@@ -85,9 +92,7 @@ export const VerificationModel = {
       admin_review_required: false,
     };
 
-    const [verification] = await db('verifications')
-      .insert(verificationData)
-      .returning('*');
+    const [verification] = await db('verifications').insert(verificationData).returning('*');
     return verification;
   },
 
@@ -179,9 +184,7 @@ export const VerificationModel = {
 
     // CMP-14: Store structured HUD assessment as JSON if provided,
     // otherwise fall back to plain notes for backward compatibility
-    const reviewNotes = hudAssessment
-      ? JSON.stringify({ hudAssessment, notes })
-      : notes;
+    const reviewNotes = hudAssessment ? JSON.stringify({ hudAssessment, notes }) : notes;
 
     const verification = await this.update(userId, {
       background_check_status: 'approved',
@@ -216,9 +219,7 @@ export const VerificationModel = {
     retentionDate.setDate(retentionDate.getDate() + 30);
 
     // CMP-14: Store structured HUD assessment as JSON if provided
-    const reviewNotes = hudAssessment
-      ? JSON.stringify({ hudAssessment, notes })
-      : notes;
+    const reviewNotes = hudAssessment ? JSON.stringify({ hudAssessment, notes }) : notes;
 
     return await this.update(userId, {
       background_check_status: 'rejected',
@@ -239,10 +240,19 @@ export const VerificationModel = {
   async getAdminReviewQueue(): Promise<Partial<Verification>[]> {
     return await db('verifications')
       .select(
-        'id', 'user_id', 'background_check_status', 'background_check_date',
-        'certn_report_id', 'certn_applicant_id', 'admin_review_required',
-        'admin_reviewed_by', 'admin_review_date', 'admin_review_notes',
-        'pre_adverse_notice_date', 'created_at', 'updated_at',
+        'id',
+        'user_id',
+        'background_check_status',
+        'background_check_date',
+        'certn_report_id',
+        'certn_applicant_id',
+        'admin_review_required',
+        'admin_reviewed_by',
+        'admin_review_date',
+        'admin_review_notes',
+        'pre_adverse_notice_date',
+        'created_at',
+        'updated_at',
       )
       .where({ admin_review_required: true })
       .whereIn('background_check_status', ['consider'])

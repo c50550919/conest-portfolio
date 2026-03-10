@@ -184,13 +184,11 @@ describe('POST /api/auth/register - Contract Tests', () => {
     });
 
     it('should return 400 for missing required fields', async () => {
-      const response = await request(app)
-        .post('/api/auth/register')
-        .send({
-          email: 'test@example.com',
-          password: 'SecurePass123!',
-          // Missing firstName, lastName, etc.
-        });
+      const response = await request(app).post('/api/auth/register').send({
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+        // Missing firstName, lastName, etc.
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
@@ -264,9 +262,7 @@ describe('POST /api/auth/register - Contract Tests', () => {
         };
         payload[field] = value;
 
-        const response = await request(app)
-          .post('/api/auth/register')
-          .send(payload);
+        const response = await request(app).post('/api/auth/register').send(payload);
 
         // Child PII is rejected - either by strict schema (unknown keys) or explicit PII check
         expect(response.status).toBe(400);

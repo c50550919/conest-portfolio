@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -44,11 +44,7 @@ export class ConnectionRequestController {
 
       const { recipient_id, message } = req.body;
 
-      const request = await ConnectionRequestService.sendRequest(
-        senderId,
-        recipient_id,
-        message,
-      );
+      const request = await ConnectionRequestService.sendRequest(senderId, recipient_id, message);
 
       res.status(201).json({
         success: true,
@@ -57,7 +53,9 @@ export class ConnectionRequestController {
       });
     } catch (error: any) {
       if (error.message === 'CONNECTION_REQUEST_ALREADY_EXISTS') {
-        res.status(409).json({ error: 'You already have a pending or accepted connection with this user' });
+        res
+          .status(409)
+          .json({ error: 'You already have a pending or accepted connection with this user' });
         return;
       }
       if (error.message === 'CANNOT_SEND_REQUEST_TO_SELF') {
@@ -104,10 +102,7 @@ export class ConnectionRequestController {
 
       const { status } = req.query;
 
-      const requests = await ConnectionRequestService.getReceivedRequests(
-        userId,
-        status as string,
-      );
+      const requests = await ConnectionRequestService.getReceivedRequests(userId, status as string);
 
       res.status(200).json({
         success: true,
@@ -133,10 +128,7 @@ export class ConnectionRequestController {
 
       const { status } = req.query;
 
-      const requests = await ConnectionRequestService.getSentRequests(
-        userId,
-        status as string,
-      );
+      const requests = await ConnectionRequestService.getSentRequests(userId, status as string);
 
       res.status(200).json({
         success: true,

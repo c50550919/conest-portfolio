@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -61,9 +61,7 @@ export const MatchModel = {
   },
 
   async findByUserId(userId: string, status?: string): Promise<Match[]> {
-    let query = db('matches')
-      .where({ user_id_1: userId })
-      .orWhere({ user_id_2: userId });
+    let query = db('matches').where({ user_id_1: userId }).orWhere({ user_id_2: userId });
 
     if (status) {
       query = query.andWhere({ status });
@@ -89,10 +87,7 @@ export const MatchModel = {
       updateData.matched_at = db.fn.now();
     }
 
-    const [match] = await db('matches')
-      .where({ id })
-      .update(updateData)
-      .returning('*');
+    const [match] = await db('matches').where({ id }).update(updateData).returning('*');
     return match;
   },
 

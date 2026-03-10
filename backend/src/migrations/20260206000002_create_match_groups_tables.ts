@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -35,7 +35,12 @@ export async function up(knex: Knex): Promise<void> {
 
   await knex.schema.createTable('match_group_members', (table) => {
     table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
-    table.uuid('match_group_id').references('id').inTable('match_groups').onDelete('CASCADE').notNullable();
+    table
+      .uuid('match_group_id')
+      .references('id')
+      .inTable('match_groups')
+      .onDelete('CASCADE')
+      .notNullable();
     table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
     table.enum('role', ['initiator', 'member']).notNullable().defaultTo('member');
     table.timestamp('joined_at').defaultTo(knex.fn.now());

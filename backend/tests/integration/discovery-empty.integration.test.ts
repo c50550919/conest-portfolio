@@ -57,15 +57,13 @@ describe('Discovery Empty State - Integration Tests', () => {
     currentUserId = registerRes.body.user.id;
 
     // Mark as verified
-    await db('verifications')
-      .where({ user_id: currentUserId })
-      .update({
-        id_verification_status: 'verified',
-        background_check_status: 'verified',
-        phone_verified: true,
-        email_verified: true,
-        fully_verified: true,
-      });
+    await db('verifications').where({ user_id: currentUserId }).update({
+      id_verification_status: 'verified',
+      background_check_status: 'verified',
+      phone_verified: true,
+      email_verified: true,
+      fully_verified: true,
+    });
   });
 
   describe('Empty State - No Available Profiles', () => {
@@ -133,15 +131,13 @@ describe('Discovery Empty State - Integration Tests', () => {
 
         const userId = res.body.user.id;
 
-        await db('verifications')
-          .where({ user_id: userId })
-          .update({
-            id_verification_status: 'verified',
-            background_check_status: 'verified',
-            phone_verified: true,
-            email_verified: true,
-            fully_verified: true,
-          });
+        await db('verifications').where({ user_id: userId }).update({
+          id_verification_status: 'verified',
+          background_check_status: 'verified',
+          phone_verified: true,
+          email_verified: true,
+          fully_verified: true,
+        });
       }
     });
 
@@ -251,15 +247,13 @@ describe('Discovery Empty State - Integration Tests', () => {
           childrenAgeGroups: ['toddler'],
         });
 
-      await db('verifications')
-        .where({ user_id: newUserRes.body.user.id })
-        .update({
-          id_verification_status: 'verified',
-          background_check_status: 'verified',
-          phone_verified: true,
-          email_verified: true,
-          fully_verified: true,
-        });
+      await db('verifications').where({ user_id: newUserRes.body.user.id }).update({
+        id_verification_status: 'verified',
+        background_check_status: 'verified',
+        phone_verified: true,
+        email_verified: true,
+        fully_verified: true,
+      });
 
       // Should now have 1 profile
       const updated = await request(app)
@@ -315,19 +309,15 @@ describe('Discovery Empty State - Integration Tests', () => {
       expect(before.body.profiles).toEqual([]);
 
       // Verify one user
-      const unverifiedUser = await db('users')
-        .where({ email: 'unverified1@test.com' })
-        .first();
+      const unverifiedUser = await db('users').where({ email: 'unverified1@test.com' }).first();
 
-      await db('verifications')
-        .where({ user_id: unverifiedUser.id })
-        .update({
-          id_verification_status: 'verified',
-          background_check_status: 'verified',
-          phone_verified: true,
-          email_verified: true,
-          fully_verified: true,
-        });
+      await db('verifications').where({ user_id: unverifiedUser.id }).update({
+        id_verification_status: 'verified',
+        background_check_status: 'verified',
+        phone_verified: true,
+        email_verified: true,
+        fully_verified: true,
+      });
 
       // Should now have 1 profile
       const after = await request(app)
@@ -467,15 +457,13 @@ describe('Discovery Empty State - Integration Tests', () => {
           childrenAgeGroups: ['elementary'],
         });
 
-      await db('verifications')
-        .where({ user_id: targetRes.body.user.id })
-        .update({
-          id_verification_status: 'verified',
-          background_check_status: 'verified',
-          phone_verified: true,
-          email_verified: true,
-          fully_verified: true,
-        });
+      await db('verifications').where({ user_id: targetRes.body.user.id }).update({
+        id_verification_status: 'verified',
+        background_check_status: 'verified',
+        phone_verified: true,
+        email_verified: true,
+        fully_verified: true,
+      });
 
       // Initially has profiles
       const before = await request(app)
@@ -530,15 +518,13 @@ describe('Discovery Empty State - Integration Tests', () => {
           childrenAgeGroups: ['toddler', 'elementary'],
         });
 
-      await db('verifications')
-        .where({ user_id: newUserRes.body.user.id })
-        .update({
-          id_verification_status: 'verified',
-          background_check_status: 'verified',
-          phone_verified: true,
-          email_verified: true,
-          fully_verified: true,
-        });
+      await db('verifications').where({ user_id: newUserRes.body.user.id }).update({
+        id_verification_status: 'verified',
+        background_check_status: 'verified',
+        phone_verified: true,
+        email_verified: true,
+        fully_verified: true,
+      });
 
       // Should now have profiles
       const after = await request(app)

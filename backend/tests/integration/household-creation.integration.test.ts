@@ -216,9 +216,7 @@ describe('Household Creation Flow - Integration Tests', () => {
       expect(totalRentShare).toBe(360000); // Should equal total rent
 
       // Verify at least one admin exists
-      const adminMembers = getMembersResponse.body.members.filter(
-        (m: any) => m.role === 'admin',
-      );
+      const adminMembers = getMembersResponse.body.members.filter((m: any) => m.role === 'admin');
       expect(adminMembers.length).toBeGreaterThanOrEqual(1);
     });
   });
@@ -379,9 +377,7 @@ describe('Household Creation Flow - Integration Tests', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
-      const member = getMembersResponse.body.members.find(
-        (m: any) => m.userId === memberUserId,
-      );
+      const member = getMembersResponse.body.members.find((m: any) => m.userId === memberUserId);
       expect(member).toBeDefined();
       expect(member.householdId).toBe(householdId);
       expect(member.rentShare).toBe(175000);

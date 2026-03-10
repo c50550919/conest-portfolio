@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -58,15 +58,11 @@ export const ExpenseModel = {
   },
 
   async findByHousehold(householdId: string): Promise<Expense[]> {
-    return await db('payments')
-      .where({ household_id: householdId })
-      .orderBy('created_at', 'desc');
+    return await db('payments').where({ household_id: householdId }).orderBy('created_at', 'desc');
   },
 
   async findByUser(userId: string): Promise<Expense[]> {
-    return await db('payments')
-      .where({ payer_id: userId })
-      .orderBy('created_at', 'desc');
+    return await db('payments').where({ payer_id: userId }).orderBy('created_at', 'desc');
   },
 
   async findByStatus(householdId: string, status: Expense['status']): Promise<Expense[]> {
@@ -88,10 +84,7 @@ export const ExpenseModel = {
       updateData.paid_at = db.fn.now();
     }
 
-    const [expense] = await db('payments')
-      .where({ id })
-      .update(updateData)
-      .returning('*');
+    const [expense] = await db('payments').where({ id }).update(updateData).returning('*');
     return expense;
   },
 
@@ -126,7 +119,7 @@ export const ExpenseModel = {
       .where({ household_id: householdId })
       .sum('amount as total')
       .first();
-    return parseInt(result?.total as string || '0', 10);
+    return parseInt((result?.total as string) || '0', 10);
   },
 
   /**
@@ -137,7 +130,7 @@ export const ExpenseModel = {
       .where({ household_id: householdId, status: 'pending' })
       .sum('amount as total')
       .first();
-    return parseInt(result?.total as string || '0', 10);
+    return parseInt((result?.total as string) || '0', 10);
   },
 
   /**
@@ -149,7 +142,7 @@ export const ExpenseModel = {
       .where('due_date', '<', db.fn.now())
       .sum('amount as total')
       .first();
-    return parseInt(result?.total as string || '0', 10);
+    return parseInt((result?.total as string) || '0', 10);
   },
 
   /**

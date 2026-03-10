@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -56,9 +56,7 @@ export const CreatePaymentIntentSchema = z
       .int('Amount must be an integer (cents)')
       .positive('Amount must be positive')
       .max(999999900, 'Amount cannot exceed $9,999,999.00'),
-    householdId: z
-      .string()
-      .uuid('Household ID must be a valid UUID'),
+    householdId: z.string().uuid('Household ID must be a valid UUID'),
     description: z
       .string()
       .min(1, 'Description is required')
@@ -84,9 +82,7 @@ export const CreatePaymentIntentSchema = z
  */
 export const SplitRentSchema = z
   .object({
-    householdId: z
-      .string()
-      .uuid('Household ID must be a valid UUID'),
+    householdId: z.string().uuid('Household ID must be a valid UUID'),
     totalAmount: z
       .number()
       .int('Total amount must be an integer (cents)')
@@ -135,14 +131,14 @@ export const GetPaymentHistorySchema = z.object({
     .string()
     .regex(/^\d+$/, 'Limit must be a number')
     .transform(Number)
-    .refine(val => val >= 1 && val <= 100, 'Limit must be between 1 and 100')
+    .refine((val) => val >= 1 && val <= 100, 'Limit must be between 1 and 100')
     .optional()
     .default('50'),
   offset: z
     .string()
     .regex(/^\d+$/, 'Offset must be a number')
     .transform(Number)
-    .refine(val => val >= 0, 'Offset must be non-negative')
+    .refine((val) => val >= 0, 'Offset must be non-negative')
     .optional()
     .default('0'),
 });
@@ -153,9 +149,7 @@ export const GetPaymentHistorySchema = z.object({
  */
 export const CreatePaymentSchema = z
   .object({
-    household_id: z
-      .string()
-      .uuid('Household ID must be a valid UUID'),
+    household_id: z.string().uuid('Household ID must be a valid UUID'),
     amount: z
       .number()
       .int('Amount must be an integer (cents)')
@@ -164,10 +158,7 @@ export const CreatePaymentSchema = z
     type: z.enum(['rent', 'utilities', 'deposit', 'other'], {
       errorMap: () => ({ message: 'Type must be rent, utilities, deposit, or other' }),
     }),
-    description: z
-      .string()
-      .max(500, 'Description cannot exceed 500 characters')
-      .optional(),
+    description: z.string().max(500, 'Description cannot exceed 500 characters').optional(),
   })
   .strict();
 
@@ -184,10 +175,7 @@ export const CreatePaymentSchema = z
  */
 export const CreateVerificationPaymentSchema = z
   .object({
-    connectionRequestId: z
-      .string()
-      .uuid('Connection request ID must be a valid UUID')
-      .optional(),
+    connectionRequestId: z.string().uuid('Connection request ID must be a valid UUID').optional(),
     idempotencyKey: z
       .string()
       .min(1, 'Idempotency key cannot be empty')
@@ -203,10 +191,7 @@ export const CreateVerificationPaymentSchema = z
  * - userId: Optional UUID to check (admin only), defaults to authenticated user
  */
 export const GetVerificationPaymentStatusSchema = z.object({
-  userId: z
-    .string()
-    .uuid('User ID must be a valid UUID')
-    .optional(),
+  userId: z.string().uuid('User ID must be a valid UUID').optional(),
 });
 
 /**
@@ -225,24 +210,14 @@ export const GetVerificationPaymentStatusSchema = z.object({
  */
 export const ValidateIOSReceiptSchema = z
   .object({
-    productId: z
-      .string()
-      .min(1, 'Product ID is required')
-      .max(255, 'Product ID too long'),
+    productId: z.string().min(1, 'Product ID is required').max(255, 'Product ID too long'),
     transactionId: z
       .string()
       .min(1, 'Transaction ID is required')
       .max(255, 'Transaction ID too long'),
-    originalTransactionId: z
-      .string()
-      .max(255, 'Original transaction ID too long')
-      .optional(),
-    receipt: z
-      .string()
-      .min(1, 'Receipt is required'),
-    signedTransaction: z
-      .string()
-      .optional(),
+    originalTransactionId: z.string().max(255, 'Original transaction ID too long').optional(),
+    receipt: z.string().min(1, 'Receipt is required'),
+    signedTransaction: z.string().optional(),
   })
   .strict();
 
@@ -260,20 +235,10 @@ export const ValidateIOSReceiptSchema = z
  */
 export const ValidateGooglePlayReceiptSchema = z
   .object({
-    productId: z
-      .string()
-      .min(1, 'Product ID is required')
-      .max(255, 'Product ID too long'),
-    purchaseToken: z
-      .string()
-      .min(1, 'Purchase token is required'),
-    transactionId: z
-      .string()
-      .max(255, 'Transaction ID too long')
-      .optional(),
-    transactionReceipt: z
-      .string()
-      .optional(),
+    productId: z.string().min(1, 'Product ID is required').max(255, 'Product ID too long'),
+    purchaseToken: z.string().min(1, 'Purchase token is required'),
+    transactionId: z.string().max(255, 'Transaction ID too long').optional(),
+    transactionReceipt: z.string().optional(),
   })
   .strict();
 
@@ -309,7 +274,9 @@ export type RefundRequest = z.infer<typeof RefundSchema>;
 export type GetPaymentHistoryRequest = z.infer<typeof GetPaymentHistorySchema>;
 export type CreatePaymentRequest = z.infer<typeof CreatePaymentSchema>;
 export type CreateVerificationPaymentRequest = z.infer<typeof CreateVerificationPaymentSchema>;
-export type GetVerificationPaymentStatusRequest = z.infer<typeof GetVerificationPaymentStatusSchema>;
+export type GetVerificationPaymentStatusRequest = z.infer<
+  typeof GetVerificationPaymentStatusSchema
+>;
 export type ValidateIOSReceiptRequest = z.infer<typeof ValidateIOSReceiptSchema>;
 export type ValidateGooglePlayReceiptRequest = z.infer<typeof ValidateGooglePlayReceiptSchema>;
 export type ValidateBundlePurchaseRequest = z.infer<typeof ValidateBundlePurchaseSchema>;

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -15,14 +15,10 @@ import logger from '../../config/logger';
 const encryptMessage = (content: string): string =>
   // PLACEHOLDER: In production, implement proper end-to-end encryption
   // For now, just return the content as-is
-  Buffer.from(content).toString('base64')
-;
-
+  Buffer.from(content).toString('base64');
 const decryptMessage = (encrypted: string): string =>
   // PLACEHOLDER: In production, implement proper decryption
-  Buffer.from(encrypted, 'base64').toString('utf-8')
-;
-
+  Buffer.from(encrypted, 'base64').toString('utf-8');
 export const MessagingService = {
   // Send a message
   async sendMessage(
@@ -79,7 +75,7 @@ export const MessagingService = {
     let messages = await MessageModel.getConversationMessages(conversation.id, limit);
 
     // Map message_encrypted to content field
-    messages = messages.map(msg => ({
+    messages = messages.map((msg) => ({
       ...msg,
       content: msg.message_encrypted || '',
     }));
@@ -111,10 +107,12 @@ export const MessagingService = {
         return {
           ...conv,
           otherParticipantId,
-          lastMessage: lastMessage ? {
-            ...lastMessage,
-            content: lastMessage.message_encrypted || '',
-          } : null,
+          lastMessage: lastMessage
+            ? {
+                ...lastMessage,
+                content: lastMessage.message_encrypted || '',
+              }
+            : null,
         };
       }),
     );
@@ -132,7 +130,7 @@ export const MessagingService = {
   async deleteMessage(messageId: string, userId: string): Promise<void> {
     // Verify message belongs to user
     const messages = await MessageModel.getConversationMessages('', 1);
-    const message = messages.find(m => m.id === messageId);
+    const message = messages.find((m) => m.id === messageId);
 
     if (!message || message.sender_id !== userId) {
       throw new Error('Unauthorized to delete this message');
@@ -148,7 +146,12 @@ export const MessagingService = {
   },
 
   // Handle real-time message delivery via Socket.io (called from websocket handler)
-  async handleRealtimeMessage(io: any, senderId: string, recipientId: string, message: any): Promise<void> {
+  async handleRealtimeMessage(
+    io: any,
+    senderId: string,
+    recipientId: string,
+    message: any,
+  ): Promise<void> {
     // Emit message to recipient's socket room
     io.to(`user:${recipientId}`).emit('new_message', {
       ...message,

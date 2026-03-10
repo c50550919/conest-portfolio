@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -74,15 +74,11 @@ export async function createSession(
     userAgent,
     createdAt: now,
     lastActivity: now,
-    expiresAt: now + (ttl * 1000),
+    expiresAt: now + ttl * 1000,
   };
 
   // Store session
-  await redis.setex(
-    `session:${sessionId}`,
-    ttl,
-    JSON.stringify(sessionData),
-  );
+  await redis.setex(`session:${sessionId}`, ttl, JSON.stringify(sessionData));
 
   // Track user sessions
   await redis.sadd(`user:${userId}:sessions`, sessionId);
@@ -127,13 +123,9 @@ export async function extendSession(sessionId: string): Promise<void> {
   const session: SessionData = JSON.parse(data);
   const ttl = securityConfig.session.ttl;
   session.lastActivity = Date.now();
-  session.expiresAt = Date.now() + (ttl * 1000);
+  session.expiresAt = Date.now() + ttl * 1000;
 
-  await redis.setex(
-    `session:${sessionId}`,
-    ttl,
-    JSON.stringify(session),
-  );
+  await redis.setex(`session:${sessionId}`, ttl, JSON.stringify(session));
 }
 
 /**
@@ -253,7 +245,8 @@ export async function detectSuspiciousActivity(
 
   // Check for rapid session creation
   const timeSinceCreation = Date.now() - session.createdAt;
-  if (timeSinceCreation < 60000) { // Less than 1 minute
+  if (timeSinceCreation < 60000) {
+    // Less than 1 minute
     reasons.push('Session created very recently');
   }
 

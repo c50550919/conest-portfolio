@@ -14,7 +14,9 @@ describe.skip('POST /api/auth/verify-phone - Contract Tests (TDD Stubs)', () => 
   beforeAll(() => {
     app = express();
     app.use(express.json());
-    app.post('/api/auth/verify-phone', (_req, res) => res.status(501).json({ error: 'Not implemented' }));
+    app.post('/api/auth/verify-phone', (_req, res) =>
+      res.status(501).json({ error: 'Not implemented' }),
+    );
   });
 
   it('should return 200 for valid verification code', async () => {

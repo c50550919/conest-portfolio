@@ -86,6 +86,7 @@ interface DemoUserResult {
  * Connect to database
  */
 async function getDatabase(): Promise<Knex> {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const knex = require('knex');
 
   const config = {
@@ -108,7 +109,7 @@ async function getDatabase(): Promise<Knex> {
  */
 async function createDemoUser(
   db: Knex,
-  userData: (typeof DEMO_USERS)[0]
+  userData: (typeof DEMO_USERS)[0],
 ): Promise<DemoUserResult | null> {
   // Check if user already exists
   let user = await db('users').where({ email: userData.email }).first();
@@ -300,13 +301,13 @@ async function seedDemoMessages(
   db: Knex,
   conversationId: string,
   user1: DemoUserResult,
-  user2: DemoUserResult
+  user2: DemoUserResult,
 ): Promise<void> {
   // Check if messages already exist
   const existingMessages = await db('messages').where({ conversation_id: conversationId }).first();
 
   if (existingMessages) {
-    console.log(`   ⏭️  Messages already seeded in conversation`);
+    console.log('   ⏭️  Messages already seeded in conversation');
     return;
   }
 

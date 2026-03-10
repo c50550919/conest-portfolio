@@ -45,11 +45,7 @@ describe('Authentication Bypass Prevention', () => {
     });
 
     it('should accept valid JWT tokens', () => {
-      const token = jwt.sign(
-        { userId: '123' },
-        JWT_SECRET,
-        { expiresIn: '1h' },
-      );
+      const token = jwt.sign({ userId: '123' }, JWT_SECRET, { expiresIn: '1h' });
 
       const decoded = jwt.verify(token, JWT_SECRET);
       expect(decoded).toHaveProperty('userId', '123');
@@ -58,14 +54,9 @@ describe('Authentication Bypass Prevention', () => {
 
   describe('Authorization Header Validation', () => {
     it('should reject malformed authorization headers', () => {
-      const malformedHeaders = [
-        'InvalidFormat token123',
-        'Bearer',
-        'token123',
-        '',
-      ];
+      const malformedHeaders = ['InvalidFormat token123', 'Bearer', 'token123', ''];
 
-      malformedHeaders.forEach(header => {
+      malformedHeaders.forEach((header) => {
         const parts = header.split(' ');
         expect(parts[0] === 'Bearer' && parts[1]).toBeFalsy();
       });
@@ -100,22 +91,18 @@ describe('Authentication Bypass Prevention', () => {
 
   describe('Password Reset Security', () => {
     it('should require valid reset token', () => {
-      const validToken = jwt.sign(
-        { userId: '123', type: 'password-reset' },
-        JWT_SECRET,
-        { expiresIn: '1h' },
-      );
+      const validToken = jwt.sign({ userId: '123', type: 'password-reset' }, JWT_SECRET, {
+        expiresIn: '1h',
+      });
 
       const decoded = jwt.verify(validToken, JWT_SECRET) as any;
       expect(decoded.type).toBe('password-reset');
     });
 
     it('should reject expired reset tokens', () => {
-      const expiredToken = jwt.sign(
-        { userId: '123', type: 'password-reset' },
-        JWT_SECRET,
-        { expiresIn: '-1s' },
-      );
+      const expiredToken = jwt.sign({ userId: '123', type: 'password-reset' }, JWT_SECRET, {
+        expiresIn: '-1s',
+      });
 
       expect(() => {
         jwt.verify(expiredToken, JWT_SECRET);

@@ -49,7 +49,9 @@ describe.skip('POST /api/auth/login - Contract Tests (TDD Stubs)', () => {
 
       // Ensure tokens are JWTs
       expect(response.body.accessToken).toMatch(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/);
-      expect(response.body.refreshToken).toMatch(/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/);
+      expect(response.body.refreshToken).toMatch(
+        /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/,
+      );
     });
 
     it('should update last_login_at timestamp', async () => {
@@ -58,10 +60,7 @@ describe.skip('POST /api/auth/login - Contract Tests (TDD Stubs)', () => {
         password: 'CorrectPassword123!',
       };
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send(credentials)
-        .expect(200);
+      const response = await request(app).post('/api/auth/login').send(credentials).expect(200);
 
       expect(response.body).toHaveProperty('lastLoginAt');
       expect(new Date(response.body.lastLoginAt).getTime()).toBeLessThanOrEqual(Date.now());
@@ -73,10 +72,7 @@ describe.skip('POST /api/auth/login - Contract Tests (TDD Stubs)', () => {
         password: 'CorrectPassword123!',
       };
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send(credentials)
-        .expect(200);
+      const response = await request(app).post('/api/auth/login').send(credentials).expect(200);
 
       expect(response.body).not.toHaveProperty('password');
       expect(response.body).not.toHaveProperty('passwordHash');
@@ -91,10 +87,7 @@ describe.skip('POST /api/auth/login - Contract Tests (TDD Stubs)', () => {
         password: 'SomePassword123!',
       };
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send(credentials)
-        .expect(401);
+      const response = await request(app).post('/api/auth/login').send(credentials).expect(401);
 
       expect(response.body.error).toContain('Invalid credentials');
     });
@@ -105,10 +98,7 @@ describe.skip('POST /api/auth/login - Contract Tests (TDD Stubs)', () => {
         password: 'WrongPassword123!',
       };
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send(credentials)
-        .expect(401);
+      const response = await request(app).post('/api/auth/login').send(credentials).expect(401);
 
       expect(response.body.error).toContain('Invalid credentials');
     });
@@ -119,10 +109,7 @@ describe.skip('POST /api/auth/login - Contract Tests (TDD Stubs)', () => {
         password: 'SomePassword123!',
       };
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send(credentials)
-        .expect(401);
+      const response = await request(app).post('/api/auth/login').send(credentials).expect(401);
 
       // Generic error message for security (timing attack mitigation)
       expect(response.body.error).toBe('Invalid credentials');
@@ -137,10 +124,7 @@ describe.skip('POST /api/auth/login - Contract Tests (TDD Stubs)', () => {
         password: 'SomePassword123!',
       };
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send(payload)
-        .expect(400);
+      const response = await request(app).post('/api/auth/login').send(payload).expect(400);
 
       expect(response.body.error).toContain('email');
     });
@@ -150,10 +134,7 @@ describe.skip('POST /api/auth/login - Contract Tests (TDD Stubs)', () => {
         email: 'test@example.com',
       };
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send(payload)
-        .expect(400);
+      const response = await request(app).post('/api/auth/login').send(payload).expect(400);
 
       expect(response.body.error).toContain('password');
     });
@@ -164,10 +145,7 @@ describe.skip('POST /api/auth/login - Contract Tests (TDD Stubs)', () => {
         password: 'SomePassword123!',
       };
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send(payload)
-        .expect(400);
+      const response = await request(app).post('/api/auth/login').send(payload).expect(400);
 
       expect(response.body.error).toContain('email');
     });
@@ -186,10 +164,7 @@ describe.skip('POST /api/auth/login - Contract Tests (TDD Stubs)', () => {
       }
 
       // 6th attempt should be rate limited
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send(credentials)
-        .expect(429);
+      const response = await request(app).post('/api/auth/login').send(credentials).expect(429);
 
       expect(response.body.error).toContain('Too many requests');
     });
@@ -202,10 +177,7 @@ describe.skip('POST /api/auth/login - Contract Tests (TDD Stubs)', () => {
         password: 'CorrectPassword123!',
       };
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send(credentials)
-        .expect(403);
+      const response = await request(app).post('/api/auth/login').send(credentials).expect(403);
 
       expect(response.body.error).toContain('Account suspended');
     });

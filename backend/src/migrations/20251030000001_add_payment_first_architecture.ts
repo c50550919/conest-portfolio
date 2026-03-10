@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -34,7 +34,12 @@ export async function up(knex: Knex): Promise<void> {
 
     // Foreign keys
     table.uuid('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
-    table.uuid('connection_request_id').nullable().references('id').inTable('connection_requests').onDelete('SET NULL');
+    table
+      .uuid('connection_request_id')
+      .nullable()
+      .references('id')
+      .inTable('connection_requests')
+      .onDelete('SET NULL');
 
     // Payment details
     table.integer('amount').notNullable().defaultTo(3900); // $39.00 in cents
@@ -52,10 +57,22 @@ export async function up(knex: Knex): Promise<void> {
     table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now());
 
     // Constraints
-    table.check("status IN ('pending', 'succeeded', 'failed', 'refunded')", [], 'chk_verification_payments_status');
-    table.check("refund_reason IN ('automated_fail', 'dispute', 'courtesy_30day') OR refund_reason IS NULL", [], 'chk_verification_payments_refund_reason');
+    table.check(
+      "status IN ('pending', 'succeeded', 'failed', 'refunded')",
+      [],
+      'chk_verification_payments_status',
+    );
+    table.check(
+      "refund_reason IN ('automated_fail', 'dispute', 'courtesy_30day') OR refund_reason IS NULL",
+      [],
+      'chk_verification_payments_refund_reason',
+    );
     table.check('amount > 0', [], 'chk_verification_payments_amount');
-    table.check('refund_amount >= 0 AND refund_amount <= amount', [], 'chk_verification_payments_refund_amount');
+    table.check(
+      'refund_amount >= 0 AND refund_amount <= amount',
+      [],
+      'chk_verification_payments_refund_amount',
+    );
   });
 
   // Indexes for verification_payments
@@ -86,7 +103,11 @@ export async function up(knex: Knex): Promise<void> {
 
     // Constraints
     table.unique(['user_id', 'question_id'], { indexName: 'idx_pre_qual_unique' });
-    table.check("question_id IN ('felony_conviction', 'sex_offender', 'pending_charges')", [], 'chk_pre_qual_question_id');
+    table.check(
+      "question_id IN ('felony_conviction', 'sex_offender', 'pending_charges')",
+      [],
+      'chk_pre_qual_question_id',
+    );
     table.check("response IN ('yes', 'no', 'prefer_not_to_say')", [], 'chk_pre_qual_response');
   });
 
@@ -101,8 +122,18 @@ export async function up(knex: Knex): Promise<void> {
   // ============================================================
   await knex.schema.alterTable('connection_requests', (table) => {
     // Payment tracking fields
-    table.uuid('sender_payment_id').nullable().references('id').inTable('verification_payments').onDelete('SET NULL');
-    table.uuid('recipient_payment_id').nullable().references('id').inTable('verification_payments').onDelete('SET NULL');
+    table
+      .uuid('sender_payment_id')
+      .nullable()
+      .references('id')
+      .inTable('verification_payments')
+      .onDelete('SET NULL');
+    table
+      .uuid('recipient_payment_id')
+      .nullable()
+      .references('id')
+      .inTable('verification_payments')
+      .onDelete('SET NULL');
     table.boolean('verification_unlocked').defaultTo(false);
   });
 

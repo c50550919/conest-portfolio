@@ -96,9 +96,7 @@ describe('T016: OAuth Apple Signup - Integration Test', () => {
       });
 
       // Verify database state - user created
-      const dbUser = await db('users')
-        .where({ email: 'newparent@icloud.com' })
-        .first();
+      const dbUser = await db('users').where({ email: 'newparent@icloud.com' }).first();
 
       expect(dbUser).toBeDefined();
       expect(dbUser.oauth_provider).toBe('apple');
@@ -107,9 +105,7 @@ describe('T016: OAuth Apple Signup - Integration Test', () => {
       expect(dbUser.email_verified).toBe(true);
 
       // Verify parent profile created with Apple-provided name
-      const dbParent = await db('parents')
-        .where({ user_id: dbUser.id })
-        .first();
+      const dbParent = await db('parents').where({ user_id: dbUser.id }).first();
 
       expect(dbParent).toBeDefined();
       expect(dbParent.first_name).toBe('Michael');
@@ -118,7 +114,7 @@ describe('T016: OAuth Apple Signup - Integration Test', () => {
 
     it('should handle Apple relay email addresses correctly', async () => {
       // Mock Apple private relay email
-    // @ts-expect-error - Mocking Apple signin for testing
+      // @ts-expect-error - Mocking Apple signin for testing
       jest.spyOn(appleSignin, 'verifyIdToken').mockResolvedValue({
         sub: '002345.xyz789abc123.1234',
         email: 'abc123xyz789@privaterelay.appleid.com',
@@ -177,7 +173,7 @@ describe('T016: OAuth Apple Signup - Integration Test', () => {
   describe('Nonce Validation (Replay Attack Prevention)', () => {
     it('should reject Apple token with mismatched nonce', async () => {
       // Mock returns different nonce than what was sent
-    // @ts-expect-error - Mocking Apple signin for testing
+      // @ts-expect-error - Mocking Apple signin for testing
       jest.spyOn(appleSignin, 'verifyIdToken').mockResolvedValue({
         sub: mockApplePayload.sub,
         email: mockApplePayload.email,
@@ -344,13 +340,9 @@ describe('T016: OAuth Apple Signup - Integration Test', () => {
       expect(response.body.user).not.toHaveProperty('childrenAges');
 
       // Verify database contains NO child PII
-      const dbUser = await db('users')
-        .where({ email: 'newparent@icloud.com' })
-        .first();
+      const dbUser = await db('users').where({ email: 'newparent@icloud.com' }).first();
 
-      const dbParent = await db('parents')
-        .where({ user_id: dbUser.id })
-        .first();
+      const dbParent = await db('parents').where({ user_id: dbUser.id }).first();
 
       // Only aggregate child data allowed
       expect(dbParent).toHaveProperty('children_count');
@@ -362,11 +354,10 @@ describe('T016: OAuth Apple Signup - Integration Test', () => {
 
   describe('Error Scenarios', () => {
     it('should reject invalid Apple identity token', async () => {
-    // @ts-expect-error - Mocking Apple signin for testing
-      jest.spyOn(appleSignin, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token signature'),
-        );
+      // @ts-expect-error - Mocking Apple signin for testing
+      jest
+        .spyOn(appleSignin, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token signature'));
 
       const response = await request(app)
         .post('/api/auth/oauth/apple')
@@ -388,11 +379,10 @@ describe('T016: OAuth Apple Signup - Integration Test', () => {
     });
 
     it('should reject expired Apple token', async () => {
-    // @ts-expect-error - Mocking Apple signin for testing
-      jest.spyOn(appleSignin, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Token expired'),
-        );
+      // @ts-expect-error - Mocking Apple signin for testing
+      jest
+        .spyOn(appleSignin, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Token expired'));
 
       const response = await request(app)
         .post('/api/auth/oauth/apple')
@@ -411,7 +401,7 @@ describe('T016: OAuth Apple Signup - Integration Test', () => {
 
     it('should handle Apple token without email gracefully', async () => {
       // Edge case: Apple sometimes doesn't return email
-    // @ts-expect-error - Mocking Apple signin for testing
+      // @ts-expect-error - Mocking Apple signin for testing
       jest.spyOn(appleSignin, 'verifyIdToken').mockResolvedValue({
         sub: '003456.noemail.5678',
         // No email field
@@ -455,9 +445,7 @@ describe('T016: OAuth Apple Signup - Integration Test', () => {
 
       expect(response.body.user.accountStatus).toBe('active');
 
-      const dbUser = await db('users')
-        .where({ email: 'newparent@icloud.com' })
-        .first();
+      const dbUser = await db('users').where({ email: 'newparent@icloud.com' }).first();
 
       expect(dbUser.account_status).toBe('active');
     });
@@ -477,9 +465,7 @@ describe('T016: OAuth Apple Signup - Integration Test', () => {
         })
         .expect(200);
 
-      const dbUser = await db('users')
-        .where({ email: 'newparent@icloud.com' })
-        .first();
+      const dbUser = await db('users').where({ email: 'newparent@icloud.com' }).first();
 
       expect(dbUser.last_login).toBeDefined();
       expect(new Date(dbUser.last_login).getTime()).toBeGreaterThanOrEqual(beforeSignup.getTime());

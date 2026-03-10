@@ -57,15 +57,13 @@ describe('Discovery Profile Browsing - Integration Tests', () => {
     currentUserId = registerRes.body.user.id;
 
     // Mark current user as verified
-    await db('verifications')
-      .where({ user_id: currentUserId })
-      .update({
-        id_verification_status: 'verified',
-        background_check_status: 'verified',
-        phone_verified: true,
-        email_verified: true,
-        fully_verified: true,
-      });
+    await db('verifications').where({ user_id: currentUserId }).update({
+      id_verification_status: 'verified',
+      background_check_status: 'verified',
+      phone_verified: true,
+      email_verified: true,
+      fully_verified: true,
+    });
 
     // Create 5 verified test users for discovery
     for (let i = 1; i <= 5; i++) {
@@ -88,15 +86,13 @@ describe('Discovery Profile Browsing - Integration Tests', () => {
       const userId = userRes.body.user.id;
 
       // Mark as verified
-      await db('verifications')
-        .where({ user_id: userId })
-        .update({
-          id_verification_status: 'verified',
-          background_check_status: 'verified',
-          phone_verified: true,
-          email_verified: true,
-          fully_verified: true,
-        });
+      await db('verifications').where({ user_id: userId }).update({
+        id_verification_status: 'verified',
+        background_check_status: 'verified',
+        phone_verified: true,
+        email_verified: true,
+        fully_verified: true,
+      });
 
       testUsers.push({
         userId,
@@ -165,7 +161,7 @@ describe('Discovery Profile Browsing - Integration Tests', () => {
       ];
 
       response.body.profiles.forEach((profile: any) => {
-        requiredFields.forEach(field => {
+        requiredFields.forEach((field) => {
           expect(profile).toHaveProperty(field);
         });
       });
@@ -189,7 +185,7 @@ describe('Discovery Profile Browsing - Integration Tests', () => {
       ];
 
       response.body.profiles.forEach((profile: any) => {
-        forbiddenFields.forEach(field => {
+        forbiddenFields.forEach((field) => {
           expect(profile).not.toHaveProperty(field);
         });
 
@@ -210,9 +206,7 @@ describe('Discovery Profile Browsing - Integration Tests', () => {
 
       response.body.profiles.forEach((profile: any) => {
         // Filter child-related keys
-        const childKeys = Object.keys(profile).filter(key =>
-          key.toLowerCase().includes('child'),
-        );
+        const childKeys = Object.keys(profile).filter((key) => key.toLowerCase().includes('child'));
 
         // ONLY childrenCount and childrenAgeGroups allowed
         expect(childKeys.sort()).toEqual(['childrenAgeGroups', 'childrenCount']);
@@ -243,7 +237,7 @@ describe('Discovery Profile Browsing - Integration Tests', () => {
         'child_photos',
       ];
 
-      forbiddenColumns.forEach(column => {
+      forbiddenColumns.forEach((column) => {
         expect(columnNames).not.toContain(column);
       });
 

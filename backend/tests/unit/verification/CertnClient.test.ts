@@ -7,7 +7,11 @@
  */
 
 import axios from 'axios';
-import { CertnClient, CertnApplication, CertnRecord } from '../../../src/features/verification/certn/CertnClient';
+import {
+  CertnClient,
+  CertnApplication,
+  CertnRecord,
+} from '../../../src/features/verification/certn/CertnClient';
 
 // Mock axios
 jest.mock('axios');
@@ -59,7 +63,7 @@ describe('CertnClient', () => {
         baseURL: 'https://api.certn.co/v1',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer test-api-key',
+          Authorization: 'Bearer test-api-key',
         },
         timeout: 30000,
       });
@@ -498,9 +502,9 @@ describe('CertnClient', () => {
       };
       mockAxiosInstance.post.mockRejectedValue(timeoutError);
 
-      await expect(
-        client.createApplicant({ email: 'test@example.com' }),
-      ).rejects.toThrow('Certn applicant creation failed: timeout of 30000ms exceeded');
+      await expect(client.createApplicant({ email: 'test@example.com' })).rejects.toThrow(
+        'Certn applicant creation failed: timeout of 30000ms exceeded',
+      );
     });
 
     it('should handle missing response data in error', async () => {

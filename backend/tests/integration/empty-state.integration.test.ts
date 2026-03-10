@@ -1,6 +1,11 @@
 import request from 'supertest';
 import app from '../../src/app';
-import { setupTestDatabase, teardownTestDatabase, createTestUser, getAuthToken } from '../helpers/test-utils';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+  createTestUser,
+  getAuthToken,
+} from '../helpers/test-utils';
 
 /**
  * Integration Test: No More Profiles Available
@@ -319,15 +324,13 @@ describe('Integration Test: No More Profiles Available', () => {
     it('should handle empty state queries efficiently', async () => {
       // Query empty queue 10 times
       const requests = Array.from({ length: 10 }, () =>
-        request(app)
-          .get('/api/discovery/profiles')
-          .set('Authorization', `Bearer ${authToken}`),
+        request(app).get('/api/discovery/profiles').set('Authorization', `Bearer ${authToken}`),
       );
 
       const results = await Promise.all(requests);
 
       // All should return empty quickly
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.status).toBe(200);
         expect(result.body.profiles).toEqual([]);
       });

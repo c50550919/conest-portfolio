@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -63,11 +63,7 @@ export async function up(knex: Knex): Promise<void> {
     );
 
     // Check: sender cannot send request to self
-    table.check(
-      'sender_id != recipient_id',
-      [],
-      'chk_connection_requests_not_self',
-    );
+    table.check('sender_id != recipient_id', [], 'chk_connection_requests_not_self');
   });
 
   // Indexes for performance

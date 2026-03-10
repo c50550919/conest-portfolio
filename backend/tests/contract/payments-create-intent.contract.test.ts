@@ -119,13 +119,11 @@ describe('POST /api/payments/intents - Contract Tests', () => {
 
   describe('Error Response Format Validation', () => {
     it('should return consistent error response structure', async () => {
-      const response = await request(app)
-        .post('/api/payments/intents')
-        .send({
-          amount: 5000,
-          householdId: '00000000-0000-0000-0000-000000000000',
-          description: 'Test payment',
-        });
+      const response = await request(app).post('/api/payments/intents').send({
+        amount: 5000,
+        householdId: '00000000-0000-0000-0000-000000000000',
+        description: 'Test payment',
+      });
 
       // All error responses should have error and message
       expect(response.body).toHaveProperty('error');
@@ -143,13 +141,11 @@ describe('POST /api/payments/intents - Contract Tests', () => {
     it('should respond within 2 seconds', async () => {
       const start = Date.now();
 
-      await request(app)
-        .post('/api/payments/intents')
-        .send({
-          amount: 5000,
-          householdId: '00000000-0000-0000-0000-000000000000',
-          description: 'Test payment',
-        });
+      await request(app).post('/api/payments/intents').send({
+        amount: 5000,
+        householdId: '00000000-0000-0000-0000-000000000000',
+        description: 'Test payment',
+      });
 
       const duration = Date.now() - start;
 

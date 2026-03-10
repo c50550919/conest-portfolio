@@ -74,8 +74,8 @@ module.exports = {
     'prefer-template': 'warn',
     'arrow-body-style': ['warn', 'as-needed'],
 
-    // Formatting (handled by Prettier, but keep basic rules)
-    'indent': ['error', 2, { SwitchCase: 1 }],
+    // Formatting (handled by Prettier)
+    'indent': 'off', // Prettier handles indentation
     'quotes': ['error', 'single', { avoidEscape: true }],
     'semi': ['error', 'always'],
     'comma-dangle': ['error', 'always-multiline'],

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -643,19 +643,15 @@ export const BillingService = {
 
     if (existing) {
       // Extend existing subscription
-      const newExpiresAt = new Date(
-        Math.max(new Date(existing.expires_at).getTime(), Date.now()),
-      );
+      const newExpiresAt = new Date(Math.max(new Date(existing.expires_at).getTime(), Date.now()));
       newExpiresAt.setDate(newExpiresAt.getDate() + durationDays);
 
-      await db('subscriptions')
-        .where({ id: existing.id })
-        .update({
-          expires_at: newExpiresAt,
-          auto_renewing: autoRenewing,
-          platform,
-          updated_at: new Date(),
-        });
+      await db('subscriptions').where({ id: existing.id }).update({
+        expires_at: newExpiresAt,
+        auto_renewing: autoRenewing,
+        platform,
+        updated_at: new Date(),
+      });
 
       return { id: existing.id, expires_at: newExpiresAt };
     }

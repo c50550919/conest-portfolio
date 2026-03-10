@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -170,10 +170,7 @@ router.post('/:id/members', HouseholdController.addMember);
  * Security: Only household admins can remove members (403 for non-admins)
  * Protection: Cannot remove last admin from household
  */
-router.delete(
-  '/:id/members/:userId',
-  HouseholdController.removeMember,
-);
+router.delete('/:id/members/:userId', HouseholdController.removeMember);
 
 /**
  * GET /api/household/:id/expenses

@@ -98,26 +98,32 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
 
     // Mock OAuth verification for Google
     // @ts-expect-error - Mocking Google OAuth2Client for testing
-    jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(async () => ({
-      getPayload: () => ({
-        sub: '888999000111222333444', // Different Google ID
-        email: sharedEmail, // Same email as existing account
-        email_verified: true,
-        given_name: 'Conflict',
-        family_name: 'Test',
-        picture: 'https://lh3.googleusercontent.com/a/different',
-      }),
-    } as any));
+    jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(
+      async () =>
+        ({
+          getPayload: () => ({
+            sub: '888999000111222333444', // Different Google ID
+            email: sharedEmail, // Same email as existing account
+            email_verified: true,
+            given_name: 'Conflict',
+            family_name: 'Test',
+            picture: 'https://lh3.googleusercontent.com/a/different',
+          }),
+        }) as any,
+    );
 
     // Mock OAuth verification for Apple
     // @ts-expect-error - Mocking Apple signin for testing
-    jest.spyOn(appleSignin, 'verifyIdToken').mockImplementation(async () => ({
-      sub: '008901.different.apple.5678', // Different Apple ID
-      email: sharedEmail, // Same email as existing Google account
-      email_verified: 'true',
-      is_private_email: 'false',
-      nonce: mockAppleNonce,
-    } as any));
+    jest.spyOn(appleSignin, 'verifyIdToken').mockImplementation(
+      async () =>
+        ({
+          sub: '008901.different.apple.5678', // Different Apple ID
+          email: sharedEmail, // Same email as existing Google account
+          email_verified: 'true',
+          is_private_email: 'false',
+          nonce: mockAppleNonce,
+        }) as any,
+    );
   });
 
   afterEach(async () => {
@@ -158,9 +164,7 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
         .expect(409);
 
       // Verify Google account remains unchanged
-      const dbUser = await db('users')
-        .where({ id: googleUserId })
-        .first();
+      const dbUser = await db('users').where({ id: googleUserId }).first();
 
       expect(dbUser.oauth_provider).toBe('google');
       expect(dbUser.oauth_provider_id).toBe(googleProviderId);
@@ -177,10 +181,7 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
         .expect(409);
 
       // Verify only ONE user exists with this email
-      const userCount = await db('users')
-        .where({ email: sharedEmail })
-        .count('* as count')
-        .first();
+      const userCount = await db('users').where({ email: sharedEmail }).count('* as count').first();
 
       expect(userCount.count).toBe('1');
     });
@@ -207,7 +208,7 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
   describe('Apple User Attempting Google Signin', () => {
     it('should reject Google signin for user who signed up with Apple', async () => {
       // Update mock to use Apple user's email
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
         getPayload: () => ({
           sub: '999000111222333444555',
@@ -234,7 +235,7 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
     });
 
     it('should NOT modify existing Apple account when Google signin is rejected', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
         getPayload: () => ({
           sub: '999000111222333444555',
@@ -251,9 +252,7 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
         .expect(409);
 
       // Verify Apple account remains unchanged
-      const dbUser = await db('users')
-        .where({ id: appleUserId })
-        .first();
+      const dbUser = await db('users').where({ id: appleUserId }).first();
 
       expect(dbUser.oauth_provider).toBe('apple');
       expect(dbUser.oauth_provider_id).toBe(appleProviderId);
@@ -313,9 +312,7 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
       expect(response.body.error).toBe('conflict');
 
       // Original Google account protected
-      const dbUser = await db('users')
-        .where({ id: googleUserId })
-        .first();
+      const dbUser = await db('users').where({ id: googleUserId }).first();
 
       expect(dbUser.oauth_provider).toBe('google');
       expect(dbUser.oauth_provider_id).toBe(googleProviderId);
@@ -354,7 +351,7 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
     it('should allow Google signin when provider AND provider_id match', async () => {
       // Existing user with Google OAuth
       // Same user signs in again with Google (returning user scenario)
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
         getPayload: () => ({
           sub: googleProviderId, // SAME Google provider_id
@@ -377,7 +374,7 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
 
     it('should reject even if email case differs', async () => {
       // Attempt Apple signin with uppercase email variant
-    // @ts-expect-error - Mocking Apple signin for testing
+      // @ts-expect-error - Mocking Apple signin for testing
       jest.spyOn(appleSignin, 'verifyIdToken').mockResolvedValue({
         sub: '008901.different.apple.5678',
         email: 'SHARED@EXAMPLE.COM', // Uppercase
@@ -401,13 +398,11 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
   describe('Provider Switching Workflow', () => {
     it('should allow Apple signin after unlinking Google (manual unlinking)', async () => {
       // Step 1: User manually unlinks Google OAuth from account settings
-      await db('users')
-        .where({ id: googleUserId })
-        .update({
-          oauth_provider: null,
-          oauth_provider_id: null,
-          oauth_profile_picture: null,
-        });
+      await db('users').where({ id: googleUserId }).update({
+        oauth_provider: null,
+        oauth_provider_id: null,
+        oauth_profile_picture: null,
+      });
 
       // Step 2: User signs in with Apple
       const response = await request(app)
@@ -422,9 +417,7 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
       expect(response.body.linked).toBe(true); // Linked to existing account
 
       // Verify Apple OAuth now linked
-      const dbUser = await db('users')
-        .where({ id: googleUserId })
-        .first();
+      const dbUser = await db('users').where({ id: googleUserId }).first();
 
       expect(dbUser.oauth_provider).toBe('apple');
       expect(dbUser.oauth_provider_id).not.toBe(googleProviderId);
@@ -461,9 +454,7 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
         .expect(409);
 
       // Google account should remain unchanged
-      const dbUser = await db('users')
-        .where({ id: googleUserId })
-        .first();
+      const dbUser = await db('users').where({ id: googleUserId }).first();
 
       expect(dbUser.oauth_provider).toBe('google');
     });
@@ -513,9 +504,7 @@ describe('T020: OAuth Provider Conflict - Integration Test', () => {
         .expect(409);
 
       // Verify oauth_consistency_check constraint still satisfied
-      const dbUser = await db('users')
-        .where({ id: googleUserId })
-        .first();
+      const dbUser = await db('users').where({ id: googleUserId }).first();
 
       // Both provider and provider_id should be set (or both null)
       if (dbUser.oauth_provider !== null) {

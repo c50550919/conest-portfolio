@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -36,7 +36,12 @@ router.post('/', messageLimiter, messageController.sendMessage);
 router.get('/conversations', messageController.getConversations);
 router.get('/conversations/:userId', messageController.getConversation);
 router.get('/unread-count', messageController.getUnreadCount);
-router.post('/send', messageLimiter, validate(schemas.createMessage), messageController.sendMessage);
+router.post(
+  '/send',
+  messageLimiter,
+  validate(schemas.createMessage),
+  messageController.sendMessage,
+);
 router.post('/:conversationId/mark-read', messageController.markAsRead);
 router.delete('/:messageId', messageController.deleteMessage);
 

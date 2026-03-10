@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -27,10 +27,7 @@ const comparisonService = new ProfileComparisonService();
  * POST /api/profiles/compare
  * Compare 2-4 profiles from mixed sources (discovery + saved)
  */
-export const compareProfiles = async (
-  req: AuthRequest,
-  res: Response,
-): Promise<void> => {
+export const compareProfiles = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     // Validate request body
     const validatedData = compareProfilesSchema.parse(req.body);
@@ -44,10 +41,7 @@ export const compareProfiles = async (
     }
 
     // Call comparison service
-    const result = await comparisonService.compareProfiles(
-      userId,
-      validatedData.profiles,
-    );
+    const result = await comparisonService.compareProfiles(userId, validatedData.profiles);
 
     res.status(200).json(result);
   } catch (error) {
@@ -71,10 +65,7 @@ export const compareProfiles = async (
         return;
       }
 
-      if (
-        error.message.includes('Invalid') ||
-        error.message.includes('Must compare')
-      ) {
+      if (error.message.includes('Invalid') || error.message.includes('Must compare')) {
         res.status(400).json({ error: error.message });
         return;
       }
@@ -89,10 +80,7 @@ export const compareProfiles = async (
  * POST /api/compatibility/calculate
  * Calculate detailed 6-dimension compatibility breakdown between two profiles
  */
-export const calculateCompatibility = async (
-  req: AuthRequest,
-  res: Response,
-): Promise<void> => {
+export const calculateCompatibility = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { profile1Id, profile2Id } = req.body;
 
@@ -175,10 +163,7 @@ export const calculateCompatibility = async (
     ];
 
     // Calculate overall weighted score
-    const overallScore = dimensions.reduce(
-      (sum, dim) => sum + dim.score * dim.weight,
-      0,
-    );
+    const overallScore = dimensions.reduce((sum, dim) => sum + dim.score * dim.weight, 0);
 
     res.status(200).json({
       success: true,
@@ -192,10 +177,7 @@ export const calculateCompatibility = async (
       },
     });
   } catch (error) {
-    console.error(
-      '[ComparisonController] Error calculating compatibility:',
-      error,
-    );
+    console.error('[ComparisonController] Error calculating compatibility:', error);
     res.status(500).json({ error: 'Failed to calculate compatibility' });
   }
 };
@@ -207,7 +189,13 @@ function calculateScheduleCompatibility(profile1: any, profile2: any): number {
   const p2Schedule = profile2.profile.preferences?.scheduleFlexibility || 'moderate';
 
   if (p1Schedule === p2Schedule) return 90;
-  if (Math.abs(['low', 'moderate', 'high'].indexOf(p1Schedule) - ['low', 'moderate', 'high'].indexOf(p2Schedule)) === 1) return 70;
+  if (
+    Math.abs(
+      ['low', 'moderate', 'high'].indexOf(p1Schedule) -
+        ['low', 'moderate', 'high'].indexOf(p2Schedule),
+    ) === 1
+  )
+    return 70;
   return 50;
 }
 

@@ -73,7 +73,9 @@ const createTestApp = () => {
   };
 
   // Import controller
-  const { householdSafetyController } = require('../features/household-safety/household-safety.controller');
+  const {
+    householdSafetyController,
+  } = require('../features/household-safety/household-safety.controller');
 
   // Setup routes
   app.get('/api/household-safety/questions', mockAuth, householdSafetyController.getQuestions);
@@ -115,7 +117,7 @@ const validAttestationResponses = [
 ];
 
 // Valid signature data
-const validSignatureData = `data:image/png;base64,${  'A'.repeat(MIN_SIGNATURE_LENGTH + 50)}`;
+const validSignatureData = `data:image/png;base64,${'A'.repeat(MIN_SIGNATURE_LENGTH + 50)}`;
 
 describe('Contract: Household Safety Disclosure API', () => {
   let app;
@@ -180,9 +182,7 @@ describe('Contract: Household Safety Disclosure API', () => {
 
     // T-HS-C03: Returns 401 when not authenticated
     it('T-HS-C03: should return 401 when not authenticated', async () => {
-      const response = await request(app)
-        .get('/api/household-safety/questions')
-        .expect(401);
+      const response = await request(app).get('/api/household-safety/questions').expect(401);
 
       expect(response.body).toHaveProperty('error');
     });
@@ -241,7 +241,9 @@ describe('Contract: Household Safety Disclosure API', () => {
         updated_at: new Date(),
       };
 
-      jest.spyOn(HouseholdSafetyDisclosureModel, 'findByParentId').mockResolvedValue(mockDisclosure);
+      jest
+        .spyOn(HouseholdSafetyDisclosureModel, 'findByParentId')
+        .mockResolvedValue(mockDisclosure);
 
       const response = await request(app)
         .get('/api/household-safety/status')
@@ -275,7 +277,9 @@ describe('Contract: Household Safety Disclosure API', () => {
         updated_at: new Date(),
       };
 
-      jest.spyOn(HouseholdSafetyDisclosureModel, 'findByParentId').mockResolvedValue(mockDisclosure);
+      jest
+        .spyOn(HouseholdSafetyDisclosureModel, 'findByParentId')
+        .mockResolvedValue(mockDisclosure);
 
       const response = await request(app)
         .get('/api/household-safety/status')
@@ -309,7 +313,9 @@ describe('Contract: Household Safety Disclosure API', () => {
         updated_at: new Date(),
       };
 
-      jest.spyOn(HouseholdSafetyDisclosureModel, 'findByParentId').mockResolvedValue(mockDisclosure);
+      jest
+        .spyOn(HouseholdSafetyDisclosureModel, 'findByParentId')
+        .mockResolvedValue(mockDisclosure);
 
       const response = await request(app)
         .get('/api/household-safety/status')
@@ -333,9 +339,7 @@ describe('Contract: Household Safety Disclosure API', () => {
 
     // T-HS-C10: Returns 401 when not authenticated
     it('T-HS-C10: should return 401 when not authenticated', async () => {
-      const response = await request(app)
-        .get('/api/household-safety/status')
-        .expect(401);
+      const response = await request(app).get('/api/household-safety/status').expect(401);
 
       expect(response.body).toHaveProperty('error');
     });
@@ -446,7 +450,11 @@ describe('Contract: Household Safety Disclosure API', () => {
     // T-HS-C15: Returns 400 for incorrect attestation answers
     it('T-HS-C15: should return 400 for incorrect attestation answers', async () => {
       const incorrectResponses = [
-        { questionId: 'juvenile_legal_history', response: true, answeredAt: new Date().toISOString() },
+        {
+          questionId: 'juvenile_legal_history',
+          response: true,
+          answeredAt: new Date().toISOString(),
+        },
         { questionId: 'court_orders', response: false, answeredAt: new Date().toISOString() },
         { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
         { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },

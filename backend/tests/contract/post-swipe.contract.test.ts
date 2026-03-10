@@ -22,12 +22,10 @@ describe('Contract Test: POST /api/discovery/swipe (DEPRECATED)', () => {
 
   describe('Authentication', () => {
     it('should return 401 or 404 without JWT token', async () => {
-      const response = await request(app)
-        .post('/api/discovery/swipe')
-        .send({
-          targetUserId,
-          direction: 'right',
-        });
+      const response = await request(app).post('/api/discovery/swipe').send({
+        targetUserId,
+        direction: 'right',
+      });
 
       // 401 for no token, or 404 if endpoint doesn't exist
       expect([401, 404]).toContain(response.status);

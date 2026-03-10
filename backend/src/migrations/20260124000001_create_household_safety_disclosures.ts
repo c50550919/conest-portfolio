@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -11,17 +11,8 @@ import { Knex } from 'knex';
 export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable('household_safety_disclosures', (table) => {
     table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
-    table
-      .uuid('household_id')
-      .references('id')
-      .inTable('households')
-      .onDelete('CASCADE');
-    table
-      .uuid('parent_id')
-      .notNullable()
-      .references('id')
-      .inTable('profiles')
-      .onDelete('CASCADE');
+    table.uuid('household_id').references('id').inTable('households').onDelete('CASCADE');
+    table.uuid('parent_id').notNullable().references('id').inTable('profiles').onDelete('CASCADE');
 
     // Disclosure type for renewals
     table.string('disclosure_type', 50).notNullable().defaultTo('initial');

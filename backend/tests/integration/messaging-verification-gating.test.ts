@@ -14,13 +14,15 @@ process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
 process.env.ENCRYPTION_MASTER_KEY = 'test-encryption-master-key-32chars';
 
 // Mock ioredis
-jest.mock('ioredis', () => jest.fn(() => ({
-  get: jest.fn().mockResolvedValue(null),
-  set: jest.fn().mockResolvedValue('OK'),
-  del: jest.fn().mockResolvedValue(1),
-  on: jest.fn().mockReturnThis(),
-  status: 'ready',
-})));
+jest.mock('ioredis', () =>
+  jest.fn(() => ({
+    get: jest.fn().mockResolvedValue(null),
+    set: jest.fn().mockResolvedValue('OK'),
+    del: jest.fn().mockResolvedValue(1),
+    on: jest.fn().mockReturnThis(),
+    status: 'ready',
+  })),
+);
 
 // Mock the database with a function that returns the mock object
 const mockDbInstance = {

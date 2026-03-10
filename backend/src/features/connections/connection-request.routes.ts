@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -63,51 +63,35 @@ router.get(
  * @access  Private
  * @query   status - Optional status filter (pending, accepted, declined, expired, cancelled)
  */
-router.get(
-  '/sent',
-  validate(getSentRequestsSchema),
-  connectionRequestController.getSentRequests,
-);
+router.get('/sent', validate(getSentRequestsSchema), connectionRequestController.getSentRequests);
 
 /**
  * @route   GET /api/connection-requests/rate-limit-status
  * @desc    Get rate limit status for current user
  * @access  Private
  */
-router.get(
-  '/rate-limit-status',
-  connectionRequestController.getRateLimitStatus,
-);
+router.get('/rate-limit-status', connectionRequestController.getRateLimitStatus);
 
 /**
  * @route   GET /api/connection-requests/statistics
  * @desc    Get connection request statistics for current user
  * @access  Private
  */
-router.get(
-  '/statistics',
-  connectionRequestController.getStatistics,
-);
+router.get('/statistics', connectionRequestController.getStatistics);
 
 /**
  * @route   GET /api/connection-requests/:id/message
  * @desc    Get decrypted message for a connection request
  * @access  Private
  */
-router.get(
-  '/:id/message',
-  connectionRequestController.getMessage,
-);
+router.get('/:id/message', connectionRequestController.getMessage);
 
 /**
  * @route   GET /api/connection-requests/:id/response-message
  * @desc    Get decrypted response message for a connection request
  * @access  Private
  */
-router.get(
-  '/:id/response-message',
-  connectionRequestController.getResponseMessage,
-);
+router.get('/:id/response-message', connectionRequestController.getResponseMessage);
 
 /**
  * @route   PATCH /api/connection-requests/:id/accept

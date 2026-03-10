@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -14,17 +14,23 @@ export async function up(knex: Knex): Promise<void> {
     table.uuid('user_id').references('id').inTable('users').onDelete('CASCADE').notNullable();
 
     // ID Verification (Jumio)
-    table.enum('id_verification_status', ['pending', 'approved', 'rejected', 'expired']).defaultTo('pending');
+    table
+      .enum('id_verification_status', ['pending', 'approved', 'rejected', 'expired'])
+      .defaultTo('pending');
     table.timestamp('id_verification_date');
     table.text('id_verification_data'); // Encrypted
 
     // Background Check (Checkr)
-    table.enum('background_check_status', ['pending', 'clear', 'consider', 'suspended']).defaultTo('pending');
+    table
+      .enum('background_check_status', ['pending', 'clear', 'consider', 'suspended'])
+      .defaultTo('pending');
     table.timestamp('background_check_date');
     table.string('background_check_report_id');
 
     // Income Verification
-    table.enum('income_verification_status', ['pending', 'verified', 'rejected']).defaultTo('pending');
+    table
+      .enum('income_verification_status', ['pending', 'verified', 'rejected'])
+      .defaultTo('pending');
     table.timestamp('income_verification_date');
     table.string('income_range');
 

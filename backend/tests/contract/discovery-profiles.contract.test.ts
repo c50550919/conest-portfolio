@@ -162,7 +162,7 @@ describe('GET /api/discovery/profiles - Contract Tests', () => {
         .expect(200);
 
       response.body.data.profiles.forEach((profile: any, index: number) => {
-        FORBIDDEN_CHILD_PII_FIELDS.forEach(forbiddenField => {
+        FORBIDDEN_CHILD_PII_FIELDS.forEach((forbiddenField) => {
           expect(profile).not.toHaveProperty(forbiddenField);
         });
       });
@@ -190,11 +190,12 @@ describe('GET /api/discovery/profiles - Contract Tests', () => {
 
         // NO exact ages, names, photos, schools
         const profileKeys = Object.keys(profile);
-        const hasChildPII = profileKeys.some(key =>
-          key.toLowerCase().includes('childname') ||
-          key.toLowerCase().includes('childage') && key !== 'childrenAgeGroups' ||
-          key.toLowerCase().includes('childphoto') ||
-          key.toLowerCase().includes('childschool'),
+        const hasChildPII = profileKeys.some(
+          (key) =>
+            key.toLowerCase().includes('childname') ||
+            (key.toLowerCase().includes('childage') && key !== 'childrenAgeGroups') ||
+            key.toLowerCase().includes('childphoto') ||
+            key.toLowerCase().includes('childschool'),
         );
         expect(hasChildPII).toBe(false);
       });
@@ -218,7 +219,7 @@ describe('GET /api/discovery/profiles - Contract Tests', () => {
 
       response.body.data.profiles.forEach((profile: any) => {
         // Verify only allowed child-related fields exist
-        const childRelatedKeys = Object.keys(profile).filter(key =>
+        const childRelatedKeys = Object.keys(profile).filter((key) =>
           key.toLowerCase().includes('child'),
         );
 
@@ -229,9 +230,7 @@ describe('GET /api/discovery/profiles - Contract Tests', () => {
 
   describe('Validation & Error Cases', () => {
     it('should return 401 if not authenticated', async () => {
-      const response = await request(app)
-        .get('/api/discovery/profiles')
-        .expect(401);
+      const response = await request(app).get('/api/discovery/profiles').expect(401);
 
       expect(response.body).toHaveProperty('error');
     });
@@ -345,7 +344,9 @@ describe('GET /api/discovery/profiles - Contract Tests', () => {
         .expect(200);
 
       response.body.data.profiles.forEach((profile: any) => {
-        expect(profile.userId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        expect(profile.userId).toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+        );
       });
     });
 

@@ -61,12 +61,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
       (VerificationModel.updateVerificationScore as jest.Mock).mockResolvedValue(30);
       (redisClient.del as jest.Mock).mockResolvedValue(1);
 
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '123456',
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '123456',
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('success', true);
@@ -95,12 +93,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
       (VerificationModel.updateVerificationScore as jest.Mock).mockResolvedValue(30);
       (redisClient.del as jest.Mock).mockResolvedValue(1);
 
-      await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '123456',
-        });
+      await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '123456',
+      });
 
       expect(UserModel.update).toHaveBeenCalledWith(
         userId,
@@ -136,12 +132,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
       (VerificationModel.updateVerificationScore as jest.Mock).mockResolvedValue(30);
       (redisClient.del as jest.Mock).mockResolvedValue(1);
 
-      await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '123456',
-        });
+      await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '123456',
+      });
 
       expect(VerificationModel.update).toHaveBeenCalledWith(
         userId,
@@ -174,12 +168,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
       (VerificationModel.updateVerificationScore as jest.Mock).mockResolvedValue(30);
       (redisClient.del as jest.Mock).mockResolvedValue(1);
 
-      await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '123456',
-        });
+      await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '123456',
+      });
 
       expect(redisClient.del).toHaveBeenCalledWith(`phone_verification:${userId}`);
     });
@@ -187,70 +179,58 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
 
   describe('Validation Error Cases', () => {
     it('should return 400 for invalid phone format', async () => {
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '1234567890', // Missing + prefix
-          code: '123456',
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '1234567890', // Missing + prefix
+        code: '123456',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
     });
 
     it('should return 400 for phone number without country code', async () => {
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '2345678901', // Missing +
-          code: '123456',
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '2345678901', // Missing +
+        code: '123456',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
     });
 
     it('should return 400 for invalid code format', async () => {
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '12345', // Should be 6 digits
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '12345', // Should be 6 digits
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
     });
 
     it('should return 400 for code with non-numeric characters', async () => {
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '12345a', // Contains letter
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '12345a', // Contains letter
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
     });
 
     it('should return 400 for missing phone', async () => {
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          code: '123456',
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        code: '123456',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
     });
 
     it('should return 400 for missing code', async () => {
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
@@ -273,12 +253,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue('654321'); // Different code
 
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '123456',
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '123456',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
@@ -300,12 +278,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue(null); // Code expired
 
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '123456',
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '123456',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
@@ -315,12 +291,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
     it('should return 404 for non-existent user', async () => {
       (UserModel.findByPhone as jest.Mock).mockResolvedValue(null);
 
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '123456',
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '123456',
+      });
 
       expect(response.status).toBe(404);
       expect(response.body).toHaveProperty('error');
@@ -350,12 +324,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
       (VerificationModel.updateVerificationScore as jest.Mock).mockResolvedValue(30);
       (redisClient.del as jest.Mock).mockResolvedValue(1);
 
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '123456',
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '123456',
+      });
 
       expect(response.body).toMatchObject({
         success: expect.any(Boolean),
@@ -386,12 +358,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
       (VerificationModel.updateVerificationScore as jest.Mock).mockResolvedValue(30);
       (redisClient.del as jest.Mock).mockResolvedValue(1);
 
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '123456',
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '123456',
+      });
 
       const responseString = JSON.stringify(response.body);
       expect(responseString).not.toContain('password_hash');
@@ -423,12 +393,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
       (VerificationModel.updateVerificationScore as jest.Mock).mockResolvedValue(30);
       (redisClient.del as jest.Mock).mockResolvedValue(1);
 
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '123456',
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '123456',
+      });
 
       // Should still return success
       expect(response.status).toBe(200);
@@ -457,12 +425,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
       // Make multiple failed attempts
       const attempts = 5;
       for (let i = 0; i < attempts; i++) {
-        await request(app)
-          .post('/api/auth/verify-phone')
-          .send({
-            phone: '+12345678901',
-            code: '123456',
-          });
+        await request(app).post('/api/auth/verify-phone').send({
+          phone: '+12345678901',
+          code: '123456',
+        });
       }
 
       // All should fail with 400 (incorrect code)
@@ -471,12 +437,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
 
     it('should use 6-digit numeric code only', async () => {
       // This test documents code format requirements
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: 'ABCDEF', // Non-numeric
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: 'ABCDEF', // Non-numeric
+      });
 
       expect(response.status).toBe(400);
     });
@@ -498,12 +462,10 @@ describe('POST /api/auth/verify-phone - Contract Tests', () => {
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.get as jest.Mock).mockResolvedValue(null); // Expired
 
-      const response = await request(app)
-        .post('/api/auth/verify-phone')
-        .send({
-          phone: '+12345678901',
-          code: '123456',
-        });
+      const response = await request(app).post('/api/auth/verify-phone').send({
+        phone: '+12345678901',
+        code: '123456',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body.error).toContain('Invalid verification code');

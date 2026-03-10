@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -47,7 +47,7 @@ export class DiscoveryService {
       .orWhere('recipient_id', userId)
       .select('sender_id', 'recipient_id');
 
-    const connectionUserIds = connectionRequests.map(cr =>
+    const connectionUserIds = connectionRequests.map((cr) =>
       cr.sender_id === userId ? cr.recipient_id : cr.sender_id,
     );
 
@@ -64,15 +64,13 @@ export class DiscoveryService {
         .select('parent1_id', 'parent2_id');
 
       // Convert parent IDs back to user IDs for exclusion
-      const matchedParentIds = matches.map(m =>
+      const matchedParentIds = matches.map((m) =>
         m.parent1_id === parentRecord.id ? m.parent2_id : m.parent1_id,
       );
 
       if (matchedParentIds.length > 0) {
-        const matchedUsers = await db('parents')
-          .whereIn('id', matchedParentIds)
-          .select('user_id');
-        matchedUserIds = matchedUsers.map(u => u.user_id);
+        const matchedUsers = await db('parents').whereIn('id', matchedParentIds).select('user_id');
+        matchedUserIds = matchedUsers.map((u) => u.user_id);
       }
     }
 
@@ -146,10 +144,13 @@ export class DiscoveryService {
     const nextCursor = hasMore ? profiles[profiles.length - 1].userId : null;
 
     const userProfile = await this.getUserProfile(userId);
-    const profileCards: ProfileCard[] = profiles.map(p => {
+    const profileCards: ProfileCard[] = profiles.map((p) => {
       const compatibilityScore = this.calculateCompatibility(userProfile, p);
       const age = calculateAge(p.dateOfBirth);
-      const budget = p.budgetMin && p.budgetMax ? (p.budgetMin + p.budgetMax) / 2 : p.budgetMin || p.budgetMax || 0;
+      const budget =
+        p.budgetMin && p.budgetMax
+          ? (p.budgetMin + p.budgetMax) / 2
+          : p.budgetMin || p.budgetMax || 0;
 
       return {
         userId: p.userId,
@@ -168,7 +169,9 @@ export class DiscoveryService {
         },
         housingStatus: p.housingStatus || undefined,
         roomRentShare: p.roomRentShare || undefined,
-        roomAvailableDate: p.roomAvailableDate ? new Date(p.roomAvailableDate).toISOString() : undefined,
+        roomAvailableDate: p.roomAvailableDate
+          ? new Date(p.roomAvailableDate).toISOString()
+          : undefined,
         profileCompletion: p.profileCompletion ?? 0,
         budget,
         moveInDate: p.moveInDate ? new Date(p.moveInDate).toISOString() : undefined,
@@ -198,9 +201,13 @@ export class DiscoveryService {
           scoringFactors: ['budget', 'location', 'move_in_timing'],
           familyCompositionUsed: false, // CRITICAL: Compliance proof
           algorithmVersion: '1.0-neutral',
-          averageCompatibilityScore: profileCards.length > 0
-            ? Math.round(profileCards.reduce((sum, p) => sum + p.compatibilityScore, 0) / profileCards.length)
-            : 0,
+          averageCompatibilityScore:
+            profileCards.length > 0
+              ? Math.round(
+                  profileCards.reduce((sum, p) => sum + p.compatibilityScore, 0) /
+                    profileCards.length,
+                )
+              : 0,
         },
       });
     } catch (auditError) {
@@ -213,7 +220,7 @@ export class DiscoveryService {
       return {
         profiles: [],
         nextCursor: null,
-        fallbackMessage: 'No parents in your area yet. We\'ll notify you when someone joins.',
+        fallbackMessage: "No parents in your area yet. We'll notify you when someone joins.",
       };
     }
 
@@ -231,7 +238,10 @@ export class DiscoveryService {
 
     const enrichedProfile = {
       ...profile,
-      budget: profile.budget_min && profile.budget_max ? (profile.budget_min + profile.budget_max) / 2 : profile.budget_min || profile.budget_max || 0,
+      budget:
+        profile.budget_min && profile.budget_max
+          ? (profile.budget_min + profile.budget_max) / 2
+          : profile.budget_min || profile.budget_max || 0,
     };
 
     // Cache for future requests
@@ -260,14 +270,15 @@ export class DiscoveryService {
 
     // Budget compatibility (40 points) - User preference, not family composition
     const userBudget = userProfile.budget || 0;
-    const targetBudget = (targetProfile.budgetMin && targetProfile.budgetMax)
-      ? (targetProfile.budgetMin + targetProfile.budgetMax) / 2
-      : targetProfile.budgetMin || targetProfile.budgetMax || 0;
+    const targetBudget =
+      targetProfile.budgetMin && targetProfile.budgetMax
+        ? (targetProfile.budgetMin + targetProfile.budgetMax) / 2
+        : targetProfile.budgetMin || targetProfile.budgetMax || 0;
 
     if (userBudget > 0 && targetBudget > 0) {
       const budgetDiff = Math.abs(userBudget - targetBudget);
       // $0 diff = 40 points, $4000+ diff = 0 points
-      score += Math.min(Math.max(0, 40 - (budgetDiff / 100)), 40);
+      score += Math.min(Math.max(0, 40 - budgetDiff / 100), 40);
     }
 
     // Location proximity (40 points) - Geographic preference
@@ -278,8 +289,9 @@ export class DiscoveryService {
     // Move-in date alignment (20 points) - Timing preference
     if (userProfile.move_in_date && targetProfile.moveInDate) {
       const daysDiff = Math.abs(
-        (new Date(userProfile.move_in_date).getTime() - new Date(targetProfile.moveInDate).getTime())
-        / (1000 * 60 * 60 * 24),
+        (new Date(userProfile.move_in_date).getTime() -
+          new Date(targetProfile.moveInDate).getTime()) /
+          (1000 * 60 * 60 * 24),
       );
       // Same week = 20 points, decreasing by ~3 points per week
       score += Math.min(Math.max(0, 20 - daysDiff / 7), 20);

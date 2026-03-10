@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -27,14 +27,11 @@ export const GetProfilesQuerySchema = z.object({
   limit: z
     .string()
     .optional()
-    .transform(val => (val ? parseInt(val) : 10))
-    .refine(val => val >= 1 && val <= 50, {
+    .transform((val) => (val ? parseInt(val) : 10))
+    .refine((val) => val >= 1 && val <= 50, {
       message: 'Limit must be between 1 and 50',
     }),
-  cursor: z
-    .string()
-    .uuid('Cursor must be a valid UUID')
-    .optional(),
+  cursor: z.string().uuid('Cursor must be a valid UUID').optional(),
 });
 
 // POST /api/discovery/screenshot body
@@ -50,11 +47,13 @@ export const ScreenshotBodySchema = z.object({
  * Verification Status Schema
  * Constitution: Principle I (Safety verification requirements)
  */
-export const VerificationStatusSchema = z.object({
-  idVerified: z.boolean(),
-  backgroundCheckComplete: z.boolean(),
-  phoneVerified: z.boolean(),
-}).strict();
+export const VerificationStatusSchema = z
+  .object({
+    idVerified: z.boolean(),
+    backgroundCheckComplete: z.boolean(),
+    phoneVerified: z.boolean(),
+  })
+  .strict();
 
 /**
  * ProfileCard Response Schema
@@ -69,34 +68,37 @@ export const VerificationStatusSchema = z.object({
  * - childrenNames, childrenPhotos, childrenAges, childrenSchools
  * - Any field containing child-identifying information
  */
-export const ProfileCardSchema = z.object({
-  userId: z.string().uuid('User ID must be a valid UUID'),
-  firstName: z.string().min(1, 'First name is required'),
-  age: z.number().int().min(18).max(100),
-  city: z.string().min(1, 'City is required'),
+export const ProfileCardSchema = z
+  .object({
+    userId: z.string().uuid('User ID must be a valid UUID'),
+    firstName: z.string().min(1, 'First name is required'),
+    age: z.number().int().min(18).max(100),
+    city: z.string().min(1, 'City is required'),
 
-  // FHA COMPLIANCE: Child data is OPTIONAL (user-initiated disclosure)
-  // Users can choose whether to share this information
-  // These fields are NOT used in algorithm scoring (preference-based only)
-  childrenCount: z.number().int().min(0).max(10).optional(),
-  childrenAgeGroups: z.array(
-    z.enum(['toddler', 'elementary', 'teen'], {
-      errorMap: () => ({
-        message: 'Age groups must be: toddler, elementary, or teen',
-      }),
-    }),
-  ).optional(),
+    // FHA COMPLIANCE: Child data is OPTIONAL (user-initiated disclosure)
+    // Users can choose whether to share this information
+    // These fields are NOT used in algorithm scoring (preference-based only)
+    childrenCount: z.number().int().min(0).max(10).optional(),
+    childrenAgeGroups: z
+      .array(
+        z.enum(['toddler', 'elementary', 'teen'], {
+          errorMap: () => ({
+            message: 'Age groups must be: toddler, elementary, or teen',
+          }),
+        }),
+      )
+      .optional(),
 
-  // Matching data
-  compatibilityScore: z.number().int().min(0).max(100),
-  verificationStatus: VerificationStatusSchema,
+    // Matching data
+    compatibilityScore: z.number().int().min(0).max(100),
+    verificationStatus: VerificationStatusSchema,
 
-  // Optional fields
-  budget: z.number().positive().optional(),
-  moveInDate: z.string().datetime().optional(),
-  bio: z.string().max(500).optional(),
-  profilePhoto: z.string().url().optional(),
-})
+    // Optional fields
+    budget: z.number().positive().optional(),
+    moveInDate: z.string().datetime().optional(),
+    bio: z.string().max(500).optional(),
+    profilePhoto: z.string().url().optional(),
+  })
   .strict() // Reject any fields not defined above
   .refine(
     (data) => {
@@ -113,7 +115,7 @@ export const ProfileCardSchema = z.object({
       ];
 
       const dataKeys = Object.keys(data);
-      const hasPII = prohibitedFields.some(field => dataKeys.includes(field));
+      const hasPII = prohibitedFields.some((field) => dataKeys.includes(field));
 
       return !hasPII;
     },
@@ -126,10 +128,12 @@ export const ProfileCardSchema = z.object({
  * Discovery Response Schema
  * Response for GET /api/discovery/profiles
  */
-export const DiscoveryResponseSchema = z.object({
-  profiles: z.array(ProfileCardSchema).max(50, 'Maximum 50 profiles per request'),
-  nextCursor: z.string().uuid().nullable(),
-}).strict();
+export const DiscoveryResponseSchema = z
+  .object({
+    profiles: z.array(ProfileCardSchema).max(50, 'Maximum 50 profiles per request'),
+    nextCursor: z.string().uuid().nullable(),
+  })
+  .strict();
 
 // ========================================
 // TYPE EXPORTS

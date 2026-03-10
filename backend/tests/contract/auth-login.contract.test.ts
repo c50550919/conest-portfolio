@@ -39,12 +39,10 @@ describe('POST /api/auth/login - Contract Tests', () => {
       (UserModel.updateLastLogin as jest.Mock).mockResolvedValue(undefined);
       (redisClient.setex as jest.Mock).mockResolvedValue('OK');
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'SecurePass123!',
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('success', true);
@@ -75,12 +73,10 @@ describe('POST /api/auth/login - Contract Tests', () => {
       (UserModel.updateLastLogin as jest.Mock).mockResolvedValue(undefined);
       (redisClient.setex as jest.Mock).mockResolvedValue('OK');
 
-      await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'SecurePass123!',
-        });
+      await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+      });
 
       expect(UserModel.updateLastLogin).toHaveBeenCalledWith('user-123');
     });
@@ -88,46 +84,38 @@ describe('POST /api/auth/login - Contract Tests', () => {
 
   describe('Validation Error Cases', () => {
     it('should return 400 for invalid email format', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'invalid-email',
-          password: 'SecurePass123!',
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'invalid-email',
+        password: 'SecurePass123!',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
     });
 
     it('should return 400 for missing email', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          password: 'SecurePass123!',
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        password: 'SecurePass123!',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
     });
 
     it('should return 400 for missing password', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
     });
 
     it('should return 400 for empty password', async () => {
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: '',
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: '',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
@@ -138,12 +126,10 @@ describe('POST /api/auth/login - Contract Tests', () => {
     it('should return 401 for non-existent user', async () => {
       (UserModel.findByEmail as jest.Mock).mockResolvedValue(null);
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'nonexistent@example.com',
-          password: 'SecurePass123!',
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'nonexistent@example.com',
+        password: 'SecurePass123!',
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error');
@@ -164,12 +150,10 @@ describe('POST /api/auth/login - Contract Tests', () => {
       (UserModel.findByEmail as jest.Mock).mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'WrongPassword123!',
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'WrongPassword123!',
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error');
@@ -179,12 +163,10 @@ describe('POST /api/auth/login - Contract Tests', () => {
     it('should not reveal whether email exists in error message', async () => {
       (UserModel.findByEmail as jest.Mock).mockResolvedValue(null);
 
-      const response1 = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'nonexistent@example.com',
-          password: 'SecurePass123!',
-        });
+      const response1 = await request(app).post('/api/auth/login').send({
+        email: 'nonexistent@example.com',
+        password: 'SecurePass123!',
+      });
 
       const mockUser = {
         id: 'user-123',
@@ -196,12 +178,10 @@ describe('POST /api/auth/login - Contract Tests', () => {
       (UserModel.findByEmail as jest.Mock).mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      const response2 = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'WrongPassword123!',
-        });
+      const response2 = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'WrongPassword123!',
+      });
 
       // Both should return same generic error message
       expect(response1.body.error).toBe(response2.body.error);
@@ -223,12 +203,10 @@ describe('POST /api/auth/login - Contract Tests', () => {
       (UserModel.findByEmail as jest.Mock).mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'SecurePass123!',
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+      });
 
       expect(response.status).toBe(403);
       expect(response.body).toHaveProperty('error');
@@ -249,12 +227,10 @@ describe('POST /api/auth/login - Contract Tests', () => {
       (UserModel.findByEmail as jest.Mock).mockResolvedValue(mockUser);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'SecurePass123!',
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+      });
 
       expect(response.status).toBe(403);
       expect(response.body).toHaveProperty('error');
@@ -282,12 +258,10 @@ describe('POST /api/auth/login - Contract Tests', () => {
       (UserModel.updateLastLogin as jest.Mock).mockResolvedValue(undefined);
       (redisClient.setex as jest.Mock).mockResolvedValue('OK');
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'SecurePass123!',
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+      });
 
       expect(response.body).toMatchObject({
         success: expect.any(Boolean),
@@ -325,12 +299,10 @@ describe('POST /api/auth/login - Contract Tests', () => {
       (UserModel.updateLastLogin as jest.Mock).mockResolvedValue(undefined);
       (redisClient.setex as jest.Mock).mockResolvedValue('OK');
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'SecurePass123!',
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+      });
 
       const responseString = JSON.stringify(response.body);
       expect(responseString).not.toContain('password_hash');
@@ -357,12 +329,10 @@ describe('POST /api/auth/login - Contract Tests', () => {
       (UserModel.updateLastLogin as jest.Mock).mockResolvedValue(undefined);
       (redisClient.setex as jest.Mock).mockResolvedValue('OK');
 
-      const response = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'SecurePass123!',
-        });
+      const response = await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+      });
 
       expect(response.body.data.tokens.accessToken).toBeTruthy();
       expect(response.body.data.tokens.refreshToken).toBeTruthy();
@@ -389,12 +359,10 @@ describe('POST /api/auth/login - Contract Tests', () => {
       (UserModel.updateLastLogin as jest.Mock).mockResolvedValue(undefined);
       (redisClient.setex as jest.Mock).mockResolvedValue('OK');
 
-      await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'test@example.com',
-          password: 'SecurePass123!',
-        });
+      await request(app).post('/api/auth/login').send({
+        email: 'test@example.com',
+        password: 'SecurePass123!',
+      });
 
       expect(redisClient.setex).toHaveBeenCalled();
       const setexCall = (redisClient.setex as jest.Mock).mock.calls[0];

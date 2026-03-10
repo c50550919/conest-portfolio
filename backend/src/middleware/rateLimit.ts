@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -80,7 +80,7 @@ export const generalRateLimit = rateLimit({
   // Skip all requests in test environment
   skip: () => isTestEnv,
   // Custom key generator (uses IP by default)
-  keyGenerator: (req) => req.ip || req.headers['x-forwarded-for'] as string || 'unknown',
+  keyGenerator: (req) => req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown',
 });
 
 /**
@@ -103,7 +103,7 @@ export const authRateLimit = rateLimit({
   skipSuccessfulRequests: true,
   // Skip all requests in test environment
   skip: () => isTestEnv,
-  keyGenerator: (req) => req.ip || req.headers['x-forwarded-for'] as string || 'unknown',
+  keyGenerator: (req) => req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown',
 });
 
 /**
@@ -233,7 +233,7 @@ export const phoneVerificationRateLimit = rateLimit({
   legacyHeaders: false,
   store: getStore('rl:phone-verify:'),
   skip: () => isTestEnv,
-  keyGenerator: (req) => req.ip || req.headers['x-forwarded-for'] as string || 'unknown',
+  keyGenerator: (req) => req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown',
 });
 
 /**

@@ -39,14 +39,18 @@ export class PushNotificationService {
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const { getEnv } = require('../config/env');
       const env = getEnv();
 
       if (!env.FIREBASE_SERVICE_ACCOUNT_PATH) {
-        logger.warn('[PushNotificationService] FIREBASE_SERVICE_ACCOUNT_PATH not set, push disabled');
+        logger.warn(
+          '[PushNotificationService] FIREBASE_SERVICE_ACCOUNT_PATH not set, push disabled',
+        );
         return;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const serviceAccount = require(env.FIREBASE_SERVICE_ACCOUNT_PATH);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),

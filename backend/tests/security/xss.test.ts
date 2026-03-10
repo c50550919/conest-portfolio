@@ -15,19 +15,15 @@ describe('XSS Prevention', () => {
         '<script>document.cookie</script>',
       ];
 
-      xssAttempts.forEach(attempt => {
+      xssAttempts.forEach((attempt) => {
         expect(hasXSS(attempt)).toBe(true);
       });
     });
 
     it('should detect javascript: protocol', () => {
-      const jsProtocols = [
-        'javascript:alert("XSS")',
-        'JavaScript:void(0)',
-        'JAVASCRIPT:alert(1)',
-      ];
+      const jsProtocols = ['javascript:alert("XSS")', 'JavaScript:void(0)', 'JAVASCRIPT:alert(1)'];
 
-      jsProtocols.forEach(protocol => {
+      jsProtocols.forEach((protocol) => {
         expect(hasXSS(protocol)).toBe(true);
       });
     });
@@ -40,7 +36,7 @@ describe('XSS Prevention', () => {
         '<svg onload=alert(1)>',
       ];
 
-      eventHandlers.forEach(handler => {
+      eventHandlers.forEach((handler) => {
         expect(hasXSS(handler)).toBe(true);
       });
     });
@@ -51,18 +47,15 @@ describe('XSS Prevention', () => {
         '<IFRAME src="evil.com"></IFRAME>',
       ];
 
-      iframes.forEach(iframe => {
+      iframes.forEach((iframe) => {
         expect(hasXSS(iframe)).toBe(true);
       });
     });
 
     it('should detect embed and object tags', () => {
-      const embedTags = [
-        '<embed src="malicious.swf">',
-        '<object data="evil.pdf">',
-      ];
+      const embedTags = ['<embed src="malicious.swf">', '<object data="evil.pdf">'];
 
-      embedTags.forEach(tag => {
+      embedTags.forEach((tag) => {
         expect(hasXSS(tag)).toBe(true);
       });
     });
@@ -74,7 +67,7 @@ describe('XSS Prevention', () => {
         'Regular text with <angle> brackets but no tags',
       ];
 
-      safeContent.forEach(content => {
+      safeContent.forEach((content) => {
         expect(hasXSS(content)).toBe(false);
       });
     });

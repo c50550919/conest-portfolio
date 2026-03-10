@@ -20,9 +20,7 @@ describe('Contract: DELETE /api/saved-profiles/:id', () => {
 
   describe('Authorization Cases', () => {
     it('should reject deletion without authentication token', async () => {
-      const response = await request(app)
-        .delete(`/api/saved-profiles/${validUUID}`)
-        .expect(401);
+      const response = await request(app).delete(`/api/saved-profiles/${validUUID}`).expect(401);
 
       expect(response.body).toMatchObject({
         error: expect.any(String),

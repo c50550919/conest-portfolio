@@ -17,7 +17,10 @@ import jwt from 'jsonwebtoken';
 import { HouseholdSafetyService } from '../features/household-safety/household-safety.service';
 import { HouseholdSafetyDisclosureModel } from '../models/HouseholdSafetyDisclosure';
 import { ParentModel } from '../models/Parent';
-import { ATTESTATION_QUESTIONS, MIN_SIGNATURE_LENGTH } from '../features/household-safety/household-safety.constants';
+import {
+  ATTESTATION_QUESTIONS,
+  MIN_SIGNATURE_LENGTH,
+} from '../features/household-safety/household-safety.constants';
 import { createAuditLog } from '../services/auditService';
 
 // Mock dependencies
@@ -71,14 +74,11 @@ const validAttestationResponses = [
   { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
 ];
 
-const validSignatureData = `data:image/png;base64,${  'A'.repeat(MIN_SIGNATURE_LENGTH + 50)}`;
+const validSignatureData = `data:image/png;base64,${'A'.repeat(MIN_SIGNATURE_LENGTH + 50)}`;
 
 // Generate valid token
-const generateValidToken = (userId: string = mockUserId): string => jwt.sign(
-  { userId, email: 'test@example.com', type: 'access' },
-  JWT_SECRET,
-  { expiresIn: '1h' },
-);
+const generateValidToken = (userId: string = mockUserId): string =>
+  jwt.sign({ userId, email: 'test@example.com', type: 'access' }, JWT_SECRET, { expiresIn: '1h' });
 
 // Create test app
 const createTestApp = () => {
@@ -101,11 +101,21 @@ const createTestApp = () => {
     }
   };
 
-  const { householdSafetyController } = require('../features/household-safety/household-safety.controller');
+  const {
+    householdSafetyController,
+  } = require('../features/household-safety/household-safety.controller');
 
-  app.get('/api/household-safety/questions', authMiddleware, householdSafetyController.getQuestions);
+  app.get(
+    '/api/household-safety/questions',
+    authMiddleware,
+    householdSafetyController.getQuestions,
+  );
   app.get('/api/household-safety/status', authMiddleware, householdSafetyController.getStatus);
-  app.post('/api/household-safety/submit', authMiddleware, householdSafetyController.submitAttestation);
+  app.post(
+    '/api/household-safety/submit',
+    authMiddleware,
+    householdSafetyController.submitAttestation,
+  );
 
   app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal server error' });
@@ -144,8 +154,8 @@ describe('Compliance: Household Safety Disclosure - Child Safety (Constitution P
 
       questions.forEach((question) => {
         // Question text should not ask for specific child names
-        expect(question.text.toLowerCase()).not.toContain('child\'s name');
-        expect(question.text.toLowerCase()).not.toContain('children\'s names');
+        expect(question.text.toLowerCase()).not.toContain("child's name");
+        expect(question.text.toLowerCase()).not.toContain("children's names");
         expect(question.text.toLowerCase()).not.toContain('name of the child');
         expect(question.text.toLowerCase()).not.toContain('name of your child');
       });
@@ -161,7 +171,7 @@ describe('Compliance: Household Safety Disclosure - Child Safety (Constitution P
 
       questions.forEach((question) => {
         // Question text should not ask for specific child ages
-        expect(question.text.toLowerCase()).not.toContain('child\'s age');
+        expect(question.text.toLowerCase()).not.toContain("child's age");
         expect(question.text.toLowerCase()).not.toContain('how old');
         expect(question.text.toLowerCase()).not.toContain('age of the child');
         expect(question.text.toLowerCase()).not.toContain('date of birth');
@@ -177,7 +187,7 @@ describe('Compliance: Household Safety Disclosure - Child Safety (Constitution P
         // Question text should not ask for specific school information
         expect(question.text.toLowerCase()).not.toContain('school name');
         expect(question.text.toLowerCase()).not.toContain('which school');
-        expect(question.text.toLowerCase()).not.toContain('child\'s school');
+        expect(question.text.toLowerCase()).not.toContain("child's school");
         expect(question.text.toLowerCase()).not.toContain('daycare');
         expect(question.text.toLowerCase()).not.toContain('teacher');
         expect(question.text.toLowerCase()).not.toContain('classroom');
@@ -274,7 +284,9 @@ describe('Compliance: Household Safety Disclosure - Child Safety (Constitution P
         updated_at: new Date(),
       };
 
-      (HouseholdSafetyDisclosureModel.findByParentId as jest.Mock).mockResolvedValue(mockDisclosure);
+      (HouseholdSafetyDisclosureModel.findByParentId as jest.Mock).mockResolvedValue(
+        mockDisclosure,
+      );
 
       const response = await request(app)
         .get('/api/household-safety/status')

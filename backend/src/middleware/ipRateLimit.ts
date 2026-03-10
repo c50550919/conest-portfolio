@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -101,10 +101,13 @@ export function ipRateLimit(options?: {
 /**
  * Endpoint-specific rate limiting
  */
-export function endpointRateLimit(endpoint: string, options?: {
-  windowMs?: number;
-  maxRequests?: number;
-}) {
+export function endpointRateLimit(
+  endpoint: string,
+  options?: {
+    windowMs?: number;
+    maxRequests?: number;
+  },
+) {
   const {
     windowMs = securityConfig.rateLimit.windowMs,
     maxRequests = securityConfig.rateLimit.maxRequests,
@@ -120,10 +123,7 @@ export function endpointRateLimit(endpoint: string, options?: {
 /**
  * User-based rate limiting (after authentication)
  */
-export function userRateLimit(options?: {
-  windowMs?: number;
-  maxRequests?: number;
-}) {
+export function userRateLimit(options?: { windowMs?: number; maxRequests?: number }) {
   const {
     windowMs = securityConfig.rateLimit.windowMs,
     maxRequests = securityConfig.rateLimit.maxRequests,
@@ -172,7 +172,10 @@ export function userRateLimit(options?: {
 /**
  * Clear rate limit for specific IP or user
  */
-export async function clearRateLimit(identifier: string, type: 'ip' | 'user' = 'ip'): Promise<void> {
+export async function clearRateLimit(
+  identifier: string,
+  type: 'ip' | 'user' = 'ip',
+): Promise<void> {
   const key = `ratelimit:${type}:${identifier}`;
   await redis.del(key);
 }

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -30,12 +30,12 @@ import { logPairingCreated } from '../../services/auditService';
 
 // Pairing algorithm weights - FHA COMPLIANT (preference-based only)
 const WEIGHTS = {
-  schedule: 0.30,      // 30% - Schedule compatibility (user preference)
-  parenting: 0.20,     // 20% - Parenting philosophy (user preference, NOT child count)
-  rules: 0.20,         // 20% - House rules alignment (user preference)
-  location: 0.15,      // 15% - Location/schools (geographic preference)
-  budget: 0.10,        // 10% - Budget match (financial preference)
-  lifestyle: 0.05,     // 5% - Lifestyle factors (user preference)
+  schedule: 0.3, // 30% - Schedule compatibility (user preference)
+  parenting: 0.2, // 20% - Parenting philosophy (user preference, NOT child count)
+  rules: 0.2, // 20% - House rules alignment (user preference)
+  location: 0.15, // 15% - Location/schools (geographic preference)
+  budget: 0.1, // 10% - Budget match (financial preference)
+  lifestyle: 0.05, // 5% - Lifestyle factors (user preference)
 };
 
 interface MatchingPreferences {
@@ -50,7 +50,10 @@ interface MatchingPreferences {
  */
 export const PairingService = {
   // Calculate compatibility score between two profiles
-  calculateCompatibility(profile1: Profile, profile2: Profile): {
+  calculateCompatibility(
+    profile1: Profile,
+    profile2: Profile,
+  ): {
     totalScore: number;
     breakdown: {
       schedule: number;
@@ -108,9 +111,7 @@ export const PairingService = {
     // Same schedule type is highly compatible
     if (profile1.schedule_type === profile2.schedule_type) {
       score += 30;
-    } else if (
-      (profile1.schedule_type === 'flexible' || profile2.schedule_type === 'flexible')
-    ) {
+    } else if (profile1.schedule_type === 'flexible' || profile2.schedule_type === 'flexible') {
       // Flexible schedules are moderately compatible with all
       score += 15;
     }
@@ -166,7 +167,7 @@ export const PairingService = {
     let matches = 0;
     let total = 0;
 
-    ruleKeys.forEach(key => {
+    ruleKeys.forEach((key) => {
       if (rules1[key] && rules2[key]) {
         total++;
         if (rules1[key] === rules2[key]) {
@@ -193,7 +194,12 @@ export const PairingService = {
       // Same zip code is ideal
       if (profile1.zip_code === profile2.zip_code) {
         score = 100;
-      } else if (profile1.latitude && profile1.longitude && profile2.latitude && profile2.longitude) {
+      } else if (
+        profile1.latitude &&
+        profile1.longitude &&
+        profile2.latitude &&
+        profile2.longitude
+      ) {
         // Calculate distance if coordinates available
         const distance = this.calculateDistance(
           profile1.latitude,
@@ -222,8 +228,9 @@ export const PairingService = {
   // Budget match
   calculateBudgetScore(profile1: Profile, profile2: Profile): number {
     // Find overlapping budget range
-    const overlap = Math.min(profile1.budget_max, profile2.budget_max) -
-                   Math.max(profile1.budget_min, profile2.budget_min);
+    const overlap =
+      Math.min(profile1.budget_max, profile2.budget_max) -
+      Math.max(profile1.budget_min, profile2.budget_min);
 
     if (overlap <= 0) {
       return 0; // No budget overlap
@@ -300,14 +307,8 @@ export const PairingService = {
    * Find potential pairings for a user - FHA COMPLIANT
    * Uses neutral language: "pairings" instead of "matches"
    */
-  async findPairings(
-    userId: string,
-    preferences: MatchingPreferences = {},
-  ): Promise<any[]> {
-    const {
-      minCompatibilityScore = 60,
-      limit = 20,
-    } = preferences;
+  async findPairings(userId: string, preferences: MatchingPreferences = {}): Promise<any[]> {
+    const { minCompatibilityScore = 60, limit = 20 } = preferences;
 
     // Get user's profile
     const userProfile = await ProfileModel.findByUserId(userId);
@@ -329,15 +330,15 @@ export const PairingService = {
 
     // Calculate compatibility scores
     const matches = candidates
-      .filter(candidate => candidate.user_id !== userId) // Exclude self
-      .map(candidate => {
+      .filter((candidate) => candidate.user_id !== userId) // Exclude self
+      .map((candidate) => {
         const compatibility = this.calculateCompatibility(userProfile, candidate);
         return {
           profile: candidate,
           compatibility,
         };
       })
-      .filter(match => match.compatibility.totalScore >= minCompatibilityScore)
+      .filter((match) => match.compatibility.totalScore >= minCompatibilityScore)
       .sort((a, b) => b.compatibility.totalScore - a.compatibility.totalScore)
       .slice(0, limit);
 
@@ -350,10 +351,7 @@ export const PairingService = {
    * Legacy method name for backward compatibility
    * @deprecated Use findPairings() instead
    */
-  async findMatches(
-    userId: string,
-    preferences: MatchingPreferences = {},
-  ): Promise<any[]> {
+  async findMatches(userId: string, preferences: MatchingPreferences = {}): Promise<any[]> {
     return this.findPairings(userId, preferences);
   },
 
@@ -396,7 +394,9 @@ export const PairingService = {
 
     const match = await MatchModel.create(matchData);
 
-    logger.info(`Match created between users ${userId1} and ${userId2} with score ${compatibility.totalScore}`);
+    logger.info(
+      `Match created between users ${userId1} and ${userId2} with score ${compatibility.totalScore}`,
+    );
 
     // FHA COMPLIANCE: Audit log pairing creation with preference-based scoring proof
     try {
@@ -429,12 +429,7 @@ export const PairingService = {
    * @param matchId - Created match ID
    * @param compatibilityScore - Compatibility score (0-100)
    */
-  notifyMatch(
-    userId1: string,
-    userId2: string,
-    matchId: string,
-    compatibilityScore: number,
-  ): void {
+  notifyMatch(userId1: string, userId2: string, matchId: string, compatibilityScore: number): void {
     const matchData = {
       id: matchId,
       compatibilityScore,

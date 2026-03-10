@@ -12,24 +12,26 @@
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock Stripe
-jest.mock('stripe', () => jest.fn().mockImplementation(() => ({
-  paymentIntents: {
-    create: jest.fn().mockResolvedValue({
-      id: 'pi_test_123',
-      client_secret: 'pi_test_123_secret',
-      amount: 3900,
-      status: 'requires_payment_method',
-    }),
-    retrieve: jest.fn().mockResolvedValue({
-      id: 'pi_test_123',
-      status: 'succeeded',
-      metadata: { type: 'verification', userId: 'user-123' },
-    }),
-  },
-  webhooks: {
-    constructEvent: jest.fn().mockImplementation((body, sig, secret) => JSON.parse(body)),
-  },
-})));
+jest.mock('stripe', () =>
+  jest.fn().mockImplementation(() => ({
+    paymentIntents: {
+      create: jest.fn().mockResolvedValue({
+        id: 'pi_test_123',
+        client_secret: 'pi_test_123_secret',
+        amount: 3900,
+        status: 'requires_payment_method',
+      }),
+      retrieve: jest.fn().mockResolvedValue({
+        id: 'pi_test_123',
+        status: 'succeeded',
+        metadata: { type: 'verification', userId: 'user-123' },
+      }),
+    },
+    webhooks: {
+      constructEvent: jest.fn().mockImplementation((body, sig, secret) => JSON.parse(body)),
+    },
+  })),
+);
 
 describe('Payment Integration', () => {
   describe('Verification Payment Flow', () => {
@@ -179,7 +181,8 @@ describe('Mobile IAP Validation', () => {
   describe('iOS App Store Receipt Validation', () => {
     it('should validate JWS transaction format', () => {
       // JWS format: header.payload.signature (3 parts separated by dots)
-      const mockJWS = 'eyJhbGciOiJFUzI1NiIsIng1YyI6WyJjZXJ0MSIsImNlcnQyIl19.eyJ0cmFuc2FjdGlvbklkIjoiMTIzNCIsInByb2R1Y3RJZCI6InZlcmlmaWNhdGlvbl9wYXltZW50In0.signature';
+      const mockJWS =
+        'eyJhbGciOiJFUzI1NiIsIng1YyI6WyJjZXJ0MSIsImNlcnQyIl19.eyJ0cmFuc2FjdGlvbklkIjoiMTIzNCIsInByb2R1Y3RJZCI6InZlcmlmaWNhdGlvbl9wYXltZW50In0.signature';
       const parts = mockJWS.split('.');
 
       expect(parts.length).toBe(3);

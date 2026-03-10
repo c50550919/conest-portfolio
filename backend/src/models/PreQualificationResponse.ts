@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -68,7 +68,9 @@ export const PreQualificationResponseModel = {
   ): Promise<PreQualificationResponse> {
     // CMP-06: Reject legacy felony_conviction question
     if ((data.question_id as string) === 'felony_conviction') {
-      throw new Error('FELONY_QUESTION_REMOVED: Use background check tiered classification instead');
+      throw new Error(
+        'FELONY_QUESTION_REMOVED: Use background check tiered classification instead',
+      );
     }
 
     // Auto-disqualify sex offenders
@@ -173,9 +175,7 @@ export const PreQualificationResponseModel = {
     // Set completed_at if all questions answered
     if (answeredCount === TOTAL_QUESTIONS) {
       const latestResponse = responses.reduce((latest, current) =>
-        new Date(current.answered_at) > new Date(latest.answered_at)
-          ? current
-          : latest,
+        new Date(current.answered_at) > new Date(latest.answered_at) ? current : latest,
       );
       summary.completed_at = latestResponse.answered_at;
     }
@@ -209,9 +209,7 @@ export const PreQualificationResponseModel = {
    * Used when user deletes account
    */
   async deleteByUserId(userId: string): Promise<void> {
-    await db('pre_qualification_responses')
-      .where({ user_id: userId })
-      .delete();
+    await db('pre_qualification_responses').where({ user_id: userId }).delete();
   },
 
   /**
@@ -219,11 +217,13 @@ export const PreQualificationResponseModel = {
    * Returns users who answered 'yes' to any question except sex_offender
    * (sex_offender 'yes' is auto-disqualified and blocked from payment)
    */
-  async getFlaggedUsers(): Promise<{
-    user_id: string;
-    flagged_questions: string[];
-    answered_at: Date;
-  }[]> {
+  async getFlaggedUsers(): Promise<
+    {
+      user_id: string;
+      flagged_questions: string[];
+      answered_at: Date;
+    }[]
+  > {
     const responses = await db('pre_qualification_responses')
       .where('response', 'yes')
       .whereNot('question_id', 'sex_offender')
@@ -231,11 +231,14 @@ export const PreQualificationResponseModel = {
       .orderBy('answered_at', 'desc');
 
     // Group by user_id
-    const flaggedUsers: Map<string, {
-      user_id: string;
-      flagged_questions: string[];
-      answered_at: Date;
-    }> = new Map();
+    const flaggedUsers: Map<
+      string,
+      {
+        user_id: string;
+        flagged_questions: string[];
+        answered_at: Date;
+      }
+    > = new Map();
 
     responses.forEach((response) => {
       if (!flaggedUsers.has(response.user_id)) {

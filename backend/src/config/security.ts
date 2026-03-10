@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -170,10 +170,26 @@ export type SecurityConfig = typeof securityConfig;
 
 // Common passwords list (top 100 most common passwords)
 export const commonPasswords = [
-  'password', '123456', '123456789', 'qwerty', 'abc123',
-  'password1', '12345678', '111111', '1234567', 'sunshine',
-  'password123', 'letmein', 'welcome', 'monkey', 'admin',
-  'iloveyou', 'master', 'princess', 'dragon', 'shadow',
+  'password',
+  '123456',
+  '123456789',
+  'qwerty',
+  'abc123',
+  'password1',
+  '12345678',
+  '111111',
+  '1234567',
+  'sunshine',
+  'password123',
+  'letmein',
+  'welcome',
+  'monkey',
+  'admin',
+  'iloveyou',
+  'master',
+  'princess',
+  'dragon',
+  'shadow',
   // Add more common passwords as needed
 ];
 

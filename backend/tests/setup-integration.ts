@@ -15,13 +15,13 @@
 // IMPORTANT: Set test environment variables BEFORE importing any modules
 // These match docker-compose.test.yml container configuration
 process.env.NODE_ENV = 'test';
-process.env.DB_HOST = '127.0.0.1';  // Use IPv4 to avoid IPv6 issues
-process.env.DB_PORT = '5433';        // Test container mapped port
+process.env.DB_HOST = '127.0.0.1'; // Use IPv4 to avoid IPv6 issues
+process.env.DB_PORT = '5433'; // Test container mapped port
 process.env.DB_NAME = 'conest_test';
 process.env.DB_USER = 'test_user';
 process.env.DB_PASSWORD = 'test_password';
 process.env.REDIS_HOST = '127.0.0.1';
-process.env.REDIS_PORT = '6380';     // Test container mapped port
+process.env.REDIS_PORT = '6380'; // Test container mapped port
 process.env.REDIS_PASSWORD = 'test_redis_password';
 process.env.JWT_SECRET = 'test-jwt-secret-key-for-integration-tests';
 process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_secret';
@@ -151,20 +151,27 @@ export interface IntegrationTestUser {
  * Note: The users table has limited columns. Admin role is simulated
  * by checking token claims in tests.
  */
-export async function createIntegrationTestUser(options: {
-  email?: string;
-  password?: string;
-  phone?: string;
-  emailVerified?: boolean;
-  phoneVerified?: boolean;
-  role?: 'user' | 'admin';
-} = {}): Promise<IntegrationTestUser> {
+export async function createIntegrationTestUser(
+  options: {
+    email?: string;
+    password?: string;
+    phone?: string;
+    emailVerified?: boolean;
+    phoneVerified?: boolean;
+    role?: 'user' | 'admin';
+  } = {},
+): Promise<IntegrationTestUser> {
   const bcrypt = await import('bcrypt');
   const jwt = await import('jsonwebtoken');
 
-  const email = options.email || `test-${Date.now()}-${Math.random().toString(36).slice(2)}@test.com`;
+  const email =
+    options.email || `test-${Date.now()}-${Math.random().toString(36).slice(2)}@test.com`;
   const password = options.password || 'TestPassword123!';
-  const phone = options.phone || `+1555${Math.floor(Math.random() * 10000000).toString().padStart(7, '0')}`;
+  const phone =
+    options.phone ||
+    `+1555${Math.floor(Math.random() * 10000000)
+      .toString()
+      .padStart(7, '0')}`;
 
   const passwordHash = await bcrypt.hash(password, 10);
 
@@ -245,10 +252,7 @@ export async function createPendingPayment(
 /**
  * Create a conversation between two users
  */
-export async function createConversation(
-  user1Id: string,
-  user2Id: string,
-): Promise<string> {
+export async function createConversation(user1Id: string, user2Id: string): Promise<string> {
   const [conversation] = await db('conversations')
     .insert({
       participant_ids: [user1Id, user2Id],
@@ -273,10 +277,7 @@ export function createStripeSignature(
   const payloadString = typeof payload === 'string' ? payload : JSON.stringify(payload);
 
   const signedPayload = `${timestamp}.${payloadString}`;
-  const signature = crypto
-    .createHmac('sha256', secret)
-    .update(signedPayload)
-    .digest('hex');
+  const signature = crypto.createHmac('sha256', secret).update(signedPayload).digest('hex');
 
   return `t=${timestamp},v1=${signature}`;
 }

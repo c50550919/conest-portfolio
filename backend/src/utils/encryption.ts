@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -14,19 +14,21 @@
 import crypto from 'crypto';
 import { securityConfig } from '../config/security';
 
-const { algorithm, keyLength, ivLength, authTagLength: _authTagLength, saltLength, iterations, digest } = securityConfig.encryption;
+const {
+  algorithm,
+  keyLength,
+  ivLength,
+  authTagLength: _authTagLength,
+  saltLength,
+  iterations,
+  digest,
+} = securityConfig.encryption;
 
 /**
  * Derive encryption key from master key using PBKDF2
  */
 function deriveKey(masterKey: string, salt: Buffer): Buffer {
-  return crypto.pbkdf2Sync(
-    masterKey,
-    salt,
-    iterations,
-    keyLength,
-    digest,
-  );
+  return crypto.pbkdf2Sync(masterKey, salt, iterations, keyLength, digest);
 }
 
 /**
@@ -81,7 +83,9 @@ export function encrypt(plaintext: string, keyVersion: string = 'v1'): string {
 
     return encrypted;
   } catch (error) {
-    throw new Error(`Encryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Encryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
   }
 }
 
@@ -120,7 +124,9 @@ export function decrypt(encrypted: string): string {
 
     return plaintext;
   } catch (error) {
-    throw new Error(`Decryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Decryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
   }
 }
 
@@ -130,10 +136,7 @@ export function decrypt(encrypted: string): string {
  * @param fieldsToEncrypt - Array of field names to encrypt
  * @returns Object with encrypted fields
  */
-export function encryptFields<T extends Record<string, any>>(
-  obj: T,
-  fieldsToEncrypt: string[],
-): T {
+export function encryptFields<T extends Record<string, any>>(obj: T, fieldsToEncrypt: string[]): T {
   const result = { ...obj } as any;
 
   for (const field of fieldsToEncrypt) {
@@ -151,10 +154,7 @@ export function encryptFields<T extends Record<string, any>>(
  * @param fieldsToDecrypt - Array of field names to decrypt
  * @returns Object with decrypted fields
  */
-export function decryptFields<T extends Record<string, any>>(
-  obj: T,
-  fieldsToDecrypt: string[],
-): T {
+export function decryptFields<T extends Record<string, any>>(obj: T, fieldsToDecrypt: string[]): T {
   const result = { ...obj } as any;
 
   for (const field of fieldsToDecrypt) {
@@ -163,7 +163,7 @@ export function decryptFields<T extends Record<string, any>>(
         result[field] = decrypt(String(result[field]));
       } catch (error) {
         // If decryption fails, keep original value (might not be encrypted)
-        console.error('Failed to decrypt field', `${field  }:`, error);
+        console.error('Failed to decrypt field', `${field}:`, error);
       }
     }
   }
@@ -219,18 +219,16 @@ export function encryptNote(plaintext: string): { encrypted: string; iv: string 
     const authTag = cipher.getAuthTag();
 
     // Format: salt:authTag:ciphertext (IV stored separately)
-    const encrypted = [
-      salt.toString('hex'),
-      authTag.toString('hex'),
-      ciphertext,
-    ].join(':');
+    const encrypted = [salt.toString('hex'), authTag.toString('hex'), ciphertext].join(':');
 
     return {
       encrypted,
       iv: iv.toString('hex'),
     };
   } catch (error) {
-    throw new Error(`Note encryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Note encryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
   }
 }
 
@@ -271,6 +269,8 @@ export function decryptNote(encrypted: string, ivHex: string): string {
 
     return plaintext;
   } catch (error) {
-    throw new Error(`Note decryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(
+      `Note decryption failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
   }
 }

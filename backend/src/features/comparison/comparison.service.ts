@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -50,10 +50,7 @@ export class ProfileComparisonService {
     this.validateRequestCount(requests);
 
     // Validate and enrich requests
-    const validatedRequests = await this.validateRequests(
-      requestingUserId,
-      requests,
-    );
+    const validatedRequests = await this.validateRequests(requestingUserId, requests);
 
     // Fetch profiles based on type
     const profiles = await Promise.all(
@@ -61,9 +58,7 @@ export class ProfileComparisonService {
     );
 
     // Filter out nulls (not found profiles)
-    const validProfiles = profiles.filter(
-      (p): p is ComparisonProfile => p !== null,
-    );
+    const validProfiles = profiles.filter((p): p is ComparisonProfile => p !== null);
 
     if (validProfiles.length < COMPARISON_LIMITS.minProfiles) {
       throw new Error(COMPARISON_ERRORS.PROFILE_NOT_FOUND);
@@ -74,8 +69,7 @@ export class ProfileComparisonService {
       data: validProfiles,
       metadata: {
         totalProfiles: validProfiles.length,
-        discoveryCount: validProfiles.filter((p) => p.sourceType === 'discovery')
-          .length,
+        discoveryCount: validProfiles.filter((p) => p.sourceType === 'discovery').length,
         savedCount: validProfiles.filter((p) => p.sourceType === 'saved').length,
         requestedAt: new Date().toISOString(),
       },
@@ -154,9 +148,7 @@ export class ProfileComparisonService {
   /**
    * Fetch discovery profile (from users + parents tables)
    */
-  private async fetchDiscoveryProfile(
-    userId: string,
-  ): Promise<ComparisonProfile | null> {
+  private async fetchDiscoveryProfile(userId: string): Promise<ComparisonProfile | null> {
     const result = await this.db('users as u')
       .join('parents as p', 'u.id', 'p.user_id')
       .where('u.id', userId)
@@ -290,10 +282,7 @@ export class ProfileComparisonService {
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
 
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
 

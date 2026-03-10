@@ -1,6 +1,11 @@
 import request from 'supertest';
 import app from '../../src/app';
-import { setupTestDatabase, teardownTestDatabase, createTestUser, getAuthToken } from '../helpers/test-utils';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+  createTestUser,
+  getAuthToken,
+} from '../helpers/test-utils';
 
 /**
  * Integration Test: Swipe Right (Express Interest)
@@ -460,19 +465,16 @@ describe('Integration Test: Swipe Right (Express Interest)', () => {
 
       // Perform 10 concurrent swipes
       const requests = users.map((token, i) =>
-        request(app)
-          .post('/api/discovery/swipe')
-          .set('Authorization', `Bearer ${token}`)
-          .send({
-            targetUserId: targets[i],
-            direction: 'right',
-          }),
+        request(app).post('/api/discovery/swipe').set('Authorization', `Bearer ${token}`).send({
+          targetUserId: targets[i],
+          direction: 'right',
+        }),
       );
 
       const results = await Promise.all(requests);
 
       // All requests should succeed
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.status).toBe(200);
         expect(result.body.swipeId).toBeDefined();
       });

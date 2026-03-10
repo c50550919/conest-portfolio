@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -114,11 +114,9 @@ export const WebhookEventModel = {
    * Called at the start of webhook handling
    */
   async markAsProcessing(id: string): Promise<void> {
-    await db('stripe_webhook_events')
-      .where({ id })
-      .update({
-        processing_status: 'processing',
-      });
+    await db('stripe_webhook_events').where({ id }).update({
+      processing_status: 'processing',
+    });
   },
 
   /**
@@ -126,12 +124,10 @@ export const WebhookEventModel = {
    * Called after successful processing
    */
   async markAsCompleted(id: string): Promise<void> {
-    await db('stripe_webhook_events')
-      .where({ id })
-      .update({
-        processing_status: 'completed',
-        processed_at: db.fn.now(),
-      });
+    await db('stripe_webhook_events').where({ id }).update({
+      processing_status: 'completed',
+      processed_at: db.fn.now(),
+    });
   },
 
   /**
@@ -139,13 +135,11 @@ export const WebhookEventModel = {
    * Called when processing encounters an error
    */
   async markAsFailed(id: string, errorMessage: string): Promise<void> {
-    await db('stripe_webhook_events')
-      .where({ id })
-      .update({
-        processing_status: 'failed',
-        error_message: errorMessage,
-        processed_at: db.fn.now(),
-      });
+    await db('stripe_webhook_events').where({ id }).update({
+      processing_status: 'failed',
+      error_message: errorMessage,
+      processed_at: db.fn.now(),
+    });
   },
 
   /**
@@ -153,30 +147,23 @@ export const WebhookEventModel = {
    * Called when event is a duplicate or not applicable
    */
   async markAsSkipped(id: string): Promise<void> {
-    await db('stripe_webhook_events')
-      .where({ id })
-      .update({
-        processing_status: 'skipped',
-        processed_at: db.fn.now(),
-      });
+    await db('stripe_webhook_events').where({ id }).update({
+      processing_status: 'skipped',
+      processed_at: db.fn.now(),
+    });
   },
 
   /**
    * Find event by Stripe event ID
    */
   async findByStripeEventId(stripeEventId: string): Promise<WebhookEvent | undefined> {
-    return await db('stripe_webhook_events')
-      .where({ stripe_event_id: stripeEventId })
-      .first();
+    return await db('stripe_webhook_events').where({ stripe_event_id: stripeEventId }).first();
   },
 
   /**
    * Find events by type for debugging/replay
    */
-  async findByType(
-    eventType: string,
-    limit: number = 100,
-  ): Promise<WebhookEvent[]> {
+  async findByType(eventType: string, limit: number = 100): Promise<WebhookEvent[]> {
     return await db('stripe_webhook_events')
       .where({ event_type: eventType })
       .orderBy('received_at', 'desc')
@@ -203,7 +190,10 @@ export const WebhookEventModel = {
    * TASK-W2-01: Find events eligible for retry
    * Returns failed events that haven't exceeded max retries and aren't in dead letter
    */
-  async findRetryEligibleEvents(maxRetries: number = 3, limit: number = 50): Promise<WebhookEvent[]> {
+  async findRetryEligibleEvents(
+    maxRetries: number = 3,
+    limit: number = 50,
+  ): Promise<WebhookEvent[]> {
     return await db('stripe_webhook_events')
       .where({ processing_status: 'failed' })
       .where((builder) => {
@@ -221,14 +211,15 @@ export const WebhookEventModel = {
   /**
    * TASK-W2-01: Mark event as failed and queue for retry
    */
-  async markAsFailedAndQueueRetry(id: string, errorMessage: string): Promise<WebhookEvent | undefined> {
-    await db('stripe_webhook_events')
-      .where({ id })
-      .update({
-        processing_status: 'failed',
-        error_message: errorMessage,
-        processed_at: db.fn.now(),
-      });
+  async markAsFailedAndQueueRetry(
+    id: string,
+    errorMessage: string,
+  ): Promise<WebhookEvent | undefined> {
+    await db('stripe_webhook_events').where({ id }).update({
+      processing_status: 'failed',
+      error_message: errorMessage,
+      processed_at: db.fn.now(),
+    });
 
     return await db('stripe_webhook_events').where({ id }).first();
   },
@@ -277,7 +268,9 @@ export const WebhookEventModel = {
         db.raw("COUNT(CASE WHEN processing_status = 'completed' THEN 1 END) as completed"),
         db.raw("COUNT(CASE WHEN processing_status = 'failed' THEN 1 END) as failed"),
         db.raw("COUNT(CASE WHEN processing_status = 'skipped' THEN 1 END) as skipped"),
-        db.raw("COUNT(CASE WHEN received_at > NOW() - INTERVAL '24 hours' THEN 1 END) as last_24_hours"),
+        db.raw(
+          "COUNT(CASE WHEN received_at > NOW() - INTERVAL '24 hours' THEN 1 END) as last_24_hours",
+        ),
       )
       .first();
 

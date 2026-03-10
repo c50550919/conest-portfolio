@@ -1,6 +1,11 @@
 import request from 'supertest';
 import app from '../../src/app';
-import { setupTestDatabase, teardownTestDatabase, createTestUser, getAuthToken } from '../helpers/test-utils';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+  createTestUser,
+  getAuthToken,
+} from '../helpers/test-utils';
 
 /**
  * Integration Test: Mutual Match Creation
@@ -305,7 +310,7 @@ describe('Integration Test: Mutual Match Creation', () => {
       expect(results[1].status).toBe(200);
 
       // Exactly ONE response should have matchCreated: true
-      const matchCreatedCount = results.filter(r => r.body.matchCreated).length;
+      const matchCreatedCount = results.filter((r) => r.body.matchCreated).length;
       expect(matchCreatedCount).toBe(1);
 
       // Only one match should be created in database
@@ -380,7 +385,7 @@ describe('Integration Test: Mutual Match Creation', () => {
 
       // Each pair: userA swipes right on userB first
       await Promise.all(
-        pairs.map(pair =>
+        pairs.map((pair) =>
           request(app)
             .post('/api/discovery/swipe')
             .set('Authorization', `Bearer ${pair.userA.token}`)
@@ -390,7 +395,7 @@ describe('Integration Test: Mutual Match Creation', () => {
 
       // All userB swipe right simultaneously (creates 10 matches)
       const matchResults = await Promise.all(
-        pairs.map(pair =>
+        pairs.map((pair) =>
           request(app)
             .post('/api/discovery/swipe')
             .set('Authorization', `Bearer ${pair.userB.token}`)
@@ -399,7 +404,7 @@ describe('Integration Test: Mutual Match Creation', () => {
       );
 
       // All matches should succeed
-      matchResults.forEach(result => {
+      matchResults.forEach((result) => {
         expect(result.status).toBe(200);
         expect(result.body.matchCreated).toBe(true);
         expect(result.body.match).toBeDefined();

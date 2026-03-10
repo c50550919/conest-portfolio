@@ -469,7 +469,9 @@ describe('POST /api/messages - Contract Tests', () => {
       expect(response.body).toHaveProperty('senderId');
       expect(response.body.senderId).toBeTruthy();
       // senderId should be a valid UUID
-      expect(response.body.senderId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      expect(response.body.senderId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+      );
     });
 
     it.skip('should preserve message content integrity', async () => {

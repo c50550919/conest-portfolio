@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -95,21 +95,12 @@ export const SavedProfileModel = {
    * Find all saved profiles for a user, optionally filtered by folder
    * Returns profiles with decrypted notes
    */
-  async findByUserId(
-    userId: string,
-    folder?: string,
-  ): Promise<SavedProfileWithProfile[]> {
+  async findByUserId(userId: string, folder?: string): Promise<SavedProfileWithProfile[]> {
     const query = db('saved_profiles as sp')
       .join('users as u', 'sp.profile_id', 'u.id')
       .join('parents as p', 'u.id', 'p.user_id')
       .where('sp.user_id', userId)
-      .select(
-        'sp.*',
-        'p.first_name',
-        'p.date_of_birth',
-        'p.city',
-        'p.state',
-      )
+      .select('sp.*', 'p.first_name', 'p.date_of_birth', 'p.city', 'p.state')
       .orderBy('sp.saved_at', 'desc');
 
     if (folder) {
@@ -143,9 +134,7 @@ export const SavedProfileModel = {
    * Only returns notes if requester is the owner
    */
   async getDecryptedNotes(id: string, userId: string): Promise<string | null> {
-    const savedProfile = await db('saved_profiles')
-      .where({ id, user_id: userId })
-      .first();
+    const savedProfile = await db('saved_profiles').where({ id, user_id: userId }).first();
 
     if (!savedProfile) {
       return null;
@@ -208,9 +197,7 @@ export const SavedProfileModel = {
    * Delete a saved profile
    */
   async delete(id: string, userId: string): Promise<void> {
-    const deleted = await db('saved_profiles')
-      .where({ id, user_id: userId })
-      .delete();
+    const deleted = await db('saved_profiles').where({ id, user_id: userId }).delete();
 
     if (deleted === 0) {
       throw new Error('SAVED_PROFILE_NOT_FOUND');
@@ -221,10 +208,7 @@ export const SavedProfileModel = {
    * Get comparison data for 2-4 saved profiles
    * Returns profiles with decrypted notes for comparison view
    */
-  async compareProfiles(
-    userId: string,
-    ids: string[],
-  ): Promise<SavedProfileWithProfile[]> {
+  async compareProfiles(userId: string, ids: string[]): Promise<SavedProfileWithProfile[]> {
     if (ids.length < 2 || ids.length > 4) {
       throw new Error('INVALID_COMPARISON_COUNT');
     }

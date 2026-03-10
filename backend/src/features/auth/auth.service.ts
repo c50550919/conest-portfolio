@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -23,7 +23,12 @@
 import { UserModel, User } from '../../models/User';
 import { ParentModel } from '../../models/Parent';
 import { VerificationModel } from '../../models/Verification';
-import { generateAccessToken, generateRefreshToken, verifyRefreshToken, JWTPayload } from '../../utils/jwt';
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+  JWTPayload,
+} from '../../utils/jwt';
 import { hashPassword, comparePassword } from '../../utils/password';
 import redis, { REDIS_TTL } from '../../config/redis';
 import { getEmailService } from '../../services/emailService';
@@ -245,7 +250,10 @@ export const AuthService = {
    * @param _phoneNumber - Phone number (ignored - fetched from user record)
    * @returns Verification metadata from Telnyx
    */
-  async sendPhoneVerification(userId: string, _phoneNumber?: string): Promise<{ verificationId?: string; expiresIn?: number }> {
+  async sendPhoneVerification(
+    userId: string,
+    _phoneNumber?: string,
+  ): Promise<{ verificationId?: string; expiresIn?: number }> {
     // Import here to avoid circular dependency
     const { VerificationService } = await import('../verification/verification.service');
     return await VerificationService.sendPhoneVerification(userId);
@@ -285,8 +293,8 @@ export const AuthService = {
    */
   validateNoChildPII(data: Record<string, unknown>): void {
     const providedFields = Object.keys(data);
-    const foundProhibitedFields = providedFields.filter(field =>
-      PROHIBITED_CHILD_FIELDS.some(prohibited =>
+    const foundProhibitedFields = providedFields.filter((field) =>
+      PROHIBITED_CHILD_FIELDS.some((prohibited) =>
         field.toLowerCase().includes(prohibited.toLowerCase()),
       ),
     );
@@ -294,7 +302,7 @@ export const AuthService = {
     if (foundProhibitedFields.length > 0) {
       throw new Error(
         `Child PII is prohibited: ${foundProhibitedFields.join(', ')}. ` +
-        'This platform stores NO child data for safety reasons.',
+          'This platform stores NO child data for safety reasons.',
       );
     }
   },

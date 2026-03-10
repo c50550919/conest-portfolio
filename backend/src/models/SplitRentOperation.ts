@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -247,7 +247,10 @@ export const SplitRentOperationModel = {
   /**
    * Mark operation as in progress
    */
-  async markInProgress(operationId: string, currentStep: string): Promise<SplitRentOperation | undefined> {
+  async markInProgress(
+    operationId: string,
+    currentStep: string,
+  ): Promise<SplitRentOperation | undefined> {
     return this.updateStatus(operationId, 'in_progress', { current_step: currentStep });
   },
 
@@ -309,12 +312,15 @@ export const SplitRentOperationModel = {
    */
   async addPaymentId(operationId: string, paymentId: string): Promise<void> {
     try {
-      await db.raw(`
+      await db.raw(
+        `
         UPDATE split_rent_operations
         SET payment_ids = payment_ids || ?::jsonb,
             completed_steps = completed_steps + 1
         WHERE operation_id = ?
-      `, [JSON.stringify([paymentId]), operationId]);
+      `,
+        [JSON.stringify([paymentId]), operationId],
+      );
     } catch (error: any) {
       if (error.code === '42P01') return;
       throw error;
@@ -326,12 +332,15 @@ export const SplitRentOperationModel = {
    */
   async addStripeIntentId(operationId: string, stripeIntentId: string): Promise<void> {
     try {
-      await db.raw(`
+      await db.raw(
+        `
         UPDATE split_rent_operations
         SET stripe_intent_ids = stripe_intent_ids || ?::jsonb,
             completed_steps = completed_steps + 1
         WHERE operation_id = ?
-      `, [JSON.stringify([stripeIntentId]), operationId]);
+      `,
+        [JSON.stringify([stripeIntentId]), operationId],
+      );
     } catch (error: any) {
       if (error.code === '42P01') return;
       throw error;
@@ -363,7 +372,10 @@ export const SplitRentOperationModel = {
   /**
    * Get recent operations for a household
    */
-  async getRecentForHousehold(householdId: string, limit: number = 10): Promise<SplitRentOperation[]> {
+  async getRecentForHousehold(
+    householdId: string,
+    limit: number = 10,
+  ): Promise<SplitRentOperation[]> {
     try {
       const operations = await db('split_rent_operations')
         .where({ household_id: householdId })

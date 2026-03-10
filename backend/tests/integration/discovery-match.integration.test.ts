@@ -100,25 +100,21 @@ describe('Discovery Mutual Match Detection - Integration Tests', () => {
     userBId = userBRes.body.user.id;
 
     // Mark both as verified
-    await db('verifications')
-      .where({ user_id: userAId })
-      .update({
-        id_verification_status: 'verified',
-        background_check_status: 'verified',
-        phone_verified: true,
-        email_verified: true,
-        fully_verified: true,
-      });
+    await db('verifications').where({ user_id: userAId }).update({
+      id_verification_status: 'verified',
+      background_check_status: 'verified',
+      phone_verified: true,
+      email_verified: true,
+      fully_verified: true,
+    });
 
-    await db('verifications')
-      .where({ user_id: userBId })
-      .update({
-        id_verification_status: 'verified',
-        background_check_status: 'verified',
-        phone_verified: true,
-        email_verified: true,
-        fully_verified: true,
-      });
+    await db('verifications').where({ user_id: userBId }).update({
+      id_verification_status: 'verified',
+      background_check_status: 'verified',
+      phone_verified: true,
+      email_verified: true,
+      fully_verified: true,
+    });
   });
 
   describe('Mutual Match Creation', () => {
@@ -343,10 +339,13 @@ describe('Discovery Mutual Match Detection - Integration Tests', () => {
       // Verify Socket.io events
       expect(mockIo.to).toHaveBeenCalledWith(userAId);
       expect(mockIo.to).toHaveBeenCalledWith(userBId);
-      expect(mockIo.emit).toHaveBeenCalledWith('match:created', expect.objectContaining({
-        matchId: expect.any(String),
-        matchedUserId: expect.any(String),
-      }));
+      expect(mockIo.emit).toHaveBeenCalledWith(
+        'match:created',
+        expect.objectContaining({
+          matchId: expect.any(String),
+          matchedUserId: expect.any(String),
+        }),
+      );
     });
 
     it('should NOT emit match:created if no mutual match', async () => {
@@ -391,12 +390,15 @@ describe('Discovery Mutual Match Detection - Integration Tests', () => {
         });
 
       // Verify event payload structure
-      expect(mockIo.emit).toHaveBeenCalledWith('match:created', expect.objectContaining({
-        matchId: swipeB.body.match.matchId,
-        matchedUserId: expect.any(String),
-        compatibilityScore: expect.any(Number),
-        createdAt: expect.any(String),
-      }));
+      expect(mockIo.emit).toHaveBeenCalledWith(
+        'match:created',
+        expect.objectContaining({
+          matchId: swipeB.body.match.matchId,
+          matchedUserId: expect.any(String),
+          compatibilityScore: expect.any(Number),
+          createdAt: expect.any(String),
+        }),
+      );
     });
   });
 
@@ -510,7 +512,7 @@ describe('Discovery Mutual Match Detection - Integration Tests', () => {
       const responses = await Promise.all(promises);
 
       // One should create match, one should not (or both might, but only one match record)
-      const matchCreatedCount = responses.filter(r => r.body.matchCreated).length;
+      const matchCreatedCount = responses.filter((r) => r.body.matchCreated).length;
       expect(matchCreatedCount).toBeGreaterThanOrEqual(1);
 
       // Verify only ONE match in database
@@ -580,7 +582,7 @@ describe('Discovery Mutual Match Detection - Integration Tests', () => {
   });
 
   describe('Match Visibility', () => {
-    it('should remove matched users from each other\'s discovery feed', async () => {
+    it("should remove matched users from each other's discovery feed", async () => {
       // Create match
       await request(app)
         .post('/api/discovery/swipe')
@@ -643,15 +645,13 @@ describe('Discovery Mutual Match Detection - Integration Tests', () => {
       userCToken = userCRes.body.accessToken;
       userCId = userCRes.body.user.id;
 
-      await db('verifications')
-        .where({ user_id: userCId })
-        .update({
-          id_verification_status: 'verified',
-          background_check_status: 'verified',
-          phone_verified: true,
-          email_verified: true,
-          fully_verified: true,
-        });
+      await db('verifications').where({ user_id: userCId }).update({
+        id_verification_status: 'verified',
+        background_check_status: 'verified',
+        phone_verified: true,
+        email_verified: true,
+        fully_verified: true,
+      });
     });
 
     it('should allow user to have multiple matches', async () => {

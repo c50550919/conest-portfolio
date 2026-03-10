@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -126,15 +126,13 @@ export const ParentModel = {
       housing_status: data.housing_status ?? null,
       profile_completed: false,
       profile_completion_percentage: 0, // Slim onboarding starts at 0
-      trust_score: 0.50,
-      response_rate: 0.00,
+      trust_score: 0.5,
+      response_rate: 0.0,
       preferred_radius: 10,
     };
 
     const query = trx ? trx('parents') : db('parents');
-    const [parent] = await query
-      .insert(parentData)
-      .returning('*');
+    const [parent] = await query.insert(parentData).returning('*');
 
     return parent;
   },
@@ -143,18 +141,14 @@ export const ParentModel = {
    * Find parent profile by user ID
    */
   async findByUserId(userId: string): Promise<Parent | undefined> {
-    return await db('parents')
-      .where({ user_id: userId })
-      .first();
+    return await db('parents').where({ user_id: userId }).first();
   },
 
   /**
    * Find parent profile by parent ID
    */
   async findById(id: string): Promise<Parent | undefined> {
-    return await db('parents')
-      .where({ id })
-      .first();
+    return await db('parents').where({ id }).first();
   },
 
   /**

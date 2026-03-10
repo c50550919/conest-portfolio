@@ -56,7 +56,7 @@ describe('Billing Integration Tests', () => {
       userId: testUserId,
       productId: 'verification_payment',
       transactionId: uuidv4(),
-      receipt: `valid-receipt-data-${  uuidv4()}`,
+      receipt: `valid-receipt-data-${uuidv4()}`,
       ...overrides,
     });
 
@@ -113,7 +113,9 @@ describe('Billing Integration Tests', () => {
         verification_data: null,
       });
 
-      await expect(BillingService.validateIOSReceipt(params)).rejects.toThrow('RECEIPT_ALREADY_USED');
+      await expect(BillingService.validateIOSReceipt(params)).rejects.toThrow(
+        'RECEIPT_ALREADY_USED',
+      );
     });
 
     it('should reject empty receipt', async () => {
@@ -133,8 +135,8 @@ describe('Billing Integration Tests', () => {
 
       // Verify insert was called for billing_transactions
       expect(mockDb.insert).toHaveBeenCalled();
-      const insertCall = mockDb.insert.mock.calls.find((call: any[]) =>
-        call[0] && call[0].platform === 'ios',
+      const insertCall = mockDb.insert.mock.calls.find(
+        (call: any[]) => call[0] && call[0].platform === 'ios',
       );
       expect(insertCall).toBeDefined();
       expect(insertCall[0].user_id).toBe(testUserId);
@@ -150,8 +152,8 @@ describe('Billing Integration Tests', () => {
 
       // Verify verification_payments insert was called
       const insertCalls = mockDb.insert.mock.calls;
-      const verificationPaymentCall = insertCalls.find((call: any[]) =>
-        call[0] && call[0].payment_method === 'app_store',
+      const verificationPaymentCall = insertCalls.find(
+        (call: any[]) => call[0] && call[0].payment_method === 'app_store',
       );
       expect(verificationPaymentCall).toBeDefined();
       expect(verificationPaymentCall[0].amount).toBe(3900);
@@ -167,8 +169,8 @@ describe('Billing Integration Tests', () => {
 
       // Verify subscriptions insert was called
       const insertCalls = mockDb.insert.mock.calls;
-      const subscriptionCall = insertCalls.find((call: any[]) =>
-        call[0] && call[0].auto_renewing === true,
+      const subscriptionCall = insertCalls.find(
+        (call: any[]) => call[0] && call[0].auto_renewing === true,
       );
       expect(subscriptionCall).toBeDefined();
       expect(subscriptionCall[0].product_id).toBe('premium_monthly');
@@ -180,7 +182,7 @@ describe('Billing Integration Tests', () => {
     const createValidAndroidParams = (overrides = {}) => ({
       userId: testUserId,
       productId: 'verification_payment',
-      purchaseToken: `valid-purchase-token-${  uuidv4()}`,
+      purchaseToken: `valid-purchase-token-${uuidv4()}`,
       ...overrides,
     });
 
@@ -240,8 +242,8 @@ describe('Billing Integration Tests', () => {
       await BillingService.validateGooglePlayReceipt(params);
 
       const insertCalls = mockDb.insert.mock.calls;
-      const verificationPaymentCall = insertCalls.find((call: any[]) =>
-        call[0] && call[0].payment_method === 'google_play',
+      const verificationPaymentCall = insertCalls.find(
+        (call: any[]) => call[0] && call[0].payment_method === 'google_play',
       );
       expect(verificationPaymentCall).toBeDefined();
     });
@@ -253,8 +255,8 @@ describe('Billing Integration Tests', () => {
       await BillingService.validateGooglePlayReceipt(params);
 
       const insertCalls = mockDb.insert.mock.calls;
-      const transactionCall = insertCalls.find((call: any[]) =>
-        call[0] && call[0].purchase_token === purchaseToken,
+      const transactionCall = insertCalls.find(
+        (call: any[]) => call[0] && call[0].purchase_token === purchaseToken,
       );
       expect(transactionCall).toBeDefined();
     });
@@ -265,9 +267,9 @@ describe('Billing Integration Tests', () => {
       userId: testUserId,
       platform,
       productId: 'verification_premium_bundle',
-      receipt: `bundle-receipt-${  uuidv4()}`,
+      receipt: `bundle-receipt-${uuidv4()}`,
       transactionId: platform === 'ios' ? uuidv4() : undefined,
-      purchaseToken: platform === 'android' ? `bundle-token-${  uuidv4()}` : undefined,
+      purchaseToken: platform === 'android' ? `bundle-token-${uuidv4()}` : undefined,
       ...overrides,
     });
 
@@ -300,8 +302,9 @@ describe('Billing Integration Tests', () => {
       await BillingService.validateBundlePurchase(params);
 
       const insertCalls = mockDb.insert.mock.calls;
-      const bundlePaymentCall = insertCalls.find((call: any[]) =>
-        call[0] && call[0].bundle_purchase === true && call[0].payment_method === 'bundle',
+      const bundlePaymentCall = insertCalls.find(
+        (call: any[]) =>
+          call[0] && call[0].bundle_purchase === true && call[0].payment_method === 'bundle',
       );
       expect(bundlePaymentCall).toBeDefined();
     });
@@ -312,8 +315,9 @@ describe('Billing Integration Tests', () => {
       await BillingService.validateBundlePurchase(params);
 
       const insertCalls = mockDb.insert.mock.calls;
-      const subscriptionCall = insertCalls.find((call: any[]) =>
-        call[0] && call[0].bundle_purchase === true && call[0].auto_renewing === false,
+      const subscriptionCall = insertCalls.find(
+        (call: any[]) =>
+          call[0] && call[0].bundle_purchase === true && call[0].auto_renewing === false,
       );
       expect(subscriptionCall).toBeDefined();
     });
@@ -403,7 +407,7 @@ describe('Billing Integration Tests', () => {
         userId: testUserId,
         productId: 'premium_monthly',
         transactionId: uuidv4(),
-        receipt: `extension-receipt-${  uuidv4()}`,
+        receipt: `extension-receipt-${uuidv4()}`,
       };
 
       await BillingService.validateIOSReceipt(params);
@@ -453,9 +457,9 @@ describe('Billing Integration Tests', () => {
     });
 
     it('should reject JWS without required payload fields', async () => {
-      const header = Buffer.from(
-        JSON.stringify({ alg: 'ES256', x5c: ['cert'] }),
-      ).toString('base64url');
+      const header = Buffer.from(JSON.stringify({ alg: 'ES256', x5c: ['cert'] })).toString(
+        'base64url',
+      );
       const payload = Buffer.from(JSON.stringify({ foo: 'bar' })).toString('base64url'); // Missing required fields
       const signature = 'sig';
 

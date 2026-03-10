@@ -107,10 +107,7 @@ describe('T023: OAuth Performance Test', () => {
         } as any;
       });
 
-      await request(app)
-        .post('/api/auth/oauth/google')
-        .send({ idToken: 'mock_token' })
-        .expect(200);
+      await request(app).post('/api/auth/oauth/google').send({ idToken: 'mock_token' }).expect(200);
 
       const endTime = Date.now();
       const totalDuration = endTime - startTime;
@@ -200,7 +197,7 @@ describe('T023: OAuth Performance Test', () => {
     });
 
     it('should verify Apple token within 200ms (P95 target)', async () => {
-    // @ts-expect-error - Mocking Apple signin for testing
+      // @ts-expect-error - Mocking Apple signin for testing
       jest.spyOn(appleSignin, 'verifyIdToken').mockImplementation(async () => {
         const verifyStart = Date.now();
         await new Promise((resolve) => setTimeout(resolve, 50));
@@ -248,7 +245,7 @@ describe('T023: OAuth Performance Test', () => {
   describe('Database Performance', () => {
     it('should create user and parent records within 50ms', async () => {
       // Mock faster OAuth verification to isolate database performance
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(async () => {
         await new Promise((resolve) => setTimeout(resolve, 10));
         return {
@@ -258,10 +255,7 @@ describe('T023: OAuth Performance Test', () => {
 
       const startTime = Date.now();
 
-      await request(app)
-        .post('/api/auth/oauth/google')
-        .send({ idToken: 'mock_token' })
-        .expect(200);
+      await request(app).post('/api/auth/oauth/google').send({ idToken: 'mock_token' }).expect(200);
 
       const totalDuration = Date.now() - startTime;
 
@@ -296,10 +290,7 @@ describe('T023: OAuth Performance Test', () => {
 
       const startTime = Date.now();
 
-      await request(app)
-        .post('/api/auth/oauth/google')
-        .send({ idToken: 'mock_token' })
-        .expect(200);
+      await request(app).post('/api/auth/oauth/google').send({ idToken: 'mock_token' }).expect(200);
 
       const duration = Date.now() - startTime;
 
@@ -409,10 +400,7 @@ describe('T023: OAuth Performance Test', () => {
         } as any;
       });
 
-      await request(app)
-        .post('/api/auth/oauth/google')
-        .send({ idToken: 'mock_token' })
-        .expect(200);
+      await request(app).post('/api/auth/oauth/google').send({ idToken: 'mock_token' }).expect(200);
 
       metrics.totalTime = Date.now() - startTime;
       metrics.databaseTime = metrics.totalTime - metrics.tokenVerificationTime;
@@ -430,7 +418,7 @@ describe('T023: OAuth Performance Test', () => {
   describe('Performance Degradation Detection', () => {
     it('should detect performance degradation (slow token verification)', async () => {
       // Simulate slow OAuth provider response
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(async () => {
         await new Promise((resolve) => setTimeout(resolve, 400)); // Slow
         return {
@@ -457,7 +445,7 @@ describe('T023: OAuth Performance Test', () => {
 
     it('should detect database performance issues', async () => {
       // Fast token verification
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockImplementation(async () => {
         await new Promise((resolve) => setTimeout(resolve, 50));
         return {
@@ -467,10 +455,7 @@ describe('T023: OAuth Performance Test', () => {
 
       const startTime = Date.now();
 
-      await request(app)
-        .post('/api/auth/oauth/google')
-        .send({ idToken: 'mock_token' })
-        .expect(200);
+      await request(app).post('/api/auth/oauth/google').send({ idToken: 'mock_token' }).expect(200);
 
       const duration = Date.now() - startTime;
 

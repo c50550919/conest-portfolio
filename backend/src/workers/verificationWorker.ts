@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -67,16 +67,20 @@ void verificationQueue.process('background_check', async (job) => {
 export const queueVerification = async (userId: string, type: 'id' | 'background' | 'income') => {
   const jobName = `${type}_verification`;
 
-  await verificationQueue.add(jobName, {
-    userId,
-    type,
-  }, {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000,
+  await verificationQueue.add(
+    jobName,
+    {
+      userId,
+      type,
     },
-  });
+    {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 2000,
+      },
+    },
+  );
 
   logger.info(`Queued ${type} verification for user ${userId}`);
 };

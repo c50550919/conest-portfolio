@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -26,7 +26,8 @@ import { getPushService } from '../../services/pushNotificationService';
  * SECURITY: Mock mode is BLOCKED in production even if Telnyx isn't configured
  * This prevents accidental deployment with mock verification enabled
  */
-const IS_PRODUCTION = process.env.NODE_ENV === 'production' || process.env.SECURITY_MODE === 'production';
+const IS_PRODUCTION =
+  process.env.NODE_ENV === 'production' || process.env.SECURITY_MODE === 'production';
 const TELNYX_CONFIGURED = TelnyxVerifyClient.isConfigured();
 
 // In production, Telnyx MUST be configured - no mock fallback allowed
@@ -48,7 +49,9 @@ export const VerificationService = {
    * @param userId - User ID to verify
    * @returns Verification metadata (verificationId in production)
    */
-  async sendPhoneVerification(userId: string): Promise<{ verificationId?: string; expiresIn?: number }> {
+  async sendPhoneVerification(
+    userId: string,
+  ): Promise<{ verificationId?: string; expiresIn?: number }> {
     const user = await UserModel.findById(userId);
     if (!user) {
       throw new Error('User not found');
@@ -100,7 +103,9 @@ export const VerificationService = {
    * @param userId - User ID to verify
    * @returns Verification metadata (verificationId in production)
    */
-  async sendPhoneVerificationVoice(userId: string): Promise<{ verificationId?: string; expiresIn?: number }> {
+  async sendPhoneVerificationVoice(
+    userId: string,
+  ): Promise<{ verificationId?: string; expiresIn?: number }> {
     const user = await UserModel.findById(userId);
     if (!user) {
       throw new Error('User not found');
@@ -252,7 +257,9 @@ export const VerificationService = {
   },
 
   // ID Verification (Veriff)
-  async initiateIDVerification(userId: string): Promise<{ verificationUrl: string; sessionId: string }> {
+  async initiateIDVerification(
+    userId: string,
+  ): Promise<{ verificationUrl: string; sessionId: string }> {
     try {
       logger.info(`Initiating Veriff ID verification for user: ${userId}`);
 
@@ -336,13 +343,18 @@ export const VerificationService = {
 
       // Fire-and-forget push notification for ID verification result
       if (internalStatus === 'approved' || internalStatus === 'rejected') {
-        getPushService().sendToUser(userId, {
-          title: 'Verification Update',
-          body: internalStatus === 'approved'
-            ? 'Your ID verification has been approved!'
-            : 'Your ID verification requires attention',
-          data: { type: 'verification', status: internalStatus },
-        }).catch(() => { /* fire-and-forget */ });
+        getPushService()
+          .sendToUser(userId, {
+            title: 'Verification Update',
+            body:
+              internalStatus === 'approved'
+                ? 'Your ID verification has been approved!'
+                : 'Your ID verification requires attention',
+            data: { type: 'verification', status: internalStatus },
+          })
+          .catch(() => {
+            /* fire-and-forget */
+          });
       }
 
       logger.info(`ID verification completed for user ${userId}`, {
@@ -427,10 +439,7 @@ export const VerificationService = {
    * 2. Wait 5 business days (handled by dataRetentionWorker)
    * 3. Finalize to 'rejected', then process refund
    */
-  async processBackgroundCheckResult(
-    userId: string,
-    applicationId: string,
-  ): Promise<void> {
+  async processBackgroundCheckResult(userId: string, applicationId: string): Promise<void> {
     try {
       logger.info(`Processing Certn result for user ${userId}`, { applicationId });
 
@@ -529,15 +538,24 @@ export const VerificationService = {
       }
 
       // Fire-and-forget push notification for background check result
-      if (internalStatus === 'approved' || internalStatus === 'rejected' || internalStatus === 'consider') {
+      if (
+        internalStatus === 'approved' ||
+        internalStatus === 'rejected' ||
+        internalStatus === 'consider'
+      ) {
         const pushStatus = internalStatus === 'approved' ? 'approved' : 'requires_attention';
-        getPushService().sendToUser(userId, {
-          title: 'Verification Update',
-          body: pushStatus === 'approved'
-            ? 'Your background check has been approved!'
-            : 'Your verification requires attention',
-          data: { type: 'verification', status: pushStatus },
-        }).catch(() => { /* fire-and-forget */ });
+        getPushService()
+          .sendToUser(userId, {
+            title: 'Verification Update',
+            body:
+              pushStatus === 'approved'
+                ? 'Your background check has been approved!'
+                : 'Your verification requires attention',
+            data: { type: 'verification', status: pushStatus },
+          })
+          .catch(() => {
+            /* fire-and-forget */
+          });
       }
 
       logger.info(`Background check processed for user ${userId}`, {
@@ -707,7 +725,9 @@ export const VerificationService = {
    */
   async handleCertnWebhook(payload: Record<string, unknown>): Promise<void> {
     const event = payload.event as string;
-    const data = payload.data as { id?: string; applicant_id?: string; status?: string } | undefined;
+    const data = payload.data as
+      | { id?: string; applicant_id?: string; status?: string }
+      | undefined;
     const applicationId = data?.id;
     const applicantId = data?.applicant_id;
     const status = data?.status;

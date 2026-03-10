@@ -111,9 +111,7 @@ describe('Contract: GET /api/verification/status', () => {
   });
 
   it('should return 401 when no auth token provided', async () => {
-    await request(app)
-      .get('/api/verification/status')
-      .expect(401);
+    await request(app).get('/api/verification/status').expect(401);
   });
 
   it('should respond within 100ms (P95)', async () => {

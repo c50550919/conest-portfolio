@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -57,7 +57,9 @@ export async function up(knex: Knex): Promise<void> {
   }
 
   const tables = [hasProfilesTable && 'profiles', hasParentsTable && 'parents'].filter(Boolean);
-  console.log(`Village living preference fields added to: ${tables.join(', ') || 'no tables found'}`);
+  console.log(
+    `Village living preference fields added to: ${tables.join(', ') || 'no tables found'}`,
+  );
 }
 
 export async function down(knex: Knex): Promise<void> {

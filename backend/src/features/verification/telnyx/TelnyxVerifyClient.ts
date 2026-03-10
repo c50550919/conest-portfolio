@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -171,13 +171,12 @@ export class TelnyxVerifyClient {
       const encodedPhone = encodeURIComponent(normalizedPhone);
 
       // Per official docs: phone number in URL path, code + profile_id in body
-      const response = await this.client.post<{ data: { phone_number: string; response_code: string } }>(
-        `/verifications/by_phone_number/${encodedPhone}/actions/verify`,
-        {
-          code: code,
-          verify_profile_id: this.verifyProfileId,
-        },
-      );
+      const response = await this.client.post<{
+        data: { phone_number: string; response_code: string };
+      }>(`/verifications/by_phone_number/${encodedPhone}/actions/verify`, {
+        code: code,
+        verify_profile_id: this.verifyProfileId,
+      });
 
       // Response format: { data: { phone_number: string, response_code: "accepted" } }
       const responseCode = response.data.data.response_code;
@@ -325,11 +324,11 @@ export class TelnyxVerifyClient {
     if (!normalized.startsWith('+')) {
       // Remove leading 1 if present (to avoid +11...)
       if (normalized.startsWith('1') && normalized.length === 11) {
-        normalized = `+${  normalized}`;
+        normalized = `+${normalized}`;
       } else if (normalized.length === 10) {
-        normalized = `+1${  normalized}`;
+        normalized = `+1${normalized}`;
       } else {
-        normalized = `+${  normalized}`;
+        normalized = `+${normalized}`;
       }
     }
 
@@ -341,7 +340,7 @@ export class TelnyxVerifyClient {
    */
   private maskPhoneNumber(phone: string): string {
     if (phone.length < 6) return '***';
-    return `${phone.substring(0, 3)  }****${  phone.substring(phone.length - 4)}`;
+    return `${phone.substring(0, 3)}****${phone.substring(phone.length - 4)}`;
   }
 
   /**

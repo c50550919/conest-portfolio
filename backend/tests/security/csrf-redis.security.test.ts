@@ -81,7 +81,7 @@ describe('CSRF Redis Security Tests', () => {
       const storedTokensJson = await redis.get(`csrf:${sessionId}`);
       expect(storedTokensJson).toBeDefined();
 
-      const storedTokens = JSON.parse(storedTokensJson!);
+      const storedTokens = JSON.parse(storedTokensJson);
       expect(storedTokens).toContain(token);
     });
 
@@ -102,7 +102,7 @@ describe('CSRF Redis Security Tests', () => {
       const token3 = await generateCSRFToken(sessionId);
 
       const storedTokensJson = await redis.get(`csrf:${sessionId}`);
-      const storedTokens = JSON.parse(storedTokensJson!);
+      const storedTokens = JSON.parse(storedTokensJson);
 
       expect(storedTokens).toHaveLength(3);
       expect(storedTokens).toContain(token1);
@@ -120,7 +120,7 @@ describe('CSRF Redis Security Tests', () => {
       }
 
       const storedTokensJson = await redis.get(`csrf:${sessionId}`);
-      const storedTokens = JSON.parse(storedTokensJson!);
+      const storedTokens = JSON.parse(storedTokensJson);
 
       // Should only keep last 5 tokens
       expect(storedTokens).toHaveLength(5);
@@ -472,7 +472,7 @@ describe('CSRF Redis Security Tests', () => {
       await redis.expire(`csrf:${sessionId}`, 1);
 
       // Wait for expiration
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      await new Promise((resolve) => setTimeout(resolve, 1100));
 
       // Token should be expired
       expect(await validateCSRFToken(sessionId, token)).toBe(false);
@@ -494,11 +494,9 @@ describe('CSRF Redis Security Tests', () => {
       expect(uniqueTokens.size).toBe(10);
 
       // All tokens should be valid
-      const validationPromises = tokens.map(token =>
-        validateCSRFToken(sessionId, token),
-      );
+      const validationPromises = tokens.map((token) => validateCSRFToken(sessionId, token));
       const results = await Promise.all(validationPromises);
-      expect(results.every(result => result === true)).toBe(true);
+      expect(results.every((result) => result === true)).toBe(true);
     });
   });
 });

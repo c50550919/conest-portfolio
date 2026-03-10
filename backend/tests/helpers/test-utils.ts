@@ -54,7 +54,9 @@ export async function setupTestDatabase(): Promise<void> {
   await db.migrate.latest();
 
   // Clear all test data
-  await db.raw('TRUNCATE TABLE users, profiles, verifications, swipes, matches RESTART IDENTITY CASCADE');
+  await db.raw(
+    'TRUNCATE TABLE users, profiles, verifications, swipes, matches RESTART IDENTITY CASCADE',
+  );
 }
 
 /**
@@ -63,7 +65,9 @@ export async function setupTestDatabase(): Promise<void> {
 export async function teardownTestDatabase(): Promise<void> {
   if (db) {
     // Clean up test data
-    await db.raw('TRUNCATE TABLE users, profiles, verifications, swipes, matches RESTART IDENTITY CASCADE');
+    await db.raw(
+      'TRUNCATE TABLE users, profiles, verifications, swipes, matches RESTART IDENTITY CASCADE',
+    );
 
     // Close connection
     await db.destroy();
@@ -112,7 +116,11 @@ export async function createTestUser(options: CreateTestUserOptions): Promise<Te
     id_verification_status: idVerified ? 'approved' : 'pending',
     background_check_status: backgroundCheckComplete ? 'clear' : 'pending',
     fully_verified: verified && idVerified && backgroundCheckComplete && phoneVerified,
-    verification_score: (verified ? 25 : 0) + (idVerified ? 25 : 0) + (backgroundCheckComplete ? 25 : 0) + (phoneVerified ? 25 : 0),
+    verification_score:
+      (verified ? 25 : 0) +
+      (idVerified ? 25 : 0) +
+      (backgroundCheckComplete ? 25 : 0) +
+      (phoneVerified ? 25 : 0),
     created_at: new Date(),
     updated_at: new Date(),
   });
@@ -168,11 +176,7 @@ export function getAuthToken(
 ): string {
   const JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-testing-only';
   const expiresIn = options.expiresIn || '1h';
-  const token = jwt.sign(
-    { userId, email },
-    JWT_SECRET,
-    { expiresIn } as jwt.SignOptions,
-  );
+  const token = jwt.sign({ userId, email }, JWT_SECRET, { expiresIn } as jwt.SignOptions);
   return token;
 }
 
@@ -192,10 +196,7 @@ export function getAuthHeader(userId: string, email: string = 'test@example.com'
 export function getExpiredAuthToken(userId: string, email: string = 'test@example.com'): string {
   const JWT_SECRET = process.env.JWT_SECRET || 'test-secret-key-for-testing-only';
   // Create token that expired 1 hour ago
-  const token = jwt.sign(
-    { userId, email, exp: Math.floor(Date.now() / 1000) - 3600 },
-    JWT_SECRET,
-  );
+  const token = jwt.sign({ userId, email, exp: Math.floor(Date.now() / 1000) - 3600 }, JWT_SECRET);
   return token;
 }
 
@@ -218,7 +219,9 @@ export function getDatabase(): Knex {
  */
 export async function clearTestData(): Promise<void> {
   if (db) {
-    await db.raw('TRUNCATE TABLE users, profiles, verifications, swipes, matches RESTART IDENTITY CASCADE');
+    await db.raw(
+      'TRUNCATE TABLE users, profiles, verifications, swipes, matches RESTART IDENTITY CASCADE',
+    );
   }
 }
 
@@ -237,9 +240,9 @@ export async function createTestUsers(
       ...baseOptions,
       profile: baseOptions.profile
         ? {
-          ...baseOptions.profile,
-          firstName: `TestUser${i}`,
-        }
+            ...baseOptions.profile,
+            firstName: `TestUser${i}`,
+          }
         : undefined,
     });
     users.push(user);

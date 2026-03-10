@@ -29,28 +29,22 @@ describe('Matching Algorithm', () => {
     await db('users').del();
 
     // Create test users with different profiles
-    const user1 = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'user1@test.com',
-        password: 'SecurePass123!',
-      });
+    const user1 = await request(app).post('/api/auth/register').send({
+      email: 'user1@test.com',
+      password: 'SecurePass123!',
+    });
     user1Token = user1.body.accessToken;
 
-    const user2 = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'user2@test.com',
-        password: 'SecurePass123!',
-      });
+    const user2 = await request(app).post('/api/auth/register').send({
+      email: 'user2@test.com',
+      password: 'SecurePass123!',
+    });
     user2Token = user2.body.accessToken;
 
-    const user3 = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'user3@test.com',
-        password: 'SecurePass123!',
-      });
+    const user3 = await request(app).post('/api/auth/register').send({
+      email: 'user3@test.com',
+      password: 'SecurePass123!',
+    });
     user3Token = user3.body.accessToken;
 
     // Create profiles with different characteristics
@@ -164,9 +158,7 @@ describe('Matching Algorithm', () => {
         .expect(200);
 
       // User1 and User2 should have high compatibility (similar values, location)
-      const matchWithUser2 = response.body.find(
-        (m: any) => m.profile_id === profile2Id,
-      );
+      const matchWithUser2 = response.body.find((m: any) => m.profile_id === profile2Id);
 
       expect(matchWithUser2).toBeDefined();
       expect(matchWithUser2.compatibility_score).toBeGreaterThan(0.7);
@@ -179,9 +171,7 @@ describe('Matching Algorithm', () => {
         .expect(200);
 
       // User1 (Austin) and User3 (Houston) should have lower location compatibility
-      const matchWithUser3 = response.body.find(
-        (m: any) => m.profile_id === profile3Id,
-      );
+      const matchWithUser3 = response.body.find((m: any) => m.profile_id === profile3Id);
 
       if (matchWithUser3) {
         expect(matchWithUser3.score_breakdown.location).toBeLessThan(0.5);
@@ -236,9 +226,7 @@ describe('Matching Algorithm', () => {
         .set('Authorization', `Bearer ${user1Token}`)
         .expect(200);
 
-      const matchWithUser2 = response.body.find(
-        (m: any) => m.profile_id === profile2Id,
-      );
+      const matchWithUser2 = response.body.find((m: any) => m.profile_id === profile2Id);
 
       expect(matchWithUser2).toBeUndefined();
     });
@@ -415,9 +403,7 @@ describe('Matching Algorithm', () => {
         .set('Authorization', `Bearer ${user1Token}`)
         .expect(200);
 
-      const matchWithUser2 = response.body.find(
-        (m: any) => m.profile_id === profile2Id,
-      );
+      const matchWithUser2 = response.body.find((m: any) => m.profile_id === profile2Id);
 
       expect(matchWithUser2.score_breakdown.budget).toBeGreaterThan(0.5);
     });
@@ -429,9 +415,7 @@ describe('Matching Algorithm', () => {
         .set('Authorization', `Bearer ${user1Token}`)
         .expect(200);
 
-      const matchWithUser2 = response.body.find(
-        (m: any) => m.profile_id === profile2Id,
-      );
+      const matchWithUser2 = response.body.find((m: any) => m.profile_id === profile2Id);
 
       // Should still match but with lower house_rules score
       expect(matchWithUser2.score_breakdown.house_rules).toBeLessThan(1.0);

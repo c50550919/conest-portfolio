@@ -627,9 +627,9 @@ describe('MessagesService', () => {
 
       (MessageModel.getConversationMessages as jest.Mock).mockResolvedValueOnce(mockMessages);
 
-      await expect(
-        messagesService.deleteMessage(messageId, mockMatch.user_id_1),
-      ).rejects.toThrow('UNAUTHORIZED_DELETE');
+      await expect(messagesService.deleteMessage(messageId, mockMatch.user_id_1)).rejects.toThrow(
+        'UNAUTHORIZED_DELETE',
+      );
     });
   });
 });

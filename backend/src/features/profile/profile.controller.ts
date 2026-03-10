@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -28,12 +28,17 @@ import { getEmailService } from '../../services/emailService';
 function calculateProfileCompletion(parent: Record<string, unknown>): number {
   let pct = 10; // base: account exists
   if (parent.city && parent.state && parent.zip_code) pct += 15;
-  if (parent.budget_min != null && parent.budget_max != null &&
-      (parent.budget_min as number) > 0 || (parent.budget_max as number) > 0) pct += 15;
+  if (
+    (parent.budget_min !== null &&
+      parent.budget_max !== null &&
+      (parent.budget_min as number) > 0) ||
+    (parent.budget_max as number) > 0
+  )
+    pct += 15;
   if (parent.date_of_birth) pct += 10;
   if (parent.bio) pct += 10;
   if (parent.occupation) pct += 10;
-  if (parent.work_schedule || parent.work_from_home != null) pct += 10;
+  if (parent.work_schedule || parent.work_from_home !== null) pct += 10;
   if (parent.parenting_style) pct += 5;
   if ((parent.children_count as number) > 0) pct += 5;
   if (parent.housing_status) pct += 5;
@@ -193,7 +198,10 @@ export const profileController = {
         await trx('pre_qualification_responses').where('user_id', userId).delete();
         await trx('saved_profiles').where('user_id', userId).delete();
         await trx('swipes').where('user_id', userId).orWhere('target_user_id', userId).delete();
-        await trx('connection_requests').where('sender_id', userId).orWhere('recipient_id', userId).delete();
+        await trx('connection_requests')
+          .where('sender_id', userId)
+          .orWhere('recipient_id', userId)
+          .delete();
         await trx('matches').where('user_id_1', userId).orWhere('user_id_2', userId).delete();
         await trx('household_members').where('user_id', userId).delete();
         await trx('match_group_members').where('user_id', userId).delete();
@@ -424,7 +432,8 @@ export const profileController = {
       return;
     }
 
-    const { housingStatus, roomRentShare, roomAvailableDate, roomDescription, roomPhotoUrl } = req.body;
+    const { housingStatus, roomRentShare, roomAvailableDate, roomDescription, roomPhotoUrl } =
+      req.body;
 
     // When clearing housing status, clear all room fields
     if (housingStatus === null) {
@@ -483,8 +492,15 @@ export const profileController = {
     }
 
     const {
-      scheduleType, workFromHome, parentingStyle, bio,
-      occupation, dateOfBirth, childrenCount, childrenAgeGroups, moveInDate,
+      scheduleType,
+      workFromHome,
+      parentingStyle,
+      bio,
+      occupation,
+      dateOfBirth,
+      childrenCount,
+      childrenAgeGroups,
+      moveInDate,
     } = req.body;
 
     const updateData: Record<string, unknown> = {};

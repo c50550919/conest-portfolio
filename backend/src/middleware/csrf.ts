@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -51,9 +51,7 @@ export async function generateCSRFToken(sessionId: string): Promise<string> {
   try {
     // Get existing tokens for this session
     const existingTokensJson = await redis.get(redisKey);
-    const existingTokens: string[] = existingTokensJson
-      ? JSON.parse(existingTokensJson)
-      : [];
+    const existingTokens: string[] = existingTokensJson ? JSON.parse(existingTokensJson) : [];
 
     // Add new token
     existingTokens.push(token);
@@ -80,10 +78,7 @@ export async function generateCSRFToken(sessionId: string): Promise<string> {
  * @param token - CSRF token to validate
  * @returns True if token is valid
  */
-export async function validateCSRFToken(
-  sessionId: string,
-  token: string,
-): Promise<boolean> {
+export async function validateCSRFToken(sessionId: string, token: string): Promise<boolean> {
   const redisKey = `${CSRF_KEY_PREFIX}${sessionId}`;
 
   try {

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -63,7 +63,10 @@ export const MessageModel = {
     return conversation;
   },
 
-  async findConversation(participant1Id: string, participant2Id: string): Promise<Conversation | undefined> {
+  async findConversation(
+    participant1Id: string,
+    participant2Id: string,
+  ): Promise<Conversation | undefined> {
     return await db('conversations')
       .where((builder) => {
         void builder
@@ -102,15 +105,17 @@ export const MessageModel = {
 
   async getConversationMessages(conversationId: string, limit: number = 50): Promise<Message[]> {
     return await db('messages')
-      .where({ conversation_id: conversationId, deleted_by_sender: false, deleted_by_recipient: false })
+      .where({
+        conversation_id: conversationId,
+        deleted_by_sender: false,
+        deleted_by_recipient: false,
+      })
       .orderBy('created_at', 'desc')
       .limit(limit);
   },
 
   async markAsRead(messageId: string): Promise<void> {
-    await db('messages')
-      .where({ id: messageId })
-      .update({ read_at: db.fn.now() });
+    await db('messages').where({ id: messageId }).update({ read_at: db.fn.now() });
   },
 
   async markConversationAsRead(conversationId: string, userId: string): Promise<void> {
@@ -122,14 +127,12 @@ export const MessageModel = {
   },
 
   async deleteMessage(messageId: string): Promise<void> {
-    await db('messages')
-      .where({ id: messageId })
-      .update({ deleted_by_sender: true });
+    await db('messages').where({ id: messageId }).update({ deleted_by_sender: true });
   },
 
   async getUnreadCount(userId: string): Promise<number> {
     const conversations = await this.getUserConversations(userId);
-    const conversationIds = conversations.map(c => c.id);
+    const conversationIds = conversations.map((c) => c.id);
 
     if (conversationIds.length === 0) return 0;
 

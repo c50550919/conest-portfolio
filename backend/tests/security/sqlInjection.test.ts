@@ -17,7 +17,7 @@ describe('SQL Injection Prevention', () => {
         '1; DELETE FROM users',
       ];
 
-      injectionAttempts.forEach(attempt => {
+      injectionAttempts.forEach((attempt) => {
         expect(hasSQLInjection(attempt)).toBe(true);
       });
     });
@@ -32,32 +32,23 @@ describe('SQL Injection Prevention', () => {
         'EXEC sp_executesql',
       ];
 
-      injectionAttempts.forEach(attempt => {
+      injectionAttempts.forEach((attempt) => {
         expect(hasSQLInjection(attempt)).toBe(true);
       });
     });
 
     it('should allow safe input without SQL patterns', () => {
-      const safeInputs = [
-        'john@example.com',
-        'John Doe',
-        'My address is 123 Main St',
-        '555-1234',
-      ];
+      const safeInputs = ['john@example.com', 'John Doe', 'My address is 123 Main St', '555-1234'];
 
-      safeInputs.forEach(input => {
+      safeInputs.forEach((input) => {
         expect(hasSQLInjection(input)).toBe(false);
       });
     });
 
     it('should detect comment-based injection', () => {
-      const commentInjections = [
-        'admin/*comment*/',
-        'test--comment',
-        'user/**/OR/**/1=1',
-      ];
+      const commentInjections = ['admin/*comment*/', 'test--comment', 'user/**/OR/**/1=1'];
 
-      commentInjections.forEach(injection => {
+      commentInjections.forEach((injection) => {
         expect(hasSQLInjection(injection)).toBe(true);
       });
     });

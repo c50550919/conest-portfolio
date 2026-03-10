@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -68,11 +68,15 @@ export class ConnectionRequestService {
     }
 
     // Fire-and-forget push notification to recipient
-    getPushService().sendToUser(recipientId, {
-      title: 'New Connection Request',
-      body: 'Someone wants to connect with you',
-      data: { type: 'connection_request' },
-    }).catch(() => { /* fire-and-forget */ });
+    getPushService()
+      .sendToUser(recipientId, {
+        title: 'New Connection Request',
+        body: 'Someone wants to connect with you',
+        data: { type: 'connection_request' },
+      })
+      .catch(() => {
+        /* fire-and-forget */
+      });
 
     return request;
   }
@@ -90,10 +94,7 @@ export class ConnectionRequestService {
   /**
    * Get all connection requests sent by a user
    */
-  async getSentRequests(
-    userId: string,
-    status?: string,
-  ): Promise<ConnectionRequestWithProfiles[]> {
+  async getSentRequests(userId: string, status?: string): Promise<ConnectionRequestWithProfiles[]> {
     return await ConnectionRequestModel.findBySenderId(userId, status);
   }
 
@@ -126,11 +127,7 @@ export class ConnectionRequestService {
       throw new Error('RESPONSE_MESSAGE_TOO_LONG');
     }
 
-    const request = await ConnectionRequestModel.accept(
-      id,
-      recipientId,
-      responseMessage,
-    );
+    const request = await ConnectionRequestModel.accept(id, recipientId, responseMessage);
 
     // Send real-time notification to sender
     try {
@@ -168,11 +165,7 @@ export class ConnectionRequestService {
       throw new Error('RESPONSE_MESSAGE_TOO_LONG');
     }
 
-    const request = await ConnectionRequestModel.decline(
-      id,
-      recipientId,
-      responseMessage,
-    );
+    const request = await ConnectionRequestModel.decline(id, recipientId, responseMessage);
 
     // Send real-time notification to sender
     try {
@@ -213,9 +206,7 @@ export class ConnectionRequestService {
    * Get rate limit status for a user
    * Returns remaining requests for today and this week
    */
-  async getRateLimitStatus(
-    userId: string,
-  ): Promise<{ daily: number; weekly: number }> {
+  async getRateLimitStatus(userId: string): Promise<{ daily: number; weekly: number }> {
     return await ConnectionRequestModel.getRateLimitStatus(userId);
   }
 

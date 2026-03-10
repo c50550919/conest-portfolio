@@ -24,12 +24,10 @@ describe('Child Safety Compliance', () => {
     await db('profiles').del();
     await db('users').del();
 
-    const registerRes = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'safety@test.com',
-        password: 'SecurePass123!',
-      });
+    const registerRes = await request(app).post('/api/auth/register').send({
+      email: 'safety@test.com',
+      password: 'SecurePass123!',
+    });
 
     authToken = registerRes.body.accessToken;
     userId = registerRes.body.user.id;
@@ -306,26 +304,15 @@ describe('Child Safety Compliance', () => {
 
   describe('Access Control - Children Never Interact', () => {
     it('should NOT have any endpoints accessible without authentication', async () => {
-      const publicEndpoints = [
-        '/api/profiles',
-        '/api/matches',
-        '/api/messages',
-        '/api/households',
-      ];
+      const publicEndpoints = ['/api/profiles', '/api/matches', '/api/messages', '/api/households'];
 
       for (const endpoint of publicEndpoints) {
-        await request(app)
-          .get(endpoint)
-          .expect(401);
+        await request(app).get(endpoint).expect(401);
       }
     });
 
     it('should NOT have any child-specific endpoints', async () => {
-      const childEndpoints = [
-        '/api/children',
-        '/api/child-profiles',
-        '/api/kids',
-      ];
+      const childEndpoints = ['/api/children', '/api/child-profiles', '/api/kids'];
 
       for (const endpoint of childEndpoints) {
         const response = await request(app)
@@ -382,7 +369,7 @@ describe('Child Safety Compliance', () => {
         logs_violations: true, // Verified in previous tests
       };
 
-      const allChecksPassed = Object.values(checks).every(check => check === true);
+      const allChecksPassed = Object.values(checks).every((check) => check === true);
 
       expect(allChecksPassed).toBe(true);
 

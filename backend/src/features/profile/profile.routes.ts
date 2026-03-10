@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -33,8 +33,16 @@ router.delete('/me', profileController.deleteProfile);
 // Slim Onboarding Endpoints
 router.put('/location', validate(schemas.updateLocation), profileController.updateLocation);
 router.put('/budget', validate(schemas.updateBudget), profileController.updateBudget);
-router.put('/housing-status', validate(schemas.updateHousingStatus), profileController.updateHousingStatus);
-router.put('/progressive', validate(schemas.updateProgressiveProfile), profileController.updateProgressiveProfile);
+router.put(
+  '/housing-status',
+  validate(schemas.updateHousingStatus),
+  profileController.updateHousingStatus,
+);
+router.put(
+  '/progressive',
+  validate(schemas.updateProgressiveProfile),
+  profileController.updateProgressiveProfile,
+);
 
 // Profile photo upload
 // POST /api/profiles/photo - Upload profile photo

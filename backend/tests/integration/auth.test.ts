@@ -32,11 +32,7 @@ describe('Authentication Integration', () => {
 
     it('should generate JWT token after registration', () => {
       const userId = 'user-123';
-      const token = jwt.sign(
-        { userId, role: 'user' },
-        JWT_SECRET,
-        { expiresIn: '15m' },
-      );
+      const token = jwt.sign({ userId, role: 'user' }, JWT_SECRET, { expiresIn: '15m' });
 
       const decoded = jwt.verify(token, JWT_SECRET) as any;
 
@@ -60,17 +56,9 @@ describe('Authentication Integration', () => {
     it('should generate access and refresh tokens', () => {
       const userId = 'user-123';
 
-      const accessToken = jwt.sign(
-        { userId, type: 'access' },
-        JWT_SECRET,
-        { expiresIn: '15m' },
-      );
+      const accessToken = jwt.sign({ userId, type: 'access' }, JWT_SECRET, { expiresIn: '15m' });
 
-      const refreshToken = jwt.sign(
-        { userId, type: 'refresh' },
-        JWT_SECRET,
-        { expiresIn: '7d' },
-      );
+      const refreshToken = jwt.sign({ userId, type: 'refresh' }, JWT_SECRET, { expiresIn: '7d' });
 
       const accessDecoded = jwt.verify(accessToken, JWT_SECRET) as any;
       const refreshDecoded = jwt.verify(refreshToken, JWT_SECRET) as any;
@@ -103,11 +91,9 @@ describe('Authentication Integration', () => {
 
   describe('Token Refresh Flow', () => {
     it('should validate refresh token before issuing new access token', () => {
-      const refreshToken = jwt.sign(
-        { userId: 'user-123', type: 'refresh' },
-        JWT_SECRET,
-        { expiresIn: '7d' },
-      );
+      const refreshToken = jwt.sign({ userId: 'user-123', type: 'refresh' }, JWT_SECRET, {
+        expiresIn: '7d',
+      });
 
       const decoded = jwt.verify(refreshToken, JWT_SECRET) as any;
 
@@ -116,11 +102,9 @@ describe('Authentication Integration', () => {
     });
 
     it('should issue new access token with short expiry', () => {
-      const newAccessToken = jwt.sign(
-        { userId: 'user-123', type: 'access' },
-        JWT_SECRET,
-        { expiresIn: '15m' },
-      );
+      const newAccessToken = jwt.sign({ userId: 'user-123', type: 'access' }, JWT_SECRET, {
+        expiresIn: '15m',
+      });
 
       const decoded = jwt.verify(newAccessToken, JWT_SECRET) as any;
       const expiresIn = decoded.exp - decoded.iat;
@@ -151,11 +135,9 @@ describe('Authentication Integration', () => {
 
   describe('Password Reset Flow', () => {
     it('should generate password reset token', () => {
-      const resetToken = jwt.sign(
-        { userId: 'user-123', type: 'password-reset' },
-        JWT_SECRET,
-        { expiresIn: '1h' },
-      );
+      const resetToken = jwt.sign({ userId: 'user-123', type: 'password-reset' }, JWT_SECRET, {
+        expiresIn: '1h',
+      });
 
       const decoded = jwt.verify(resetToken, JWT_SECRET) as any;
 

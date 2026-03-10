@@ -58,12 +58,10 @@ describe('POST /api/auth/oauth/apple - Contract Tests', () => {
     });
 
     it('should reject request with empty identityToken (or return 404 if not implemented)', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/apple')
-        .send({
-          identityToken: '',
-          nonce: 'test-nonce',
-        });
+      const response = await request(app).post('/api/auth/oauth/apple').send({
+        identityToken: '',
+        nonce: 'test-nonce',
+      });
 
       expect([400, 404]).toContain(response.status);
 
@@ -74,12 +72,10 @@ describe('POST /api/auth/oauth/apple - Contract Tests', () => {
     });
 
     it('should reject request with empty nonce (or return 404 if not implemented)', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/apple')
-        .send({
-          identityToken: 'mock-token',
-          nonce: '',
-        });
+      const response = await request(app).post('/api/auth/oauth/apple').send({
+        identityToken: 'mock-token',
+        nonce: '',
+      });
 
       expect([400, 404]).toContain(response.status);
 
@@ -90,24 +86,20 @@ describe('POST /api/auth/oauth/apple - Contract Tests', () => {
     });
 
     it('should handle invalid fullName structure (or return 404 if not implemented)', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/apple')
-        .send({
-          identityToken: 'mock-token',
-          nonce: 'test-nonce',
-          fullName: 'invalid-string',
-        });
+      const response = await request(app).post('/api/auth/oauth/apple').send({
+        identityToken: 'mock-token',
+        nonce: 'test-nonce',
+        fullName: 'invalid-string',
+      });
 
       expect([400, 404]).toContain(response.status);
     });
 
     it('should accept minimal valid request (may fail auth or return 404)', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/apple')
-        .send({
-          identityToken: 'eyJraWQiOiJmaDZCczhDIiwiYWxnIjoiUlMyNTYifQ.payload.signature',
-          nonce: 'test-nonce-123',
-        });
+      const response = await request(app).post('/api/auth/oauth/apple').send({
+        identityToken: 'eyJraWQiOiJmaDZCczhDIiwiYWxnIjoiUlMyNTYifQ.payload.signature',
+        nonce: 'test-nonce-123',
+      });
 
       // Should pass validation but fail authentication, or return 404 if not implemented
       expect([400, 401, 404, 500]).toContain(response.status);
@@ -132,35 +124,29 @@ describe('POST /api/auth/oauth/apple - Contract Tests', () => {
 
   describe('Authentication Errors - 401 Unauthorized', () => {
     it('should return unauthorized or not found for invalid Apple token', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/apple')
-        .send({
-          identityToken: 'invalid-apple-token-xyz',
-          nonce: 'test-nonce',
-        });
+      const response = await request(app).post('/api/auth/oauth/apple').send({
+        identityToken: 'invalid-apple-token-xyz',
+        nonce: 'test-nonce',
+      });
 
       // 401 for invalid token, 404 if endpoint not implemented
       expect([400, 401, 404]).toContain(response.status);
     });
 
     it('should return error for malformed token', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/apple')
-        .send({
-          identityToken: 'not.a.valid.token',
-          nonce: 'test-nonce',
-        });
+      const response = await request(app).post('/api/auth/oauth/apple').send({
+        identityToken: 'not.a.valid.token',
+        nonce: 'test-nonce',
+      });
 
       expect([400, 401, 404]).toContain(response.status);
     });
 
     it('should return error for short invalid token', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/apple')
-        .send({
-          identityToken: 'short',
-          nonce: 'test-nonce',
-        });
+      const response = await request(app).post('/api/auth/oauth/apple').send({
+        identityToken: 'short',
+        nonce: 'test-nonce',
+      });
 
       expect([400, 401, 404]).toContain(response.status);
     });
@@ -250,12 +236,10 @@ describe('POST /api/auth/oauth/apple - Contract Tests', () => {
     });
 
     it('should return proper error format for auth errors (or 404)', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/apple')
-        .send({
-          identityToken: 'invalid-token',
-          nonce: 'test-nonce',
-        });
+      const response = await request(app).post('/api/auth/oauth/apple').send({
+        identityToken: 'invalid-token',
+        nonce: 'test-nonce',
+      });
 
       expect([400, 401, 404]).toContain(response.status);
 
@@ -276,9 +260,7 @@ describe('POST /api/auth/oauth/apple - Contract Tests', () => {
     it('should respond within 2 seconds', async () => {
       const start = Date.now();
 
-      await request(app)
-        .post('/api/auth/oauth/apple')
-        .send({ nonce: 'test-nonce' });
+      await request(app).post('/api/auth/oauth/apple').send({ nonce: 'test-nonce' });
 
       const duration = Date.now() - start;
 
@@ -289,24 +271,20 @@ describe('POST /api/auth/oauth/apple - Contract Tests', () => {
 
   describe('Security Headers', () => {
     it('should include response headers', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/apple')
-        .send({
-          identityToken: 'test-token',
-          nonce: 'test-nonce',
-        });
+      const response = await request(app).post('/api/auth/oauth/apple').send({
+        identityToken: 'test-token',
+        nonce: 'test-nonce',
+      });
 
       // Check for basic headers
       expect(response.headers).toBeDefined();
     });
 
     it('should not expose sensitive server information', async () => {
-      const response = await request(app)
-        .post('/api/auth/oauth/apple')
-        .send({
-          identityToken: 'test-token',
-          nonce: 'test-nonce',
-        });
+      const response = await request(app).post('/api/auth/oauth/apple').send({
+        identityToken: 'test-token',
+        nonce: 'test-nonce',
+      });
 
       // Should not expose internal details
       if (response.body.message) {

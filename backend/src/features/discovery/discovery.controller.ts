@@ -1,17 +1,14 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
  */
 import { Response } from 'express';
 import DiscoveryService from './discovery.service';
-import {
-  GetProfilesQuerySchema,
-  ScreenshotBodySchema,
-} from '../../validators/discoverySchemas';
+import { GetProfilesQuerySchema, ScreenshotBodySchema } from '../../validators/discoverySchemas';
 import { z } from 'zod';
 import SocketService from '../../services/SocketService';
 import logger from '../../config/logger';
@@ -84,7 +81,7 @@ export class DiscoveryController {
         res.status(400).json({
           success: false,
           error: 'Validation error',
-          details: error.errors.map(err => ({
+          details: error.errors.map((err) => ({
             field: err.path.join('.'),
             message: err.message,
           })),
@@ -160,7 +157,7 @@ export class DiscoveryController {
         res.status(400).json({
           success: false,
           error: 'Validation error',
-          details: error.errors.map(err => ({
+          details: error.errors.map((err) => ({
             field: err.path.join('.'),
             message: err.message,
           })),

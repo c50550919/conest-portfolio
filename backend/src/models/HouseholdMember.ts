@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -141,10 +141,7 @@ export const HouseholdMemberModel = {
   },
 
   async update(id: string, data: Partial<HouseholdMember>): Promise<HouseholdMember> {
-    const [member] = await db('household_members')
-      .where({ id })
-      .update(data)
-      .returning('*');
+    const [member] = await db('household_members').where({ id }).update(data).returning('*');
     return member;
   },
 
@@ -259,7 +256,7 @@ export const HouseholdMemberModel = {
       .whereNull('move_out_date')
       .sum('rent_share as total')
       .first();
-    return parseFloat(result?.total as string || '0');
+    return parseFloat((result?.total as string) || '0');
   },
 
   /**

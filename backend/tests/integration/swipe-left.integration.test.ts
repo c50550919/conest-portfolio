@@ -1,6 +1,11 @@
 import request from 'supertest';
 import app from '../../src/app';
-import { setupTestDatabase, teardownTestDatabase, createTestUser, getAuthToken } from '../helpers/test-utils';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+  createTestUser,
+  getAuthToken,
+} from '../helpers/test-utils';
 
 /**
  * Integration Test: Swipe Left (Pass)
@@ -156,7 +161,7 @@ describe('Integration Test: Swipe Left (Pass)', () => {
       expect(response.body.match).toBeUndefined();
     });
 
-    it('should permanently remove profile from user\'s queue', async () => {
+    it("should permanently remove profile from user's queue", async () => {
       // Swipe left
       await request(app)
         .post('/api/discovery/swipe')

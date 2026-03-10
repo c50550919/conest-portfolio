@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -51,14 +51,10 @@ export const matchController = {
     }
 
     // FHA COMPLIANCE: Pass request context for audit logging
-    const match = await MatchingService.createMatch(
-      req.userId,
-      targetUserId,
-      {
-        ipAddress: req.ip || 'unknown',
-        userAgent: req.headers['user-agent'] || 'unknown',
-      },
-    );
+    const match = await MatchingService.createMatch(req.userId, targetUserId, {
+      ipAddress: req.ip || 'unknown',
+      userAgent: req.headers['user-agent'] || 'unknown',
+    });
 
     res.status(201).json({
       success: true,

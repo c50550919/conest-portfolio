@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -37,9 +37,7 @@ function parseSize(size: string): number {
 /**
  * Middleware to enforce request body size limits
  */
-export function requestSizeLimit(
-  maxSize: string = securityConfig.request.maxBodySize,
-) {
+export function requestSizeLimit(maxSize: string = securityConfig.request.maxBodySize) {
   const maxBytes = parseSize(maxSize);
 
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -79,9 +77,7 @@ export function requestSizeLimit(
 /**
  * Middleware to enforce file upload size limits
  */
-export function fileUploadSizeLimit(
-  maxSize: number = securityConfig.request.maxFileSize,
-) {
+export function fileUploadSizeLimit(maxSize: number = securityConfig.request.maxFileSize) {
   return (req: Request, res: Response, next: NextFunction): void => {
     // This works with multer middleware
     const file = (req as any).file;
@@ -120,9 +116,7 @@ export function fileUploadSizeLimit(
 /**
  * Middleware to enforce request timeout
  */
-export function requestTimeout(
-  timeout: number = securityConfig.request.timeout,
-) {
+export function requestTimeout(timeout: number = securityConfig.request.timeout) {
   return (_req: Request, res: Response, next: NextFunction): void => {
     const timer = setTimeout(() => {
       if (!res.headersSent) {

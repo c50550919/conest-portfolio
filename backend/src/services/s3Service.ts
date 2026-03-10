@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -43,19 +43,10 @@ import logger from '../config/logger';
 import { getEnv } from '../config/env';
 
 // Allowed MIME types for profile photos
-const ALLOWED_IMAGE_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-]);
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 // Allowed MIME types for documents (verification)
-const ALLOWED_DOCUMENT_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'application/pdf',
-]);
+const ALLOWED_DOCUMENT_TYPES = new Set(['image/jpeg', 'image/png', 'application/pdf']);
 
 // File size limits in bytes
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -124,7 +115,10 @@ class StorageService {
     // 1. SECURITY_MODE is development/testing
     // 2. OR AWS credentials are not configured
     const isDevMode = env.SECURITY_MODE === 'development' || env.SECURITY_MODE === 'testing';
-    const hasS3Config = env.AWS_ACCESS_KEY_ID && env.AWS_SECRET_ACCESS_KEY && env.AWS_S3_BUCKET !== 'conest-dev-uploads';
+    const hasS3Config =
+      env.AWS_ACCESS_KEY_ID &&
+      env.AWS_SECRET_ACCESS_KEY &&
+      env.AWS_S3_BUCKET !== 'conest-dev-uploads';
 
     if (isDevMode && !hasS3Config) {
       this.useLocalStorage = true;
@@ -243,10 +237,7 @@ class StorageService {
   /**
    * Validate file type against allowed types
    */
-  private validateFileType(
-    mimeType: string,
-    category: UploadOptions['category'],
-  ): boolean {
+  private validateFileType(mimeType: string, category: UploadOptions['category']): boolean {
     if (category === 'profile-photos') {
       return ALLOWED_IMAGE_TYPES.has(mimeType);
     }
@@ -256,10 +247,7 @@ class StorageService {
   /**
    * Validate file size against limits
    */
-  private validateFileSize(
-    size: number,
-    category: UploadOptions['category'],
-  ): boolean {
+  private validateFileSize(size: number, category: UploadOptions['category']): boolean {
     const maxSize = category === 'profile-photos' ? MAX_IMAGE_SIZE : MAX_DOCUMENT_SIZE;
     return size <= maxSize;
   }
@@ -286,9 +274,7 @@ class StorageService {
     // Validate file size
     if (!this.validateFileSize(buffer.length, category)) {
       const maxSize = category === 'profile-photos' ? MAX_IMAGE_SIZE : MAX_DOCUMENT_SIZE;
-      throw new Error(
-        `File too large. Maximum size: ${Math.round(maxSize / 1024 / 1024)}MB`,
-      );
+      throw new Error(`File too large. Maximum size: ${Math.round(maxSize / 1024 / 1024)}MB`);
     }
 
     // Generate unique key

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -32,19 +32,10 @@ interface MulterRequest extends Request {
 }
 
 // Allowed MIME types for profile photos
-const ALLOWED_IMAGE_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-]);
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 // Allowed MIME types for documents (verification)
-const ALLOWED_DOCUMENT_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'application/pdf',
-]);
+const ALLOWED_DOCUMENT_TYPES = new Set(['image/jpeg', 'image/png', 'application/pdf']);
 
 // File size limits
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -53,22 +44,20 @@ const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024; // 10MB
 /**
  * Create file filter for specific allowed types
  */
-const createFileFilter = (allowedTypes: Set<string>) => (
-  _req: Request,
-  file: Express.Multer.File,
-  callback: FileFilterCallback,
-): void => {
-  // Check MIME type against whitelist
-  if (allowedTypes.has(file.mimetype)) {
-    callback(null, true);
-  } else {
-    callback(
-      new Error(
-        `Invalid file type: ${file.mimetype}. Allowed types: ${Array.from(allowedTypes).join(', ')}`,
-      ),
-    );
-  }
-};
+const createFileFilter =
+  (allowedTypes: Set<string>) =>
+  (_req: Request, file: Express.Multer.File, callback: FileFilterCallback): void => {
+    // Check MIME type against whitelist
+    if (allowedTypes.has(file.mimetype)) {
+      callback(null, true);
+    } else {
+      callback(
+        new Error(
+          `Invalid file type: ${file.mimetype}. Allowed types: ${Array.from(allowedTypes).join(', ')}`,
+        ),
+      );
+    }
+  };
 
 /**
  * Multer configuration for profile photo uploads
@@ -140,7 +129,8 @@ export const handleUploadError = (
       case 'LIMIT_UNEXPECTED_FILE':
         res.status(400).json({
           success: false,
-          error: 'Unexpected field name. Use "photo" for profile photos or "document" for verification docs.',
+          error:
+            'Unexpected field name. Use "photo" for profile photos or "document" for verification docs.',
         });
         return;
       default:
@@ -168,25 +158,23 @@ export const handleUploadError = (
 /**
  * Middleware to validate that a file was actually uploaded
  */
-export const requireFile = (fieldName: string = 'file') => (req: MulterRequest, res: Response, next: NextFunction): void => {
-  if (!req.file) {
-    res.status(400).json({
-      success: false,
-      error: `No file uploaded. Please provide a ${fieldName}.`,
-    });
-    return;
-  }
-  next();
-};
+export const requireFile =
+  (fieldName: string = 'file') =>
+  (req: MulterRequest, res: Response, next: NextFunction): void => {
+    if (!req.file) {
+      res.status(400).json({
+        success: false,
+        error: `No file uploaded. Please provide a ${fieldName}.`,
+      });
+      return;
+    }
+    next();
+  };
 
 /**
  * Middleware to add file metadata to request for logging
  */
-export const logUploadMetadata = (
-  req: MulterRequest,
-  _res: Response,
-  next: NextFunction,
-): void => {
+export const logUploadMetadata = (req: MulterRequest, _res: Response, next: NextFunction): void => {
   if (req.file) {
     logger.info('File upload received', {
       originalName: req.file.originalname,

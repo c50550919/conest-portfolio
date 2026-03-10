@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -15,11 +15,7 @@
  * Created: 2025-12-30
  */
 
-import {
-  UserDB,
-  User,
-  CurrentUser,
-} from './user.entity';
+import { UserDB, User, CurrentUser } from './user.entity';
 
 import {
   ParentDB,
@@ -32,23 +28,11 @@ import {
   VerificationStatusObject,
 } from './parent.entity';
 
-import {
-  VerificationDB,
-  Verification,
-  VerificationStatusResponse,
-} from './verification.entity';
+import { VerificationDB, Verification, VerificationStatusResponse } from './verification.entity';
 
-import {
-  MessageDB,
-  Message,
-  ConversationDB,
-  Conversation,
-} from './message.entity';
+import { MessageDB, Message, ConversationDB, Conversation } from './message.entity';
 
-import {
-  ConnectionRequestDB,
-  ConnectionRequest,
-} from './connection-request.entity';
+import { ConnectionRequestDB, ConnectionRequest } from './connection-request.entity';
 
 import {
   HouseholdDB,
@@ -60,11 +44,7 @@ import {
   HouseholdActualDB,
 } from './household.entity';
 
-import {
-  MatchDB,
-  Match,
-  CompatibilityBreakdown,
-} from './match.entity';
+import { MatchDB, Match, CompatibilityBreakdown } from './match.entity';
 
 // =============================================================================
 // Generic Utilities
@@ -96,7 +76,12 @@ export function transformKeysToCamel<T extends Record<string, unknown>>(
     const camelKey = snakeToCamel(key);
     const value = obj[key];
 
-    if (value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+    if (
+      value !== null &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      !(value instanceof Date)
+    ) {
       result[camelKey] = transformKeysToCamel(value as Record<string, unknown>);
     } else if (Array.isArray(value)) {
       result[camelKey] = value.map((item) =>
@@ -124,7 +109,12 @@ export function transformKeysToSnake<T extends Record<string, unknown>>(
     const snakeKey = camelToSnake(key);
     const value = obj[key];
 
-    if (value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+    if (
+      value !== null &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      !(value instanceof Date)
+    ) {
       result[snakeKey] = transformKeysToSnake(value as Record<string, unknown>);
     } else if (Array.isArray(value)) {
       result[snakeKey] = value.map((item) =>
@@ -282,9 +272,10 @@ export function parentDBToAPI(db: ParentDB): Parent {
 
     budgetMin: db.budget_min,
     budgetMax: db.budget_max,
-    housingBudget: db.budget_min !== undefined && db.budget_max !== undefined
-      ? { min: db.budget_min, max: db.budget_max }
-      : undefined,
+    housingBudget:
+      db.budget_min !== undefined && db.budget_max !== undefined
+        ? { min: db.budget_min, max: db.budget_max }
+        : undefined,
     moveInDate: dateToISOString(db.move_in_date),
     housingStatus: db.housing_status,
     roomRentShare: db.room_rent_share,
@@ -318,10 +309,7 @@ export function parentDBToAPI(db: ParentDB): Parent {
 /**
  * Transform ParentDB to ProfileCard for discovery feed
  */
-export function parentDBToProfileCard(
-  db: ParentDB,
-  compatibilityScore: number = 0,
-): ProfileCard {
+export function parentDBToProfileCard(db: ParentDB, compatibilityScore: number = 0): ProfileCard {
   const age = db.date_of_birth ? calculateAge(db.date_of_birth) : undefined;
 
   return {
@@ -339,9 +327,10 @@ export function parentDBToProfileCard(
     roomAvailableDate: dateToISOString(db.room_available_date),
     profileCompletion: db.profile_completion_percentage,
     budget: db.budget_max ?? db.budget_min,
-    housingBudget: db.budget_min !== undefined && db.budget_max !== undefined
-      ? { min: db.budget_min, max: db.budget_max }
-      : undefined,
+    housingBudget:
+      db.budget_min !== undefined && db.budget_max !== undefined
+        ? { min: db.budget_min, max: db.budget_max }
+        : undefined,
     moveInDate: dateToISOString(db.move_in_date),
     bio: db.bio,
     profilePhoto: db.profile_photo_url,
@@ -432,10 +421,7 @@ export function messageDBToAPI(
 /**
  * Transform ConversationDB to Conversation API response
  */
-export function conversationDBToAPI(
-  db: ConversationDB,
-  unreadCount: number = 0,
-): Conversation {
+export function conversationDBToAPI(db: ConversationDB, unreadCount: number = 0): Conversation {
   return {
     id: db.id,
     participant1Id: db.participant1_id,

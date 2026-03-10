@@ -134,9 +134,7 @@ describe('T019: OAuth Account Linking Rejected (Unverified Email) - Integration 
         .expect(403);
 
       // Verify database - OAuth fields should remain NULL
-      const dbUser = await db('users')
-        .where({ id: unverifiedUserId })
-        .first();
+      const dbUser = await db('users').where({ id: unverifiedUserId }).first();
 
       expect(dbUser.oauth_provider).toBeNull();
       expect(dbUser.oauth_provider_id).toBeNull();
@@ -206,9 +204,7 @@ describe('T019: OAuth Account Linking Rejected (Unverified Email) - Integration 
         })
         .expect(403);
 
-      const dbUser = await db('users')
-        .where({ id: unverifiedUserId })
-        .first();
+      const dbUser = await db('users').where({ id: unverifiedUserId }).first();
 
       expect(dbUser.oauth_provider).toBeNull();
       expect(dbUser.oauth_provider_id).toBeNull();
@@ -224,9 +220,7 @@ describe('T019: OAuth Account Linking Rejected (Unverified Email) - Integration 
       // 3. System correctly rejects linking to prevent takeover
 
       // Attacker's unverified account exists (created in beforeEach)
-      const attackerAccount = await db('users')
-        .where({ id: unverifiedUserId })
-        .first();
+      const attackerAccount = await db('users').where({ id: unverifiedUserId }).first();
 
       expect(attackerAccount.email_verified).toBe(false);
       expect(attackerAccount.oauth_provider).toBeNull();
@@ -241,9 +235,7 @@ describe('T019: OAuth Account Linking Rejected (Unverified Email) - Integration 
       expect(victimAttempt.body.error).toBe('forbidden');
 
       // Attacker's account remains unchanged (no OAuth data added)
-      const attackerAccountAfter = await db('users')
-        .where({ id: unverifiedUserId })
-        .first();
+      const attackerAccountAfter = await db('users').where({ id: unverifiedUserId }).first();
 
       expect(attackerAccountAfter.oauth_provider).toBeNull();
       expect(attackerAccountAfter.oauth_provider_id).toBeNull();
@@ -277,9 +269,7 @@ describe('T019: OAuth Account Linking Rejected (Unverified Email) - Integration 
         .expect(403);
 
       // User verifies their email (simulate verification)
-      await db('users')
-        .where({ id: unverifiedUserId })
-        .update({ email_verified: true });
+      await db('users').where({ id: unverifiedUserId }).update({ email_verified: true });
 
       // Second attempt - should succeed
       const response = await request(app)
@@ -294,9 +284,7 @@ describe('T019: OAuth Account Linking Rejected (Unverified Email) - Integration 
       });
 
       // Verify OAuth fields added
-      const dbUser = await db('users')
-        .where({ id: unverifiedUserId })
-        .first();
+      const dbUser = await db('users').where({ id: unverifiedUserId }).first();
 
       expect(dbUser.oauth_provider).toBe('google');
       expect(dbUser.oauth_provider_id).toBe('987654321098765432109');
@@ -328,9 +316,7 @@ describe('T019: OAuth Account Linking Rejected (Unverified Email) - Integration 
   describe('Edge Cases', () => {
     it('should reject OAuth linking even if phone is verified but email is not', async () => {
       // Update account to have verified phone but unverified email
-      await db('users')
-        .where({ id: unverifiedUserId })
-        .update({ phone_verified: true });
+      await db('users').where({ id: unverifiedUserId }).update({ phone_verified: true });
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -340,9 +326,7 @@ describe('T019: OAuth Account Linking Rejected (Unverified Email) - Integration 
       expect(response.body.error).toBe('forbidden');
 
       // Email verification is the requirement, not phone
-      const dbUser = await db('users')
-        .where({ id: unverifiedUserId })
-        .first();
+      const dbUser = await db('users').where({ id: unverifiedUserId }).first();
 
       expect(dbUser.phone_verified).toBe(true); // Phone verified
       expect(dbUser.email_verified).toBe(false); // Email NOT verified
@@ -370,9 +354,7 @@ describe('T019: OAuth Account Linking Rejected (Unverified Email) - Integration 
       expect(appleResponse.body.error).toBe('forbidden');
 
       // Account remains unchanged
-      const dbUser = await db('users')
-        .where({ id: unverifiedUserId })
-        .first();
+      const dbUser = await db('users').where({ id: unverifiedUserId }).first();
 
       expect(dbUser.oauth_provider).toBeNull();
       expect(dbUser.email_verified).toBe(false);
@@ -386,9 +368,7 @@ describe('T019: OAuth Account Linking Rejected (Unverified Email) - Integration 
         .expect(403);
 
       // User verifies email immediately
-      await db('users')
-        .where({ id: unverifiedUserId })
-        .update({ email_verified: true });
+      await db('users').where({ id: unverifiedUserId }).update({ email_verified: true });
 
       // Second request (moments later) - should succeed
       const response = await request(app)
@@ -453,9 +433,7 @@ describe('T019: OAuth Account Linking Rejected (Unverified Email) - Integration 
       expect(attempt3.body.error).toBe('forbidden');
 
       // Account should still be unlinked
-      const dbUser = await db('users')
-        .where({ id: unverifiedUserId })
-        .first();
+      const dbUser = await db('users').where({ id: unverifiedUserId }).first();
 
       expect(dbUser.oauth_provider).toBeNull();
       expect(dbUser.email_verified).toBe(false);

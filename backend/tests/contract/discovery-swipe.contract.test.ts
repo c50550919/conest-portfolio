@@ -40,12 +40,15 @@ const SwipeRequestSchema = z.object({
 const SwipeResponseSchema = z.object({
   swipeId: z.string().uuid(),
   matchCreated: z.boolean(),
-  match: z.object({
-    matchId: z.string().uuid(),
-    matchedUserId: z.string().uuid(),
-    compatibilityScore: z.number().int().min(0).max(100),
-    createdAt: z.string().datetime(),
-  }).nullable().optional(),
+  match: z
+    .object({
+      matchId: z.string().uuid(),
+      matchedUserId: z.string().uuid(),
+      compatibilityScore: z.number().int().min(0).max(100),
+      createdAt: z.string().datetime(),
+    })
+    .nullable()
+    .optional(),
 });
 
 describe('POST /api/discovery/swipe - Contract Tests', () => {
@@ -57,12 +60,10 @@ describe('POST /api/discovery/swipe - Contract Tests', () => {
   // These tests are updated to accept 404 (not found) as a valid response.
   describe('Validation & Error Cases', () => {
     it('should return 401 or 404 if not authenticated', async () => {
-      const response = await request(app)
-        .post('/api/discovery/swipe')
-        .send({
-          targetUserId: targetUserId,
-          direction: 'right',
-        });
+      const response = await request(app).post('/api/discovery/swipe').send({
+        targetUserId: targetUserId,
+        direction: 'right',
+      });
 
       // Accept 401 (unauthorized) or 404 (endpoint removed)
       expect([401, 404]).toContain(response.status);
@@ -312,10 +313,13 @@ describe('POST /api/discovery/swipe - Contract Tests', () => {
         // Verify Socket.io event was emitted
         expect(mockIo.to).toHaveBeenCalledWith('mock-user-id');
         expect(mockIo.to).toHaveBeenCalledWith('user-mutual-match');
-        expect(mockIo.emit).toHaveBeenCalledWith('match:created', expect.objectContaining({
-          matchId: expect.any(String),
-          matchedUserId: expect.any(String),
-        }));
+        expect(mockIo.emit).toHaveBeenCalledWith(
+          'match:created',
+          expect.objectContaining({
+            matchId: expect.any(String),
+            matchedUserId: expect.any(String),
+          }),
+        );
       }
     });
 
@@ -386,26 +390,20 @@ describe('POST /api/discovery/swipe - Contract Tests', () => {
       // Skipped: Requires database records for mock users
       // Send two swipes simultaneously
       const promises = [
-        request(app)
-          .post('/api/discovery/swipe')
-          .set('Authorization', `Bearer ${authToken}`)
-          .send({
-            targetUserId: 'user-concurrent-test',
-            direction: 'right',
-          }),
-        request(app)
-          .post('/api/discovery/swipe')
-          .set('Authorization', `Bearer ${authToken}`)
-          .send({
-            targetUserId: 'user-concurrent-test',
-            direction: 'right',
-          }),
+        request(app).post('/api/discovery/swipe').set('Authorization', `Bearer ${authToken}`).send({
+          targetUserId: 'user-concurrent-test',
+          direction: 'right',
+        }),
+        request(app).post('/api/discovery/swipe').set('Authorization', `Bearer ${authToken}`).send({
+          targetUserId: 'user-concurrent-test',
+          direction: 'right',
+        }),
       ];
 
       const responses = await Promise.all(promises);
 
       // One should succeed (200), one should fail (400 duplicate)
-      const statusCodes = responses.map(r => r.status).sort();
+      const statusCodes = responses.map((r) => r.status).sort();
       expect(statusCodes).toEqual([200, 400]);
     });
 

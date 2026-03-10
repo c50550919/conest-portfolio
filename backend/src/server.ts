@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -134,9 +134,15 @@ const startServer = async () => {
       if (aiModerationEnabled) {
         void moderationWorker.start();
         const shadowMode = process.env.AI_MODERATION_SHADOW_MODE === 'true';
-        console.log(`\n🤖 AI Content Moderation: ${shadowMode ? 'SHADOW MODE (logging only)' : 'ACTIVE'}`);
-        console.log(`   - Primary Provider: ${  process.env.AI_MODERATION_PRIMARY_PROVIDER || 'gemini'}`);
-        console.log(`   - Fallback Provider: ${  process.env.AI_MODERATION_FALLBACK_PROVIDER || 'openai'}`);
+        console.log(
+          `\n🤖 AI Content Moderation: ${shadowMode ? 'SHADOW MODE (logging only)' : 'ACTIVE'}`,
+        );
+        console.log(
+          `   - Primary Provider: ${process.env.AI_MODERATION_PRIMARY_PROVIDER || 'gemini'}`,
+        );
+        console.log(
+          `   - Fallback Provider: ${process.env.AI_MODERATION_FALLBACK_PROVIDER || 'openai'}`,
+        );
       } else {
         console.log('\n⚠️  AI Content Moderation: DISABLED');
       }

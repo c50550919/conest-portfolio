@@ -33,15 +33,17 @@ describe('Integration Test: Token Refresh Flow', () => {
 
     // Create test user
     const password_hash = await hashPassword('SecurePass123!');
-    const [user] = await db('users').insert({
-      email: 'refresh-test@example.com',
-      password_hash,
-      phone_number: '+14155552671',
-      phone_verified: false,
-      email_verified: false,
-      two_factor_enabled: false,
-      status: 'active',
-    }).returning('*');
+    const [user] = await db('users')
+      .insert({
+        email: 'refresh-test@example.com',
+        password_hash,
+        phone_number: '+14155552671',
+        phone_verified: false,
+        email_verified: false,
+        two_factor_enabled: false,
+        status: 'active',
+      })
+      .returning('*');
 
     testUser = user;
     testUserId = user.id;
@@ -74,12 +76,10 @@ describe('Integration Test: Token Refresh Flow', () => {
   describe('Complete Token Refresh Flow', () => {
     it('should login � wait � refresh � access with new token', async () => {
       // STEP 1: Login to get initial tokens
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'refresh-test@example.com',
-          password: 'SecurePass123!',
-        });
+      const loginResponse = await request(app).post('/api/auth/login').send({
+        email: 'refresh-test@example.com',
+        password: 'SecurePass123!',
+      });
 
       expect(loginResponse.status).toBe(200);
       expect(loginResponse.body.data).toHaveProperty('tokens');
@@ -99,18 +99,17 @@ describe('Integration Test: Token Refresh Flow', () => {
       // For testing, we proceed directly to refresh
 
       // STEP 3: Refresh using refresh token
-      const refreshResponse = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: initialTokens.refreshToken,
-        });
+      const refreshResponse = await request(app).post('/api/auth/refresh').send({
+        refreshToken: initialTokens.refreshToken,
+      });
 
       expect(refreshResponse.status).toBe(200);
       expect(refreshResponse.body.success).toBe(true);
       expect(refreshResponse.body.data).toHaveProperty('accessToken');
       expect(refreshResponse.body.data).toHaveProperty('refreshToken');
 
-      const { accessToken: newAccessToken, refreshToken: newRefreshToken } = refreshResponse.body.data;
+      const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
+        refreshResponse.body.data;
 
       // Verify new tokens are different from initial tokens (token rotation)
       expect(newAccessToken).not.toBe(initialTokens.accessToken);
@@ -141,30 +140,24 @@ describe('Integration Test: Token Refresh Flow', () => {
 
     it('should reject old refresh token after rotation', async () => {
       // Login to get initial tokens
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'refresh-test@example.com',
-          password: 'SecurePass123!',
-        });
+      const loginResponse = await request(app).post('/api/auth/login').send({
+        email: 'refresh-test@example.com',
+        password: 'SecurePass123!',
+      });
 
       const { tokens: initialTokens } = loginResponse.body.data;
 
       // Refresh once (token rotation)
-      const firstRefreshResponse = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: initialTokens.refreshToken,
-        });
+      const firstRefreshResponse = await request(app).post('/api/auth/refresh').send({
+        refreshToken: initialTokens.refreshToken,
+      });
 
       expect(firstRefreshResponse.status).toBe(200);
 
       // Try to use old refresh token again (should fail)
-      const secondRefreshResponse = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: initialTokens.refreshToken, // Old token
-        });
+      const secondRefreshResponse = await request(app).post('/api/auth/refresh').send({
+        refreshToken: initialTokens.refreshToken, // Old token
+      });
 
       expect(secondRefreshResponse.status).toBe(401);
       expect(secondRefreshResponse.body.error).toContain('Invalid or expired refresh token');
@@ -198,11 +191,9 @@ describe('Integration Test: Token Refresh Flow', () => {
       );
 
       // Try to refresh with expired token
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: expiredRefreshToken,
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken: expiredRefreshToken,
+      });
 
       expect(response.status).toBe(401);
       expect(response.body.error).toContain('Invalid or expired refresh token');
@@ -212,12 +203,10 @@ describe('Integration Test: Token Refresh Flow', () => {
   describe('Security Requirements', () => {
     it('should reject refresh token for inactive user', async () => {
       // Login to get tokens
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'refresh-test@example.com',
-          password: 'SecurePass123!',
-        });
+      const loginResponse = await request(app).post('/api/auth/login').send({
+        email: 'refresh-test@example.com',
+        password: 'SecurePass123!',
+      });
 
       const { tokens } = loginResponse.body.data;
 
@@ -225,11 +214,9 @@ describe('Integration Test: Token Refresh Flow', () => {
       await UserModel.update(testUserId, { status: 'suspended' });
 
       // Try to refresh (should fail)
-      const refreshResponse = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: tokens.refreshToken,
-        });
+      const refreshResponse = await request(app).post('/api/auth/refresh').send({
+        refreshToken: tokens.refreshToken,
+      });
 
       expect(refreshResponse.status).toBe(401);
       expect(refreshResponse.body.error).toContain('Invalid or expired refresh token');
@@ -237,12 +224,10 @@ describe('Integration Test: Token Refresh Flow', () => {
 
     it('should reject refresh token for deleted user', async () => {
       // Login to get tokens
-      const loginResponse = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'refresh-test@example.com',
-          password: 'SecurePass123!',
-        });
+      const loginResponse = await request(app).post('/api/auth/login').send({
+        email: 'refresh-test@example.com',
+        password: 'SecurePass123!',
+      });
 
       const { tokens } = loginResponse.body.data;
 
@@ -250,11 +235,9 @@ describe('Integration Test: Token Refresh Flow', () => {
       await UserModel.delete(testUserId);
 
       // Try to refresh (should fail)
-      const refreshResponse = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: tokens.refreshToken,
-        });
+      const refreshResponse = await request(app).post('/api/auth/refresh').send({
+        refreshToken: tokens.refreshToken,
+      });
 
       expect(refreshResponse.status).toBe(401);
       expect(refreshResponse.body.error).toContain('Invalid or expired refresh token');

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -66,7 +66,10 @@ export const VerificationWebhookEventModel = {
    * @param provider - Provider name (veriff, certn)
    * @param providerEventId - Provider's unique event/session ID
    */
-  async isEventProcessed(provider: VerificationProvider, providerEventId: string): Promise<boolean> {
+  async isEventProcessed(
+    provider: VerificationProvider,
+    providerEventId: string,
+  ): Promise<boolean> {
     try {
       const event = await db('verification_webhook_events')
         .where({ provider, provider_event_id: providerEventId })
@@ -118,9 +121,7 @@ export const VerificationWebhookEventModel = {
         received_at: new Date(),
       };
 
-      const [event] = await db('verification_webhook_events')
-        .insert(newEvent)
-        .returning('*');
+      const [event] = await db('verification_webhook_events').insert(newEvent).returning('*');
 
       return { event, isNew: true };
     } catch (error: any) {
@@ -183,12 +184,10 @@ export const VerificationWebhookEventModel = {
    */
   async markAsCompleted(id: string): Promise<void> {
     try {
-      await db('verification_webhook_events')
-        .where({ id })
-        .update({
-          processing_status: 'completed',
-          processed_at: new Date(),
-        });
+      await db('verification_webhook_events').where({ id }).update({
+        processing_status: 'completed',
+        processed_at: new Date(),
+      });
     } catch (error: any) {
       if (error.code === '42P01') return; // Table doesn't exist
       throw error;
@@ -200,13 +199,11 @@ export const VerificationWebhookEventModel = {
    */
   async markAsFailed(id: string, errorMessage: string): Promise<void> {
     try {
-      await db('verification_webhook_events')
-        .where({ id })
-        .update({
-          processing_status: 'failed',
-          error_message: errorMessage,
-          processed_at: new Date(),
-        });
+      await db('verification_webhook_events').where({ id }).update({
+        processing_status: 'failed',
+        error_message: errorMessage,
+        processed_at: new Date(),
+      });
     } catch (error: any) {
       if (error.code === '42P01') return; // Table doesn't exist
       throw error;
@@ -218,12 +215,10 @@ export const VerificationWebhookEventModel = {
    */
   async markAsSkipped(id: string): Promise<void> {
     try {
-      await db('verification_webhook_events')
-        .where({ id })
-        .update({
-          processing_status: 'skipped',
-          processed_at: new Date(),
-        });
+      await db('verification_webhook_events').where({ id }).update({
+        processing_status: 'skipped',
+        processed_at: new Date(),
+      });
     } catch (error: any) {
       if (error.code === '42P01') return; // Table doesn't exist
       throw error;
@@ -234,7 +229,10 @@ export const VerificationWebhookEventModel = {
    * Find failed events for retry
    * TASK-W2-01: Updated to exclude dead letter events
    */
-  async findFailedEvents(provider?: VerificationProvider, limit: number = 50): Promise<VerificationWebhookEvent[]> {
+  async findFailedEvents(
+    provider?: VerificationProvider,
+    limit: number = 50,
+  ): Promise<VerificationWebhookEvent[]> {
     try {
       let query = db('verification_webhook_events')
         .where({ processing_status: 'failed' })
@@ -288,7 +286,10 @@ export const VerificationWebhookEventModel = {
   /**
    * TASK-W2-01: Get dead letter events
    */
-  async getDeadLetterEvents(provider?: VerificationProvider, limit: number = 50): Promise<VerificationWebhookEvent[]> {
+  async getDeadLetterEvents(
+    provider?: VerificationProvider,
+    limit: number = 50,
+  ): Promise<VerificationWebhookEvent[]> {
     try {
       let query = db('verification_webhook_events')
         .where('dead_letter', true)

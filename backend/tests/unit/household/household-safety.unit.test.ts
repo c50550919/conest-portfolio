@@ -77,7 +77,8 @@ import db from '../config/database';
 
 // Get the mock query builder from the mocked module
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const getMockQueryBuilder = () => (db as any).__builder as ReturnType<typeof createMockQueryBuilder>;
+const getMockQueryBuilder = () =>
+  (db as any).__builder as ReturnType<typeof createMockQueryBuilder>;
 
 describe('Household Safety Disclosure System', () => {
   const mockParentId = 'parent-123-uuid';
@@ -93,7 +94,7 @@ describe('Household Safety Disclosure System', () => {
   ];
 
   // Valid signature (base64 image data > MIN_SIGNATURE_LENGTH)
-  const validSignatureData = `data:image/png;base64,${  'A'.repeat(MIN_SIGNATURE_LENGTH + 50)}`;
+  const validSignatureData = `data:image/png;base64,${'A'.repeat(MIN_SIGNATURE_LENGTH + 50)}`;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -148,7 +149,8 @@ describe('Household Safety Disclosure System', () => {
     describe('validateAttestationResponses', () => {
       // T-HS-U04: Passes with correct answers
       it('T-HS-U04: should pass validation with all correct answers', () => {
-        const result = HouseholdSafetyService.validateAttestationResponses(validAttestationResponses);
+        const result =
+          HouseholdSafetyService.validateAttestationResponses(validAttestationResponses);
         expect(result).toEqual({ valid: true });
       });
 
@@ -166,10 +168,18 @@ describe('Household Safety Disclosure System', () => {
       // T-HS-U06: Returns error when juvenile_legal_history = true
       it('T-HS-U06: should return error when juvenile_legal_history is true', () => {
         const responses: AttestationResponse[] = [
-          { questionId: 'juvenile_legal_history', response: true, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'juvenile_legal_history',
+            response: true,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'court_orders', response: false, answeredAt: new Date().toISOString() },
           { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
-          { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'disclosure_accuracy',
+            response: true,
+            answeredAt: new Date().toISOString(),
+          },
         ];
 
         const result = HouseholdSafetyService.validateAttestationResponses(responses);
@@ -181,10 +191,18 @@ describe('Household Safety Disclosure System', () => {
       // T-HS-U07: Returns error when court_orders = true
       it('T-HS-U07: should return error when court_orders is true', () => {
         const responses: AttestationResponse[] = [
-          { questionId: 'juvenile_legal_history', response: false, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'juvenile_legal_history',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'court_orders', response: true, answeredAt: new Date().toISOString() },
           { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
-          { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'disclosure_accuracy',
+            response: true,
+            answeredAt: new Date().toISOString(),
+          },
         ];
 
         const result = HouseholdSafetyService.validateAttestationResponses(responses);
@@ -196,10 +214,18 @@ describe('Household Safety Disclosure System', () => {
       // T-HS-U08: Returns error when cps_involvement = true
       it('T-HS-U08: should return error when cps_involvement is true', () => {
         const responses: AttestationResponse[] = [
-          { questionId: 'juvenile_legal_history', response: false, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'juvenile_legal_history',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'court_orders', response: false, answeredAt: new Date().toISOString() },
           { questionId: 'cps_involvement', response: true, answeredAt: new Date().toISOString() },
-          { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'disclosure_accuracy',
+            response: true,
+            answeredAt: new Date().toISOString(),
+          },
         ];
 
         const result = HouseholdSafetyService.validateAttestationResponses(responses);
@@ -211,10 +237,18 @@ describe('Household Safety Disclosure System', () => {
       // T-HS-U09: Returns error when disclosure_accuracy = false
       it('T-HS-U09: should return error when disclosure_accuracy is false', () => {
         const responses: AttestationResponse[] = [
-          { questionId: 'juvenile_legal_history', response: false, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'juvenile_legal_history',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'court_orders', response: false, answeredAt: new Date().toISOString() },
           { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
-          { questionId: 'disclosure_accuracy', response: false, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'disclosure_accuracy',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
         ];
 
         const result = HouseholdSafetyService.validateAttestationResponses(responses);
@@ -226,10 +260,18 @@ describe('Household Safety Disclosure System', () => {
       // T-HS-U10: Error message is user-friendly
       it('T-HS-U10: should return user-friendly error message mentioning support', () => {
         const responses: AttestationResponse[] = [
-          { questionId: 'juvenile_legal_history', response: true, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'juvenile_legal_history',
+            response: true,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'court_orders', response: false, answeredAt: new Date().toISOString() },
           { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
-          { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'disclosure_accuracy',
+            response: true,
+            answeredAt: new Date().toISOString(),
+          },
         ];
 
         const result = HouseholdSafetyService.validateAttestationResponses(responses);
@@ -278,7 +320,9 @@ describe('Household Safety Disclosure System', () => {
           updated_at: new Date(),
         };
 
-        jest.spyOn(HouseholdSafetyDisclosureModel, 'findByParentId').mockResolvedValue(mockDisclosure);
+        jest
+          .spyOn(HouseholdSafetyDisclosureModel, 'findByParentId')
+          .mockResolvedValue(mockDisclosure);
 
         const status = await HouseholdSafetyService.getDisclosureStatus(mockParentId);
 
@@ -309,7 +353,9 @@ describe('Household Safety Disclosure System', () => {
           updated_at: new Date(),
         };
 
-        jest.spyOn(HouseholdSafetyDisclosureModel, 'findByParentId').mockResolvedValue(mockDisclosure);
+        jest
+          .spyOn(HouseholdSafetyDisclosureModel, 'findByParentId')
+          .mockResolvedValue(mockDisclosure);
 
         const status = await HouseholdSafetyService.getDisclosureStatus(mockParentId);
 
@@ -340,7 +386,9 @@ describe('Household Safety Disclosure System', () => {
           updated_at: new Date(),
         };
 
-        jest.spyOn(HouseholdSafetyDisclosureModel, 'findByParentId').mockResolvedValue(mockDisclosure);
+        jest
+          .spyOn(HouseholdSafetyDisclosureModel, 'findByParentId')
+          .mockResolvedValue(mockDisclosure);
 
         const status = await HouseholdSafetyService.getDisclosureStatus(mockParentId);
 
@@ -368,7 +416,9 @@ describe('Household Safety Disclosure System', () => {
           updated_at: new Date(),
         };
 
-        jest.spyOn(HouseholdSafetyDisclosureModel, 'findByParentId').mockResolvedValue(mockDisclosure);
+        jest
+          .spyOn(HouseholdSafetyDisclosureModel, 'findByParentId')
+          .mockResolvedValue(mockDisclosure);
 
         const status = await HouseholdSafetyService.getDisclosureStatus(mockParentId);
 
@@ -395,17 +445,29 @@ describe('Household Safety Disclosure System', () => {
 
       beforeEach(() => {
         // Mock model methods
-        jest.spyOn(HouseholdSafetyDisclosureModel, 'supersedePrevious').mockResolvedValue(undefined);
-        jest.spyOn(HouseholdSafetyDisclosureModel, 'create').mockResolvedValue(mockCreatedDisclosure);
+        jest
+          .spyOn(HouseholdSafetyDisclosureModel, 'supersedePrevious')
+          .mockResolvedValue(undefined);
+        jest
+          .spyOn(HouseholdSafetyDisclosureModel, 'create')
+          .mockResolvedValue(mockCreatedDisclosure);
       });
 
       // T-HS-U16: Fails for invalid responses
       it('T-HS-U16: should fail submission for invalid attestation responses', async () => {
         const invalidResponses: AttestationResponse[] = [
-          { questionId: 'juvenile_legal_history', response: true, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'juvenile_legal_history',
+            response: true,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'court_orders', response: false, answeredAt: new Date().toISOString() },
           { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
-          { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'disclosure_accuracy',
+            response: true,
+            answeredAt: new Date().toISOString(),
+          },
         ];
 
         const result = await HouseholdSafetyService.submitAttestation(
@@ -498,10 +560,18 @@ describe('Household Safety Disclosure System', () => {
 
       it('should create audit log on failed submission', async () => {
         const invalidResponses: AttestationResponse[] = [
-          { questionId: 'juvenile_legal_history', response: true, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'juvenile_legal_history',
+            response: true,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'court_orders', response: false, answeredAt: new Date().toISOString() },
           { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
-          { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'disclosure_accuracy',
+            response: true,
+            answeredAt: new Date().toISOString(),
+          },
         ];
 
         await HouseholdSafetyService.submitAttestation(
@@ -642,7 +712,9 @@ describe('Household Safety Disclosure System', () => {
           created_at: new Date(),
           updated_at: new Date(),
         };
-        jest.spyOn(HouseholdSafetyDisclosureModel, 'findByParentId').mockResolvedValueOnce(mockDisclosure);
+        jest
+          .spyOn(HouseholdSafetyDisclosureModel, 'findByParentId')
+          .mockResolvedValueOnce(mockDisclosure);
 
         const result = await HouseholdSafetyDisclosureModel.findByParentId(mockParentId);
 
@@ -689,7 +761,9 @@ describe('Household Safety Disclosure System', () => {
           created_at: new Date(),
           updated_at: new Date(),
         };
-        jest.spyOn(HouseholdSafetyDisclosureModel, 'findByParentId').mockResolvedValueOnce(mockDisclosure);
+        jest
+          .spyOn(HouseholdSafetyDisclosureModel, 'findByParentId')
+          .mockResolvedValueOnce(mockDisclosure);
 
         const result = await HouseholdSafetyDisclosureModel.hasValidDisclosure(mockParentId);
 
@@ -705,7 +779,9 @@ describe('Household Safety Disclosure System', () => {
 
       // T-HS-M14: Verify it accepts parentId parameter
       it('T-HS-M14: supersedePrevious should accept parentId parameter', async () => {
-        jest.spyOn(HouseholdSafetyDisclosureModel, 'supersedePrevious').mockResolvedValueOnce(undefined);
+        jest
+          .spyOn(HouseholdSafetyDisclosureModel, 'supersedePrevious')
+          .mockResolvedValueOnce(undefined);
 
         await expect(
           HouseholdSafetyDisclosureModel.supersedePrevious(mockParentId),
@@ -714,7 +790,9 @@ describe('Household Safety Disclosure System', () => {
 
       // T-HS-M15: Scope is per-parent
       it('T-HS-M15: supersedePrevious should scope updates to specific parent', async () => {
-        const spy = jest.spyOn(HouseholdSafetyDisclosureModel, 'supersedePrevious').mockResolvedValueOnce(undefined);
+        const spy = jest
+          .spyOn(HouseholdSafetyDisclosureModel, 'supersedePrevious')
+          .mockResolvedValueOnce(undefined);
 
         await HouseholdSafetyDisclosureModel.supersedePrevious(mockParentId);
 
@@ -769,7 +847,9 @@ describe('Household Safety Disclosure System', () => {
           created_at: new Date(),
           updated_at: new Date(),
         };
-        jest.spyOn(HouseholdSafetyDisclosureModel, 'findById').mockResolvedValueOnce(mockDisclosure);
+        jest
+          .spyOn(HouseholdSafetyDisclosureModel, 'findById')
+          .mockResolvedValueOnce(mockDisclosure);
 
         const result = await HouseholdSafetyDisclosureModel.findById(mockDisclosureId);
 
@@ -805,9 +885,12 @@ describe('Household Safety Disclosure System', () => {
           },
         ];
 
-        jest.spyOn(HouseholdSafetyDisclosureModel, 'getExpiringDisclosures').mockResolvedValueOnce(mockDisclosures);
+        jest
+          .spyOn(HouseholdSafetyDisclosureModel, 'getExpiringDisclosures')
+          .mockResolvedValueOnce(mockDisclosures);
 
-        const result = await HouseholdSafetyDisclosureModel.getExpiringDisclosures(RENEWAL_WARNING_DAYS);
+        const result =
+          await HouseholdSafetyDisclosureModel.getExpiringDisclosures(RENEWAL_WARNING_DAYS);
 
         expect(result).toHaveLength(1);
       });
@@ -842,18 +925,14 @@ describe('Household Safety Disclosure System', () => {
     });
 
     it('should have correct expected answers for safety questions', () => {
-      const safetyQuestions = ATTESTATION_QUESTIONS.filter(
-        (q) => q.id !== 'disclosure_accuracy',
-      );
+      const safetyQuestions = ATTESTATION_QUESTIONS.filter((q) => q.id !== 'disclosure_accuracy');
       safetyQuestions.forEach((question) => {
         expect(question.expectedAnswer).toBe(false);
       });
     });
 
     it('should have expected answer of true for disclosure_accuracy', () => {
-      const accuracyQuestion = ATTESTATION_QUESTIONS.find(
-        (q) => q.id === 'disclosure_accuracy',
-      );
+      const accuracyQuestion = ATTESTATION_QUESTIONS.find((q) => q.id === 'disclosure_accuracy');
       expect(accuracyQuestion?.expectedAnswer).toBe(true);
     });
   });

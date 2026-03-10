@@ -7,7 +7,11 @@
 
 import axios from 'axios';
 import crypto from 'crypto';
-import { VeriffClient, VeriffSession, VeriffDecision } from '../../../src/features/verification/veriff/VeriffClient';
+import {
+  VeriffClient,
+  VeriffSession,
+  VeriffDecision,
+} from '../../../src/features/verification/veriff/VeriffClient';
 
 // Mock axios
 jest.mock('axios');
@@ -161,10 +165,9 @@ describe('VeriffClient', () => {
 
       await client.createSession(userId, callbackUrl);
 
-      expect(logger.info).toHaveBeenCalledWith(
-        `Veriff session created for user ${userId}`,
-        { sessionId: 'session-456' },
-      );
+      expect(logger.info).toHaveBeenCalledWith(`Veriff session created for user ${userId}`, {
+        sessionId: 'session-456',
+      });
     });
 
     it('should throw error on API failure', async () => {
@@ -228,9 +231,7 @@ describe('VeriffClient', () => {
 
       const result = await client.getDecision(sessionId);
 
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        `/v1/sessions/${sessionId}/decision`,
-      );
+      expect(mockAxiosInstance.get).toHaveBeenCalledWith(`/v1/sessions/${sessionId}/decision`);
       expect(result).toEqual(mockDecisionResponse);
     });
 
@@ -422,10 +423,14 @@ describe('VeriffClient', () => {
 
       // Make two calls - verify signatures are generated
       await client.createSession('user-1', 'https://callback.com');
-      const firstSignature = (mockAxiosInstance.post.mock.calls[0][2] as any).headers['X-SIGNATURE'];
+      const firstSignature = (mockAxiosInstance.post.mock.calls[0][2] as any).headers[
+        'X-SIGNATURE'
+      ];
 
       await client.createSession('user-1', 'https://callback.com');
-      const secondSignature = (mockAxiosInstance.post.mock.calls[1][2] as any).headers['X-SIGNATURE'];
+      const secondSignature = (mockAxiosInstance.post.mock.calls[1][2] as any).headers[
+        'X-SIGNATURE'
+      ];
 
       // Both calls should have valid signatures generated
       expect(firstSignature).toBeDefined();
@@ -465,9 +470,9 @@ describe('VeriffClient', () => {
       };
       mockAxiosInstance.post.mockRejectedValue(timeoutError);
 
-      await expect(
-        client.createSession('user-1', 'https://callback.com'),
-      ).rejects.toThrow('Veriff session creation failed: timeout of 30000ms exceeded');
+      await expect(client.createSession('user-1', 'https://callback.com')).rejects.toThrow(
+        'Veriff session creation failed: timeout of 30000ms exceeded',
+      );
     });
 
     it('should handle missing response data in error', async () => {
@@ -500,9 +505,9 @@ describe('VeriffClient', () => {
       };
       mockAxiosInstance.post.mockRejectedValue(authError);
 
-      await expect(
-        client.createSession('user-1', 'https://callback.com'),
-      ).rejects.toThrow('Veriff session creation failed');
+      await expect(client.createSession('user-1', 'https://callback.com')).rejects.toThrow(
+        'Veriff session creation failed',
+      );
     });
 
     it('should handle 429 rate limit error', async () => {
@@ -515,9 +520,9 @@ describe('VeriffClient', () => {
       };
       mockAxiosInstance.post.mockRejectedValue(rateLimitError);
 
-      await expect(
-        client.createSession('user-1', 'https://callback.com'),
-      ).rejects.toThrow('Veriff session creation failed');
+      await expect(client.createSession('user-1', 'https://callback.com')).rejects.toThrow(
+        'Veriff session creation failed',
+      );
     });
   });
 });

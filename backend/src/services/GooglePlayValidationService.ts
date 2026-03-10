@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -148,7 +148,8 @@ class GooglePlayValidationService {
       const autoRenewing = subscriptionData.autoRenewing;
 
       // paymentState: 0 = Payment pending, 1 = Payment received, 2 = Free trial, 3 = Pending deferred upgrade/downgrade
-      const isValid = paymentState === 1 && expiryTimeMillis && parseInt(expiryTimeMillis, 10) > Date.now();
+      const isValid =
+        paymentState === 1 && expiryTimeMillis && parseInt(expiryTimeMillis, 10) > Date.now();
 
       if (!isValid) {
         return {

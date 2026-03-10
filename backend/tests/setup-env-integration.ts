@@ -12,15 +12,15 @@ process.env.NODE_ENV = 'test';
 process.env.SECURITY_MODE = 'testing';
 
 // Database configuration - matches docker-compose.test.yml
-process.env.DB_HOST = '127.0.0.1';     // Use IPv4 to avoid IPv6 issues
-process.env.DB_PORT = '5433';           // Test container mapped port (not 5432!)
+process.env.DB_HOST = '127.0.0.1'; // Use IPv4 to avoid IPv6 issues
+process.env.DB_PORT = '5433'; // Test container mapped port (not 5432!)
 process.env.DB_NAME = 'conest_test';
 process.env.DB_USER = 'test_user';
 process.env.DB_PASSWORD = 'test_password';
 
 // Redis configuration - matches docker-compose.test.yml
 process.env.REDIS_HOST = '127.0.0.1';
-process.env.REDIS_PORT = '6380';        // Test container mapped port
+process.env.REDIS_PORT = '6380'; // Test container mapped port
 process.env.REDIS_PASSWORD = 'test_redis_password';
 
 // JWT secrets for testing

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -180,7 +180,7 @@ export const BUNDLE_PRICING = {
    * Value proposition
    */
   VALUE: {
-    total_value_cents: 3900 + (1499 * 6), // $128.94
+    total_value_cents: 3900 + 1499 * 6, // $128.94
     savings_cents: 2994, // $29.94
     savings_percentage: 23, // 23% discount
   },
@@ -271,8 +271,12 @@ export const PricingHelpers = {
    * @returns Commission earnings in cents
    */
   calculateRevenueShareCommission(certnRate: number, veriffRate: number): number {
-    const certnCommission = Math.round(VERIFICATION_PRICING.COST_BREAKDOWN.background_check * certnRate);
-    const veriffCommission = Math.round(VERIFICATION_PRICING.COST_BREAKDOWN.id_verification * veriffRate);
+    const certnCommission = Math.round(
+      VERIFICATION_PRICING.COST_BREAKDOWN.background_check * certnRate,
+    );
+    const veriffCommission = Math.round(
+      VERIFICATION_PRICING.COST_BREAKDOWN.id_verification * veriffRate,
+    );
     return certnCommission + veriffCommission;
   },
 
@@ -313,5 +317,5 @@ export const PricingHelpers = {
  */
 export type PricingTier = keyof typeof PRICING_TIERS;
 export type RefundReason = 'automated_fail' | 'courtesy_30day';
-export type PremiumFeature = typeof PREMIUM_PRICING.FEATURES[number];
+export type PremiumFeature = (typeof PREMIUM_PRICING.FEATURES)[number];
 export type RevenueShareScenario = keyof typeof VERIFICATION_PRICING.REVENUE_SHARE_SCENARIOS;

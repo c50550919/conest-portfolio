@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -162,10 +162,7 @@ Authorization: Bearer <your_jwt_token>
       },
     ],
   },
-  apis: [
-    './src/routes/*.ts',
-    './src/controllers/*.ts',
-  ],
+  apis: ['./src/routes/*.ts', './src/controllers/*.ts'],
 };
 
 const swaggerSpec = swaggerJsdoc(options);
@@ -179,11 +176,7 @@ export function setupSwagger(app: Express): void {
   };
 
   // Serve Swagger UI
-  app.use(
-    '/api-docs',
-    swaggerUi.serve,
-    swaggerUi.setup(swaggerSpec, swaggerUiOptions),
-  );
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
 
   // Serve raw OpenAPI spec as JSON
   app.get('/api-docs.json', (_req, res) => {

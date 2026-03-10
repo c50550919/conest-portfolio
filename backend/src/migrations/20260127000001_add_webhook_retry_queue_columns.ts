@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -87,7 +87,10 @@ export async function down(knex: Knex): Promise<void> {
   // Remove columns from verification_webhook_events
   await knex.schema.alterTable('verification_webhook_events', (table) => {
     table.dropIndex(['processing_status', 'next_retry_at'], 'idx_verification_webhook_retry_queue');
-    table.dropIndex(['dead_letter', 'provider', 'event_type'], 'idx_verification_webhook_dead_letter');
+    table.dropIndex(
+      ['dead_letter', 'provider', 'event_type'],
+      'idx_verification_webhook_dead_letter',
+    );
     table.dropColumn('retry_count');
     table.dropColumn('last_retry_at');
     table.dropColumn('next_retry_at');

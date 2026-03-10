@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -20,7 +20,11 @@
  */
 
 import { Router } from 'express';
-import { authenticateToken, requireAdmin, requirePhoneVerified } from '../../middleware/auth.middleware';
+import {
+  authenticateToken,
+  requireAdmin,
+  requirePhoneVerified,
+} from '../../middleware/auth.middleware';
 import { messageRateLimit, adminRateLimiter } from '../../middleware/rateLimit';
 import EnhancedMessagingService from './enhanced-messaging.service';
 import logger from '../../config/logger';

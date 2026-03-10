@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -105,7 +105,8 @@ export const SubscriptionService = {
         receipt_data: receiptData,
         validation_data: validationResult.validationData,
         expires_at: 'expiresAt' in validationResult ? validationResult.expiresAt : undefined,
-        auto_renewing: 'autoRenewing' in validationResult ? validationResult.autoRenewing : undefined,
+        auto_renewing:
+          'autoRenewing' in validationResult ? validationResult.autoRenewing : undefined,
       };
 
       const subscription = await SubscriptionModel.createSubscription(subscriptionData);
@@ -236,7 +237,7 @@ export const SubscriptionService = {
     try {
       const subscriptions = await SubscriptionModel.findByUserId(userId);
 
-      return subscriptions.map(sub => ({
+      return subscriptions.map((sub) => ({
         id: sub.id,
         productId: sub.product_id,
         status: sub.status,

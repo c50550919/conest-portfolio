@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -71,9 +71,7 @@ export const HouseholdModel = {
   },
 
   async findByAddressHash(addressHash: string): Promise<Household | undefined> {
-    return await db('households')
-      .where({ address_hash: addressHash })
-      .first();
+    return await db('households').where({ address_hash: addressHash }).first();
   },
 
   async update(id: string, data: Partial<Household>): Promise<Household> {
@@ -92,9 +90,7 @@ export const HouseholdModel = {
    * Get all active households
    */
   async getActive(): Promise<Household[]> {
-    return await db('households')
-      .where({ active: true })
-      .orderBy('created_at', 'desc');
+    return await db('households').where({ active: true }).orderBy('created_at', 'desc');
   },
 
   /**
@@ -115,7 +111,7 @@ export const HouseholdModel = {
       .whereNull('move_out_date')
       .count('* as count')
       .first();
-    return parseInt(result?.count as string || '0', 10);
+    return parseInt((result?.count as string) || '0', 10);
   },
 
   /**

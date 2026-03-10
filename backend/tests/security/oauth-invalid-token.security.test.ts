@@ -43,11 +43,10 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
 
   describe('Google OAuth - Invalid Token Scenarios', () => {
     it('should reject tampered Google token (invalid signature)', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token signature'),
-        );
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token signature'));
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -66,11 +65,10 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should reject expired Google token', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Token used too late'),
-        );
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Token used too late'));
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -84,11 +82,10 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should reject Google token with wrong audience', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Wrong recipient'),
-        );
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Wrong recipient'));
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -99,11 +96,10 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should reject completely malformed Google token', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Token format is incorrect'),
-        );
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Token format is incorrect'));
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -139,7 +135,7 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should reject Google token with unverified email', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
         getPayload: () => ({
           sub: '123456789012345678901',
@@ -163,7 +159,7 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should reject Google token without email field', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
         getPayload: () => ({
           sub: '123456789012345678901',
@@ -183,7 +179,7 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should reject Google token without sub (user ID)', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
         getPayload: () => ({
           // No sub field
@@ -205,11 +201,10 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
 
   describe('Apple OAuth - Invalid Token Scenarios', () => {
     it('should reject tampered Apple token (invalid signature)', async () => {
-    // @ts-expect-error - Mocking Apple signin for testing
-      jest.spyOn(appleSignin, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token signature'),
-        );
+      // @ts-expect-error - Mocking Apple signin for testing
+      jest
+        .spyOn(appleSignin, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token signature'));
 
       const response = await request(app)
         .post('/api/auth/oauth/apple')
@@ -231,11 +226,10 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should reject expired Apple token', async () => {
-    // @ts-expect-error - Mocking Apple signin for testing
-      jest.spyOn(appleSignin, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Token expired'),
-        );
+      // @ts-expect-error - Mocking Apple signin for testing
+      jest
+        .spyOn(appleSignin, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Token expired'));
 
       const response = await request(app)
         .post('/api/auth/oauth/apple')
@@ -249,7 +243,7 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should reject Apple token with nonce mismatch (replay attack)', async () => {
-    // @ts-expect-error - Mocking Apple signin for testing
+      // @ts-expect-error - Mocking Apple signin for testing
       jest.spyOn(appleSignin, 'verifyIdToken').mockResolvedValue({
         sub: '009012.apple.user.3456',
         email: 'replay@icloud.com',
@@ -324,7 +318,7 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should reject Apple token without email field', async () => {
-    // @ts-expect-error - Mocking Apple signin for testing
+      // @ts-expect-error - Mocking Apple signin for testing
       jest.spyOn(appleSignin, 'verifyIdToken').mockResolvedValue({
         sub: '009012.no-email.3456',
         // No email field
@@ -348,7 +342,7 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should reject Apple token without sub (user ID)', async () => {
-    // @ts-expect-error - Mocking Apple signin for testing
+      // @ts-expect-error - Mocking Apple signin for testing
       jest.spyOn(appleSignin, 'verifyIdToken').mockResolvedValue({
         // No sub field
         email: 'nosub@icloud.com',
@@ -368,11 +362,10 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should reject completely malformed Apple token', async () => {
-    // @ts-expect-error - Mocking Apple signin for testing
-      jest.spyOn(appleSignin, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Token format is incorrect'),
-        );
+      // @ts-expect-error - Mocking Apple signin for testing
+      jest
+        .spyOn(appleSignin, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Token format is incorrect'));
 
       const response = await request(app)
         .post('/api/auth/oauth/apple')
@@ -388,11 +381,10 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
 
   describe('Security: No Side Effects from Invalid Tokens', () => {
     it('should NOT create user record when Google token is invalid', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token'),
-        );
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token'));
 
       await request(app)
         .post('/api/auth/oauth/google')
@@ -408,11 +400,10 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should NOT create user record when Apple token is invalid', async () => {
-    // @ts-expect-error - Mocking Apple signin for testing
-      jest.spyOn(appleSignin, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token'),
-        );
+      // @ts-expect-error - Mocking Apple signin for testing
+      jest
+        .spyOn(appleSignin, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token'));
 
       await request(app)
         .post('/api/auth/oauth/apple')
@@ -442,10 +433,9 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
 
       // Attempt signin with invalid token
       // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token'),
-        );
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token'));
 
       await request(app)
         .post('/api/auth/oauth/google')
@@ -453,9 +443,7 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
         .expect(401);
 
       // Verify user unchanged
-      const dbUser = await db('users')
-        .where({ id: existingUser.id })
-        .first();
+      const dbUser = await db('users').where({ id: existingUser.id }).first();
 
       expect(dbUser.oauth_provider).toBe('google');
       expect(dbUser.oauth_provider_id).toBe('999888777666555');
@@ -475,10 +463,9 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
       });
 
       // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token'),
-        );
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token'));
 
       await request(app)
         .post('/api/auth/oauth/google')
@@ -493,11 +480,10 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
 
   describe('Error Message Security', () => {
     it('should NOT leak sensitive information in error messages', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token signature from Google servers'),
-        );
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token signature from Google servers'));
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -523,10 +509,9 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
 
       for (const scenario of rejectionScenarios) {
         // @ts-expect-error - Mocking Google OAuth2Client for testing
-        jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-          mockRejectedValue(
-            new Error(scenario.error),
-          );
+        jest
+          .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+          .mockRejectedValue(new Error(scenario.error));
 
         const response = await request(app)
           .post('/api/auth/oauth/google')
@@ -542,11 +527,10 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
     });
 
     it('should NOT return JWT tokens in error responses', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token'),
-        );
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token'));
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -573,10 +557,9 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
 
       // Mock invalid token
       // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token'),
-        );
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token'));
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -590,11 +573,10 @@ describe('T022: Invalid Token Rejection - Security Test', () => {
 
   describe('Multiple Invalid Attempts', () => {
     it('should consistently reject repeated invalid token attempts', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token'),
-        );
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token'));
 
       // Multiple attempts with invalid token
       for (let i = 0; i < 3; i++) {

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -67,8 +67,13 @@ export function calculateSLARemaining(checkDate: Date | undefined): number {
  * - Decision with rationale
  */
 const VALID_OFFENSE_NATURES: OffenseNature[] = [
-  'violent_felony', 'non_violent_felony', 'misdemeanor',
-  'drug_related', 'property_crime', 'fraud_financial', 'other',
+  'violent_felony',
+  'non_violent_felony',
+  'misdemeanor',
+  'drug_related',
+  'property_crime',
+  'fraud_financial',
+  'other',
 ];
 const VALID_SEVERITIES: OffenseSeverity[] = ['high', 'medium', 'low'];
 const VALID_DECISIONS: AssessmentDecision[] = ['approve', 'deny', 'request_more_info'];
@@ -84,7 +89,11 @@ function validateHUDAssessment(assessment: any): { valid: boolean; errors: strin
   if (!VALID_OFFENSE_NATURES.includes(assessment.offenseNature)) {
     errors.push(`offenseNature must be one of: ${VALID_OFFENSE_NATURES.join(', ')}`);
   }
-  if (!assessment.offenseDescription || typeof assessment.offenseDescription !== 'string' || assessment.offenseDescription.trim().length < 10) {
+  if (
+    !assessment.offenseDescription ||
+    typeof assessment.offenseDescription !== 'string' ||
+    assessment.offenseDescription.trim().length < 10
+  ) {
     errors.push('offenseDescription must be a string with at least 10 characters');
   }
 
@@ -118,7 +127,11 @@ function validateHUDAssessment(assessment: any): { valid: boolean; errors: strin
   }
 
   // Factor 5: Nexus to housing safety
-  if (!assessment.nexusToHousingSafety || typeof assessment.nexusToHousingSafety !== 'string' || assessment.nexusToHousingSafety.trim().length < 10) {
+  if (
+    !assessment.nexusToHousingSafety ||
+    typeof assessment.nexusToHousingSafety !== 'string' ||
+    assessment.nexusToHousingSafety.trim().length < 10
+  ) {
     errors.push('nexusToHousingSafety must be a string with at least 10 characters');
   }
 
@@ -126,7 +139,11 @@ function validateHUDAssessment(assessment: any): { valid: boolean; errors: strin
   if (!VALID_DECISIONS.includes(assessment.decision)) {
     errors.push(`decision must be one of: ${VALID_DECISIONS.join(', ')}`);
   }
-  if (!assessment.decisionRationale || typeof assessment.decisionRationale !== 'string' || assessment.decisionRationale.trim().length < 10) {
+  if (
+    !assessment.decisionRationale ||
+    typeof assessment.decisionRationale !== 'string' ||
+    assessment.decisionRationale.trim().length < 10
+  ) {
     errors.push('decisionRationale must be a string with at least 10 characters');
   }
 
@@ -144,7 +161,8 @@ export const verificationReviewController = {
 
     const enrichedQueue = await Promise.all(
       queue.map(async (verification) => {
-        if (!verification.user_id) return { ...verification, user: null, payment_status: null, sla_hours_remaining: null };
+        if (!verification.user_id)
+          return { ...verification, user: null, payment_status: null, sla_hours_remaining: null };
         const user = await UserModel.findById(verification.user_id);
         const payment = await VerificationPaymentModel.findByUserId(verification.user_id, 1);
 
@@ -237,7 +255,10 @@ export const verificationReviewController = {
     }
 
     const verification = await VerificationModel.adminApprove(
-      userId, adminUserId, notes, validatedAssessment,
+      userId,
+      adminUserId,
+      notes,
+      validatedAssessment,
     );
 
     logger.info('Admin approved verification', {
@@ -271,7 +292,8 @@ export const verificationReviewController = {
     if (!hudAssessment) {
       res.status(400).json({
         error: 'HUD individualized assessment required for denials',
-        message: 'Per HUD guidance, all housing denials based on criminal history must include a documented individualized assessment considering: nature of offense, severity, recency, rehabilitation evidence, and nexus to housing safety.',
+        message:
+          'Per HUD guidance, all housing denials based on criminal history must include a documented individualized assessment considering: nature of offense, severity, recency, rehabilitation evidence, and nexus to housing safety.',
       });
       return;
     }
@@ -292,7 +314,10 @@ export const verificationReviewController = {
     };
 
     const verification = await VerificationModel.adminReject(
-      userId, adminUserId, notes, validatedAssessment,
+      userId,
+      adminUserId,
+      notes,
+      validatedAssessment,
     );
 
     // Process automatic refund for rejection

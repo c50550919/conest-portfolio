@@ -82,28 +82,25 @@ const validAttestationResponses = [
   { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
 ];
 
-const validSignatureData = `data:image/png;base64,${  'A'.repeat(MIN_SIGNATURE_LENGTH + 50)}`;
+const validSignatureData = `data:image/png;base64,${'A'.repeat(MIN_SIGNATURE_LENGTH + 50)}`;
 
 // JWT token generators
-const generateValidToken = (userId: string = mockUserId): string => jwt.sign(
-  { userId, email: 'test@example.com', type: 'access' },
-  JWT_SECRET,
-  { expiresIn: '1h' },
-);
+const generateValidToken = (userId: string = mockUserId): string =>
+  jwt.sign({ userId, email: 'test@example.com', type: 'access' }, JWT_SECRET, { expiresIn: '1h' });
 
-const generateExpiredToken = (userId: string = mockUserId): string => jwt.sign(
-  { userId, email: 'test@example.com', type: 'access' },
-  JWT_SECRET,
-  { expiresIn: '-1h' }, // Already expired
-);
+const generateExpiredToken = (userId: string = mockUserId): string =>
+  jwt.sign(
+    { userId, email: 'test@example.com', type: 'access' },
+    JWT_SECRET,
+    { expiresIn: '-1h' }, // Already expired
+  );
 
 const generateInvalidToken = (): string => 'invalid.jwt.token.structure';
 
-const generateWrongSecretToken = (userId: string = mockUserId): string => jwt.sign(
-  { userId, email: 'test@example.com', type: 'access' },
-  'wrong-secret-key',
-  { expiresIn: '1h' },
-);
+const generateWrongSecretToken = (userId: string = mockUserId): string =>
+  jwt.sign({ userId, email: 'test@example.com', type: 'access' }, 'wrong-secret-key', {
+    expiresIn: '1h',
+  });
 
 // Create test app with proper JWT validation
 const createTestApp = () => {
@@ -132,12 +129,22 @@ const createTestApp = () => {
   };
 
   // Import controller
-  const { householdSafetyController } = require('../features/household-safety/household-safety.controller');
+  const {
+    householdSafetyController,
+  } = require('../features/household-safety/household-safety.controller');
 
   // Setup routes
-  app.get('/api/household-safety/questions', authMiddleware, householdSafetyController.getQuestions);
+  app.get(
+    '/api/household-safety/questions',
+    authMiddleware,
+    householdSafetyController.getQuestions,
+  );
   app.get('/api/household-safety/status', authMiddleware, householdSafetyController.getStatus);
-  app.post('/api/household-safety/submit', authMiddleware, householdSafetyController.submitAttestation);
+  app.post(
+    '/api/household-safety/submit',
+    authMiddleware,
+    householdSafetyController.submitAttestation,
+  );
 
   // Error handler - should NOT expose internal details
   app.use((err, req, res, next) => {
@@ -176,21 +183,20 @@ describe('Security: Household Safety Disclosure API', () => {
     // T-HS-S01: All endpoints reject unauthenticated requests
     it('T-HS-S01: should reject unauthenticated requests on all endpoints', async () => {
       // GET /questions
-      const questionsRes = await request(app)
-        .get('/api/household-safety/questions')
-        .expect(401);
+      const questionsRes = await request(app).get('/api/household-safety/questions').expect(401);
       expect(questionsRes.body).toHaveProperty('error');
 
       // GET /status
-      const statusRes = await request(app)
-        .get('/api/household-safety/status')
-        .expect(401);
+      const statusRes = await request(app).get('/api/household-safety/status').expect(401);
       expect(statusRes.body).toHaveProperty('error');
 
       // POST /submit
       const submitRes = await request(app)
         .post('/api/household-safety/submit')
-        .send({ attestationResponses: validAttestationResponses, signatureData: validSignatureData })
+        .send({
+          attestationResponses: validAttestationResponses,
+          signatureData: validSignatureData,
+        })
         .expect(401);
       expect(submitRes.body).toHaveProperty('error');
     });
@@ -256,7 +262,9 @@ describe('Security: Household Safety Disclosure API', () => {
 
     // T-HS-S04: Users can only access their own disclosures
     it('T-HS-S04: should only allow users to access their own disclosures', async () => {
-      jest.spyOn(HouseholdSafetyDisclosureModel, 'findByParentId').mockResolvedValue(mockDisclosure);
+      jest
+        .spyOn(HouseholdSafetyDisclosureModel, 'findByParentId')
+        .mockResolvedValue(mockDisclosure);
 
       const validToken = generateValidToken(mockUserId);
 
@@ -342,7 +350,7 @@ describe('Security: Household Safety Disclosure API', () => {
 
     // T-HS-S07: XSS in signature data sanitized
     it('T-HS-S07: should handle XSS attempts in signature data', async () => {
-      const xssPayload = `<script>alert("XSS")</script>${  'A'.repeat(MIN_SIGNATURE_LENGTH)}`;
+      const xssPayload = `<script>alert("XSS")</script>${'A'.repeat(MIN_SIGNATURE_LENGTH)}`;
 
       const response = await request(app)
         .post('/api/household-safety/submit')
@@ -361,7 +369,11 @@ describe('Security: Household Safety Disclosure API', () => {
     // T-HS-S08: Invalid questionId values rejected
     it('T-HS-S08: should reject invalid questionId values', async () => {
       const invalidResponses = [
-        { questionId: 'invalid_question_id', response: false, answeredAt: new Date().toISOString() },
+        {
+          questionId: 'invalid_question_id',
+          response: false,
+          answeredAt: new Date().toISOString(),
+        },
         { questionId: 'court_orders', response: false, answeredAt: new Date().toISOString() },
         { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
         { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
@@ -436,21 +448,23 @@ describe('Security: Household Safety Disclosure API', () => {
 
       // Note: This test verifies the endpoint handles multiple requests
       // Full rate limiting is tested at the middleware level with the real app
-      const promises = Array(5).fill(null).map(() =>
-        request(app)
-          .post('/api/household-safety/submit')
-          .set('Authorization', `Bearer ${validToken}`)
-          .send({
-            attestationResponses: validAttestationResponses,
-            signatureData: validSignatureData,
-            householdId: mockHouseholdId,
-          }),
-      );
+      const promises = Array(5)
+        .fill(null)
+        .map(() =>
+          request(app)
+            .post('/api/household-safety/submit')
+            .set('Authorization', `Bearer ${validToken}`)
+            .send({
+              attestationResponses: validAttestationResponses,
+              signatureData: validSignatureData,
+              householdId: mockHouseholdId,
+            }),
+        );
 
       const responses = await Promise.all(promises);
 
       // All requests should complete (either 201 or 429 if rate limited)
-      responses.forEach(response => {
+      responses.forEach((response) => {
         expect([201, 429]).toContain(response.status);
       });
     });
@@ -465,9 +479,9 @@ describe('Security: Household Safety Disclosure API', () => {
 
     it('should not expose internal error details', async () => {
       // Force an error by making the service throw
-      jest.spyOn(HouseholdSafetyDisclosureModel, 'findByParentId').mockRejectedValue(
-        new Error('Internal database error with sensitive details'),
-      );
+      jest
+        .spyOn(HouseholdSafetyDisclosureModel, 'findByParentId')
+        .mockRejectedValue(new Error('Internal database error with sensitive details'));
 
       const response = await request(app)
         .get('/api/household-safety/status')

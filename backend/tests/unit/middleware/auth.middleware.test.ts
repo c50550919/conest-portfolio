@@ -41,8 +41,8 @@ interface AuthRequest extends Request {
 import { verifyToken } from '../../utils/jwt';
 import { UserModel } from '../../models/User';
 
-const mockVerifyToken = verifyToken as jest.MockedFunction<typeof verifyToken>;
-const mockUserModel = UserModel as jest.Mocked<typeof UserModel>;
+const mockVerifyToken = verifyToken;
+const mockUserModel = UserModel;
 
 // Type alias for partial user mock
 type PartialUser = Partial<{

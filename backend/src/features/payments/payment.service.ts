@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -35,7 +35,12 @@ import { UserModel } from '../../models/User';
 import { VerificationPaymentModel } from '../../models/VerificationPayment';
 import { VerificationService } from '../verification/verification.service';
 import { WebhookEventModel } from '../../models/WebhookEvent';
-import { PaymentCompensationService, SplitRentSagaResult, RollbackResult, CompensationResult } from './paymentCompensation.service';
+import {
+  PaymentCompensationService,
+  SplitRentSagaResult,
+  RollbackResult,
+  CompensationResult,
+} from './paymentCompensation.service';
 import logger from '../../config/logger';
 
 // Constants for verification payments
@@ -178,7 +183,7 @@ export const PaymentService = {
       // If payerId provided, verify membership
       if (payerId) {
         const members = await HouseholdModel.getMembers(householdId);
-        const isMember = members.some(m => m.user_id === payerId);
+        const isMember = members.some((m) => m.user_id === payerId);
         if (!isMember) {
           throw new Error('USER_NOT_HOUSEHOLD_MEMBER');
         }
@@ -237,7 +242,7 @@ export const PaymentService = {
 
     // Verify user is a member of the household
     const members = await HouseholdModel.getMembers(householdId);
-    const isMember = members.some(m => m.user_id === payerId);
+    const isMember = members.some((m) => m.user_id === payerId);
     if (!isMember) {
       throw new Error('User is not a member of this household');
     }
@@ -315,11 +320,13 @@ export const PaymentService = {
    * @param params - Split rent parameters
    * @returns Array of split amounts for each member
    */
-  async splitRent(params: SplitRentParams): Promise<Array<{
-    userId: string;
-    amount: number;
-    percentage: number;
-  }>> {
+  async splitRent(params: SplitRentParams): Promise<
+    Array<{
+      userId: string;
+      amount: number;
+      percentage: number;
+    }>
+  > {
     try {
       const { householdId, totalAmount } = params;
 
@@ -348,7 +355,7 @@ export const PaymentService = {
       }
 
       // Calculate split amounts
-      const splitAmounts = members.map(member => ({
+      const splitAmounts = members.map((member) => ({
         userId: member.user_id,
         amount: Math.round((member.rent_share / totalShares) * totalAmount),
         percentage: (member.rent_share / totalShares) * 100,
@@ -402,7 +409,7 @@ export const PaymentService = {
 
     // Create payment for each member
     const payments = await Promise.all(
-      members.map(member =>
+      members.map((member) =>
         PaymentModel.createPayment({
           household_id: householdId,
           payer_id: member.user_id,
@@ -542,7 +549,7 @@ export const PaymentService = {
     try {
       const payments = await PaymentModel.findByUser(userId);
 
-      return payments.map(payment => ({
+      return payments.map((payment) => ({
         id: payment.id,
         amount: payment.amount,
         status: payment.status,
@@ -611,7 +618,8 @@ export const PaymentService = {
 
     // Auto-generate idempotency key if not provided
     // Format: verification_payment_{userId}_{timestamp}_{random}
-    const idempotencyKey = params.idempotencyKey ||
+    const idempotencyKey =
+      params.idempotencyKey ||
       `verification_payment_${userId}_${Date.now()}_${uuidv4().slice(0, 8)}`;
 
     try {
@@ -733,7 +741,8 @@ export const PaymentService = {
   async handleVerificationPaymentSuccess(paymentIntentId: string): Promise<void> {
     try {
       // Find verification payment record
-      const verificationPayment = await VerificationPaymentModel.findByStripePaymentIntentId(paymentIntentId);
+      const verificationPayment =
+        await VerificationPaymentModel.findByStripePaymentIntentId(paymentIntentId);
 
       if (!verificationPayment) {
         logger.warn(`No verification payment found for PaymentIntent: ${paymentIntentId}`);
@@ -751,7 +760,6 @@ export const PaymentService = {
       // Note: Background check is triggered AFTER ID verification completes
       // The ID verification webhook will call initiateBackgroundCheck()
       // This ensures we have verified identity before running background check
-
     } catch (error: any) {
       logger.error('Error handling verification payment success:', error);
       throw error;
@@ -766,7 +774,8 @@ export const PaymentService = {
    */
   async handleVerificationPaymentFailure(paymentIntentId: string): Promise<void> {
     try {
-      const verificationPayment = await VerificationPaymentModel.findByStripePaymentIntentId(paymentIntentId);
+      const verificationPayment =
+        await VerificationPaymentModel.findByStripePaymentIntentId(paymentIntentId);
 
       if (!verificationPayment) {
         logger.warn(`No verification payment found for failed PaymentIntent: ${paymentIntentId}`);

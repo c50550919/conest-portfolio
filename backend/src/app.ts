@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -84,7 +84,9 @@ app.use(generalLimiter);
 // Request logging middleware (development only)
 if (process.env.NODE_ENV === 'development') {
   app.use((req, _res, next) => {
-    console.log(`[HTTP] ${req.method} ${req.url} - Auth: ${req.headers.authorization ? 'Yes' : 'No'}`);
+    console.log(
+      `[HTTP] ${req.method} ${req.url} - Auth: ${req.headers.authorization ? 'Yes' : 'No'}`,
+    );
     next();
   });
 }
@@ -131,12 +133,14 @@ app.use('/api/notifications', notificationRoutes);
 // SECURITY: Only registered in development/test environments
 if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
   // Dynamic import to ensure this code is never bundled in production
-  import('./routes/dev').then((devRoutes) => {
-    app.use('/api/dev', devRoutes.default);
-    console.log('⚠️  DEV ROUTES ENABLED - /api/dev/* endpoints are active');
-  }).catch((err) => {
-    console.error('Failed to load dev routes:', err);
-  });
+  import('./routes/dev')
+    .then((devRoutes) => {
+      app.use('/api/dev', devRoutes.default);
+      console.log('⚠️  DEV ROUTES ENABLED - /api/dev/* endpoints are active');
+    })
+    .catch((err) => {
+      console.error('Failed to load dev routes:', err);
+    });
 }
 
 // Local file uploads serving (development mode only)

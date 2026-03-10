@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -109,10 +109,7 @@ export class OAuthService {
    * @returns OAuthProfile with user information
    * @throws Error if token is invalid, expired, or nonce mismatches
    */
-  async verifyAppleToken(
-    identityToken: string,
-    nonce: string,
-  ): Promise<OAuthProfile> {
+  async verifyAppleToken(identityToken: string, nonce: string): Promise<OAuthProfile> {
     try {
       // Verify token with Apple
       const appleIdTokenClaims = await appleSignin.verifyIdToken(identityToken, {
@@ -365,7 +362,7 @@ export class OAuthService {
     const tokenPair = await AuthService.generateTokenPair(existingUser.id, existingUser.email);
 
     return {
-      user: (updatedUser),
+      user: updatedUser,
       tokens: {
         accessToken: tokenPair.accessToken,
         refreshToken: tokenPair.refreshToken,

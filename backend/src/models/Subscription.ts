@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -112,9 +112,7 @@ export const SubscriptionModel = {
    * Includes expired and cancelled subscriptions
    */
   async findByUserId(userId: string): Promise<Subscription[]> {
-    return await db('subscriptions')
-      .where({ user_id: userId })
-      .orderBy('created_at', 'desc');
+    return await db('subscriptions').where({ user_id: userId }).orderBy('created_at', 'desc');
   },
 
   /**
@@ -278,7 +276,9 @@ export const SubscriptionModel = {
       .where({ user_id: userId })
       .select(
         db.raw('COUNT(*) as total_subscriptions'),
-        db.raw("COUNT(CASE WHEN status = 'active' AND purchase_type = 'subscription' THEN 1 END) as active_subscriptions"),
+        db.raw(
+          "COUNT(CASE WHEN status = 'active' AND purchase_type = 'subscription' THEN 1 END) as active_subscriptions",
+        ),
         db.raw("COUNT(CASE WHEN status = 'expired' THEN 1 END) as expired_subscriptions"),
         db.raw("COUNT(CASE WHEN purchase_type = 'one_time' THEN 1 END) as total_purchases"),
       )

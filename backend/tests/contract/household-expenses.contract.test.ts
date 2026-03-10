@@ -98,7 +98,9 @@ describe('GET /api/household/:id/expenses - Contract Tests', () => {
           expect(['rent', 'utilities', 'deposit', 'other']).toContain(expense.type);
 
           // Validate status
-          expect(['pending', 'processing', 'completed', 'failed', 'refunded']).toContain(expense.status);
+          expect(['pending', 'processing', 'completed', 'failed', 'refunded']).toContain(
+            expense.status,
+          );
 
           // Validate amount is positive integer in cents
           expect(typeof expense.amount).toBe('number');
@@ -146,9 +148,7 @@ describe('GET /api/household/:id/expenses - Contract Tests', () => {
 
   describe('Authorization & Error Cases', () => {
     it('should return 401 if not authenticated', async () => {
-      const response = await request(app)
-        .get(`/api/household/${householdId}/expenses`)
-        .expect(401);
+      const response = await request(app).get(`/api/household/${householdId}/expenses`).expect(401);
 
       expect(response.body).toHaveProperty('error');
     });
@@ -225,9 +225,7 @@ describe('GET /api/household/:id/expenses - Contract Tests', () => {
       expect(response.body.total).toBe(calculatedTotal);
 
       // Pending should be sum of pending expenses
-      const pendingExpenses = response.body.expenses.filter(
-        (exp: any) => exp.status === 'pending',
-      );
+      const pendingExpenses = response.body.expenses.filter((exp: any) => exp.status === 'pending');
       const calculatedPending = pendingExpenses.reduce(
         (sum: number, exp: any) => sum + exp.amount,
         0,
@@ -237,10 +235,7 @@ describe('GET /api/household/:id/expenses - Contract Tests', () => {
       // Overdue should be sum of pending expenses with past due date
       const now = new Date();
       const overdueExpenses = response.body.expenses.filter(
-        (exp: any) =>
-          exp.status === 'pending' &&
-          exp.dueDate &&
-          new Date(exp.dueDate) < now,
+        (exp: any) => exp.status === 'pending' && exp.dueDate && new Date(exp.dueDate) < now,
       );
       const calculatedOverdue = overdueExpenses.reduce(
         (sum: number, exp: any) => sum + exp.amount,

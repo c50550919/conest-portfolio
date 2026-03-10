@@ -1,7 +1,12 @@
 import { test, expect, chromium, Page, Browser, BrowserContext } from '@playwright/test';
 import request from 'supertest';
 import app from '../../src/app';
-import { setupTestDatabase, teardownTestDatabase, createTestUser, getAuthToken } from '../helpers/test-utils';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+  createTestUser,
+  getAuthToken,
+} from '../helpers/test-utils';
 
 /**
  * E2E TEST: Discovery Screen Workflow with Playwright + Android Emulator
@@ -96,12 +101,14 @@ describe('E2E Test: Discovery Screen Workflow', () => {
   test.beforeEach(async () => {
     // Create new browser context for isolation
     context = await browser.newContext({
-      viewport: ANDROID_EMULATOR === 'true'
-        ? { width: 360, height: 640 } // Android phone dimensions
-        : { width: 1280, height: 720 }, // Desktop
-      userAgent: ANDROID_EMULATOR === 'true'
-        ? 'Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36'
-        : undefined,
+      viewport:
+        ANDROID_EMULATOR === 'true'
+          ? { width: 360, height: 640 } // Android phone dimensions
+          : { width: 1280, height: 720 }, // Desktop
+      userAgent:
+        ANDROID_EMULATOR === 'true'
+          ? 'Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36'
+          : undefined,
     });
 
     page = await context.newPage();
@@ -152,7 +159,9 @@ describe('E2E Test: Discovery Screen Workflow', () => {
       await expect(profileCard.locator('[data-testid="badge-phone-verified"]')).toBeVisible();
 
       // Step 6: Validate compatibility score
-      const compatibilityScore = await profileCard.locator('[data-testid="compatibility-score"]').textContent();
+      const compatibilityScore = await profileCard
+        .locator('[data-testid="compatibility-score"]')
+        .textContent();
       expect(compatibilityScore).toMatch(/\d+%/);
 
       // Step 7: Performance validation - page load <500ms
@@ -212,7 +221,9 @@ describe('E2E Test: Discovery Screen Workflow', () => {
       await page.goto(`${BACKEND_URL}/discovery`);
 
       // User1 swipes right on User2
-      const user2ProfileCard = page.locator(`[data-testid="profile-card"][data-user-id="${userId2}"]`);
+      const user2ProfileCard = page.locator(
+        `[data-testid="profile-card"][data-user-id="${userId2}"]`,
+      );
       await user2ProfileCard.locator('[data-testid="swipe-right-btn"]').click();
 
       // Step 1: "It's a Match!" modal appears
@@ -312,7 +323,9 @@ describe('E2E Test: Discovery Screen Workflow', () => {
       // Step 2: Tooltip appears
       const tooltip = page.locator('[data-testid="badge-tooltip"]');
       await expect(tooltip).toBeVisible();
-      await expect(tooltip).toContainText('Background check completed via third-party verification');
+      await expect(tooltip).toContainText(
+        'Background check completed via third-party verification',
+      );
     });
   });
 

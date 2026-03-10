@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -40,10 +40,12 @@ export function sanitizeHTML(input: string): string {
  * Sanitize email address
  */
 export function sanitizeEmail(email: string): string {
-  return validator.normalizeEmail(email, {
-    all_lowercase: true,
-    gmail_remove_dots: false,
-  }) || '';
+  return (
+    validator.normalizeEmail(email, {
+      all_lowercase: true,
+      gmail_remove_dots: false,
+    }) || ''
+  );
 }
 
 /**
@@ -63,10 +65,12 @@ export function sanitizePhone(phone: string): string {
 export function sanitizeURL(url: string): string | null {
   const sanitized = validator.trim(url);
 
-  if (!validator.isURL(sanitized, {
-    protocols: ['http', 'https'],
-    require_protocol: true,
-  })) {
+  if (
+    !validator.isURL(sanitized, {
+      protocols: ['http', 'https'],
+      require_protocol: true,
+    })
+  ) {
     return null;
   }
 
@@ -82,7 +86,7 @@ function sanitizeObject(obj: any, depth: number = 0): any {
   if (obj === null || obj === undefined) return obj;
 
   if (Array.isArray(obj)) {
-    return obj.map(item => sanitizeObject(item, depth + 1));
+    return obj.map((item) => sanitizeObject(item, depth + 1));
   }
 
   if (typeof obj === 'object' && !(obj instanceof Date)) {
@@ -191,7 +195,7 @@ export function hasSQLInjection(input: string): boolean {
     /(\/\*|\*\/|--)/,
   ];
 
-  return sqlPatterns.some(pattern => pattern.test(input));
+  return sqlPatterns.some((pattern) => pattern.test(input));
 }
 
 /**
@@ -207,7 +211,7 @@ export function hasXSS(input: string): boolean {
     /<object/gi,
   ];
 
-  return xssPatterns.some(pattern => pattern.test(input));
+  return xssPatterns.some((pattern) => pattern.test(input));
 }
 
 /**
@@ -225,10 +229,7 @@ export function detectMaliciousInput(req: Request, res: Response, next: NextFunc
     return false;
   };
 
-  const isMalicious =
-    checkValue(req.body) ||
-    checkValue(req.query) ||
-    checkValue(req.params);
+  const isMalicious = checkValue(req.body) || checkValue(req.query) || checkValue(req.params);
 
   if (isMalicious) {
     res.status(400).json({

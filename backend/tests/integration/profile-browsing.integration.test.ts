@@ -1,6 +1,11 @@
 import request from 'supertest';
 import app from '../../src/app';
-import { setupTestDatabase, teardownTestDatabase, createTestUser, getAuthToken } from '../helpers/test-utils';
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+  createTestUser,
+  getAuthToken,
+} from '../helpers/test-utils';
 
 /**
  * Integration Test: Successful Profile Browsing
@@ -47,16 +52,86 @@ describe('Integration Test: Successful Profile Browsing', () => {
 
     // Create 10+ potential matches with varied compatibility
     const testProfiles = [
-      { email: 'match1@example.com', firstName: 'Emily', age: 30, childrenCount: 1, childrenAgeGroups: ['toddler'], budget: 1800 },
-      { email: 'match2@example.com', firstName: 'Jessica', age: 34, childrenCount: 2, childrenAgeGroups: ['elementary', 'teen'], budget: 2200 },
-      { email: 'match3@example.com', firstName: 'Amanda', age: 28, childrenCount: 1, childrenAgeGroups: ['elementary'], budget: 1900 },
-      { email: 'match4@example.com', firstName: 'Rachel', age: 35, childrenCount: 3, childrenAgeGroups: ['toddler', 'elementary', 'teen'], budget: 2500 },
-      { email: 'match5@example.com', firstName: 'Lisa', age: 31, childrenCount: 2, childrenAgeGroups: ['toddler'], budget: 2000 },
-      { email: 'match6@example.com', firstName: 'Michelle', age: 29, childrenCount: 1, childrenAgeGroups: ['elementary'], budget: 1700 },
-      { email: 'match7@example.com', firstName: 'Jennifer', age: 36, childrenCount: 2, childrenAgeGroups: ['teen'], budget: 2300 },
-      { email: 'match8@example.com', firstName: 'Nicole', age: 33, childrenCount: 1, childrenAgeGroups: ['toddler'], budget: 1950 },
-      { email: 'match9@example.com', firstName: 'Melissa', age: 30, childrenCount: 2, childrenAgeGroups: ['elementary'], budget: 2100 },
-      { email: 'match10@example.com', firstName: 'Stephanie', age: 32, childrenCount: 1, childrenAgeGroups: ['toddler', 'elementary'], budget: 2000 },
+      {
+        email: 'match1@example.com',
+        firstName: 'Emily',
+        age: 30,
+        childrenCount: 1,
+        childrenAgeGroups: ['toddler'],
+        budget: 1800,
+      },
+      {
+        email: 'match2@example.com',
+        firstName: 'Jessica',
+        age: 34,
+        childrenCount: 2,
+        childrenAgeGroups: ['elementary', 'teen'],
+        budget: 2200,
+      },
+      {
+        email: 'match3@example.com',
+        firstName: 'Amanda',
+        age: 28,
+        childrenCount: 1,
+        childrenAgeGroups: ['elementary'],
+        budget: 1900,
+      },
+      {
+        email: 'match4@example.com',
+        firstName: 'Rachel',
+        age: 35,
+        childrenCount: 3,
+        childrenAgeGroups: ['toddler', 'elementary', 'teen'],
+        budget: 2500,
+      },
+      {
+        email: 'match5@example.com',
+        firstName: 'Lisa',
+        age: 31,
+        childrenCount: 2,
+        childrenAgeGroups: ['toddler'],
+        budget: 2000,
+      },
+      {
+        email: 'match6@example.com',
+        firstName: 'Michelle',
+        age: 29,
+        childrenCount: 1,
+        childrenAgeGroups: ['elementary'],
+        budget: 1700,
+      },
+      {
+        email: 'match7@example.com',
+        firstName: 'Jennifer',
+        age: 36,
+        childrenCount: 2,
+        childrenAgeGroups: ['teen'],
+        budget: 2300,
+      },
+      {
+        email: 'match8@example.com',
+        firstName: 'Nicole',
+        age: 33,
+        childrenCount: 1,
+        childrenAgeGroups: ['toddler'],
+        budget: 1950,
+      },
+      {
+        email: 'match9@example.com',
+        firstName: 'Melissa',
+        age: 30,
+        childrenCount: 2,
+        childrenAgeGroups: ['elementary'],
+        budget: 2100,
+      },
+      {
+        email: 'match10@example.com',
+        firstName: 'Stephanie',
+        age: 32,
+        childrenCount: 1,
+        childrenAgeGroups: ['toddler', 'elementary'],
+        budget: 2000,
+      },
     ];
 
     for (const profile of testProfiles) {
@@ -262,7 +337,7 @@ describe('Integration Test: Successful Profile Browsing', () => {
       });
     });
 
-    it('should exclude user\'s own profile from discovery queue', async () => {
+    it("should exclude user's own profile from discovery queue", async () => {
       const response = await request(app)
         .get('/api/discovery/profiles')
         .set('Authorization', `Bearer ${authToken}`)
@@ -322,7 +397,7 @@ describe('Integration Test: Successful Profile Browsing', () => {
         request(app)
           .get('/api/discovery/profiles')
           .set('Authorization', `Bearer ${authToken}`)
-          .then(response => ({
+          .then((response) => ({
             status: response.status,
             duration: response.header['x-response-time'],
           })),
@@ -331,7 +406,7 @@ describe('Integration Test: Successful Profile Browsing', () => {
       const results = await Promise.all(requests);
 
       // All requests should succeed
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(result.status).toBe(200);
       });
     });

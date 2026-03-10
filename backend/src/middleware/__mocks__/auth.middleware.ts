@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -25,7 +25,7 @@ import * as jwt from 'jsonwebtoken';
 if (process.env.NODE_ENV !== 'test') {
   throw new Error(
     'SECURITY ERROR: Auth mock middleware loaded outside test environment. ' +
-    'This file should only be used during testing via Jest moduleNameMapper.'
+      'This file should only be used during testing via Jest moduleNameMapper.',
   );
 }
 
@@ -44,7 +44,8 @@ export interface AuthRequest extends Request {
 
 // Test-only secret: Safe because of NODE_ENV guard above prevents production use
 // deepcode ignore HardcodedSecret: Intentional test secret with NODE_ENV=test runtime guard
-const TEST_JWT_SECRET = process.env.TEST_JWT_SECRET || process.env.JWT_SECRET || 'test-jwt-secret-e2e-only';
+const TEST_JWT_SECRET =
+  process.env.TEST_JWT_SECRET || process.env.JWT_SECRET || 'test-jwt-secret-e2e-only';
 
 /**
  * Default mock user for tests
@@ -68,21 +69,26 @@ const mockUserConfigs: Record<string, Partial<typeof defaultMockUser>> = {
   // Verification states
   'verified-paid': { id_verified: true, background_check_complete: true },
   'under-review': { id_verified: false, background_check_complete: false },
-  'unpaid': { id_verified: false, background_check_complete: false },
-  'paid': { id_verified: true, background_check_complete: true },
-  'unverified': { id_verified: false, background_check_complete: false, email_verified: false },
+  unpaid: { id_verified: false, background_check_complete: false },
+  paid: { id_verified: true, background_check_complete: true },
+  unverified: { id_verified: false, background_check_complete: false, email_verified: false },
   'paid-not-verified': { id_verified: false, background_check_complete: false },
-  'new-user': { id_verified: false, background_check_complete: false, email_verified: false, phone_verified: false },
+  'new-user': {
+    id_verified: false,
+    background_check_complete: false,
+    email_verified: false,
+    phone_verified: false,
+  },
 
   // User variants
   'other-user': { id: '64c31337-4e0f-4a41-b537-db546f26ff01', email: 'other@example.com' },
-  'other': { id: '64c31337-4e0f-4a41-b537-db546f26ff02', email: 'other2@example.com' },
+  other: { id: '64c31337-4e0f-4a41-b537-db546f26ff02', email: 'other2@example.com' },
   'user-a': { id: '64c31337-4e0f-4a41-b537-db546f26ffa1', email: 'user-a@example.com' },
   'user-b': { id: '64c31337-4e0f-4a41-b537-db546f26ffb2', email: 'user-b@example.com' },
   'user-c': { id: '64c31337-4e0f-4a41-b537-db546f26ffc3', email: 'user-c@example.com' },
 
   // Admin roles
-  'admin': { role: 'admin', id: '64c31337-4e0f-4a41-b537-admin00001' },
+  admin: { role: 'admin', id: '64c31337-4e0f-4a41-b537-admin00001' },
   'non-admin-member': { role: 'user' },
   'external-user': { id: '64c31337-4e0f-4a41-b537-external001', email: 'external@example.com' },
 
@@ -95,7 +101,12 @@ const mockUserConfigs: Record<string, Partial<typeof defaultMockUser>> = {
   'rate-limited': { id: '64c31337-4e0f-4a41-b537-ratelimit01' },
 
   // Verification status variations
-  'incomplete': { id_verified: false, background_check_complete: false, email_verified: true, phone_verified: true },
+  incomplete: {
+    id_verified: false,
+    background_check_complete: false,
+    email_verified: true,
+    phone_verified: true,
+  },
   'pending-id': { id_verified: false, background_check_complete: true },
   'pending-background': { id_verified: true, background_check_complete: false },
   'rejected-background': { id_verified: true, background_check_complete: false },
@@ -122,56 +133,58 @@ function getMockUserForToken(token: string): typeof defaultMockUser {
  * Create mock auth middleware
  * Handles both valid JWTs and legacy mock tokens
  */
-const createMockAuthMiddleware = (mockUser = defaultMockUser) => async (req: any, res: Response, next: NextFunction): Promise<void> => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader?.split(' ')[1];
+const createMockAuthMiddleware =
+  (mockUser = defaultMockUser) =>
+  async (req: any, res: Response, next: NextFunction): Promise<void> => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader?.split(' ')[1];
 
-  if (!token) {
-    res.status(401).json({
-      error: 'unauthorized',
-      message: 'Authentication required - Access token is missing',
-    });
-    return;
-  }
-
-  // Try to decode the token to get user info
-  try {
-    const decoded = jwt.verify(token, TEST_JWT_SECRET) as { userId: string; email: string };
-    req.userId = decoded.userId;
-    req.email = decoded.email;
-    req.user = {
-      ...mockUser,
-      id: decoded.userId,
-      email: decoded.email,
-    };
-    req.jwtPayload = decoded;
-    next();
-  } catch (error) {
-    // If token is invalid, check if it's a mock token pattern
-    if (token.startsWith('mock-token-')) {
-      const userId = token.replace('mock-token-', '');
-      req.userId = userId;
-      req.email = mockUser.email;
-      req.user = { ...mockUser, id: userId };
-      req.jwtPayload = { userId, email: mockUser.email };
-      next();
-    } else if (token.startsWith('mock-jwt-token')) {
-      // Handle all mock-jwt-token-{suffix} patterns
-      const user = getMockUserForToken(token);
-      req.userId = user.id;
-      req.email = user.email;
-      req.user = user;
-      req.jwtPayload = { userId: user.id, email: user.email };
-      next();
-    } else {
+    if (!token) {
       res.status(401).json({
         error: 'unauthorized',
-        message: 'Invalid authentication token',
+        message: 'Authentication required - Access token is missing',
       });
       return;
     }
-  }
-};
+
+    // Try to decode the token to get user info
+    try {
+      const decoded = jwt.verify(token, TEST_JWT_SECRET) as { userId: string; email: string };
+      req.userId = decoded.userId;
+      req.email = decoded.email;
+      req.user = {
+        ...mockUser,
+        id: decoded.userId,
+        email: decoded.email,
+      };
+      req.jwtPayload = decoded;
+      next();
+    } catch (error) {
+      // If token is invalid, check if it's a mock token pattern
+      if (token.startsWith('mock-token-')) {
+        const userId = token.replace('mock-token-', '');
+        req.userId = userId;
+        req.email = mockUser.email;
+        req.user = { ...mockUser, id: userId };
+        req.jwtPayload = { userId, email: mockUser.email };
+        next();
+      } else if (token.startsWith('mock-jwt-token')) {
+        // Handle all mock-jwt-token-{suffix} patterns
+        const user = getMockUserForToken(token);
+        req.userId = user.id;
+        req.email = user.email;
+        req.user = user;
+        req.jwtPayload = { userId: user.id, email: user.email };
+        next();
+      } else {
+        res.status(401).json({
+          error: 'unauthorized',
+          message: 'Invalid authentication token',
+        });
+        return;
+      }
+    }
+  };
 
 /**
  * Mock JWT Authentication Middleware
@@ -224,11 +237,7 @@ export async function authenticateJWTOptional(
 /**
  * Require email verification middleware
  */
-export function requireEmailVerification(
-  req: any,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requireEmailVerification(req: any, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({
       error: 'Authentication required',
@@ -251,11 +260,7 @@ export function requireEmailVerification(
 /**
  * Require phone verification middleware
  */
-export function requirePhoneVerification(
-  req: any,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requirePhoneVerification(req: any, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({
       error: 'Authentication required',
@@ -278,11 +283,7 @@ export function requirePhoneVerification(
 /**
  * Require full verification (ID + background check)
  */
-export function requireFullVerification(
-  req: any,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requireFullVerification(req: any, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({
       error: 'Authentication required',
@@ -305,11 +306,7 @@ export function requireFullVerification(
 /**
  * Require admin role middleware
  */
-export function requireAdmin(
-  req: any,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requireAdmin(req: any, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({
       error: 'Authentication required',
@@ -336,11 +333,7 @@ export function requireAdmin(
 /**
  * Require phone verified for messaging gate
  */
-export function requirePhoneVerified(
-  req: any,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requirePhoneVerified(req: any, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({ error: 'Authentication required' });
     return;
@@ -360,11 +353,7 @@ export function requirePhoneVerified(
 /**
  * Require ID verified for connection requests gate
  */
-export function requireIdVerified(
-  req: any,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requireIdVerified(req: any, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({ error: 'Authentication required' });
     return;
@@ -384,11 +373,7 @@ export function requireIdVerified(
 /**
  * Require background check for household gate
  */
-export function requireBackgroundCheck(
-  req: any,
-  res: Response,
-  next: NextFunction,
-): void {
+export function requireBackgroundCheck(req: any, res: Response, next: NextFunction): void {
   if (!req.user) {
     res.status(401).json({ error: 'Authentication required' });
     return;

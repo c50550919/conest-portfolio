@@ -24,9 +24,7 @@ import app from '../app';
 describe('GET /api/payments/history - Contract Tests', () => {
   describe('Authentication Validation', () => {
     it('should return 401 for request without auth token', async () => {
-      const response = await request(app)
-        .get('/api/payments/history')
-        .expect(401);
+      const response = await request(app).get('/api/payments/history').expect(401);
 
       expect(response.body).toHaveProperty('error');
       expect(response.body).toHaveProperty('message');
@@ -55,8 +53,7 @@ describe('GET /api/payments/history - Contract Tests', () => {
 
   describe('Error Response Format Validation', () => {
     it('should return consistent error response structure', async () => {
-      const response = await request(app)
-        .get('/api/payments/history');
+      const response = await request(app).get('/api/payments/history');
 
       // All error responses should have error and message
       expect(response.body).toHaveProperty('error');
@@ -74,9 +71,7 @@ describe('GET /api/payments/history - Contract Tests', () => {
     it('should respond within reasonable time (target: 500ms)', async () => {
       const start = Date.now();
 
-      await request(app)
-        .get('/api/payments/history')
-        .set('Authorization', 'Bearer mock-token');
+      await request(app).get('/api/payments/history').set('Authorization', 'Bearer mock-token');
 
       const duration = Date.now() - start;
 

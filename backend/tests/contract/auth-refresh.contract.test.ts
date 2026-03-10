@@ -23,11 +23,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
   describe('Success Cases', () => {
     it('should refresh access token with valid refresh token and return 200', async () => {
       const userId = 'user-123';
-      const refreshToken = jwt.sign(
-        { userId, email: 'test@example.com' },
-        JWT_SECRET,
-        { expiresIn: '7d' },
-      );
+      const refreshToken = jwt.sign({ userId, email: 'test@example.com' }, JWT_SECRET, {
+        expiresIn: '7d',
+      });
 
       const mockUser = {
         id: userId,
@@ -44,11 +42,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.setex as jest.Mock).mockResolvedValue('OK');
 
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken,
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken,
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('success', true);
@@ -60,11 +56,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
 
     it('should implement refresh token rotation (return new refresh token)', async () => {
       const userId = 'user-123';
-      const oldRefreshToken = jwt.sign(
-        { userId, email: 'test@example.com' },
-        JWT_SECRET,
-        { expiresIn: '7d' },
-      );
+      const oldRefreshToken = jwt.sign({ userId, email: 'test@example.com' }, JWT_SECRET, {
+        expiresIn: '7d',
+      });
 
       const mockUser = {
         id: userId,
@@ -81,11 +75,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.setex as jest.Mock).mockResolvedValue('OK');
 
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: oldRefreshToken,
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken: oldRefreshToken,
+      });
 
       // New refresh token should be different from old one
       expect(response.body.data.refreshToken).not.toBe(oldRefreshToken);
@@ -97,20 +89,16 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
 
   describe('Validation Error Cases', () => {
     it('should return 400 for missing refresh token', async () => {
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({});
+      const response = await request(app).post('/api/auth/refresh').send({});
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
     });
 
     it('should return 400 for empty refresh token', async () => {
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: '',
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken: '',
+      });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
@@ -119,11 +107,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
 
   describe('Authentication Error Cases', () => {
     it('should return 401 for invalid refresh token format', async () => {
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: 'invalid.token.format',
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken: 'invalid.token.format',
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error');
@@ -131,17 +117,13 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
     });
 
     it('should return 401 for expired refresh token', async () => {
-      const expiredToken = jwt.sign(
-        { userId: 'user-123', email: 'test@example.com' },
-        JWT_SECRET,
-        { expiresIn: '-1s' },
-      );
+      const expiredToken = jwt.sign({ userId: 'user-123', email: 'test@example.com' }, JWT_SECRET, {
+        expiresIn: '-1s',
+      });
 
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: expiredToken,
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken: expiredToken,
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error');
@@ -155,30 +137,24 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
         { expiresIn: '7d' },
       );
 
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: invalidToken,
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken: invalidToken,
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error');
     });
 
     it('should return 401 for token not found in Redis', async () => {
-      const validToken = jwt.sign(
-        { userId: 'user-123', email: 'test@example.com' },
-        JWT_SECRET,
-        { expiresIn: '7d' },
-      );
+      const validToken = jwt.sign({ userId: 'user-123', email: 'test@example.com' }, JWT_SECRET, {
+        expiresIn: '7d',
+      });
 
       (redisClient.get as jest.Mock).mockResolvedValue(null);
 
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: validToken,
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken: validToken,
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error');
@@ -201,11 +177,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
 
       (redisClient.get as jest.Mock).mockResolvedValue(differentToken);
 
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: clientToken,
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken: clientToken,
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error');
@@ -221,11 +195,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       (redisClient.get as jest.Mock).mockResolvedValue(validToken);
       (UserModel.findById as jest.Mock).mockResolvedValue(null);
 
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: validToken,
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken: validToken,
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error');
@@ -233,11 +205,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
     });
 
     it('should return 401 for inactive user', async () => {
-      const validToken = jwt.sign(
-        { userId: 'user-123', email: 'test@example.com' },
-        JWT_SECRET,
-        { expiresIn: '7d' },
-      );
+      const validToken = jwt.sign({ userId: 'user-123', email: 'test@example.com' }, JWT_SECRET, {
+        expiresIn: '7d',
+      });
 
       const inactiveUser = {
         id: 'user-123',
@@ -251,11 +221,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       (redisClient.get as jest.Mock).mockResolvedValue(validToken);
       (UserModel.findById as jest.Mock).mockResolvedValue(inactiveUser);
 
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: validToken,
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken: validToken,
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('error');
@@ -265,11 +233,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
   describe('Response Schema Validation', () => {
     it('should return correct response structure on success', async () => {
       const userId = 'user-123';
-      const refreshToken = jwt.sign(
-        { userId, email: 'test@example.com' },
-        JWT_SECRET,
-        { expiresIn: '7d' },
-      );
+      const refreshToken = jwt.sign({ userId, email: 'test@example.com' }, JWT_SECRET, {
+        expiresIn: '7d',
+      });
 
       const mockUser = {
         id: userId,
@@ -286,11 +252,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.setex as jest.Mock).mockResolvedValue('OK');
 
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken,
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken,
+      });
 
       expect(response.body).toMatchObject({
         success: expect.any(Boolean),
@@ -304,11 +268,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
 
     it('should not include user data in response (only tokens)', async () => {
       const userId = 'user-123';
-      const refreshToken = jwt.sign(
-        { userId, email: 'test@example.com' },
-        JWT_SECRET,
-        { expiresIn: '7d' },
-      );
+      const refreshToken = jwt.sign({ userId, email: 'test@example.com' }, JWT_SECRET, {
+        expiresIn: '7d',
+      });
 
       const mockUser = {
         id: userId,
@@ -326,11 +288,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.setex as jest.Mock).mockResolvedValue('OK');
 
-      const response = await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken,
-        });
+      const response = await request(app).post('/api/auth/refresh').send({
+        refreshToken,
+      });
 
       expect(response.body.data).not.toHaveProperty('user');
       expect(response.body.data).not.toHaveProperty('password_hash');
@@ -340,11 +300,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
   describe('Security Requirements', () => {
     it('should invalidate old refresh token after rotation', async () => {
       const userId = 'user-123';
-      const oldRefreshToken = jwt.sign(
-        { userId, email: 'test@example.com' },
-        JWT_SECRET,
-        { expiresIn: '7d' },
-      );
+      const oldRefreshToken = jwt.sign({ userId, email: 'test@example.com' }, JWT_SECRET, {
+        expiresIn: '7d',
+      });
 
       const mockUser = {
         id: userId,
@@ -361,11 +319,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.setex as jest.Mock).mockResolvedValue('OK');
 
-      await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken: oldRefreshToken,
-        });
+      await request(app).post('/api/auth/refresh').send({
+        refreshToken: oldRefreshToken,
+      });
 
       // Verify Redis setex was called to store new token
       expect(redisClient.setex).toHaveBeenCalled();
@@ -379,11 +335,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
 
     it('should set proper TTL for refresh token in Redis', async () => {
       const userId = 'user-123';
-      const refreshToken = jwt.sign(
-        { userId, email: 'test@example.com' },
-        JWT_SECRET,
-        { expiresIn: '7d' },
-      );
+      const refreshToken = jwt.sign({ userId, email: 'test@example.com' }, JWT_SECRET, {
+        expiresIn: '7d',
+      });
 
       const mockUser = {
         id: userId,
@@ -400,11 +354,9 @@ describe('POST /api/auth/refresh - Contract Tests', () => {
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
       (redisClient.setex as jest.Mock).mockResolvedValue('OK');
 
-      await request(app)
-        .post('/api/auth/refresh')
-        .send({
-          refreshToken,
-        });
+      await request(app).post('/api/auth/refresh').send({
+        refreshToken,
+      });
 
       // Verify Redis setex was called with proper TTL (7 days = 604800 seconds)
       expect(redisClient.setex).toHaveBeenCalled();

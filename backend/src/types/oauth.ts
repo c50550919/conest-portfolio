@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -225,10 +225,7 @@ export interface RateLimitResponse {
 /**
  * Union type of all possible error responses
  */
-export type OAuthErrorResponse =
-  | ErrorResponse
-  | AccountConflictResponse
-  | RateLimitResponse;
+export type OAuthErrorResponse = ErrorResponse | AccountConflictResponse | RateLimitResponse;
 
 // ============================================================================
 // Internal Types (Backend Only)
@@ -429,10 +426,7 @@ export function isAuthSuccess(
 export function isErrorResponse(
   response: AuthSuccessResponse | OAuthErrorResponse,
 ): response is ErrorResponse {
-  return (
-    'error' in response &&
-    typeof (response as ErrorResponse).error === 'string'
-  );
+  return 'error' in response && typeof (response as ErrorResponse).error === 'string';
 }
 
 /**
@@ -447,9 +441,7 @@ export function isAccountConflict(
 /**
  * Type guard for RateLimitResponse
  */
-export function isRateLimitError(
-  response: OAuthErrorResponse,
-): response is RateLimitResponse {
+export function isRateLimitError(response: OAuthErrorResponse): response is RateLimitResponse {
   return (response as RateLimitResponse).error === 'rate_limit_exceeded';
 }
 
@@ -498,10 +490,7 @@ export type ExtractProvider<T extends UserResponse> = T['oauth_provider'];
 /**
  * Omit sensitive fields from user response (for logging)
  */
-export type SafeUserResponse = Omit<
-  UserResponse,
-  'oauth_provider_id' | 'phone'
->;
+export type SafeUserResponse = Omit<UserResponse, 'oauth_provider_id' | 'phone'>;
 
 // ============================================================================
 // Constants

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -111,7 +111,10 @@ export class CertnClient {
     this.apiKey = process.env.CERTN_API_KEY || '';
     this.baseURL = process.env.CERTN_BASE_URL || 'https://api.certn.co/v1';
     this.webhookSecret = process.env.CERTN_WEBHOOK_SECRET || '';
-    this.webhookToleranceSeconds = parseInt(process.env.CERTN_WEBHOOK_TOLERANCE_SECONDS || '300', 10);
+    this.webhookToleranceSeconds = parseInt(
+      process.env.CERTN_WEBHOOK_TOLERANCE_SECONDS || '300',
+      10,
+    );
 
     if (!this.apiKey) {
       logger.warn('CERTN_API_KEY not configured - background checks will fail');
@@ -125,7 +128,7 @@ export class CertnClient {
       baseURL: this.baseURL,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
       },
       timeout: 30000,
     });
@@ -294,35 +297,60 @@ export class CertnClient {
 
     // Tier 1: Sex offender registry — universally exempt from ban-the-box
     const sexOffenderPatterns = [
-      'sex offender', 'sexual offender', 'sex registry',
-      'sexual predator', 'megan\'s law', 'sorna',
-      'sexual assault', 'sexual abuse', 'rape',
-      'indecent exposure', 'sexual exploitation',
-      'child pornography', 'child sexual',
+      'sex offender',
+      'sexual offender',
+      'sex registry',
+      'sexual predator',
+      "megan's law",
+      'sorna',
+      'sexual assault',
+      'sexual abuse',
+      'rape',
+      'indecent exposure',
+      'sexual exploitation',
+      'child pornography',
+      'child sexual',
     ];
-    if (sexOffenderPatterns.some(p => combined.includes(p))) {
+    if (sexOffenderPatterns.some((p) => combined.includes(p))) {
       return 'auto_reject_sex_offender';
     }
 
     // Tier 2: Crimes against children — universally exempt
     const childCrimePatterns = [
-      'child abuse', 'child neglect', 'child endangerment',
-      'child cruelty', 'minor victim', 'against a minor',
-      'against a child', 'juvenile victim',
-      'child exploitation', 'contributing to delinquency',
+      'child abuse',
+      'child neglect',
+      'child endangerment',
+      'child cruelty',
+      'minor victim',
+      'against a minor',
+      'against a child',
+      'juvenile victim',
+      'child exploitation',
+      'contributing to delinquency',
     ];
-    if (childCrimePatterns.some(p => combined.includes(p))) {
+    if (childCrimePatterns.some((p) => combined.includes(p))) {
       return 'auto_reject_child_crime';
     }
 
     // Tier 3: Violent crimes within 7 years → individualized review
     const violentPatterns = [
-      'assault', 'battery', 'robbery', 'homicide', 'murder',
-      'manslaughter', 'kidnapping', 'arson', 'domestic violence',
-      'aggravated', 'armed', 'weapon', 'firearm',
-      'stalking', 'terroristic threat',
+      'assault',
+      'battery',
+      'robbery',
+      'homicide',
+      'murder',
+      'manslaughter',
+      'kidnapping',
+      'arson',
+      'domestic violence',
+      'aggravated',
+      'armed',
+      'weapon',
+      'firearm',
+      'stalking',
+      'terroristic threat',
     ];
-    const isViolent = violentPatterns.some(p => combined.includes(p));
+    const isViolent = violentPatterns.some((p) => combined.includes(p));
 
     if (isViolent) {
       // Check recency — within 7 years
@@ -393,13 +421,16 @@ export class CertnClient {
   verifyWebhookSignature(payload: any, signatureHeader: string): boolean {
     // If no webhook secret configured, log warning and reject in production
     if (!this.webhookSecret) {
-      const isProduction = process.env.SECURITY_MODE === 'production' || process.env.NODE_ENV === 'production';
+      const isProduction =
+        process.env.SECURITY_MODE === 'production' || process.env.NODE_ENV === 'production';
       if (isProduction) {
         logger.error('Certn webhook rejected: CERTN_WEBHOOK_SECRET not configured in production');
         return false;
       }
       // In development, allow but warn
-      logger.warn('Certn webhook signature verification skipped: CERTN_WEBHOOK_SECRET not configured');
+      logger.warn(
+        'Certn webhook signature verification skipped: CERTN_WEBHOOK_SECRET not configured',
+      );
       return true;
     }
 
@@ -414,7 +445,7 @@ export class CertnClient {
 
       if (!timestamp || signatures.length === 0) {
         logger.error('Certn webhook rejected: Invalid signature header format', {
-          signatureHeader: `${signatureHeader.substring(0, 50)  }...`,
+          signatureHeader: `${signatureHeader.substring(0, 50)}...`,
         });
         return false;
       }

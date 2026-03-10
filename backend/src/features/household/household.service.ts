@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -43,14 +43,10 @@ export class HouseholdService {
 
     // Add creator as owner with 100% rent share initially
     // Uses createByUserId which internally looks up parent_id
-    const member = await HouseholdMemberModel.createByUserId(
-      household.id,
-      creatorUserId,
-      {
-        role: 'owner',
-        rent_share: data.monthly_rent,
-      },
-    );
+    const member = await HouseholdMemberModel.createByUserId(household.id, creatorUserId, {
+      role: 'owner',
+      rent_share: data.monthly_rent,
+    });
 
     return { household, member };
   }
@@ -132,10 +128,7 @@ export class HouseholdService {
   /**
    * Get household expenses with payer info
    */
-  static async getExpenses(
-    householdId: string,
-    filters?: { status?: string; type?: string },
-  ) {
+  static async getExpenses(householdId: string, filters?: { status?: string; type?: string }) {
     let expenses;
 
     if (filters?.status) {
@@ -217,14 +210,10 @@ export class HouseholdService {
     }
 
     // Add member using createByUserId which looks up parent_id internally
-    const member = await HouseholdMemberModel.createByUserId(
-      householdId,
-      data.userId,
-      {
-        rent_share: data.rentShare,
-        role: data.role === 'admin' ? 'owner' : 'co-tenant',
-      },
-    );
+    const member = await HouseholdMemberModel.createByUserId(householdId, data.userId, {
+      rent_share: data.rentShare,
+      role: data.role === 'admin' ? 'owner' : 'co-tenant',
+    });
 
     return member;
   }
@@ -232,11 +221,7 @@ export class HouseholdService {
   /**
    * Remove member from household (admin only)
    */
-  static async removeMember(
-    householdId: string,
-    requestingUserId: string,
-    userIdToRemove: string,
-  ) {
+  static async removeMember(householdId: string, requestingUserId: string, userIdToRemove: string) {
     // Verify requesting user is admin
     const isAdmin = await HouseholdMemberModel.isAdmin(householdId, requestingUserId);
     if (!isAdmin) {
@@ -272,11 +257,7 @@ export class HouseholdService {
       throw new Error('Only admins can update rent shares');
     }
 
-    return await HouseholdMemberModel.updateRentShare(
-      householdId,
-      userIdToUpdate,
-      newRentShare,
-    );
+    return await HouseholdMemberModel.updateRentShare(householdId, userIdToUpdate, newRentShare);
   }
 
   /**

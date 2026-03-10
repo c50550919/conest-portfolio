@@ -19,9 +19,7 @@ describe('Contract: PATCH /api/connection-requests/:id/cancel', () => {
 
   describe('Authorization Cases', () => {
     it('should reject cancel without authentication', async () => {
-      await request(app)
-        .patch(`/api/connection-requests/${requestId}/cancel`)
-        .expect(401);
+      await request(app).patch(`/api/connection-requests/${requestId}/cancel`).expect(401);
     });
   });
 

@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -41,8 +41,7 @@ export const AuthController = {
     } catch (error) {
       if (error instanceof Error) {
         // Child PII violation or duplicate user errors
-        if (error.message.includes('Prohibited child PII') ||
-            error.message.includes('Child PII')) {
+        if (error.message.includes('Prohibited child PII') || error.message.includes('Child PII')) {
           res.status(400).json({
             success: false,
             error: error.message,
@@ -88,8 +87,11 @@ export const AuthController = {
         }
 
         // Account status errors
-        if (error.message.includes('suspended') || error.message.includes('deactivated') ||
-            error.message.includes('not active')) {
+        if (
+          error.message.includes('suspended') ||
+          error.message.includes('deactivated') ||
+          error.message.includes('not active')
+        ) {
           res.status(403).json({
             success: false,
             error: 'Account is not active',

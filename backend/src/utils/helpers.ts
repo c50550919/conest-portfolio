@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -85,22 +85,24 @@ export const calculateAge = (dateOfBirth: Date): number => {
 /**
  * Sanitize user input to prevent XSS
  */
-export const sanitizeInput = (input: string): string => input
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#x27;')
-  .replace(/\//g, '&#x2F;');
+export const sanitizeInput = (input: string): string =>
+  input
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
 
 /**
  * Generate slug from string
  */
-export const generateSlug = (text: string): string => text
-  .toLowerCase()
-  .replace(/[^\w\s-]/g, '')
-  .replace(/\s+/g, '-')
-  .replace(/--+/g, '-')
-  .trim();
+export const generateSlug = (text: string): string =>
+  text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/--+/g, '-')
+    .trim();
 
 /**
  * Check if date is in the past
@@ -115,16 +117,18 @@ export const isFutureDate = (date: Date): boolean => new Date(date) > new Date()
 /**
  * Format date to readable string
  */
-export const formatDate = (date: Date): string => new Date(date).toLocaleDateString('en-US', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-});
+export const formatDate = (date: Date): string =>
+  new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
 /**
  * Delay function for testing/rate limiting
  */
-export const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+export const delay = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Safely parse JSON with fallback
@@ -140,6 +144,5 @@ export const safeJsonParse = <T>(json: string, fallback: T): T => {
 /**
  * Generate random string
  */
-export const generateRandomString = (length: number = 32): string => {
-  return crypto.randomBytes(length).toString('base64url').substring(0, length);
-};
+export const generateRandomString = (length: number = 32): string =>
+  crypto.randomBytes(length).toString('base64url').substring(0, length);

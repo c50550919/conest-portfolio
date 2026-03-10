@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -165,10 +165,7 @@ export const ConnectionRequestModel = {
    * Get decrypted message for a connection request
    * Only returns message if requester is sender or recipient
    */
-  async getDecryptedMessage(
-    id: string,
-    userId: string,
-  ): Promise<string | null> {
+  async getDecryptedMessage(id: string, userId: string): Promise<string | null> {
     const request = await db('connection_requests')
       .where({ id })
       .where((builder) => {
@@ -187,10 +184,7 @@ export const ConnectionRequestModel = {
    * Get decrypted response message for a connection request
    * Only returns response if requester is sender or recipient
    */
-  async getDecryptedResponseMessage(
-    id: string,
-    userId: string,
-  ): Promise<string | null> {
+  async getDecryptedResponseMessage(id: string, userId: string): Promise<string | null> {
     const request = await db('connection_requests')
       .where({ id })
       .where((builder) => {
@@ -198,17 +192,11 @@ export const ConnectionRequestModel = {
       })
       .first();
 
-    if (
-      !request?.response_message_encrypted ||
-      !request.response_message_iv
-    ) {
+    if (!request?.response_message_encrypted || !request.response_message_iv) {
       return null;
     }
 
-    return decryptNote(
-      request.response_message_encrypted,
-      request.response_message_iv,
-    );
+    return decryptNote(request.response_message_encrypted, request.response_message_iv);
   },
 
   /**
@@ -228,11 +216,7 @@ export const ConnectionRequestModel = {
         'sender_verification.user_id',
       )
       .join('users as recipient_user', 'cr.recipient_id', 'recipient_user.id')
-      .join(
-        'parents as recipient_parent',
-        'recipient_user.id',
-        'recipient_parent.user_id',
-      )
+      .join('parents as recipient_parent', 'recipient_user.id', 'recipient_parent.user_id')
       .leftJoin(
         'verifications as recipient_verification',
         'recipient_user.id',
@@ -312,11 +296,7 @@ export const ConnectionRequestModel = {
         'sender_verification.user_id',
       )
       .join('users as recipient_user', 'cr.recipient_id', 'recipient_user.id')
-      .join(
-        'parents as recipient_parent',
-        'recipient_user.id',
-        'recipient_parent.user_id',
-      )
+      .join('parents as recipient_parent', 'recipient_user.id', 'recipient_parent.user_id')
       .leftJoin(
         'verifications as recipient_verification',
         'recipient_user.id',
@@ -446,15 +426,16 @@ export const ConnectionRequestModel = {
 
     if (senderParent && recipientParent) {
       // Ensure parent1_id < parent2_id to satisfy CHECK constraint
-      const [parent1_id, parent2_id] = senderParent.id < recipientParent.id
-        ? [senderParent.id, recipientParent.id]
-        : [recipientParent.id, senderParent.id];
+      const [parent1_id, parent2_id] =
+        senderParent.id < recipientParent.id
+          ? [senderParent.id, recipientParent.id]
+          : [recipientParent.id, senderParent.id];
 
       // Create a match in the matches table
       await db('matches').insert({
         parent1_id,
         parent2_id,
-        compatibility_score: 85.00, // Default score for connection request matches
+        compatibility_score: 85.0, // Default score for connection request matches
         score_breakdown: JSON.stringify({
           source: 'connection_request',
           request_id: id,
@@ -467,12 +448,14 @@ export const ConnectionRequestModel = {
       });
 
       // Create a conversation for messaging (uses parent IDs)
-      const [conversation] = await db('conversations').insert({
-        participant1_id: senderParent.id,
-        participant2_id: recipientParent.id,
-        both_verified: true, // Both users verified since they can send connection requests
-        created_at: db.fn.now(),
-      }).returning('*');
+      const [conversation] = await db('conversations')
+        .insert({
+          participant1_id: senderParent.id,
+          participant2_id: recipientParent.id,
+          both_verified: true, // Both users verified since they can send connection requests
+          created_at: db.fn.now(),
+        })
+        .returning('*');
 
       // If there's a response message, insert it as the first message in the conversation
       if (responseMessage?.trim()) {
@@ -613,11 +596,9 @@ export const ConnectionRequestModel = {
       .whereIn('status', ['accepted', 'declined', 'expired', 'cancelled'])
       .whereNull('archived_at')
       .where((builder) => {
-        void builder.where(
-          'responded_at',
-          '<=',
-          db.raw("NOW() - INTERVAL '90 days'"),
-        ).orWhere('updated_at', '<=', db.raw("NOW() - INTERVAL '90 days'"));
+        void builder
+          .where('responded_at', '<=', db.raw("NOW() - INTERVAL '90 days'"))
+          .orWhere('updated_at', '<=', db.raw("NOW() - INTERVAL '90 days'"));
       })
       .update({
         archived_at: db.fn.now(),
@@ -631,9 +612,7 @@ export const ConnectionRequestModel = {
    * Get rate limit status for a user
    * Returns remaining requests for today and this week
    */
-  async getRateLimitStatus(
-    userId: string,
-  ): Promise<{ daily: number; weekly: number }> {
+  async getRateLimitStatus(userId: string): Promise<{ daily: number; weekly: number }> {
     const dailyKey = `connection_requests:daily:${userId}`;
     const weeklyKey = `connection_requests:weekly:${userId}`;
 

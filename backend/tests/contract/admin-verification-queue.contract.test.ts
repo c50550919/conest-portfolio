@@ -30,9 +30,7 @@ describe('GET /api/admin/verifications/queue - Contract Tests', () => {
 
   describe('Admin Authentication and Authorization', () => {
     it('should reject request without auth token', async () => {
-      const response = await request(app)
-        .get('/api/admin/verifications/queue')
-        .expect(401);
+      const response = await request(app).get('/api/admin/verifications/queue').expect(401);
 
       expect(response.body).toMatchObject({
         error: expect.any(String),
@@ -188,8 +186,10 @@ describe('GET /api/admin/verifications/queue - Contract Tests', () => {
         if (Array.isArray(queue) && queue.length > 1) {
           // Verify sorted by sla_hours_remaining ascending (oldest first)
           for (let i = 0; i < queue.length - 1; i++) {
-            if (queue[i].sla_hours_remaining !== undefined &&
-                queue[i + 1].sla_hours_remaining !== undefined) {
+            if (
+              queue[i].sla_hours_remaining !== undefined &&
+              queue[i + 1].sla_hours_remaining !== undefined
+            ) {
               expect(queue[i].sla_hours_remaining).toBeLessThanOrEqual(
                 queue[i + 1].sla_hours_remaining,
               );
@@ -205,9 +205,7 @@ describe('GET /api/admin/verifications/queue - Contract Tests', () => {
 
   describe('Error Response Schema', () => {
     it('should return consistent error format for 401', async () => {
-      const response = await request(app)
-        .get('/api/admin/verifications/queue')
-        .expect(401);
+      const response = await request(app).get('/api/admin/verifications/queue').expect(401);
 
       expect(response.body).toHaveProperty('error');
       expect(response.body).toHaveProperty('message');
@@ -253,9 +251,7 @@ describe('GET /api/admin/verifications/queue - Contract Tests', () => {
     it('should respond within 500ms', async () => {
       const start = Date.now();
 
-      await request(app)
-        .get('/api/admin/verifications/queue')
-        .set('Authorization', mockAdminToken);
+      await request(app).get('/api/admin/verifications/queue').set('Authorization', mockAdminToken);
 
       const duration = Date.now() - start;
 

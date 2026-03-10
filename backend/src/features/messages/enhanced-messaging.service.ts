@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -36,7 +36,13 @@ interface VerificationStatus {
 export interface ReportMessageParams {
   messageId: string;
   reportedBy: string;
-  reportType: 'inappropriate_content' | 'harassment' | 'spam' | 'scam' | 'child_safety_concern' | 'other';
+  reportType:
+    | 'inappropriate_content'
+    | 'harassment'
+    | 'spam'
+    | 'scam'
+    | 'child_safety_concern'
+    | 'other';
   description?: string;
 }
 
@@ -45,7 +51,13 @@ export interface AdminModerationAction {
   adminId: string;
   action: 'approve' | 'reject' | 'delete' | 'flag';
   reason: string;
-  actionTaken?: 'none' | 'warning_issued' | 'message_deleted' | 'user_suspended' | 'user_banned' | 'escalated';
+  actionTaken?:
+    | 'none'
+    | 'warning_issued'
+    | 'message_deleted'
+    | 'user_suspended'
+    | 'user_banned'
+    | 'escalated';
 }
 
 export interface ConversationListItem {
@@ -76,16 +88,14 @@ export class EnhancedMessagingService {
       return false;
     }
 
-    return verifications.every(v => v.fully_verified === true);
+    return verifications.every((v) => v.fully_verified === true);
   }
 
   /**
    * Get verification status for a user
    */
   async getUserVerification(userId: string): Promise<VerificationStatus | null> {
-    const verification = await this.knex('verifications')
-      .where('user_id', userId)
-      .first();
+    const verification = await this.knex('verifications').where('user_id', userId).first();
 
     if (!verification) {
       return null;
@@ -114,7 +124,15 @@ export class EnhancedMessagingService {
     fileUrl?: string;
     metadata?: any;
   }): Promise<any> {
-    const { conversationId, senderId, recipientId, content, messageType = 'text', fileUrl, metadata } = params;
+    const {
+      conversationId,
+      senderId,
+      recipientId,
+      content,
+      messageType = 'text',
+      fileUrl,
+      metadata,
+    } = params;
 
     // Enforce verification requirement for SENDER only
     // Verified users can message anyone, but unverified recipients must verify to VIEW/REPLY
@@ -129,9 +147,7 @@ export class EnhancedMessagingService {
     // This is enforced in getMessagesGated() method
 
     // Check if conversation is blocked
-    const conversation = await this.knex('conversations')
-      .where('id', conversationId)
-      .first();
+    const conversation = await this.knex('conversations').where('id', conversationId).first();
 
     if (!conversation) {
       throw new Error('CONVERSATION_NOT_FOUND');
@@ -169,7 +185,10 @@ export class EnhancedMessagingService {
     // Queue message for AI moderation (async - doesn't block message delivery)
     if (aiModerationEnabled) {
       queueMessageForModeration(message.id, content, senderId, conversationId).catch((err) => {
-        logger.error('Failed to queue message for moderation', { messageId: message.id, error: err });
+        logger.error('Failed to queue message for moderation', {
+          messageId: message.id,
+          error: err,
+        });
       });
     }
 
@@ -206,12 +225,16 @@ export class EnhancedMessagingService {
     }
 
     // Fire-and-forget push notification to recipient
-    const truncatedBody = content.length > 100 ? content.substring(0, 100) + '...' : content;
-    getPushService().sendToUser(recipientId, {
-      title: 'New Message',
-      body: truncatedBody,
-      data: { type: 'message', conversationId: String(conversationId) },
-    }).catch(() => { /* fire-and-forget */ });
+    const truncatedBody = content.length > 100 ? `${content.substring(0, 100)}...` : content;
+    getPushService()
+      .sendToUser(recipientId, {
+        title: 'New Message',
+        body: truncatedBody,
+        data: { type: 'message', conversationId: String(conversationId) },
+      })
+      .catch(() => {
+        /* fire-and-forget */
+      });
 
     logger.info(`Verified message sent: ${message.id} from ${senderId} to ${recipientId}`);
 
@@ -234,9 +257,7 @@ export class EnhancedMessagingService {
     const { messageId, reportedBy, reportType, description } = params;
 
     // Get message and determine reported user
-    const message = await this.knex('messages')
-      .where('id', messageId)
-      .first();
+    const message = await this.knex('messages').where('id', messageId).first();
 
     if (!message) {
       throw new Error('MESSAGE_NOT_FOUND');
@@ -252,8 +273,7 @@ export class EnhancedMessagingService {
     }
 
     const isParticipant =
-      conversation.participant1_id === reportedBy ||
-      conversation.participant2_id === reportedBy;
+      conversation.participant1_id === reportedBy || conversation.participant2_id === reportedBy;
 
     if (!isParticipant) {
       throw new Error('UNAUTHORIZED: Only conversation participants can report messages');
@@ -262,9 +282,14 @@ export class EnhancedMessagingService {
     const reportedUserId = message.sender_id;
 
     // Determine severity based on report type
-    const severity = reportType === 'child_safety_concern' ? 'critical' :
-      reportType === 'harassment' || reportType === 'scam' ? 'high' :
-        reportType === 'inappropriate_content' ? 'medium' : 'low';
+    const severity =
+      reportType === 'child_safety_concern'
+        ? 'critical'
+        : reportType === 'harassment' || reportType === 'scam'
+          ? 'high'
+          : reportType === 'inappropriate_content'
+            ? 'medium'
+            : 'low';
 
     // Create report
     await this.knex('message_reports').insert({
@@ -308,25 +333,25 @@ export class EnhancedMessagingService {
     const { messageId, adminId, action, reason, actionTaken = 'none' } = params;
 
     // Verify admin privileges
-    const admin = await this.knex('users')
-      .where('id', adminId)
-      .first();
+    const admin = await this.knex('users').where('id', adminId).first();
 
     if (!admin || admin.status !== 'active') {
       throw new Error('UNAUTHORIZED: Invalid admin credentials');
     }
 
-    const message = await this.knex('messages')
-      .where('id', messageId)
-      .first();
+    const message = await this.knex('messages').where('id', messageId).first();
 
     if (!message) {
       throw new Error('MESSAGE_NOT_FOUND');
     }
 
     // Update message moderation status
-    const moderationStatus = action === 'approve' ? 'approved' :
-      action === 'reject' || action === 'delete' ? 'rejected' : 'pending';
+    const moderationStatus =
+      action === 'approve'
+        ? 'approved'
+        : action === 'reject' || action === 'delete'
+          ? 'rejected'
+          : 'pending';
 
     await this.knex('messages')
       .where('id', messageId)
@@ -339,21 +364,23 @@ export class EnhancedMessagingService {
       });
 
     // Update related reports
-    await this.knex('message_reports')
-      .where('message_id', messageId)
-      .update({
-        status: 'resolved',
-        resolved_by: adminId,
-        resolved_at: new Date(),
-        resolution_notes: reason,
-        action_taken: actionTaken,
-      });
+    await this.knex('message_reports').where('message_id', messageId).update({
+      status: 'resolved',
+      resolved_by: adminId,
+      resolved_at: new Date(),
+      resolution_notes: reason,
+      action_taken: actionTaken,
+    });
 
     // Create admin action audit log
     await this.knex('admin_actions').insert({
       admin_id: adminId,
-      action_type: action === 'delete' ? 'message_deleted' :
-        action === 'approve' ? 'message_approved' : 'message_rejected',
+      action_type:
+        action === 'delete'
+          ? 'message_deleted'
+          : action === 'approve'
+            ? 'message_approved'
+            : 'message_rejected',
       target_message_id: messageId,
       target_user_id: message.sender_id,
       reason,
@@ -385,8 +412,7 @@ export class EnhancedMessagingService {
 
     const conversations = await this.knex('conversations')
       .where((builder) => {
-        void builder.where('participant1_id', parentId)
-          .orWhere('participant2_id', parentId);
+        void builder.where('participant1_id', parentId).orWhere('participant2_id', parentId);
       })
       .where('archived', false)
       .orderBy('last_message_at', 'desc')
@@ -394,9 +420,8 @@ export class EnhancedMessagingService {
 
     const conversationList = await Promise.all(
       conversations.map(async (conv) => {
-        const otherParentId = conv.participant1_id === parentId
-          ? conv.participant2_id
-          : conv.participant1_id;
+        const otherParentId =
+          conv.participant1_id === parentId ? conv.participant2_id : conv.participant1_id;
 
         const isParticipant1 = conv.participant1_id === parentId;
         const unreadCount = isParticipant1 ? conv.unread_count_p1 : conv.unread_count_p2;
@@ -409,8 +434,13 @@ export class EnhancedMessagingService {
           .first();
 
         // Get verification status using the other parent's user_id
-        const otherParent = await this.knex('parents').where('id', otherParentId).select('user_id').first();
-        const verification = otherParent ? await this.getUserVerification(otherParent.user_id) : null;
+        const otherParent = await this.knex('parents')
+          .where('id', otherParentId)
+          .select('user_id')
+          .first();
+        const verification = otherParent
+          ? await this.getUserVerification(otherParent.user_id)
+          : null;
 
         return {
           id: conv.id,
@@ -459,7 +489,7 @@ export class EnhancedMessagingService {
     const reports = await query;
 
     // Decrypt message content for review
-    return reports.map(report => ({
+    return reports.map((report) => ({
       ...report,
       decrypted_content: decrypt(report.encrypted_content),
     }));
@@ -469,29 +499,24 @@ export class EnhancedMessagingService {
    * Block a conversation
    */
   async blockConversation(conversationId: string, userId: string): Promise<void> {
-    const conversation = await this.knex('conversations')
-      .where('id', conversationId)
-      .first();
+    const conversation = await this.knex('conversations').where('id', conversationId).first();
 
     if (!conversation) {
       throw new Error('CONVERSATION_NOT_FOUND');
     }
 
     const isParticipant =
-      conversation.participant1_id === userId ||
-      conversation.participant2_id === userId;
+      conversation.participant1_id === userId || conversation.participant2_id === userId;
 
     if (!isParticipant) {
       throw new Error('UNAUTHORIZED');
     }
 
-    await this.knex('conversations')
-      .where('id', conversationId)
-      .update({
-        blocked: true,
-        blocked_by: userId,
-        blocked_at: new Date(),
-      });
+    await this.knex('conversations').where('id', conversationId).update({
+      blocked: true,
+      blocked_by: userId,
+      blocked_at: new Date(),
+    });
 
     logger.info(`Conversation ${conversationId} blocked by ${userId}`);
   }
@@ -506,7 +531,10 @@ export class EnhancedMessagingService {
    * - Verified users can send to anyone
    * - Unverified users can receive but must verify to view/reply
    */
-  async getMessagesGated(conversationId: string, userId: string): Promise<{
+  async getMessagesGated(
+    conversationId: string,
+    userId: string,
+  ): Promise<{
     locked: boolean;
     unreadCount?: number;
     message?: string;
@@ -527,7 +555,9 @@ export class EnhancedMessagingService {
 
       const unreadCount = parseInt(unreadResult?.count?.toString() || '0', 10);
 
-      logger.info(`Unverified user ${userId} attempted to view messages. Returning locked response.`);
+      logger.info(
+        `Unverified user ${userId} attempted to view messages. Returning locked response.`,
+      );
 
       return {
         locked: true,
@@ -546,14 +576,14 @@ export class EnhancedMessagingService {
       .select('*');
 
     // Map message content for verified user
-    const decryptedMessages = messages.map(msg => ({
+    const decryptedMessages = messages.map((msg) => ({
       id: msg.id,
       conversationId: msg.conversation_id,
       senderId: msg.sender_id,
       content: msg.message_encrypted || '',
       messageType: msg.message_type,
       fileUrl: msg.file_url,
-      read: msg.read_at != null,
+      read: msg.read_at !== null,
       readAt: msg.read_at,
       createdAt: msg.created_at,
       moderationStatus: msg.moderation_status,
@@ -583,16 +613,18 @@ export class EnhancedMessagingService {
     // Get total unread count across all conversations
     const result = await this.knex('conversations')
       .where((builder) => {
-        void builder.where('participant1_id', parentId)
-          .orWhere('participant2_id', parentId);
+        void builder.where('participant1_id', parentId).orWhere('participant2_id', parentId);
       })
       .select(
-        this.knex.raw(`
+        this.knex.raw(
+          `
           SUM(CASE
             WHEN participant1_id = ? THEN unread_count_p1
             ELSE unread_count_p2
           END) as total_unread
-        `, [parentId]),
+        `,
+          [parentId],
+        ),
       )
       .first();
 

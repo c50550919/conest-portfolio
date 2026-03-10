@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -91,12 +91,7 @@ router.post(
  * Rate Limit: 10 req/hour
  * Validation: CreatePaymentIntentSchema
  */
-router.post(
-  '/intents',
-  authenticateToken,
-  paymentLimiter,
-  PaymentController.createPaymentIntent,
-);
+router.post('/intents', authenticateToken, paymentLimiter, PaymentController.createPaymentIntent);
 
 /**
  * POST /api/payments/split-rent
@@ -106,12 +101,7 @@ router.post(
  * Rate Limit: 10 req/hour
  * Validation: SplitRentSchema
  */
-router.post(
-  '/split-rent',
-  authenticateToken,
-  paymentLimiter,
-  PaymentController.splitRent,
-);
+router.post('/split-rent', authenticateToken, paymentLimiter, PaymentController.splitRent);
 
 /**
  * POST /api/payments/refund
@@ -121,12 +111,7 @@ router.post(
  * Rate Limit: 10 req/hour
  * Validation: RefundSchema
  */
-router.post(
-  '/refund',
-  authenticateToken,
-  paymentLimiter,
-  PaymentController.processRefund,
-);
+router.post('/refund', authenticateToken, paymentLimiter, PaymentController.processRefund);
 
 /**
  * GET /api/payments/history
@@ -135,11 +120,7 @@ router.post(
  * Auth: Required (JWT)
  * Validation: GetPaymentHistorySchema (query params)
  */
-router.get(
-  '/history',
-  authenticateToken,
-  PaymentController.getPaymentHistory,
-);
+router.get('/history', authenticateToken, PaymentController.getPaymentHistory);
 
 // ========================================
 // Verification Payment Endpoints
@@ -205,24 +186,43 @@ router.get('/overdue', authenticateToken, paymentController.getOverduePayments);
  * POST /api/payments/:paymentId/refund
  * Legacy refund endpoint
  */
-router.post('/:paymentId/refund', authenticateToken, paymentLimiter, paymentController.refundPaymentLegacy);
+router.post(
+  '/:paymentId/refund',
+  authenticateToken,
+  paymentLimiter,
+  paymentController.refundPaymentLegacy,
+);
 
 /**
  * POST /api/payments/household/:householdId/split-rent
  * Legacy split rent endpoint
  */
-router.post('/household/:householdId/split-rent', authenticateToken, paymentLimiter, paymentController.splitRentLegacy);
+router.post(
+  '/household/:householdId/split-rent',
+  authenticateToken,
+  paymentLimiter,
+  paymentController.splitRentLegacy,
+);
 
 /**
  * POST /api/payments/stripe/create-account
  * Legacy Stripe account creation endpoint
  */
-router.post('/stripe/create-account', authenticateToken, paymentLimiter, paymentController.createHouseholdStripeAccountLegacy);
+router.post(
+  '/stripe/create-account',
+  authenticateToken,
+  paymentLimiter,
+  paymentController.createHouseholdStripeAccountLegacy,
+);
 
 /**
  * GET /api/payments/stripe/onboarding/:householdId
  * Get Stripe onboarding link
  */
-router.get('/stripe/onboarding/:householdId', authenticateToken, paymentController.getOnboardingLink);
+router.get(
+  '/stripe/onboarding/:householdId',
+  authenticateToken,
+  paymentController.getOnboardingLink,
+);
 
 export default router;

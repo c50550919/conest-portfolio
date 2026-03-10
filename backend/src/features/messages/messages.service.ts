@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -227,10 +227,7 @@ export class MessagesService {
 
       // Get messages with cursor-based pagination
       // Fetch limit * 2 to account for cursor filtering
-      const allMessages = await MessageModel.getConversationMessages(
-        conversation.id,
-        limit * 2,
-      );
+      const allMessages = await MessageModel.getConversationMessages(conversation.id, limit * 2);
 
       let messages = allMessages;
 
@@ -262,9 +259,7 @@ export class MessagesService {
 
       // Determine next cursor (last message ID if we hit the limit)
       const nextCursor =
-        messages.length === limit && messages.length > 0
-          ? messages[messages.length - 1].id
-          : null;
+        messages.length === limit && messages.length > 0 ? messages[messages.length - 1].id : null;
 
       const duration = Date.now() - startTime;
       logger.info(
@@ -431,9 +426,9 @@ export class MessagesService {
             otherParticipantId,
             lastMessage: lastMessage
               ? {
-                ...lastMessage,
-                content: decrypt(lastMessage.content),
-              }
+                  ...lastMessage,
+                  content: decrypt(lastMessage.content),
+                }
               : null,
           };
         }),

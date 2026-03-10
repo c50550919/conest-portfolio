@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -136,7 +136,12 @@ export async function up(knex: Knex): Promise<void> {
 
     // Operation tracking
     table.string('operation_id', 255).unique().notNullable(); // Unique operation ID for saga tracking
-    table.uuid('household_id').notNullable().references('id').inTable('households').onDelete('CASCADE');
+    table
+      .uuid('household_id')
+      .notNullable()
+      .references('id')
+      .inTable('households')
+      .onDelete('CASCADE');
 
     // Saga state
     table.string('saga_status', 30).notNullable().defaultTo('pending');
@@ -174,11 +179,7 @@ export async function up(knex: Knex): Promise<void> {
       [],
       'chk_saga_status',
     );
-    table.check(
-      'rent_month >= 1 AND rent_month <= 12',
-      [],
-      'chk_rent_month_range',
-    );
+    table.check('rent_month >= 1 AND rent_month <= 12', [], 'chk_rent_month_range');
   });
 
   // Indexes for split_rent_operations

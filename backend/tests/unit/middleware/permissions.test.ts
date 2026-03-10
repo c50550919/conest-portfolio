@@ -27,7 +27,7 @@ jest.mock('../../models/HouseholdMember', () => ({
 }));
 
 import { HouseholdMemberModel } from '../../models/HouseholdMember';
-const mockHouseholdMemberModel = HouseholdMemberModel as jest.Mocked<typeof HouseholdMemberModel>;
+const mockHouseholdMemberModel = HouseholdMemberModel;
 
 // Helper functions for creating mock request/response
 const createMockRequest = (overrides: Partial<Request> = {}): Partial<Request> => ({
@@ -468,7 +468,8 @@ describe('Permissions Middleware', () => {
       expect(res.json).toHaveBeenCalledWith({
         error: 'Child data access forbidden',
         code: 'CHILD_DATA_FORBIDDEN',
-        message: 'This platform does not store or process child-specific data. Only aggregate family information (children_count, children_age_groups) is permitted.',
+        message:
+          'This platform does not store or process child-specific data. Only aggregate family information (children_count, children_age_groups) is permitted.',
       });
       expect(next).not.toHaveBeenCalled();
     });
@@ -537,7 +538,11 @@ describe('Permissions Middleware', () => {
       // Aggregate data about children (count, age groups) is allowed
       // Only child-specific PII (names, photos, specific ages) is blocked
       const req = createMockRequest({
-        body: { numberOfChildren: 2, children_count: 3, children_age_groups: ['toddler', 'elementary'] },
+        body: {
+          numberOfChildren: 2,
+          children_count: 3,
+          children_age_groups: ['toddler', 'elementary'],
+        },
       }) as Request;
       const res = createMockResponse() as Response;
       const next = createMockNext();
@@ -625,9 +630,10 @@ describe('Permissions Middleware', () => {
     });
 
     it('should pass request object to custom check for context', async () => {
-      const customCheck = jest.fn().mockImplementation((req, user) => 
-        // Check if user can access a specific resource based on request params
-        req.params.resourceId === user.ownedResourceId,
+      const customCheck = jest.fn().mockImplementation(
+        (req, user) =>
+          // Check if user can access a specific resource based on request params
+          req.params.resourceId === user.ownedResourceId,
       );
       const middleware = requireCustomPermission(customCheck);
       const req = createMockRequest({ params: { resourceId: 'res-456' } }) as Request;

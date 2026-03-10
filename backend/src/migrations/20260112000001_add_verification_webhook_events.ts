@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -74,7 +74,10 @@ export async function up(knex: Knex): Promise<void> {
     });
 
     // Index for fast duplicate checks
-    table.index(['provider', 'provider_event_id', 'processing_status'], 'idx_verification_webhook_lookup');
+    table.index(
+      ['provider', 'provider_event_id', 'processing_status'],
+      'idx_verification_webhook_lookup',
+    );
 
     // Index for finding failed events
     table.index(['processing_status', 'received_at'], 'idx_verification_webhook_failed');

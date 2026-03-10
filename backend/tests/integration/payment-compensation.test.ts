@@ -16,14 +16,33 @@
 import { z } from 'zod';
 
 // Test configuration constants
-const SAGA_STATUSES = ['pending', 'in_progress', 'completed', 'failed', 'compensating', 'compensated', 'compensation_failed'] as const;
+const SAGA_STATUSES = [
+  'pending',
+  'in_progress',
+  'completed',
+  'failed',
+  'compensating',
+  'compensated',
+  'compensation_failed',
+] as const;
 const COMPENSATION_TYPES = ['refund', 'void', 'cancel', 'reversal'] as const;
 const COMPENSATION_STATUSES = ['pending', 'processing', 'completed', 'failed', 'skipped'] as const;
 const AUDIT_EVENT_TYPES = [
-  'created', 'status_changed', 'intent_created', 'intent_confirmed', 'intent_failed',
-  'intent_canceled', 'refund_initiated', 'refund_completed', 'refund_failed',
-  'compensation_started', 'compensation_completed', 'compensation_failed',
-  'rollback_started', 'rollback_completed', 'rollback_failed',
+  'created',
+  'status_changed',
+  'intent_created',
+  'intent_confirmed',
+  'intent_failed',
+  'intent_canceled',
+  'refund_initiated',
+  'refund_completed',
+  'refund_failed',
+  'compensation_started',
+  'compensation_completed',
+  'compensation_failed',
+  'rollback_started',
+  'rollback_completed',
+  'rollback_failed',
 ] as const;
 const ACTOR_TYPES = ['system', 'user', 'webhook', 'scheduled', 'compensation'] as const;
 
@@ -437,7 +456,7 @@ describe('Payment Compensation Service', () => {
   });
 
   describe('Saga State Transitions', () => {
-    type SagaStatus = typeof SAGA_STATUSES[number];
+    type SagaStatus = (typeof SAGA_STATUSES)[number];
 
     const validTransitions: Record<SagaStatus, SagaStatus[]> = {
       pending: ['in_progress', 'failed'],
@@ -449,7 +468,8 @@ describe('Payment Compensation Service', () => {
       compensation_failed: [], // Terminal state (requires manual intervention)
     };
 
-    const isValidTransition = (from: SagaStatus, to: SagaStatus): boolean => validTransitions[from]?.includes(to) ?? false;
+    const isValidTransition = (from: SagaStatus, to: SagaStatus): boolean =>
+      validTransitions[from]?.includes(to) ?? false;
 
     it('should allow pending to in_progress', () => {
       expect(isValidTransition('pending', 'in_progress')).toBe(true);
@@ -496,11 +516,8 @@ describe('Payment Compensation Service', () => {
   });
 
   describe('Idempotency Key Generation', () => {
-    const generateIdempotencyKey = (
-      householdId: string,
-      year: number,
-      month: number,
-    ): string => `split_rent_${householdId}_${year}_${String(month).padStart(2, '0')}`;
+    const generateIdempotencyKey = (householdId: string, year: number, month: number): string =>
+      `split_rent_${householdId}_${year}_${String(month).padStart(2, '0')}`;
 
     it('should generate consistent key for same inputs', () => {
       const key1 = generateIdempotencyKey('household123', 2026, 2);
@@ -549,9 +566,11 @@ describe('Payment Compensation Service', () => {
       refundedAmount: number;
     }
 
-    const isCompensationComplete = (stats: CompensationStats): boolean => stats.pending === 0 && stats.processing === 0;
+    const isCompensationComplete = (stats: CompensationStats): boolean =>
+      stats.pending === 0 && stats.processing === 0;
 
-    const isCompensationSuccessful = (stats: CompensationStats): boolean => isCompensationComplete(stats) && stats.failed === 0;
+    const isCompensationSuccessful = (stats: CompensationStats): boolean =>
+      isCompensationComplete(stats) && stats.failed === 0;
 
     const getSuccessRate = (stats: CompensationStats): number => {
       const processed = stats.completed + stats.failed + stats.skipped;
@@ -669,15 +688,17 @@ describe('Payment Compensation Service', () => {
     const sagaResultSchema = z.object({
       operationId: z.string().min(1),
       success: z.boolean(),
-      payments: z.array(z.object({
-        payment: z.object({
-          id: z.string().uuid(),
-          amount: z.number().int().min(0),
-          status: z.string(),
+      payments: z.array(
+        z.object({
+          payment: z.object({
+            id: z.string().uuid(),
+            amount: z.number().int().min(0),
+            status: z.string(),
+          }),
+          stripePaymentIntentId: z.string().optional(),
+          clientSecret: z.string().optional(),
         }),
-        stripePaymentIntentId: z.string().optional(),
-        clientSecret: z.string().optional(),
-      })),
+      ),
       error: z.string().optional(),
       compensated: z.boolean().optional(),
     });

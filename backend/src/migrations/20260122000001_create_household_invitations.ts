@@ -1,7 +1,7 @@
 /**
  * CoNest - Single Parent Housing Platform
  * Copyright (c) 2025-2026 CoNest. All rights reserved.
- * 
+ *
  * PROPRIETARY AND CONFIDENTIAL
  * Unauthorized copying, distribution, or use of this file is strictly prohibited.
  * See LICENSE file in the project root for full license terms.
@@ -54,7 +54,12 @@ export async function up(knex: Knex): Promise<void> {
     table.uuid('id').primary().defaultTo(knex.raw('uuid_generate_v4()'));
 
     // Relationships
-    table.uuid('household_id').notNullable().references('id').inTable('households').onDelete('CASCADE');
+    table
+      .uuid('household_id')
+      .notNullable()
+      .references('id')
+      .inTable('households')
+      .onDelete('CASCADE');
     table.uuid('inviter_id').notNullable().references('id').inTable('profiles').onDelete('CASCADE');
     table.uuid('invitee_id').notNullable().references('id').inTable('profiles').onDelete('CASCADE');
 

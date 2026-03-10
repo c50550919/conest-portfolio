@@ -175,9 +175,7 @@ describe('Complete User Journey - E2E', () => {
 
       expect(Array.isArray(response.body)).toBe(true);
 
-      const matchWithUser2 = response.body.find(
-        (m: any) => m.profile_id === profile2Id,
-      );
+      const matchWithUser2 = response.body.find((m: any) => m.profile_id === profile2Id);
 
       expect(matchWithUser2).toBeDefined();
       expect(matchWithUser2.compatibility_score).toBeGreaterThan(0.7);
@@ -189,9 +187,7 @@ describe('Complete User Journey - E2E', () => {
         .set('Authorization', `Bearer ${user2Token}`)
         .expect(200);
 
-      const matchWithUser1 = response.body.find(
-        (m: any) => m.profile_id === profile1Id,
-      );
+      const matchWithUser1 = response.body.find((m: any) => m.profile_id === profile1Id);
 
       expect(matchWithUser1).toBeDefined();
       expect(matchWithUser1.compatibility_score).toBeGreaterThan(0.7);
@@ -239,7 +235,8 @@ describe('Complete User Journey - E2E', () => {
         .post(`/api/conversations/${conversationId}/messages`)
         .set('Authorization', `Bearer ${user1Token}`)
         .send({
-          content: 'Hi Michelle! I saw your profile and we seem like a great match. Would you like to discuss housing options?',
+          content:
+            'Hi Michelle! I saw your profile and we seem like a great match. Would you like to discuss housing options?',
         })
         .expect(201);
 
@@ -252,7 +249,8 @@ describe('Complete User Journey - E2E', () => {
         .post(`/api/conversations/${conversationId}/messages`)
         .set('Authorization', `Bearer ${user2Token}`)
         .send({
-          content: "Hi Sarah! Yes, I'd love to chat more. Your work schedule seems to align well with mine!",
+          content:
+            "Hi Sarah! Yes, I'd love to chat more. Your work schedule seems to align well with mine!",
         })
         .expect(201);
 
@@ -395,22 +393,24 @@ describe('Complete User Journey - E2E', () => {
       expect(match.status).toBe('mutual_interest');
 
       // Verify conversation exists
-      const conversation = await db('conversations')
-        .where({ id: conversationId })
-        .first();
+      const conversation = await db('conversations').where({ id: conversationId }).first();
       expect(conversation).toBeDefined();
 
       // Verify household exists with 2 members
       const household = await db('households').where({ id: householdId }).first();
       expect(household).toBeDefined();
 
-      const members = await db('household_members')
-        .where({ household_id: householdId, status: 'active' });
+      const members = await db('household_members').where({
+        household_id: householdId,
+        status: 'active',
+      });
       expect(members.length).toBe(2);
 
       // Verify payments exist
-      const payments = await db('payments')
-        .where({ household_id: householdId, status: 'completed' });
+      const payments = await db('payments').where({
+        household_id: householdId,
+        status: 'completed',
+      });
       expect(payments.length).toBe(2);
 
       console.log('✅ Complete user journey test passed successfully!');

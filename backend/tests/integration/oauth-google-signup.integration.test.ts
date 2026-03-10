@@ -82,9 +82,7 @@ describe('T015: OAuth Google Signup - Integration Test', () => {
       });
 
       // Verify database state - user created
-      const dbUser = await db('users')
-        .where({ email: 'newparent@gmail.com' })
-        .first();
+      const dbUser = await db('users').where({ email: 'newparent@gmail.com' }).first();
 
       expect(dbUser).toBeDefined();
       expect(dbUser.oauth_provider).toBe('google');
@@ -93,9 +91,7 @@ describe('T015: OAuth Google Signup - Integration Test', () => {
       expect(dbUser.email_verified).toBe(true); // Google verifies emails
 
       // Verify database state - parent profile created
-      const dbParent = await db('parents')
-        .where({ user_id: dbUser.id })
-        .first();
+      const dbParent = await db('parents').where({ user_id: dbUser.id }).first();
 
       expect(dbParent).toBeDefined();
       expect(dbParent.first_name).toBe('Sarah');
@@ -104,7 +100,7 @@ describe('T015: OAuth Google Signup - Integration Test', () => {
 
     it('should handle Google profiles without given_name gracefully', async () => {
       // Mock Google profile without name fields (edge case)
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
         getPayload: () => ({
           sub: '998877665544332211',
@@ -219,13 +215,9 @@ describe('T015: OAuth Google Signup - Integration Test', () => {
       expect(response.body.user).not.toHaveProperty('childrenSchools');
 
       // Verify database contains NO child PII
-      const dbUser = await db('users')
-        .where({ email: 'newparent@gmail.com' })
-        .first();
+      const dbUser = await db('users').where({ email: 'newparent@gmail.com' }).first();
 
-      const dbParent = await db('parents')
-        .where({ user_id: dbUser.id })
-        .first();
+      const dbParent = await db('parents').where({ user_id: dbUser.id }).first();
 
       // Only aggregate child data allowed (Constitution Principle I)
       expect(dbParent).toHaveProperty('children_count');
@@ -237,11 +229,10 @@ describe('T015: OAuth Google Signup - Integration Test', () => {
 
   describe('Error Scenarios', () => {
     it('should reject invalid Google token', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Invalid token signature'),
-        );
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Invalid token signature'));
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -256,11 +247,10 @@ describe('T015: OAuth Google Signup - Integration Test', () => {
     });
 
     it('should reject expired Google token', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
-      jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').// @ts-expect-error - Mocking error
-        mockRejectedValue(
-          new Error('Token used too late'),
-        );
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
+      jest
+        .spyOn(OAuth2Client.prototype, 'verifyIdToken') // @ts-expect-error - Mocking error
+        .mockRejectedValue(new Error('Token used too late'));
 
       const response = await request(app)
         .post('/api/auth/oauth/google')
@@ -274,7 +264,7 @@ describe('T015: OAuth Google Signup - Integration Test', () => {
     });
 
     it('should reject Google token with unverified email', async () => {
-    // @ts-expect-error - Mocking Google OAuth2Client for testing
+      // @ts-expect-error - Mocking Google OAuth2Client for testing
       jest.spyOn(OAuth2Client.prototype, 'verifyIdToken').mockResolvedValue({
         getPayload: () => ({
           ...mockGoogleProfile,
@@ -305,9 +295,7 @@ describe('T015: OAuth Google Signup - Integration Test', () => {
       expect(response.body.user.accountStatus).toBe('active');
 
       // Verify database
-      const dbUser = await db('users')
-        .where({ email: 'newparent@gmail.com' })
-        .first();
+      const dbUser = await db('users').where({ email: 'newparent@gmail.com' }).first();
 
       expect(dbUser.account_status).toBe('active');
     });
@@ -320,9 +308,7 @@ describe('T015: OAuth Google Signup - Integration Test', () => {
         .send({ idToken: mockGoogleToken })
         .expect(200);
 
-      const dbUser = await db('users')
-        .where({ email: 'newparent@gmail.com' })
-        .first();
+      const dbUser = await db('users').where({ email: 'newparent@gmail.com' }).first();
 
       expect(dbUser.last_login).toBeDefined();
       expect(new Date(dbUser.last_login).getTime()).toBeGreaterThanOrEqual(beforeSignup.getTime());

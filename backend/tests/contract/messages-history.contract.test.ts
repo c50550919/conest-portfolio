@@ -191,7 +191,9 @@ describe('GET /api/messages/:matchId/history - Contract Tests', () => {
         // Content should NOT contain encryption markers like "v1:", ":", hex strings
         // (Decrypted content should be plain text)
         if (message.content.includes('v1:')) {
-          throw new Error('Message content appears to be encrypted, should be decrypted for participant');
+          throw new Error(
+            'Message content appears to be encrypted, should be decrypted for participant',
+          );
         }
       });
     });
@@ -234,9 +236,7 @@ describe('GET /api/messages/:matchId/history - Contract Tests', () => {
 
   describe('Validation & Error Cases', () => {
     it('should return 401 if not authenticated', async () => {
-      const response = await request(app)
-        .get(`/api/messages/${matchId}/history`)
-        .expect(401);
+      const response = await request(app).get(`/api/messages/${matchId}/history`).expect(401);
 
       expect(response.body).toHaveProperty('error');
     });
