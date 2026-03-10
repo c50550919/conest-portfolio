@@ -1,15 +1,13 @@
 package main
 
-import rego.v1
-
-deny contains msg if {
+deny[msg] {
   bucket_count := count([r |
-    some r in input.resource_changes
+    r := input.resource_changes[_]
     r.type == "aws_s3_bucket"
     r.change.actions != ["delete"]
   ])
   block_count := count([r |
-    some r in input.resource_changes
+    r := input.resource_changes[_]
     r.type == "aws_s3_bucket_public_access_block"
     r.change.actions != ["delete"]
   ])
@@ -21,8 +19,8 @@ deny contains msg if {
   )
 }
 
-deny contains msg if {
-  some resource in input.resource_changes
+deny[msg] {
+  resource := input.resource_changes[_]
   resource.type == "aws_s3_bucket_public_access_block"
   resource.change.after.block_public_acls != true
   msg := sprintf(
@@ -31,8 +29,8 @@ deny contains msg if {
   )
 }
 
-deny contains msg if {
-  some resource in input.resource_changes
+deny[msg] {
+  resource := input.resource_changes[_]
   resource.type == "aws_s3_bucket_public_access_block"
   resource.change.after.block_public_policy != true
   msg := sprintf(
@@ -41,8 +39,8 @@ deny contains msg if {
   )
 }
 
-deny contains msg if {
-  some resource in input.resource_changes
+deny[msg] {
+  resource := input.resource_changes[_]
   resource.type == "aws_s3_bucket_public_access_block"
   resource.change.after.ignore_public_acls != true
   msg := sprintf(
@@ -51,8 +49,8 @@ deny contains msg if {
   )
 }
 
-deny contains msg if {
-  some resource in input.resource_changes
+deny[msg] {
+  resource := input.resource_changes[_]
   resource.type == "aws_s3_bucket_public_access_block"
   resource.change.after.restrict_public_buckets != true
   msg := sprintf(

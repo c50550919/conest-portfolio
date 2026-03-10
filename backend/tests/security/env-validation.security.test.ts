@@ -19,7 +19,7 @@ import {
   validateEnvironment,
   validateProductionSecurity,
   getValidationSummary,
-} from '../../config/validation';
+} from '../../src/config/validation';
 
 // Store original environment
 const originalEnv = { ...process.env };

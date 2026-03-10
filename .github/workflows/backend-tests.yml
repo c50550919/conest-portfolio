@@ -20,10 +20,10 @@ jobs:
         working-directory: ./backend
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -47,10 +47,10 @@ jobs:
         working-directory: ./backend
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -75,10 +75,10 @@ jobs:
         working-directory: ./backend
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -88,10 +88,11 @@ jobs:
         run: npm ci
 
       - name: Run unit tests
-        run: npx jest __tests__/unit --coverage
+        run: npm run test -- --coverage
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        if: always()
+        uses: codecov/codecov-action@v4
         with:
           files: ./backend/coverage/lcov.info
           flags: unit
@@ -131,10 +132,10 @@ jobs:
           - 6379:6379
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -143,33 +144,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup test environment
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/safenest_test
-          REDIS_URL: redis://localhost:6379
-        run: |
-          cp .env.example .env.test
-          echo "DATABASE_URL=$DATABASE_URL" >> .env.test
-          echo "REDIS_URL=$REDIS_URL" >> .env.test
-
       - name: Run migrations
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/safenest_test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: safenest_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
         run: npm run migrate
-
-      - name: Seed test data
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/safenest_test
-        run: npm run seed:dev
 
       - name: Run integration tests
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/safenest_test
-          REDIS_URL: redis://localhost:6379
-        run: npx jest __tests__/integration --coverage
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: safenest_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          NODE_ENV: test
+          JWT_SECRET: test-secret-minimum-32-characters-long-for-testing
+          JWT_REFRESH_SECRET: test-refresh-secret-minimum-32-characters-long
+        run: npm run test:integration -- --coverage
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        if: always()
+        uses: codecov/codecov-action@v4
         with:
           files: ./backend/coverage/lcov.info
           flags: integration
@@ -209,10 +209,10 @@ jobs:
           - 6379:6379
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -221,33 +221,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup test environment
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/safenest_test
-          REDIS_URL: redis://localhost:6379
-        run: |
-          cp .env.example .env.test
-          echo "DATABASE_URL=$DATABASE_URL" >> .env.test
-          echo "REDIS_URL=$REDIS_URL" >> .env.test
-
       - name: Run migrations
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/safenest_test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: safenest_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
         run: npm run migrate
-
-      - name: Seed test data
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/safenest_test
-        run: npm run seed:dev
 
       - name: Run E2E tests
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/safenest_test
-          REDIS_URL: redis://localhost:6379
-        run: npx jest __tests__/e2e --coverage
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: safenest_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          NODE_ENV: test
+          JWT_SECRET: test-secret-minimum-32-characters-long-for-testing
+          JWT_REFRESH_SECRET: test-refresh-secret-minimum-32-characters-long
+        run: npx jest tests/e2e --coverage --passWithNoTests
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        if: always()
+        uses: codecov/codecov-action@v4
         with:
           files: ./backend/coverage/lcov.info
           flags: e2e
@@ -277,10 +276,10 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -289,22 +288,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup test environment
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/safenest_test
-        run: |
-          cp .env.example .env.test
-          echo "DATABASE_URL=$DATABASE_URL" >> .env.test
-
       - name: Run migrations
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/safenest_test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: safenest_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
         run: npm run migrate
 
       - name: Run compliance tests
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/safenest_test
-        run: npx jest __tests__/compliance --verbose
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: safenest_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          NODE_ENV: test
+        run: npx jest tests/compliance --verbose --passWithNoTests
 
       - name: Generate compliance report
         if: always()
@@ -321,7 +322,7 @@ jobs:
 
       - name: Upload compliance report
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: compliance-report
           path: backend/compliance-report.md

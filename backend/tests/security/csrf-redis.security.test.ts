@@ -16,14 +16,14 @@
  */
 
 import { Request, Response, NextFunction } from 'express';
-import redis from '../../config/redis';
+import redis from '../../src/config/redis';
 import {
   generateCSRFToken,
   validateCSRFToken,
   attachCSRFToken,
   verifyCSRFToken,
   clearCSRFTokens,
-} from '../../middleware/csrf';
+} from '../../src/middleware/csrf';
 
 // Mock Express request/response
 const mockRequest = (overrides: Partial<Request> = {}): Partial<Request> => ({
