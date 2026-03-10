@@ -46,6 +46,8 @@ module.exports = {
         '**/?(*.)+(spec|test).ts',
         '!**/tests/e2e/**',
         '!**/tests/integration/**',
+        '!**/tests/security/**',
+        '!**/tests/performance/**',
         '!**/*.integration.test.ts',
       ],
       setupFiles: ['<rootDir>/tests/setup-env.ts'],
