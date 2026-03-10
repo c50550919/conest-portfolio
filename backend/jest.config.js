@@ -58,6 +58,8 @@ module.exports = {
         ...baseConfig.moduleNameMapper,
         // Auto-mock auth middleware for unit tests
         '^(.*)/middleware/auth\\.middleware$': '<rootDir>/src/middleware/__mocks__/auth.middleware.ts',
+        // Auto-mock database for unit tests (prevents real Knex connections)
+        '^(.*)/config/database$': '<rootDir>/src/config/__mocks__/database.ts',
       },
     },
     // Integration Tests (real DB/Redis)

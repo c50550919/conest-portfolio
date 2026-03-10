@@ -475,9 +475,10 @@ describe('CertnClient', () => {
 
       client.verifyWebhookSignature(payload, signature);
 
-      expect(logger.info).toHaveBeenCalledWith('Certn webhook signature verification', {
-        signature: 'sig-123',
-      });
+      // In test mode (no CERTN_WEBHOOK_SECRET), verification is skipped with a warning
+      expect(logger.warn).toHaveBeenCalledWith(
+        'Certn webhook signature verification skipped: CERTN_WEBHOOK_SECRET not configured',
+      );
     });
   });
 

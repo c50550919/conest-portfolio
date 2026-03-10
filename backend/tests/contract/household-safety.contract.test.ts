@@ -111,7 +111,8 @@ const generateTestToken = () => 'mock-test-token';
 // Valid attestation responses
 const validAttestationResponses = [
   { questionId: 'juvenile_legal_history', response: false, answeredAt: new Date().toISOString() },
-  { questionId: 'court_orders', response: false, answeredAt: new Date().toISOString() },
+  { questionId: 'court_orders_against_you', response: false, answeredAt: new Date().toISOString() },
+  { questionId: 'court_orders_protective', response: false, answeredAt: new Date().toISOString() },
   { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
   { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
 ];
@@ -158,15 +159,15 @@ describe('Contract: Household Safety Disclosure API', () => {
       expect(Array.isArray(response.body.data.questions)).toBe(true);
     });
 
-    // T-HS-C02: Returns 4 questions with correct structure
-    it('T-HS-C02: should return 4 questions with correct structure', async () => {
+    // T-HS-C02: Returns 5 questions with correct structure
+    it('T-HS-C02: should return 5 questions with correct structure', async () => {
       const response = await request(app)
         .get('/api/household-safety/questions')
         .set('Authorization', `Bearer ${authToken}`)
         .expect(200);
 
       const { questions } = response.body.data;
-      expect(questions).toHaveLength(4);
+      expect(questions).toHaveLength(5);
 
       questions.forEach((question: any) => {
         expect(question).toHaveProperty('id');
@@ -176,7 +177,7 @@ describe('Contract: Household Safety Disclosure API', () => {
         expect(typeof question.id).toBe('string');
         expect(typeof question.text).toBe('string');
         expect(typeof question.required).toBe('boolean');
-        expect(typeof question.expectedAnswer).toBe('boolean');
+        expect(question.expectedAnswer === null || typeof question.expectedAnswer === 'boolean').toBe(true);
       });
     });
 
@@ -455,7 +456,8 @@ describe('Contract: Household Safety Disclosure API', () => {
           response: true,
           answeredAt: new Date().toISOString(),
         },
-        { questionId: 'court_orders', response: false, answeredAt: new Date().toISOString() },
+        { questionId: 'court_orders_against_you', response: false, answeredAt: new Date().toISOString() },
+        { questionId: 'court_orders_protective', response: false, answeredAt: new Date().toISOString() },
         { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
         { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
       ];

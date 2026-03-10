@@ -69,7 +69,8 @@ const mockParent = {
 // Valid attestation responses
 const validAttestationResponses = [
   { questionId: 'juvenile_legal_history', response: false, answeredAt: new Date().toISOString() },
-  { questionId: 'court_orders', response: false, answeredAt: new Date().toISOString() },
+  { questionId: 'court_orders_against_you', response: false, answeredAt: new Date().toISOString() },
+  { questionId: 'court_orders_protective', response: false, answeredAt: new Date().toISOString() },
   { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
   { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
 ];
@@ -212,7 +213,8 @@ describe('Compliance: Household Safety Disclosure - Child Safety (Constitution P
 
       // Expected question IDs should be about household safety status
       expect(questionIds).toContain('juvenile_legal_history');
-      expect(questionIds).toContain('court_orders');
+      expect(questionIds).toContain('court_orders_against_you');
+      expect(questionIds).toContain('court_orders_protective');
       expect(questionIds).toContain('cps_involvement');
       expect(questionIds).toContain('disclosure_accuracy');
     });
@@ -392,10 +394,10 @@ describe('Compliance: Household Safety Disclosure - Child Safety (Constitution P
   // ============================================================================
 
   describe('Questions Content Validation', () => {
-    it('should have exactly 4 required attestation questions', () => {
+    it('should have exactly 5 required attestation questions', () => {
       const questions = HouseholdSafetyService.getAttestationQuestions();
 
-      expect(questions.length).toBe(4);
+      expect(questions.length).toBe(5);
       questions.forEach((question) => {
         expect(question.required).toBe(true);
       });
@@ -409,7 +411,8 @@ describe('Compliance: Household Safety Disclosure - Child Safety (Constitution P
 
       expect(questionTopics).toEqual([
         'juvenile_legal_history',
-        'court_orders',
+        'court_orders_against_you',
+        'court_orders_protective',
         'cps_involvement',
         'disclosure_accuracy',
       ]);
@@ -427,7 +430,7 @@ describe('Compliance: Household Safety Disclosure - Child Safety (Constitution P
       const safetyQuestion = questions.find((q) => q.id === 'juvenile_legal_history');
       expect(safetyQuestion?.text).toContain('minor');
 
-      const courtQuestion = questions.find((q) => q.id === 'court_orders');
+      const courtQuestion = questions.find((q) => q.id === 'court_orders_against_you');
       expect(courtQuestion?.text).toContain('minor');
     });
   });
