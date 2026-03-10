@@ -21,15 +21,7 @@ const createChainableMock = (): any => {
         if (prop === 'toSQL') return () => ({ sql: '', bindings: [] });
 
         // Terminal methods that return promises
-        const terminalMethods = [
-          'first',
-          'pluck',
-          'count',
-          'min',
-          'max',
-          'sum',
-          'avg',
-        ];
+        const terminalMethods = ['first', 'pluck', 'count', 'min', 'max', 'sum', 'avg'];
         if (terminalMethods.includes(prop as string)) {
           return jest.fn().mockResolvedValue(null);
         }
@@ -57,9 +49,7 @@ const createChainableMock = (): any => {
   mock.fn = {
     now: jest.fn().mockReturnValue('NOW()'),
   };
-  mock.transaction = jest
-    .fn()
-    .mockImplementation(async (callback: any) => callback(mock));
+  mock.transaction = jest.fn().mockImplementation(async (callback: any) => callback(mock));
 
   return mock;
 };

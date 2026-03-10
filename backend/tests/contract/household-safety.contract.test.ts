@@ -177,7 +177,9 @@ describe('Contract: Household Safety Disclosure API', () => {
         expect(typeof question.id).toBe('string');
         expect(typeof question.text).toBe('string');
         expect(typeof question.required).toBe('boolean');
-        expect(question.expectedAnswer === null || typeof question.expectedAnswer === 'boolean').toBe(true);
+        expect(
+          question.expectedAnswer === null || typeof question.expectedAnswer === 'boolean',
+        ).toBe(true);
       });
     });
 
@@ -456,8 +458,16 @@ describe('Contract: Household Safety Disclosure API', () => {
           response: true,
           answeredAt: new Date().toISOString(),
         },
-        { questionId: 'court_orders_against_you', response: false, answeredAt: new Date().toISOString() },
-        { questionId: 'court_orders_protective', response: false, answeredAt: new Date().toISOString() },
+        {
+          questionId: 'court_orders_against_you',
+          response: false,
+          answeredAt: new Date().toISOString(),
+        },
+        {
+          questionId: 'court_orders_protective',
+          response: false,
+          answeredAt: new Date().toISOString(),
+        },
         { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
         { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
       ];

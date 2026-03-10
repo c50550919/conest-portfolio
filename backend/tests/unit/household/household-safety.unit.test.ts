@@ -88,8 +88,16 @@ describe('Household Safety Disclosure System', () => {
   // Valid attestation responses (all correct answers)
   const validAttestationResponses: AttestationResponse[] = [
     { questionId: 'juvenile_legal_history', response: false, answeredAt: new Date().toISOString() },
-    { questionId: 'court_orders_against_you', response: false, answeredAt: new Date().toISOString() },
-    { questionId: 'court_orders_protective', response: false, answeredAt: new Date().toISOString() },
+    {
+      questionId: 'court_orders_against_you',
+      response: false,
+      answeredAt: new Date().toISOString(),
+    },
+    {
+      questionId: 'court_orders_protective',
+      response: false,
+      answeredAt: new Date().toISOString(),
+    },
     { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
     { questionId: 'disclosure_accuracy', response: true, answeredAt: new Date().toISOString() },
   ];
@@ -129,7 +137,9 @@ describe('Household Safety Disclosure System', () => {
           expect(typeof question.id).toBe('string');
           expect(typeof question.text).toBe('string');
           expect(typeof question.required).toBe('boolean');
-          expect(question.expectedAnswer === null || typeof question.expectedAnswer === 'boolean').toBe(true);
+          expect(
+            question.expectedAnswer === null || typeof question.expectedAnswer === 'boolean',
+          ).toBe(true);
         });
       });
 
@@ -175,8 +185,16 @@ describe('Household Safety Disclosure System', () => {
             response: true,
             answeredAt: new Date().toISOString(),
           },
-          { questionId: 'court_orders_against_you', response: false, answeredAt: new Date().toISOString() },
-          { questionId: 'court_orders_protective', response: false, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'court_orders_against_you',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
+          {
+            questionId: 'court_orders_protective',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
           {
             questionId: 'disclosure_accuracy',
@@ -199,8 +217,16 @@ describe('Household Safety Disclosure System', () => {
             response: false,
             answeredAt: new Date().toISOString(),
           },
-          { questionId: 'court_orders_against_you', response: true, answeredAt: new Date().toISOString() },
-          { questionId: 'court_orders_protective', response: false, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'court_orders_against_you',
+            response: true,
+            answeredAt: new Date().toISOString(),
+          },
+          {
+            questionId: 'court_orders_protective',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
           {
             questionId: 'disclosure_accuracy',
@@ -223,8 +249,16 @@ describe('Household Safety Disclosure System', () => {
             response: false,
             answeredAt: new Date().toISOString(),
           },
-          { questionId: 'court_orders_against_you', response: false, answeredAt: new Date().toISOString() },
-          { questionId: 'court_orders_protective', response: false, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'court_orders_against_you',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
+          {
+            questionId: 'court_orders_protective',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'cps_involvement', response: true, answeredAt: new Date().toISOString() },
           {
             questionId: 'disclosure_accuracy',
@@ -247,8 +281,16 @@ describe('Household Safety Disclosure System', () => {
             response: false,
             answeredAt: new Date().toISOString(),
           },
-          { questionId: 'court_orders_against_you', response: false, answeredAt: new Date().toISOString() },
-          { questionId: 'court_orders_protective', response: false, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'court_orders_against_you',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
+          {
+            questionId: 'court_orders_protective',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
           {
             questionId: 'disclosure_accuracy',
@@ -271,8 +313,16 @@ describe('Household Safety Disclosure System', () => {
             response: true,
             answeredAt: new Date().toISOString(),
           },
-          { questionId: 'court_orders_against_you', response: false, answeredAt: new Date().toISOString() },
-          { questionId: 'court_orders_protective', response: false, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'court_orders_against_you',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
+          {
+            questionId: 'court_orders_protective',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
           {
             questionId: 'disclosure_accuracy',
@@ -468,8 +518,16 @@ describe('Household Safety Disclosure System', () => {
             response: true,
             answeredAt: new Date().toISOString(),
           },
-          { questionId: 'court_orders_against_you', response: false, answeredAt: new Date().toISOString() },
-          { questionId: 'court_orders_protective', response: false, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'court_orders_against_you',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
+          {
+            questionId: 'court_orders_protective',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
           {
             questionId: 'disclosure_accuracy',
@@ -573,8 +631,16 @@ describe('Household Safety Disclosure System', () => {
             response: true,
             answeredAt: new Date().toISOString(),
           },
-          { questionId: 'court_orders_against_you', response: false, answeredAt: new Date().toISOString() },
-          { questionId: 'court_orders_protective', response: false, answeredAt: new Date().toISOString() },
+          {
+            questionId: 'court_orders_against_you',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
+          {
+            questionId: 'court_orders_protective',
+            response: false,
+            answeredAt: new Date().toISOString(),
+          },
           { questionId: 'cps_involvement', response: false, answeredAt: new Date().toISOString() },
           {
             questionId: 'disclosure_accuracy',
@@ -943,7 +1009,9 @@ describe('Household Safety Disclosure System', () => {
     });
 
     it('should have expectedAnswer of null for court_orders_protective (VAWA compliance)', () => {
-      const protectiveQuestion = ATTESTATION_QUESTIONS.find((q) => q.id === 'court_orders_protective');
+      const protectiveQuestion = ATTESTATION_QUESTIONS.find(
+        (q) => q.id === 'court_orders_protective',
+      );
       expect(protectiveQuestion?.expectedAnswer).toBeNull();
     });
 
