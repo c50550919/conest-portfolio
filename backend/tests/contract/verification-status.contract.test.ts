@@ -4,7 +4,7 @@
  */
 
 import request from 'supertest';
-import app from '../app';
+import app from '../../src/app';
 
 describe('Contract: GET /api/verification/status', () => {
   let authToken: string;

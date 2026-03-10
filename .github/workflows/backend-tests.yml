@@ -138,6 +138,7 @@ jobs:
       - name: Upload coverage
         if: always()
         uses: codecov/codecov-action@v4
+        continue-on-error: true
         with:
           files: ./backend/coverage/lcov.info
           flags: unit
@@ -215,6 +216,7 @@ jobs:
       - name: Upload coverage
         if: always()
         uses: codecov/codecov-action@v4
+        continue-on-error: true
         with:
           files: ./backend/coverage/lcov.info
           flags: integration
@@ -292,6 +294,7 @@ jobs:
       - name: Upload coverage
         if: always()
         uses: codecov/codecov-action@v4
+        continue-on-error: true
         with:
           files: ./backend/coverage/lcov.info
           flags: e2e

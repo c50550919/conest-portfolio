@@ -14,7 +14,7 @@
  */
 
 import request from 'supertest';
-import app from '../app';
+import app from '../../src/app';
 
 describe('Contract: Connection Request Response Endpoints', () => {
   let authToken: string;

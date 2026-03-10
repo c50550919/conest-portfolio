@@ -75,6 +75,42 @@ module.exports = {
       testTimeout: 30000,
       // DO NOT mock auth middleware for integration tests - use real auth
     },
+    // Security Tests (real DB/Redis)
+    {
+      ...baseConfig,
+      displayName: 'security',
+      roots: ['<rootDir>/tests/security'],
+      testMatch: [
+        '**/tests/security/**/*.test.ts',
+      ],
+      setupFiles: ['<rootDir>/tests/setup-env.ts'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+      testTimeout: 30000,
+    },
+    // E2E Tests (real DB/Redis, Jest-based only - Playwright tests run separately)
+    {
+      ...baseConfig,
+      displayName: 'e2e',
+      roots: ['<rootDir>/tests/e2e'],
+      testMatch: [
+        '**/tests/e2e/**/*.test.ts',
+        '!**/tests/e2e/**/*.e2e.test.ts',
+      ],
+      setupFiles: ['<rootDir>/tests/setup-env.ts'],
+      testTimeout: 60000,
+    },
+    // Performance Tests
+    {
+      ...baseConfig,
+      displayName: 'performance',
+      roots: ['<rootDir>/tests/performance'],
+      testMatch: [
+        '**/tests/performance/**/*.test.ts',
+      ],
+      setupFiles: ['<rootDir>/tests/setup-env.ts'],
+      setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+      testTimeout: 30000,
+    },
   ],
 
   // Coverage configuration (applies to all projects)

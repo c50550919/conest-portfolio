@@ -1,8 +1,8 @@
 // @ts-nocheck
 // Jest globals (describe, it, expect, beforeEach, afterEach) are automatically available
 import request from 'supertest';
-import { db } from '../config/database';
-import app from '../app';
+import { db } from '../../src/config/database';
+import app from '../../src/app';
 import { OAuth2Client } from 'google-auth-library';
 
 /**

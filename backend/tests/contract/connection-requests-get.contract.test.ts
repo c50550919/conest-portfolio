@@ -12,7 +12,7 @@
  */
 
 import request from 'supertest';
-import app from '../app';
+import app from '../../src/app';
 
 describe('Contract: GET /api/connection-requests', () => {
   let authToken: string;

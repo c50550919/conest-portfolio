@@ -20,7 +20,7 @@
  */
 
 import request from 'supertest';
-import app from '../app';
+import app from '../../src/app';
 
 describe('GET /api/discovery/profiles - Contract Tests', () => {
   // Mock token for testing (will fail auth, which is what we want for auth tests)

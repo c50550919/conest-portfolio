@@ -25,7 +25,7 @@
 
 // Jest globals (describe, it, expect, beforeEach, afterEach) are automatically available
 import request from 'supertest';
-import app from '../app';
+import app from '../../src/app';
 
 describe('POST /api/auth/oauth/apple - Contract Tests', () => {
   describe('Request Schema Validation - 400 Errors', () => {

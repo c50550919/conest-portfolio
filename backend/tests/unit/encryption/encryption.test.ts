@@ -10,7 +10,7 @@ import {
   generateSecureToken,
   hash,
   verifyHash,
-} from '../../src/utils/encryption';
+} from '../../../src/utils/encryption';
 
 describe('Encryption Utilities', () => {
   describe('encrypt and decrypt', () => {

@@ -13,12 +13,12 @@
 import { Request, Response, NextFunction } from 'express';
 
 // Mock dependencies BEFORE requiring the actual module
-jest.mock('../../utils/jwt');
-jest.mock('../../models/User');
+jest.mock('../../../src/utils/jwt');
+jest.mock('../../../src/models/User');
 
 // Get the ACTUAL implementation (bypasses moduleNameMapper mock)
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const actualAuthMiddleware = jest.requireActual('../../middleware/auth.middleware');
+const actualAuthMiddleware = jest.requireActual('../../../src/middleware/auth.middleware');
 
 const {
   authenticateJWT,
@@ -38,8 +38,8 @@ interface AuthRequest extends Request {
   file?: Express.Multer.File;
 }
 
-import { verifyToken } from '../../utils/jwt';
-import { UserModel } from '../../models/User';
+import { verifyToken } from '../../../src/utils/jwt';
+import { UserModel } from '../../../src/models/User';
 
 const mockVerifyToken = verifyToken;
 const mockUserModel = UserModel;

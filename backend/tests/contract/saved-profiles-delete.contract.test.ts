@@ -13,7 +13,7 @@
  */
 
 import request from 'supertest';
-import app from '../app';
+import app from '../../src/app';
 
 describe('Contract: DELETE /api/saved-profiles/:id', () => {
   const validUUID = '550e8400-e29b-41d4-a716-446655440000';
