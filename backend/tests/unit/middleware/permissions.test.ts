@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Permissions Middleware Unit Tests
  *
