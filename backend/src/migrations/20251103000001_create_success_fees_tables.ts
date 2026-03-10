@@ -51,7 +51,7 @@ export async function up(knex: Knex): Promise<void> {
   // ============================================================
   await knex.schema.createTable('housing_documents', (table) => {
     // Primary key
-    table.uuid('id').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
 
     // Foreign keys
     table.uuid('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
@@ -116,7 +116,7 @@ export async function up(knex: Knex): Promise<void> {
   // ============================================================
   await knex.schema.createTable('success_fees', (table) => {
     // Primary key
-    table.uuid('id').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
 
     // Foreign keys
     table.uuid('user_a_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
@@ -254,7 +254,7 @@ export async function up(knex: Knex): Promise<void> {
   // 5. CREATE admin_audit_log TABLE (for compliance)
   // ============================================================
   await knex.schema.createTable('admin_audit_log', (table) => {
-    table.uuid('id').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
     table.uuid('admin_user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
     table.string('action', 100).notNullable();
     table.uuid('target_id').notNullable(); // ID of success_fee or document

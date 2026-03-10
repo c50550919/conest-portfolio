@@ -30,7 +30,7 @@ export async function up(knex: Knex): Promise<void> {
   // ============================================================
   await knex.schema.createTable('stripe_webhook_events', (table) => {
     // Primary key
-    table.uuid('id').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
 
     // Stripe event tracking
     table.string('stripe_event_id', 255).unique().notNullable();
@@ -67,7 +67,7 @@ export async function up(knex: Knex): Promise<void> {
   // ============================================================
   await knex.schema.createTable('idempotency_keys', (table) => {
     // Primary key
-    table.uuid('id').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
 
     // Key tracking
     table.string('idempotency_key', 255).unique().notNullable();

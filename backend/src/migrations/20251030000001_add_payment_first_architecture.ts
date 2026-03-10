@@ -30,7 +30,7 @@ export async function up(knex: Knex): Promise<void> {
   // ============================================================
   await knex.schema.createTable('verification_payments', (table) => {
     // Primary key
-    table.uuid('id').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
 
     // Foreign keys
     table.uuid('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
@@ -89,7 +89,7 @@ export async function up(knex: Knex): Promise<void> {
   // ============================================================
   await knex.schema.createTable('pre_qualification_responses', (table) => {
     // Primary key
-    table.uuid('id').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
 
     // Foreign keys
     table.uuid('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');

@@ -51,7 +51,7 @@ export async function up(knex: Knex): Promise<void> {
   // Create household_invitations table
   await knex.schema.createTable('household_invitations', (table) => {
     // Primary key
-    table.uuid('id').primary().defaultTo(knex.raw('uuid_generate_v4()'));
+    table.uuid('id').primary().defaultTo(knex.raw('gen_random_uuid()'));
 
     // Relationships
     table
