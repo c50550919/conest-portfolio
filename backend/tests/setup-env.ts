@@ -13,6 +13,7 @@ process.env.JWT_SECRET = 'test-secret-key-for-testing-only-32chars';
 process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-for-testing-32ch';
 process.env.STRIPE_SECRET_KEY = 'sk_test_mock_key_for_testing_only';
 process.env.AWS_S3_BUCKET = 'test-bucket-for-testing';
+process.env.ENCRYPTION_MASTER_KEY = 'test-encryption-master-key-32chars!';
 
 // Disable rate limiting and other features that interfere with tests
 process.env.ENABLE_RATE_LIMITING = 'false';
