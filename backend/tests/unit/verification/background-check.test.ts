@@ -14,15 +14,15 @@
 
 import crypto from 'crypto';
 import axios from 'axios';
-import { CertnClient } from '../features/verification/certn/CertnClient';
-import logger from '../config/logger';
+import { CertnClient } from '../../../src/features/verification/certn/CertnClient';
+import logger from '../../../src/config/logger';
 
 // Mock axios for Certn API calls
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 // Mock logger to capture audit logs
-jest.mock('../config/logger', () => ({
+jest.mock('../../../src/config/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),

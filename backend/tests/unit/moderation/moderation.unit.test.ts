@@ -13,10 +13,10 @@ import {
   ModerationSignals,
   DEFAULT_THRESHOLDS,
   ESCALATION_LADDER,
-} from '../features/moderation/moderation.types';
+} from '../../../src/features/moderation/moderation.types';
 
 // Mock the database
-jest.mock('../config/database', () => ({
+jest.mock('../../../src/config/database', () => ({
   default: {
     select: jest.fn().mockReturnThis(),
     where: jest.fn().mockReturnThis(),
@@ -30,7 +30,7 @@ jest.mock('../config/database', () => ({
 }));
 
 // Mock logger
-jest.mock('../config/logger', () => ({
+jest.mock('../../../src/config/logger', () => ({
   default: {
     info: jest.fn(),
     warn: jest.fn(),
@@ -40,7 +40,7 @@ jest.mock('../config/logger', () => ({
 }));
 
 // Mock notification worker
-jest.mock('../workers/notificationWorker', () => ({
+jest.mock('../../../src/workers/notificationWorker', () => ({
   queueNotification: jest.fn().mockResolvedValue(undefined),
 }));
 

@@ -23,7 +23,7 @@
 
 // Jest globals (describe, it, expect, beforeEach, afterEach) are automatically available
 import request from 'supertest';
-import app from '../app';
+import app from '../../src/app';
 
 describe('Admin Verification Review - Contract Tests', () => {
   const mockAdminToken = 'Bearer mock-admin-token-12345';

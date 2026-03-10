@@ -16,17 +16,17 @@ import {
   requireHouseholdMembership,
   preventChildDataAccess,
   requireCustomPermission,
-} from '../../middleware/permissions';
+} from '../../src/middleware/permissions';
 
 // Mock HouseholdMemberModel for database-independent testing
-jest.mock('../../models/HouseholdMember', () => ({
+jest.mock('../../src/models/HouseholdMember', () => ({
   HouseholdMemberModel: {
     isMember: jest.fn(),
     isAdmin: jest.fn(),
   },
 }));
 
-import { HouseholdMemberModel } from '../../models/HouseholdMember';
+import { HouseholdMemberModel } from '../../src/models/HouseholdMember';
 const mockHouseholdMemberModel = HouseholdMemberModel;
 
 // Helper functions for creating mock request/response

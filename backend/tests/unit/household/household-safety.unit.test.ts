@@ -27,7 +27,7 @@ const createMockQueryBuilder = () => ({
 const mockBuilder = createMockQueryBuilder();
 
 // Mock the database module - must be before imports
-jest.mock('../config/database', () => {
+jest.mock('../../../src/config/database', () => {
   const builder = {
     insert: jest.fn().mockReturnThis(),
     returning: jest.fn(),
@@ -47,33 +47,33 @@ jest.mock('../config/database', () => {
 });
 
 // Mock the audit service
-jest.mock('../services/auditService', () => ({
+jest.mock('../../../src/services/auditService', () => ({
   createAuditLog: jest.fn().mockResolvedValue(undefined),
 }));
 
 // Mock the logger
-jest.mock('../config/logger', () => ({
+jest.mock('../../../src/config/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
 }));
 
 // Now import the modules after mocks are set up
-import { HouseholdSafetyService } from '../features/household-safety/household-safety.service';
-import { HouseholdSafetyDisclosureModel } from '../models/HouseholdSafetyDisclosure';
+import { HouseholdSafetyService } from '../../../src/features/household-safety/household-safety.service';
+import { HouseholdSafetyDisclosureModel } from '../../../src/models/HouseholdSafetyDisclosure';
 import {
   ATTESTATION_QUESTIONS,
   DISCLOSURE_VALIDITY_DAYS,
   RENEWAL_WARNING_DAYS,
   MIN_SIGNATURE_LENGTH,
-} from '../features/household-safety/household-safety.constants';
+} from '../../../src/features/household-safety/household-safety.constants';
 import {
   AttestationResponse,
   DisclosureType,
   HouseholdSafetyDisclosureDB,
-} from '../types/entities/household-safety.entity';
-import { createAuditLog } from '../services/auditService';
-import db from '../config/database';
+} from '../../../src/types/entities/household-safety.entity';
+import { createAuditLog } from '../../../src/services/auditService';
+import db from '../../../src/config/database';
 
 // Get the mock query builder from the mocked module
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

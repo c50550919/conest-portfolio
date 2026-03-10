@@ -14,17 +14,17 @@
 import request from 'supertest';
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { HouseholdSafetyService } from '../features/household-safety/household-safety.service';
-import { HouseholdSafetyDisclosureModel } from '../models/HouseholdSafetyDisclosure';
-import { ParentModel } from '../models/Parent';
+import { HouseholdSafetyService } from '../../../src/features/household-safety/household-safety.service';
+import { HouseholdSafetyDisclosureModel } from '../../../src/models/HouseholdSafetyDisclosure';
+import { ParentModel } from '../../../src/models/Parent';
 import {
   ATTESTATION_QUESTIONS,
   MIN_SIGNATURE_LENGTH,
-} from '../features/household-safety/household-safety.constants';
-import { createAuditLog } from '../services/auditService';
+} from '../../../src/features/household-safety/household-safety.constants';
+import { createAuditLog } from '../../../src/services/auditService';
 
 // Mock dependencies
-jest.mock('../config/database', () => ({
+jest.mock('../../../src/config/database', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     insert: jest.fn().mockReturnThis(),
@@ -38,18 +38,18 @@ jest.mock('../config/database', () => ({
   })),
 }));
 
-jest.mock('../services/auditService', () => ({
+jest.mock('../../../src/services/auditService', () => ({
   createAuditLog: jest.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock('../config/logger', () => ({
+jest.mock('../../../src/config/logger', () => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
 }));
 
-jest.mock('../models/Parent');
-jest.mock('../models/HouseholdSafetyDisclosure');
+jest.mock('../../../src/models/Parent');
+jest.mock('../../../src/models/HouseholdSafetyDisclosure');
 
 // JWT secret for testing
 const JWT_SECRET = process.env.JWT_SECRET || 'test-jwt-secret-key-for-testing-only';
@@ -103,7 +103,7 @@ const createTestApp = () => {
 
   const {
     householdSafetyController,
-  } = require('../features/household-safety/household-safety.controller');
+  } = require('../../../src/features/household-safety/household-safety.controller');
 
   app.get(
     '/api/household-safety/questions',

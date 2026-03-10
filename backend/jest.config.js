@@ -48,6 +48,7 @@ module.exports = {
         '!**/tests/integration/**',
         '!**/tests/security/**',
         '!**/tests/performance/**',
+        '!**/tests/compliance/**',
         '!**/*.integration.test.ts',
       ],
       setupFiles: ['<rootDir>/tests/setup-env.ts'],
