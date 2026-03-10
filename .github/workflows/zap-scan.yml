@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: '0 2 * * 1'  # Weekly on Monday 2am UTC
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   zap-scan:
     runs-on: ubuntu-latest
@@ -108,7 +113,7 @@ jobs:
           curl http://localhost:3001/api/health || exit 1
 
       - name: Run OWASP ZAP Baseline Scan
-        uses: zaproxy/action-baseline@v0.7.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: 'http://localhost:3001'
           rules_file_name: '.zap/rules.tsv'
