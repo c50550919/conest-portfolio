@@ -13,6 +13,31 @@ jest.mock('../../src/models/User');
 jest.mock('../../src/models/Verification');
 jest.mock('../../src/config/redis');
 
+// Mock VerificationService to use Redis-based code verification
+// instead of the mock phone mode that bypasses Redis
+jest.mock('../../src/features/verification/verification.service', () => ({
+  VerificationService: {
+    verifyPhoneCode: jest.fn(async (userId: string, code: string) => {
+      const redis = require('../../src/config/redis').default;
+      const storedCode = await redis.get(`phone_verification:${userId}`);
+      if (!storedCode || storedCode !== code) {
+        return false;
+      }
+      // Update records (mocked)
+      const { VerificationModel } = require('../../src/models/Verification');
+      const { UserModel } = require('../../src/models/User');
+      await VerificationModel.update(userId, {
+        phone_verified: true,
+        phone_verification_date: new Date(),
+      });
+      await UserModel.update(userId, { phone_verified: true });
+      await VerificationModel.updateVerificationScore(userId);
+      await redis.del(`phone_verification:${userId}`);
+      return true;
+    }),
+  },
+}));
+
 describe('POST /api/auth/verify-phone - Contract Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();

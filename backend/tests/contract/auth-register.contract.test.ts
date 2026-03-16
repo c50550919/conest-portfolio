@@ -14,6 +14,14 @@ jest.mock('../../src/models/User');
 jest.mock('../../src/models/Verification');
 jest.mock('../../src/config/redis');
 
+// Mock email service to prevent getEnv() crash in test environment
+jest.mock('../../src/services/emailService', () => ({
+  getEmailService: jest.fn(() => ({
+    sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+    sendEmailVerification: jest.fn().mockResolvedValue(undefined),
+  })),
+}));
+
 describe('POST /api/auth/register - Contract Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();

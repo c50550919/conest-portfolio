@@ -20,6 +20,20 @@
 import request from 'supertest';
 import app from '../../src/app';
 
+// Mock SavedProfileModel to return arrays instead of null from DB mock
+jest.mock('../../src/models/SavedProfile', () => ({
+  SavedProfileModel: {
+    findByUserId: jest.fn().mockResolvedValue([]),
+    findById: jest.fn().mockResolvedValue(null),
+    isSaved: jest.fn().mockResolvedValue(false),
+    create: jest.fn().mockResolvedValue({}),
+    update: jest.fn().mockResolvedValue({}),
+    delete: jest.fn().mockResolvedValue(1),
+    countByUserId: jest.fn().mockResolvedValue(0),
+    getDecryptedNotes: jest.fn().mockResolvedValue(null),
+  },
+}));
+
 describe('GET /api/saved-profiles - Contract Tests', () => {
   describe('Authentication Enforcement', () => {
     it('should reject request without auth token', async () => {

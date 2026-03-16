@@ -11,6 +11,69 @@ import request from 'supertest';
 import { app } from '../../src/app';
 import { z } from 'zod';
 
+// Mock household-related models to prevent null cascades from DB mock
+jest.mock('../../src/models/HouseholdMember', () => ({
+  HouseholdMemberModel: {
+    isAdmin: jest.fn().mockResolvedValue(true),
+    isMember: jest.fn().mockResolvedValue(true),
+    findByHousehold: jest.fn().mockResolvedValue([]),
+    findByUserId: jest.fn().mockResolvedValue(null),
+    create: jest.fn().mockResolvedValue({
+      id: '00000000-0000-0000-0000-000000000001',
+      household_id: 'household-123',
+      user_id: 'new-user-456',
+      parent_id: '00000000-0000-0000-0000-000000000002',
+      role: 'member',
+      rent_share: 50000,
+      joined_at: new Date().toISOString(),
+      status: 'active',
+    }),
+  },
+}));
+
+jest.mock('../../src/models/Household', () => ({
+  HouseholdModel: {
+    findById: jest.fn().mockResolvedValue({
+      id: 'household-123',
+      name: 'Test Household',
+      active: true,
+      status: 'active',
+    }),
+    create: jest.fn().mockResolvedValue({}),
+    update: jest.fn().mockResolvedValue({}),
+  },
+}));
+
+jest.mock('../../src/models/Expense', () => ({
+  ExpenseModel: {
+    findByHousehold: jest.fn().mockResolvedValue([]),
+    findByStatus: jest.fn().mockResolvedValue([]),
+    findByType: jest.fn().mockResolvedValue([]),
+    create: jest.fn().mockResolvedValue({}),
+  },
+}));
+
+jest.mock('../../src/models/User', () => ({
+  UserModel: {
+    findById: jest.fn().mockResolvedValue({
+      id: 'new-user-456',
+      email: 'newuser@example.com',
+      account_status: 'active',
+    }),
+    findByEmail: jest.fn().mockResolvedValue(null),
+  },
+}));
+
+jest.mock('../../src/models/Parent', () => ({
+  ParentModel: {
+    findByUserId: jest.fn().mockResolvedValue({
+      id: '00000000-0000-0000-0000-000000000002',
+      user_id: 'new-user-456',
+      first_name: 'Test',
+    }),
+  },
+}));
+
 // AddMember request schema
 const AddMemberRequestSchema = z.object({
   userId: z.string().uuid(),

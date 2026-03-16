@@ -14,6 +14,41 @@
 import request from 'supertest';
 import app from '../../src/app';
 
+// Mock ConnectionRequestModel to return arrays instead of null from DB mock
+jest.mock('../../src/models/ConnectionRequest', () => ({
+  ConnectionRequestModel: {
+    findByRecipientId: jest.fn().mockResolvedValue([]),
+    findBySenderId: jest.fn().mockResolvedValue([]),
+    create: jest.fn().mockResolvedValue({}),
+    findById: jest.fn().mockResolvedValue(null),
+    getDecryptedMessage: jest.fn().mockResolvedValue(null),
+    getDecryptedResponseMessage: jest.fn().mockResolvedValue(null),
+    countSentToday: jest.fn().mockResolvedValue(0),
+    countSentThisWeek: jest.fn().mockResolvedValue(0),
+    getStatistics: jest.fn().mockResolvedValue({
+      totalSent: 0,
+      totalReceived: 0,
+      pending: 0,
+      accepted: 0,
+      declined: 0,
+    }),
+  },
+}));
+
+// Mock socket and push notification services (used by connection request service)
+jest.mock('../../src/config/socket', () => ({
+  getSocketIO: jest.fn(() => ({
+    to: jest.fn().mockReturnThis(),
+    emit: jest.fn(),
+  })),
+}));
+
+jest.mock('../../src/services/pushNotificationService', () => ({
+  getPushService: jest.fn(() => ({
+    sendToUser: jest.fn().mockResolvedValue(undefined),
+  })),
+}));
+
 describe('Contract: GET /api/connection-requests', () => {
   let authToken: string;
   let userId: string;
