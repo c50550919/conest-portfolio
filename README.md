@@ -1,404 +1,288 @@
-# CoNest - Single Parent Housing Platform
+# CoNest - Shared Housing Platform for Single Parents
 
-> **Safe, Verified, and Compatible Roommate Matching for Single Parents**
+A full-stack production-grade application that matches single parents with compatible, verified roommates for shared housing. Built with child safety compliance, real-time messaging, identity verification, payment processing, and a weighted matching algorithm — all designed around regulatory constraints (FHA, FCRA, COPPA, VAWA).
 
-[![Security](https://img.shields.io/badge/security-hardened-green.svg)](./SECURITY.md)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)](./backend/TESTING_GUIDE.md)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)](./backend/TESTING_GUIDE.md)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-
-## 🎯 Mission
-
-Help single parents find safe, verified, and compatible roommates to make housing affordable while prioritizing child safety through cost-sharing.
-
-## 🛡️ Core Safety Principles
-
-- **NO child data storage** - Only parent profiles, never children's names/photos/details
-- **Mandatory verification** - Background checks and ID verification for all users
-- **End-to-end encryption** - All messages and sensitive data encrypted
-- **Parent-only platform** - Children never interact with the app
-
-## ✨ Key Features
-
-### 1. **Parent Verification System**
-- Government ID verification via Jumio (mocked for development)
-- Background checks via Checkr API (mocked for development)
-- Phone/email verification
-- Income verification (optional)
-- Trust scoring system
-
-### 2. **Smart Matching Algorithm**
-Weighted compatibility scoring:
-- **25%** Schedule compatibility
-- **20%** Parenting philosophy alignment
-- **20%** House rules compatibility
-- **15%** Location & schools
-- **10%** Budget match
-- **10%** Lifestyle factors
-
-### 3. **Safety Features**
-- Verification badges on all profiles
-- Emergency contact system
-- Report/block functionality
-- Visitor logging for households
-- Comprehensive audit trails
-
-### 4. **Household Management**
-- Expense splitting with Stripe Connect
-- Shared calendar and chore scheduling
-- House rules documentation
-- Lease agreement templates
-- Payment automation
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Docker Desktop installed and running
-- Node.js 18+ installed
-- Git initialized
-- Stripe account (test mode enabled)
-
-### 1. Environment Setup
-
-```bash
-# Clone repository
-cd /Users/ghostmac/Development/conest
-
-# Start Docker containers (PostgreSQL + Redis)
-docker-compose up -d
-
-# Verify containers are running
-docker ps
-```
-
-### 2. Backend Setup
-
-```bash
-cd backend
-
-# Install dependencies
-npm install
-
-# Copy environment file
-cp .env.example .env
-# Edit .env with your configuration
-
-# Setup test database and seed data
-chmod +x scripts/*.sh
-./scripts/test-setup.sh
-
-# Run tests
-npm test
-
-# Start development server
-npm run dev
-```
-
-Backend API will be available at: **http://localhost:3000**
-
-### 3. Mobile App Setup
-
-```bash
-cd mobile
-
-# Install dependencies
-npm install
-
-# iOS setup (macOS only)
-cd ios && pod install && cd ..
-
-# Start Metro bundler
-npm start
-
-# Run on iOS (in new terminal)
-npm run ios
-
-# Or run on Android
-npm run android
-```
-
-## 📊 Tech Stack
-
-### Backend
-- **Runtime**: Node.js 18+ with TypeScript
-- **Framework**: Express.js
-- **Database**: PostgreSQL 15 with PostGIS
-- **Cache**: Redis 7
-- **Real-time**: Socket.io
-- **Payments**: Stripe Connect
-- **Authentication**: JWT with refresh tokens
-
-### Mobile
-- **Framework**: React Native with TypeScript
-- **Navigation**: React Navigation 6
-- **State Management**: Redux Toolkit + React Query
-- **UI**: React Native Paper + custom components
-- **Storage**: AsyncStorage (encrypted)
-
-### Infrastructure
-- **Containerization**: Docker & Docker Compose
-- **Testing**: Jest + Supertest + Artillery
-- **Linting**: ESLint + Prettier
-- **CI/CD**: GitHub Actions
-
-## 🧪 Testing
-
-### Run All Tests
-```bash
-cd backend
-./scripts/run-tests.sh --coverage
-```
-
-### Run Specific Test Suites
-```bash
-# Security tests only
-npm run test:security
-
-# Integration tests
-./scripts/run-tests.sh --suite integration
-
-# E2E tests
-./scripts/run-tests.sh --suite e2e
-
-# Compliance tests (child safety)
-./scripts/run-tests.sh --suite compliance
-```
-
-### API Health Check
-```bash
-# Start server first
-npm run dev
-
-# In another terminal
-TEST_EMAIL=sarah.verified@test.com TEST_PASSWORD=TestPassword123! \
-  ./scripts/api-health-check.sh
-```
-
-### Load Testing
-```bash
-npm install -g artillery
-artillery run artillery-config.yml
-```
-
-## 📚 Documentation
-
-- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - System architecture and design
-- **[SECURITY.md](./SECURITY.md)** - Security best practices and compliance
-- **[COMPLEXITY.md](./COMPLEXITY.md)** - Code complexity management
-- **[UI_DESIGN.md](./UI_DESIGN.md)** - Design system and components
-- **[TESTING_GUIDE.md](./backend/TESTING_GUIDE.md)** - Comprehensive testing guide
-- **[API_EXAMPLES.md](./backend/API_EXAMPLES.md)** - All 47 API endpoint examples
-- **[IMPLEMENTATION.md](./IMPLEMENTATION.md)** - Step-by-step implementation guide
-
-## 🔐 Security Features
-
-### Authentication & Authorization
-- ✅ Bcrypt password hashing (cost factor 12)
-- ✅ JWT with short expiry (15min access, 7day refresh)
-- ✅ Refresh token rotation
-- ✅ Account lockout after 5 failed attempts
-- ✅ Session management with Redis
-- ✅ Role-based access control (RBAC)
-
-### Input Validation
-- ✅ SQL injection prevention
-- ✅ XSS protection with CSP headers
-- ✅ CSRF token protection
-- ✅ Request size limits (10MB body, 5MB files)
-- ✅ Rate limiting (100 req/15min general, stricter for sensitive endpoints)
-
-### Data Encryption
-- ✅ AES-256-GCM encryption for sensitive data
-- ✅ PBKDF2 key derivation (100K iterations)
-- ✅ PII tokenization for audit logs
-- ✅ End-to-end message encryption preparation
-- ✅ SSL/TLS for all communications
-
-### Code Quality
-- ✅ ESLint with max complexity 15
-- ✅ Prettier for consistent formatting
-- ✅ 85%+ test coverage requirement
-- ✅ Automated security audits
-- ✅ SonarQube quality gates
-
-## 🎨 Design System
-
-### Color Palette
-```typescript
-primary: '#2ECC71'    // Trust green - growth, safety
-secondary: '#3498DB'  // Calm blue - stability
-tertiary: '#F39C12'   // Warm amber - home
-error: '#E74C3C'      // Alert red
-success: '#27AE60'    // Verified green
-```
-
-### Core Components
-- **SafetyBadge** - Verification status indicators
-- **CompatibilityScore** - Circular progress with gradient
-- **ParentCard** - Profile cards (NO child data)
-- **TrustIndicator** - Trust metrics display
-
-## 📈 Success Metrics
-
-### Safety & Trust
-- Zero child safety incidents (**CRITICAL**)
-- 95% user verification rate
-- <24hr background check completion
-- Zero data breaches (**CRITICAL**)
-
-### User Experience
-- 80% successful housing matches
-- Average housing stability: >12 months
-- <3s app launch time
-- <200ms API response time (p95)
-
-### Code Quality
-- 85%+ test coverage (enforced)
-- Max complexity 15 (enforced)
-- Zero critical vulnerabilities (enforced)
-
-## 🛠️ Development Commands
-
-### Backend
-```bash
-npm run dev              # Start development server
-npm run build            # Build for production
-npm test                 # Run all tests
-npm run test:coverage    # Run tests with coverage
-npm run test:security    # Run security tests
-npm run lint             # Run ESLint
-npm run lint:fix         # Fix linting issues
-npm run format           # Format code with Prettier
-npm run security:audit   # Run security audit
-```
-
-### Mobile
-```bash
-npm start                # Start Metro bundler
-npm run ios              # Run on iOS simulator
-npm run android          # Run on Android emulator
-npm test                 # Run tests
-npm run lint             # Run ESLint
-npm run format           # Format code
-```
-
-## 🚦 API Endpoints
-
-### Authentication (8 endpoints)
-- `POST /api/v1/auth/register` - User registration
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/logout` - User logout
-- `POST /api/v1/auth/refresh` - Refresh access token
-- `POST /api/v1/auth/verify-email` - Email verification
-- `POST /api/v1/auth/verify-phone` - Phone verification
-- `POST /api/v1/auth/password-reset` - Password reset
-- `POST /api/v1/auth/2fa/enable` - Enable 2FA
-
-### Profiles (6 endpoints)
-- `GET /api/v1/profiles/:id` - Get profile by ID
-- `POST /api/v1/profiles` - Create profile
-- `PUT /api/v1/profiles/:id` - Update profile
-- `DELETE /api/v1/profiles/:id` - Delete profile
-- `POST /api/v1/profiles/:id/photo` - Upload photo
-- `GET /api/v1/profiles/search` - Search profiles
-
-### Matching (5 endpoints)
-- `GET /api/v1/matches` - Get potential matches
-- `POST /api/v1/matches` - Create match
-- `GET /api/v1/matches/:id` - Get match details
-- `POST /api/v1/matches/:id/like` - Express interest
-- `POST /api/v1/matches/:id/pass` - Pass on match
-
-### Messages (6 endpoints)
-- `GET /api/v1/conversations` - Get all conversations
-- `GET /api/v1/conversations/:id/messages` - Get messages
-- `POST /api/v1/messages` - Send message
-- `PUT /api/v1/messages/:id/read` - Mark as read
-- `DELETE /api/v1/messages/:id` - Delete message
-- `GET /api/v1/messages/unread` - Get unread count
-
-### Payments (9 endpoints)
-- `POST /api/v1/stripe/connect` - Create Stripe Connect account
-- `GET /api/v1/payments` - Get payment history
-- `POST /api/v1/payments` - Create payment
-- `POST /api/v1/payments/:id/refund` - Process refund
-- `POST /api/v1/households/:id/split-rent` - Split rent
-- `POST /api/v1/stripe/webhook` - Stripe webhook handler
-
-**See [API_EXAMPLES.md](./backend/API_EXAMPLES.md) for complete documentation with cURL examples**
-
-## 👥 Test Users
-
-All test users have password: **`TestPassword123!`**
-
-| Email | Status | Children | Budget |
-|-------|--------|----------|--------|
-| sarah.verified@test.com | Fully verified | 2 (ages 5-10) | $800-1200 |
-| maria.fullverified@test.com | Fully + 2FA | 1 (ages 2-4) | $700-1000 |
-| lisa.pending@test.com | Partial | 1 (ages 6-8) | $1000-1500 |
-| jennifer.complete@test.com | Fully verified | 3 (ages 4-12) | $900-1300 |
-
-## 📦 Project Structure
-
-```
-conest/
-├── backend/              # Node.js/Express API
-│   ├── src/
-│   │   ├── config/      # Database, Redis, security configs
-│   │   ├── controllers/ # Route handlers
-│   │   ├── models/      # Database models
-│   │   ├── routes/      # API endpoints
-│   │   ├── services/    # Business logic & external APIs
-│   │   ├── middleware/  # Auth, validation, security
-│   │   ├── websockets/  # Socket.io real-time
-│   │   ├── workers/     # Background jobs
-│   │   ├── utils/       # Helpers & utilities
-│   │   └── migrations/  # Database migrations
-│   ├── __tests__/       # Test suites
-│   ├── scripts/         # Utility scripts
-│   └── seeds/           # Test data
-│
-├── mobile/              # React Native app
-│   ├── src/
-│   │   ├── components/  # Reusable UI components
-│   │   ├── screens/     # App screens
-│   │   ├── navigation/  # React Navigation setup
-│   │   ├── services/    # API calls & native features
-│   │   ├── store/       # Redux Toolkit state
-│   │   ├── hooks/       # Custom React hooks
-│   │   ├── theme/       # Design system
-│   │   └── utils/       # Helpers & constants
-│   └── __tests__/       # Component & integration tests
-│
-├── .github/             # GitHub Actions CI/CD
-├── DATABASE.sql         # PostgreSQL schema
-├── docker-compose.yml   # Docker orchestration
-└── Documentation files
-```
-
-## 🤝 Contributing
-
-We follow secure coding practices and maintain high code quality standards:
-
-1. All code must pass ESLint (max complexity 15)
-2. Test coverage must be ≥80%
-3. All security tests must pass
-4. No child data storage violations
-5. Follow existing code style (Prettier enforced)
-
-## 🔒 License
-
-MIT License - See [LICENSE](./LICENSE) for details
-
-## 📞 Support
-
-For issues and feature requests, please create an issue in the repository.
-
-## 🙏 Acknowledgments
-
-Built with security and child safety as top priorities. Special thanks to all contributors dedicated to making housing accessible for single-parent families.
+**179,000+ lines of TypeScript** across backend API, React Native mobile app, and infrastructure. **179 test files** spanning unit, integration, contract, security, compliance, and performance tiers with an enforced **85% coverage threshold**.
 
 ---
 
-**⚠️ REMEMBER: This platform prioritizes child safety. NEVER store, display, or transmit child-identifying information.**
+## Architecture Overview
+
+```
+                         ┌─────────────────┐
+                         │  React Native    │
+                         │  Mobile App      │
+                         │  (TypeScript)    │
+                         └────────┬─────── ┘
+                                  │ REST + WebSocket
+                                  ▼
+┌──────────┐    ┌──────────────────────────────────┐    ┌──────────┐
+│  Veriff   │◄──│       Express.js API Server       │──►│  Stripe  │
+│  (ID)     │   │                                    │   │ Connect  │
+├──────────┤   │  JWT Auth · RBAC · Rate Limiting   │   ├──────────┤
+│  Certn    │◄──│  AES-256-GCM Encryption            │──►│  Telnyx  │
+│  (BGC)    │   │  Feature-based Route Architecture  │   │  (SMS)   │
+└──────────┘   └──────────┬───────────┬─────────────┘   └──────────┘
+                           │           │
+                    ┌──────▼──┐   ┌────▼─────┐
+                    │PostgreSQL│   │  Redis 7  │
+                    │15+PostGIS│   │           │
+                    │30 tables │   │ Sessions  │
+                    │35 migr.  │   │ CSRF Tkns │
+                    └─────────┘   │ Socket.io │
+                                  │ Rate Lmts │
+                                  └───────────┘
+```
+
+### Backend (Node.js + Express + TypeScript)
+- **137 API endpoints** across 20 feature-based route files
+- **23 database models** using Knex query builder
+- **12 middleware layers** (auth, CSRF, rate limiting, sanitization, CORS, Helmet, permissions, etc.)
+- **35 database migrations** tracking schema evolution over 6 months
+- Feature-based directory structure: each domain has its own controller, service, routes, and validator
+
+### Mobile (React Native + TypeScript)
+- **304 source files** with Redux Toolkit state management
+- React Navigation routing, custom hooks, theming system
+- iOS (CocoaPods) and Android build configurations
+
+### Infrastructure
+- **Docker Compose** orchestration (PostgreSQL 15 + PostGIS, Redis 7)
+- **9 GitHub Actions workflows** (backend tests, mobile CI, schema drift detection, OWASP ZAP scanning, PR validation)
+- Separate Jest projects per test tier with isolated setup files
+
+---
+
+## Technical Decisions Worth Discussing
+
+### 1. Matching Algorithm (FHA-Compliant)
+
+The core matching engine scores parent compatibility on 6 weighted factors:
+
+| Factor | Weight | Why This Weight |
+|--------|--------|-----------------|
+| Schedule compatibility | 30% | Shared housing fails when schedules conflict — highest practical impact |
+| Parenting philosophy | 20% | Discipline style mismatches cause household friction |
+| House rules alignment | 20% | Cleanliness, noise, guest policies — daily cohabitation |
+| Location/schools | 15% | Must serve both parents' school districts |
+| Budget match | 10% | Income disparity creates resentment — but less than behavioral factors |
+| Lifestyle factors | 5% | Smoking, pets, diet — important but not dealbreakers |
+
+**Key constraint**: Family composition (number of children) is intentionally excluded from the discovery algorithm. Under the Fair Housing Act, `childrenCount` cannot influence who sees whom. This field exists in the database for household logistics (bedroom planning) but is never exposed in the matching or discovery layer. The compliance test suite enforces this at 100% coverage.
+
+### 2. Verification Pipeline (FCRA-Compliant)
+
+Identity verification and background checks run through a multi-stage pipeline:
+
+```
+Phone Verify (Telnyx) → Email Verify → ID Verify (Veriff) → Background Check (Certn)
+                                                                      │
+                                                           ┌──────────┼──────────┐
+                                                           ▼          ▼          ▼
+                                                     Sex Offender  Violent    Non-Violent
+                                                     Auto-Reject   Review     Approve
+```
+
+FCRA requires a two-step adverse action process: pre-adverse notice, 5-day waiting period, then final decision. Criminal record data is encrypted at rest with AES-256-GCM. The webhook handler validates provider signatures and uses an idempotency table to prevent duplicate processing.
+
+### 3. Encryption Strategy
+
+Sensitive fields use AES-256-GCM with per-record random IVs and PBKDF2 key derivation:
+
+```typescript
+// Encrypted fields: addresses, messages, government IDs, background check results
+// Each record gets its own IV and salt — no two ciphertexts share parameters
+encrypt(plaintext) → { iv, salt, authTag, ciphertext, keyVersion }
+```
+
+Key versioning supports rotation without re-encrypting existing records. The `keyVersion` field tells the decrypt function which key to use.
+
+### 4. Real-Time Messaging (Socket.io + Redis)
+
+WebSocket connections authenticate via JWT. Redis pub/sub enables horizontal scaling — any backend instance can deliver messages to any connected user:
+
+- **Rooms**: `user:{id}`, `conversation:{id}`, `household:{id}`
+- **Events**: typing indicators, new messages, connection requests, match notifications, household expense alerts
+- **Target**: <100ms message delivery
+
+### 5. Payment Processing (Stripe Connect)
+
+Household expense splitting uses Stripe Connect to handle multi-party payments:
+- Rent splitting among 2+ household members
+- Per-member payment tracking with audit logs
+- Refund processing with compensation tracking
+- Webhook signature validation for payment events
+
+### 6. Multi-Tenant Architecture (Latest Addition)
+
+Organizations table supports B2B pivot — housing nonprofits manage their own client rosters, housing inventory, and placement pipelines. Org-scoped queries enforce tenant isolation at the database layer:
+
+```
+Organization → Org Members (RBAC roles) → Clients → Housing Units → Placements
+```
+
+Roles: `case_manager`, `program_director`, `org_admin`, `super_admin`
+
+---
+
+## Security Implementation
+
+### Middleware Chain (order matters)
+```
+Request → Helmet (CSP/HSTS) → CORS → Rate Limit → Body Parser → CSRF → Auth (JWT)
+       → Permissions (RBAC) → Validation (Zod/express-validator) → Sanitization → Handler
+```
+
+### What's Enforced
+| Layer | Implementation |
+|-------|---------------|
+| Authentication | JWT with 15-min access tokens, 7-day refresh rotation, bcrypt cost factor 12 |
+| Authorization | Fine-grained RBAC (`payment:read`, `payment:write`, `admin:*`) |
+| Rate Limiting | Redis-backed, 100 req/15min general, 5 req/15min for auth, 10 req/hr for payments |
+| CSRF | Redis-backed tokens, 24-hour TTL, max 5 tokens per session |
+| Input Validation | Zod schemas (36+ validators) + express-validator for legacy routes |
+| Output | Helmet CSP, X-Frame-Options DENY, HSTS, no X-Powered-By |
+| Encryption | AES-256-GCM at rest, TLS in transit, per-field encryption for PII |
+
+### CI/CD Security
+- **OWASP ZAP** scanning on every PR
+- **npm audit** in CI pipeline
+- **Schema drift detection** — migration files validated against running database
+- ESLint security rules with max cyclomatic complexity of 15
+
+---
+
+## Testing Strategy
+
+### Test Pyramid
+```
+                    ╱ ╲
+                   ╱ E2E╲         2 tests — full user journeys
+                  ╱───────╲
+                 ╱ Security ╲     8 tests — auth bypass, injection, CSRF
+                ╱─────────────╲
+               ╱  Performance  ╲  2 tests — load testing with Artillery
+              ╱─────────────────╲
+             ╱    Compliance     ╲ 2 tests — child safety, FHA rules
+            ╱─────────────────────╲
+           ╱    Contract (34)      ╲  API schema validation
+          ╱─────────────────────────╲
+         ╱    Integration (35)       ╲  real DB + Redis
+        ╱─────────────────────────────╲
+       ╱        Unit (14+)             ╲  mocked dependencies
+      ╱─────────────────────────────────╲
+```
+
+### Coverage Enforcement
+- **85% global threshold** for branches, functions, lines, and statements
+- **100% mandatory** for child safety validators — the build fails if any child-data-related code path is untested
+- Separate Jest configurations per tier with appropriate timeouts (unit: 10s, integration: 30s, security: 30s, E2E: 60s)
+
+---
+
+## Database Schema (Key Tables)
+
+| Table | Purpose | Notable Columns |
+|-------|---------|-----------------|
+| `users` | Authentication | `email`, `password_hash`, `phone_verified`, `two_factor_enabled`, `status` |
+| `profiles` | Parent profiles | Demographics, preferences — **no child-identifying data** |
+| `verifications` | ID + background check status | `provider`, `status`, `expires_at` |
+| `matches` | Compatibility pairings | `compatibility_score`, `score_breakdown` (JSONB) |
+| `conversations` / `messages` | Encrypted messaging | `content_encrypted`, `read_at` |
+| `households` | Shared living groups | `rent_amount`, `rules` (JSONB) |
+| `organizations` | B2B multi-tenancy | `slug`, `plan_tier`, `settings` (JSONB) |
+| `clients` | Org-managed individuals | `household_size`, `budget_max`, `accessibility_needs` (JSONB) |
+| `housing_units` | Property inventory | `location` (PostGIS), `accessibility_features` (JSONB) |
+| `placements` | Client-to-unit pipeline | `stage` (6-step), `compatibility_score`, `score_breakdown` |
+| `webhook_events` | Provider webhook idempotency | `provider`, `event_type`, `idempotency_key` |
+| `payment_audit_log` | Financial audit trail | `action`, `amount`, `stripe_event_id` |
+
+---
+
+## Regulatory Compliance Summary
+
+| Regulation | How It's Addressed |
+|------------|-------------------|
+| **FHA (Fair Housing Act)** | `childrenCount` excluded from discovery/matching. No religion-proxy fields in scoring. Compliance tests enforce this. |
+| **FCRA (Fair Credit Reporting Act)** | Two-step adverse action for background checks. Standalone written disclosure. Consumer dispute rights. |
+| **COPPA** | Zero child data storage. Platform is parent-only. 100% test coverage on child safety validators. |
+| **VAWA** | DV survivors with protective orders are not blocked by safety attestations. Address confidentiality supported. |
+| **Fair Chance Housing** | Criminal history questions deferred to verification gate — not asked during onboarding. Tiered assessment (sex offender → auto-reject, violent → individualized review, non-violent → approve). |
+
+---
+
+## Running Locally
+
+### Prerequisites
+- Docker Desktop
+- Node.js 18+
+
+### Start Services
+```bash
+docker compose up -d                  # PostgreSQL + Redis
+cd backend && npm install
+cp .env.example .env                  # Configure environment
+npx knex migrate:latest               # Run migrations
+npm run dev                           # API on localhost:3000
+```
+
+### Run Tests
+```bash
+npm test                              # All tests
+npm run test:security                 # Security suite only
+npm run test:coverage                 # With coverage report
+```
+
+### Mobile
+```bash
+cd mobile && npm install
+cd ios && pod install && cd ..
+npm start                             # Metro bundler
+npm run ios                           # iOS simulator
+```
+
+---
+
+## Project Structure
+
+```
+conest/
+├── backend/
+│   ├── src/
+│   │   ├── config/          # Database, Redis, Stripe, Socket.io, security configs
+│   │   ├── features/        # Feature modules (matching, placement, verification, etc.)
+│   │   ├── models/          # 23 Knex models with typed interfaces
+│   │   ├── middleware/       # 12 middleware layers (auth, CSRF, rate limit, etc.)
+│   │   ├── migrations/      # 35 migrations tracking 6 months of schema evolution
+│   │   ├── utils/           # Encryption, JWT, validation helpers
+│   │   ├── lib/             # Shared libraries (org-scoped queries)
+│   │   └── app.ts           # Express app with Sentry, Swagger, webhook handlers
+│   └── tests/               # 179 test files across 7 tiers
+│       ├── unit/            # Mocked dependency tests
+│       ├── integration/     # Real DB/Redis tests
+│       ├── contract/        # API schema validation
+│       ├── security/        # Auth bypass, injection, CSRF tests
+│       ├── compliance/      # Child safety, FHA rules
+│       ├── e2e/             # Full user journey tests
+│       └── performance/     # Artillery load tests
+├── mobile/                  # React Native app (304 source files)
+│   ├── src/
+│   │   ├── screens/         # App screens
+│   │   ├── components/      # Reusable UI components
+│   │   ├── store/           # Redux Toolkit slices
+│   │   ├── navigation/      # React Navigation config
+│   │   ├── hooks/           # Custom hooks
+│   │   └── services/        # API integration
+├── .github/workflows/       # 9 CI/CD pipelines
+├── docker-compose.yml       # PostgreSQL 15 + PostGIS, Redis 7
+└── SECURITY.md              # Security practices documentation
+```
+
+---
+
+## What I'd Do Differently
+
+- **ORM choice**: Started with Knex raw query builder for control. For a team project, Prisma or Drizzle would provide better type safety and migration tooling at the cost of some query flexibility.
+- **Monorepo tooling**: Using npm workspaces. Turborepo or Nx would improve build caching and task orchestration as the repo scales.
+- **State management**: Redux Toolkit works but React Query handles most of the server state. Would reduce Redux surface area in a rewrite.
+- **Test isolation**: Integration tests share a database. Testcontainers per test suite would eliminate ordering dependencies.
