@@ -13,6 +13,7 @@
     "migrate:demo:rollback": "dotenv -e .env.demo -- knex migrate:rollback",
     "seed:dev": "knex seed:run",
     "seed:demo": "dotenv -e .env.demo -- ts-node scripts/seed-demo-presentation.ts",
+    "seed:placd-demo": "ts-node scripts/seed-placd-demo.ts",
     "seed:demo:discovery": "dotenv -e .env.demo -- ts-node scripts/seed-demo-presentation.ts --discovery-only",
     "seed:demo:household": "dotenv -e .env.demo -- ts-node scripts/seed-demo-presentation.ts --with-household",
     "demo:reset": "npm run migrate:demo:rollback -- --all && npm run migrate:demo && npm run seed:demo",
