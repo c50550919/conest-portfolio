@@ -56,6 +56,9 @@ import { verificationWebhookRoutes } from './features/verification';
 import { adminRoutes } from './features/admin';
 // Notifications feature (push notification device tokens)
 import notificationRoutes from './features/notifications/notification.routes';
+// Placd pivot — org-scoped B2B placement routes
+import orgRoutes from './features/org/org.routes';
+import placementRoutes from './features/placement/placement.routes';
 
 // Load environment variables
 dotenv.config();
@@ -128,6 +131,9 @@ app.use('/api/connection-requests', connectionRequestRoutes);
 app.use('/api/compatibility', comparisonRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
+// Placd pivot — org-scoped B2B placement routes
+app.use('/api/orgs', orgRoutes);
+app.use('/api/orgs', placementRoutes);
 
 // Development-only routes (test token generation, etc.)
 // SECURITY: Only registered in development/test environments

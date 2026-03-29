@@ -23,36 +23,29 @@ declare global {
  * Must run AFTER authenticateJWT middleware.
  */
 export function resolveOrgContext() {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const orgSlug = req.params.orgSlug;
     if (!orgSlug) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Organization slug is required' });
+      res.status(400).json({ success: false, message: 'Organization slug is required' });
+      return;
     }
 
     const userId = (req as any).user?.id || (req as any).userId;
     if (!userId) {
-      return res
-        .status(401)
-        .json({ success: false, message: 'Authentication required' });
+      res.status(401).json({ success: false, message: 'Authentication required' });
+      return;
     }
 
     const org = await OrganizationModel.findBySlug(orgSlug);
     if (!org) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'Organization not found' });
+      res.status(404).json({ success: false, message: 'Organization not found' });
+      return;
     }
 
     const membership = await OrgMemberModel.findByOrgAndUser(org.id, userId);
     if (!membership) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: 'Not a member of this organization',
-        });
+      res.status(403).json({ success: false, message: 'Not a member of this organization' });
+      return;
     }
 
     req.orgId = org.id;
@@ -72,19 +65,14 @@ export function resolveOrgContext() {
  * Role hierarchy: super_admin > org_admin > program_director > case_manager
  */
 export function requireOrgRole(...allowedRoles: string[]) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.orgMember) {
-      return res
-        .status(403)
-        .json({ success: false, message: 'Organization context required' });
+      res.status(403).json({ success: false, message: 'Organization context required' });
+      return;
     }
     if (!allowedRoles.includes(req.orgMember.role)) {
-      return res
-        .status(403)
-        .json({
-          success: false,
-          message: 'Insufficient role for this action',
-        });
+      res.status(403).json({ success: false, message: 'Insufficient role for this action' });
+      return;
     }
     next();
   };
