@@ -64,11 +64,11 @@ const ClientModel = {
       .select('status')
       .count('* as count');
     return counts.reduce(
-      (acc: Record<string, number>, row: { status: string; count: string }) => {
+      (acc: Record<string, number>, row: any) => {
         acc[row.status] = parseInt(row.count);
         return acc;
       },
-      {},
+      {} as Record<string, number>,
     );
   },
 };

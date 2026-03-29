@@ -88,11 +88,11 @@ const PlacementModel = {
       .select('stage')
       .count('* as count');
     return counts.reduce(
-      (acc: Record<string, number>, row: { stage: string; count: string }) => {
+      (acc: Record<string, number>, row: any) => {
         acc[row.stage] = parseInt(row.count);
         return acc;
       },
-      {},
+      {} as Record<string, number>,
     );
   },
 };
