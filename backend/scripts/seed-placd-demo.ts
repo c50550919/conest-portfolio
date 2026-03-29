@@ -190,19 +190,22 @@ async function main() {
           .returning('*');
       }
 
-      // Create profile
-      const existingProfile = await db('profiles').where({ user_id: user.id }).first();
-      if (!existingProfile) {
-        await db('profiles').insert({
-          user_id: user.id,
-          first_name: staff.firstName,
-          last_name: staff.lastName,
-          city: 'Charlotte',
-          state: 'NC',
-          zip_code: '28202',
-          verified: true,
-          verification_level: 'full',
-        });
+      // Create profile (if profiles table exists — not needed for Placd B2B)
+      const hasProfiles = await db.schema.hasTable('profiles');
+      if (hasProfiles) {
+        const existingProfile = await db('profiles').where({ user_id: user.id }).first();
+        if (!existingProfile) {
+          await db('profiles').insert({
+            user_id: user.id,
+            first_name: staff.firstName,
+            last_name: staff.lastName,
+            city: 'Charlotte',
+            state: 'NC',
+            zip_code: '28202',
+            verified: true,
+            verification_level: 'full',
+          });
+        }
       }
 
       // Create org membership

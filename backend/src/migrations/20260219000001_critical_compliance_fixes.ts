@@ -30,50 +30,62 @@ export async function up(knex: Knex): Promise<void> {
   // 1. VERIFICATIONS TABLE: Encryption + Retention + FCRA
   // ============================================================
 
-  // Change flagged_records from jsonb to text (encrypted string storage)
-  // Existing data will be cast to text — must be re-encrypted by application
-  await knex.raw(`
-    ALTER TABLE verifications
-    ALTER COLUMN flagged_records TYPE text
-    USING flagged_records::text;
-  `);
+  // Guard: only alter verifications table if it exists (may not in fresh DB)
+  const hasVerifications = await knex.schema.hasTable('verifications');
+  if (hasVerifications) {
+    // Change flagged_records from jsonb to text (encrypted string storage)
+    const hasFlaggedRecords = await knex.raw(`
+      SELECT column_name FROM information_schema.columns
+      WHERE table_name = 'verifications' AND column_name = 'flagged_records'
+    `);
+    if (hasFlaggedRecords.rows.length > 0) {
+      await knex.raw(`
+        ALTER TABLE verifications
+        ALTER COLUMN flagged_records TYPE text
+        USING flagged_records::text;
+      `);
+    }
 
-  // Add retention expiration for criminal record data (CMP-03)
-  await knex.schema.alterTable('verifications', (table) => {
-    table.timestamp('retention_expires_at').nullable();
-    table.timestamp('pre_adverse_notice_date').nullable();
-  });
+    // Add retention expiration for criminal record data (CMP-03)
+    await knex.schema.alterTable('verifications', (table) => {
+      table.timestamp('retention_expires_at').nullable();
+      table.timestamp('pre_adverse_notice_date').nullable();
+    });
 
-  // Update background_check_status constraint to include 'pre_adverse' (CMP-04)
-  await knex.raw(`
-    ALTER TABLE verifications
-    DROP CONSTRAINT IF EXISTS chk_verifications_background_check_status;
+    // Update background_check_status constraint to include 'pre_adverse' (CMP-04)
+    await knex.raw(`
+      ALTER TABLE verifications
+      DROP CONSTRAINT IF EXISTS chk_verifications_background_check_status;
 
-    ALTER TABLE verifications
-    ADD CONSTRAINT chk_verifications_background_check_status
-      CHECK (background_check_status IN ('not_started', 'pending', 'approved', 'rejected', 'consider', 'expired', 'pre_adverse'));
-  `);
+      ALTER TABLE verifications
+      ADD CONSTRAINT chk_verifications_background_check_status
+        CHECK (background_check_status IN ('not_started', 'pending', 'approved', 'rejected', 'consider', 'expired', 'pre_adverse', 'clear'));
+    `);
 
-  // Index for retention worker daily cleanup
-  await knex.raw(`
-    CREATE INDEX idx_verifications_retention_expires
-    ON verifications(retention_expires_at)
-    WHERE retention_expires_at IS NOT NULL;
-  `);
+    // Index for retention worker daily cleanup
+    await knex.raw(`
+      CREATE INDEX IF NOT EXISTS idx_verifications_retention_expires
+      ON verifications(retention_expires_at)
+      WHERE retention_expires_at IS NOT NULL;
+    `);
 
-  // Index for FCRA adverse action worker
-  await knex.raw(`
-    CREATE INDEX idx_verifications_pre_adverse
-    ON verifications(pre_adverse_notice_date)
-    WHERE background_check_status = 'pre_adverse';
-  `);
+    // Index for FCRA adverse action worker
+    await knex.raw(`
+      CREATE INDEX IF NOT EXISTS idx_verifications_pre_adverse
+      ON verifications(pre_adverse_notice_date)
+      WHERE background_check_status = 'pre_adverse';
+    `);
+  }
 
   // ============================================================
   // 2. VERIFICATION_WEBHOOK_EVENTS TABLE: Encrypted flag
   // ============================================================
-  await knex.schema.alterTable('verification_webhook_events', (table) => {
-    table.boolean('encrypted').notNullable().defaultTo(false);
-  });
+  const hasWebhookEvents = await knex.schema.hasTable('verification_webhook_events');
+  if (hasWebhookEvents) {
+    await knex.schema.alterTable('verification_webhook_events', (table) => {
+      table.boolean('encrypted').notNullable().defaultTo(false);
+    });
+  }
 
   // ============================================================
   // 3. USERS TABLE: ToS/Privacy consent timestamps
