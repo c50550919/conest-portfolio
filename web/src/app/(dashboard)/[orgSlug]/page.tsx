@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Users, Clock, AlertTriangle, CheckCircle, ArrowRight } from 'lucide-react';
+import { DataQualityBadge } from '@/components/data-quality-badge';
 import api from '@/lib/api';
 
 interface DashboardData {
@@ -98,7 +99,7 @@ export default function DashboardHome() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -151,6 +152,7 @@ export default function DashboardHome() {
             </div>
           </CardContent>
         </Card>
+        <DataQualityBadge orgSlug={orgSlug} />
       </div>
 
       {/* My Caseload */}
