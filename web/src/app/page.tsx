@@ -130,53 +130,45 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== CAPABILITIES ===== */}
-      <section id="capabilities" className="relative py-32">
+      {/* ===== PLATFORM ===== */}
+      <section id="platform" className="relative py-32">
         <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-xl" />
         <div className="relative w-full px-4 sm:px-8 lg:px-12">
           {/* Section label */}
           <div className="flex items-center gap-3 mb-20">
             <div className="h-px w-12 bg-gradient-to-r from-blue-500 to-teal-400" />
             <span className="text-[13px] tracking-[0.2em] uppercase text-slate-500 font-medium">
-              Capabilities
+              Platform
             </span>
           </div>
 
           {/* Two-column asymmetric layout */}
           <div className="grid lg:grid-cols-12 gap-12 lg:gap-6">
-            {/* Left: Large feature */}
+            {/* Left: Lead feature — Pipeline */}
             <div className="lg:col-span-7 group">
               <div className="h-full p-10 rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] hover:border-white/[0.15] transition-all duration-500">
                 <div className="flex items-center gap-4 mb-8">
                   <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                    <GitMerge className="w-6 h-6 text-blue-400" />
+                    <Workflow className="w-6 h-6 text-blue-400" />
                   </div>
                   <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold text-white mb-4 tracking-tight">
-                  6-Factor Matching Engine
+                  Placement Pipeline
                 </h3>
                 <p className="text-slate-400 text-lg leading-relaxed max-w-xl mb-8">
-                  Every client-unit pair is scored across location, budget,
-                  household size, language, accessibility, and services
-                  proximity. The algorithm surfaces the three best matches
-                  instantly.
+                  Visual kanban tracks every case from intake through
+                  move-in. Your team knows where every family stands
+                  &mdash; no spreadsheet cross-referencing, no cases
+                  falling through cracks.
                 </p>
-                <div className="grid grid-cols-3 gap-4">
-                  {['Location', 'Budget', 'Household'].map((factor) => (
+                <div className="grid grid-cols-6 gap-2">
+                  {['Intake', 'Matching', 'Proposed', 'Accepted', 'Placed', 'Closed'].map((stage) => (
                     <div
-                      key={factor}
-                      className="px-4 py-3 rounded-lg bg-white/[0.04] border border-white/[0.06] text-center"
+                      key={stage}
+                      className="px-2 py-3 rounded-lg bg-white/[0.04] border border-white/[0.06] text-center"
                     >
-                      <span className="text-sm text-slate-400">{factor}</span>
-                    </div>
-                  ))}
-                  {['Language', 'Accessibility', 'Services'].map((factor) => (
-                    <div
-                      key={factor}
-                      className="px-4 py-3 rounded-lg bg-white/[0.04] border border-white/[0.06] text-center"
-                    >
-                      <span className="text-sm text-slate-400">{factor}</span>
+                      <span className="text-xs text-slate-400">{stage}</span>
                     </div>
                   ))}
                 </div>
@@ -187,14 +179,16 @@ export default function LandingPage() {
             <div className="lg:col-span-5 flex flex-col gap-6">
               <div className="flex-1 p-8 rounded-2xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] border border-white/[0.08] hover:border-white/[0.15] transition-all duration-500">
                 <div className="w-10 h-10 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mb-5">
-                  <Workflow className="w-5 h-5 text-teal-400" />
+                  <GitMerge className="w-5 h-5 text-teal-400" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
-                  Pipeline Tracking
+                  Intelligent Matching
                 </h3>
                 <p className="text-slate-400 leading-relaxed">
-                  Visual kanban tracks every placement from intake through
-                  move-in. Know where every case stands at a glance.
+                  AI scores every client-unit pair across six factors
+                  &mdash; location, budget, household size, language,
+                  accessibility, and services. Top matches surface
+                  automatically.
                 </p>
               </div>
 
@@ -203,11 +197,12 @@ export default function LandingPage() {
                   <LineChart className="w-5 h-5 text-indigo-400" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2 tracking-tight">
-                  Compliance Reports
+                  One-Click Compliance
                 </h3>
                 <p className="text-slate-400 leading-relaxed">
-                  One-click HUD and ESG reports. Outcome tracking,
-                  time-to-place metrics, and success rates — always audit-ready.
+                  HUD- and ORR-ready reports generate instantly.
+                  Time-to-place, outcomes, demographics &mdash; always
+                  audit-ready, never assembled by hand.
                 </p>
               </div>
             </div>
