@@ -210,43 +210,47 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ===== IMPACT NUMBERS ===== */}
-      <section id="impact" className="relative py-24">
+      {/* ===== WHAT CHANGES ===== */}
+      <section id="what-changes" className="relative py-24">
         <div className="absolute inset-0 bg-slate-950/60" />
         <div className="relative w-full px-4 sm:px-8 lg:px-12">
           <div className="flex items-center gap-3 mb-16">
             <div className="h-px w-12 bg-gradient-to-r from-blue-500 to-teal-400" />
             <span className="text-[13px] tracking-[0.2em] uppercase text-slate-500 font-medium">
-              Impact
+              What Changes
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-white/[0.06] rounded-2xl overflow-hidden">
             <div className="bg-slate-950/90 p-10">
-              <p className="text-[clamp(2.5rem,5vw,4rem)] font-bold text-white tracking-tight leading-none mb-3">
-                60
-                <span className="text-blue-400">%</span>
+              <p className="text-[clamp(1.8rem,4vw,2.8rem)] font-bold text-white tracking-tight leading-none mb-3">
+                Hours
+                <span className="text-blue-400">, not weeks</span>
               </p>
               <p className="text-slate-400 leading-relaxed">
-                Faster time-to-place compared to manual matching workflows
+                Time-to-match drops from manual spreadsheet review
+                to instant AI-scored results
               </p>
             </div>
             <div className="bg-slate-950/90 p-10">
-              <p className="text-[clamp(2.5rem,5vw,4rem)] font-bold text-white tracking-tight leading-none mb-3">
-                6
-                <span className="text-teal-400">-factor</span>
+              <p className="text-[clamp(1.8rem,4vw,2.8rem)] font-bold text-white tracking-tight leading-none mb-3">
+                6 factors
+                <span className="text-teal-400">, 1 click</span>
               </p>
               <p className="text-slate-400 leading-relaxed">
-                AI scoring algorithm per client-unit pair for optimal placement
+                Location, budget, household, language, accessibility,
+                and services &mdash; scored automatically for every
+                client-unit pair
               </p>
             </div>
             <div className="bg-slate-950/90 p-10">
-              <p className="text-[clamp(2.5rem,5vw,4rem)] font-bold text-white tracking-tight leading-none mb-3">
-                100
-                <span className="text-emerald-400">%</span>
+              <p className="text-[clamp(1.8rem,4vw,2.8rem)] font-bold text-white tracking-tight leading-none mb-3">
+                Always
+                <span className="text-emerald-400"> audit-ready</span>
               </p>
               <p className="text-slate-400 leading-relaxed">
-                Audit-ready compliance reporting from day one of deployment
+                HUD and ORR reports generate from live pipeline data
+                &mdash; no end-of-month scramble
               </p>
             </div>
           </div>
