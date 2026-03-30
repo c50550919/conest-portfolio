@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ReportSummary } from '@/components/report-summary';
-import { Download, FileText } from 'lucide-react';
+import { Download } from 'lucide-react';
 import Papa from 'papaparse';
 import api from '@/lib/api';
 
@@ -248,6 +249,42 @@ export default function ReportsPage() {
                 );
               })}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* HUD APR Summary */}
+        <Card className="md:col-span-2 border-blue-200 bg-blue-50/50">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">HUD APR Summary Preview</CardTitle>
+              <Badge variant="outline" className="text-blue-700 border-blue-300">
+                Pre-Submission
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground">Persons Served</p>
+                <p className="text-xl font-bold">{report.activeClients + report.totalPlacements}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Exits to Permanent Housing</p>
+                <p className="text-xl font-bold">{report.totalPlacements}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Avg Length of Stay</p>
+                <p className="text-xl font-bold">{report.avgDaysToPlacement}d</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Successful Outcomes</p>
+                <p className="text-xl font-bold">{report.successRate}%</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              This is a preview based on current pipeline data. Full APR export with demographic
+              breakdowns will be available after your first reporting period.
+            </p>
           </CardContent>
         </Card>
       </div>
