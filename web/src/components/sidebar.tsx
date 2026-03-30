@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Users,
+  Home,
   LayoutDashboard,
   FileText,
   Settings,
@@ -18,6 +19,7 @@ interface SidebarProps {
 }
 
 const navItems = [
+  { label: 'Dashboard', href: '', icon: Home },
   { label: 'Placements', href: '/placements', icon: LayoutDashboard },
   { label: 'Clients', href: '/clients', icon: Users },
   { label: 'Reports', href: '/reports', icon: FileText },
@@ -36,7 +38,9 @@ export function Sidebar({ orgSlug, orgName }: SidebarProps) {
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.map((item) => {
           const href = `/${orgSlug}${item.href}`;
-          const isActive = pathname?.startsWith(href);
+          const isActive = item.href === ''
+            ? pathname === `/${orgSlug}` || pathname === `/${orgSlug}/`
+            : pathname?.startsWith(href);
           return (
             <Link
               key={item.href}
