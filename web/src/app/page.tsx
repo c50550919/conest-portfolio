@@ -280,8 +280,9 @@ export default function LandingPage() {
                   Intake
                 </h3>
                 <p className="text-slate-400 leading-relaxed">
-                  Client enters the system with housing needs, preferences,
-                  language requirements, and accessibility constraints.
+                  Case manager logs the client &mdash; household size, budget,
+                  language, location, accessibility needs. One form,
+                  structured data from day one.
                 </p>
               </div>
             </div>
@@ -297,8 +298,9 @@ export default function LandingPage() {
                   Match
                 </h3>
                 <p className="text-slate-400 leading-relaxed">
-                  AI scores all available units across six weighted factors and
-                  surfaces the top matches instantly.
+                  Placd scores every available unit across six factors and
+                  surfaces the top matches. What took a week of phone calls
+                  happens in seconds.
                 </p>
               </div>
             </div>
@@ -311,11 +313,12 @@ export default function LandingPage() {
               <div className="relative">
                 <div className="w-2 h-2 rounded-full bg-emerald-400 mb-8" />
                 <h3 className="text-xl font-bold text-white mb-3 tracking-tight">
-                  Place
+                  Place & Track
                 </h3>
                 <p className="text-slate-400 leading-relaxed">
-                  Case manager reviews matches, proposes a unit, and tracks the
-                  placement through acceptance and move-in.
+                  Case manager proposes a unit, the client accepts, and the
+                  placement moves through your pipeline &mdash; visible to your
+                  whole team until move-in and beyond.
                 </p>
               </div>
             </div>
