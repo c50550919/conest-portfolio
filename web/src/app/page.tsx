@@ -338,13 +338,14 @@ export default function LandingPage() {
               </span>
             </div>
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-6 tracking-tight leading-[1.1]">
-              Ready to modernize
+              See what your placement
               <br />
-              your placement workflow?
+              workflow could look like.
             </h2>
             <p className="text-lg text-slate-400 mb-10 max-w-lg leading-relaxed">
-              See Placd in action with a personalized demo tailored to your
-              organization&apos;s needs.
+              30-minute walkthrough with your org&apos;s data shape &mdash;
+              not a generic slide deck. We&apos;ll show you intake to
+              placed, with your caseload in mind.
             </p>
             <div className="flex items-center gap-5">
               <a
@@ -354,13 +355,13 @@ export default function LandingPage() {
                 Request a Demo
                 <ArrowRight className="w-4 h-4" />
               </a>
-              <Link
-                href="/login"
+              <a
+                href="#how-it-works"
                 className="inline-flex items-center gap-2 text-slate-400 hover:text-white font-medium text-[15px] transition-colors duration-200"
               >
-                Try the Dashboard
+                See How It Works
                 <ChevronRight className="w-4 h-4" />
-              </Link>
+              </a>
             </div>
           </div>
         </div>
