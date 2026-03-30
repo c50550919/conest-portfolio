@@ -5,7 +5,8 @@ import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ReportSummary } from '@/components/report-summary';
-import { FileText } from 'lucide-react';
+import { Download, FileText } from 'lucide-react';
+import Papa from 'papaparse';
 import api from '@/lib/api';
 
 interface ReportData {
@@ -24,11 +25,12 @@ export default function ReportsPage() {
   const orgSlug = params.orgSlug as string;
   const [report, setReport] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [range, setRange] = useState<'30d' | '90d' | '6mo' | '12mo' | 'all'>('all');
 
   useEffect(() => {
     async function fetchReport() {
       try {
-        const { data } = await api.get(`/orgs/${orgSlug}/reports/summary`);
+        const { data } = await api.get(`/orgs/${orgSlug}/reports/summary?range=${range}`);
         setReport({
           totalPlacements: data.data.totalPlacements,
           avgDaysToPlacement: data.data.avgDaysToPlacement,
@@ -67,12 +69,33 @@ export default function ReportsPage() {
       }
     }
     fetchReport();
-  }, [orgSlug]);
+  }, [orgSlug, range]);
 
-  function handleExportPdf() {
-    alert(
-      'PDF export requires jspdf — will be functional after npm install jspdf jspdf-autotable',
-    );
+  function handleExportCsv() {
+    if (!report) return;
+    const rows = [
+      { metric: 'Total Placements', value: report.totalPlacements },
+      { metric: 'Avg Days to Placement', value: report.avgDaysToPlacement },
+      { metric: 'Success Rate', value: `${report.successRate}%` },
+      { metric: 'Active Clients', value: report.activeClients },
+      ...Object.entries(report.stageCounts).map(([stage, count]) => ({
+        metric: `Pipeline: ${stage}`, value: count,
+      })),
+      ...report.monthlyPlacements.map((m) => ({
+        metric: `Monthly: ${m.month}`, value: m.count,
+      })),
+      ...report.outcomeBreakdown.map((o) => ({
+        metric: `Outcome: ${o.outcome}`, value: o.count,
+      })),
+    ];
+    const csv = Papa.unparse(rows);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `placd-report-${orgSlug}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   if (loading || !report) {
@@ -85,12 +108,24 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-bold">Compliance Reports</h2>
-        <Button variant="outline" onClick={handleExportPdf}>
-          <FileText className="mr-2 h-4 w-4" />
-          Export PDF
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {(['30d', '90d', '6mo', '12mo', 'all'] as const).map((r) => (
+            <Button
+              key={r}
+              variant={range === r ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setRange(r)}
+            >
+              {r === 'all' ? 'All Time' : r}
+            </Button>
+          ))}
+          <Button variant="outline" size="sm" onClick={handleExportCsv}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       <ReportSummary
