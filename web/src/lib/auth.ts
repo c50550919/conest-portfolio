@@ -17,15 +17,20 @@ export interface OrgContext {
 export async function login(email: string, password: string) {
   const { data } = await api.post('/auth/login', { email, password });
   if (data.success) {
-    localStorage.setItem('placd_access_token', data.data.accessToken);
-    localStorage.setItem('placd_refresh_token', data.data.refreshToken);
+    localStorage.setItem('placd_access_token', data.data.tokens.accessToken);
+    localStorage.setItem('placd_refresh_token', data.data.tokens.refreshToken);
   }
   return data;
 }
 
 export async function getMyOrgs(): Promise<OrgContext[]> {
   const { data } = await api.get('/orgs/me');
-  return data.data;
+  return data.data.map((m: Record<string, unknown>) => ({
+    orgId: m.org_id,
+    orgSlug: m.org_slug,
+    orgName: m.org_name,
+    role: m.role,
+  }));
 }
 
 export function logout() {

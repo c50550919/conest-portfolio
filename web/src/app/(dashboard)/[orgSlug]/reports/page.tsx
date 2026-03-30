@@ -27,7 +27,11 @@ export default function ReportsPage() {
     async function fetchReport() {
       try {
         const { data } = await api.get(`/orgs/${orgSlug}/reports/summary`);
-        setReport(data.data);
+        setReport({
+          ...data.data,
+          monthlyPlacements: data.data.monthlyPlacements ?? [],
+          outcomeBreakdown: data.data.outcomeBreakdown ?? [],
+        });
       } catch {
         // Fallback demo data
         setReport({
