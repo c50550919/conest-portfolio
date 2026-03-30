@@ -382,7 +382,7 @@ export default function LandingPage() {
               />
               <div className="h-4 w-px bg-white/10" />
               <span className="text-[13px] text-slate-500 tracking-wide">
-                AI-Powered Housing Placement
+                Housing Placement Platform
               </span>
             </div>
             <div className="flex items-center gap-8 text-[13px] text-slate-500">
@@ -416,7 +416,7 @@ export default function LandingPage() {
         <div className="relative w-full px-4 sm:px-8 lg:px-12 py-6 flex items-center justify-center gap-3">
           <Shield className="w-4 h-4 text-slate-600" />
           <span className="text-[12px] text-slate-600 tracking-wide">
-            SOC 2 Type II &middot; HIPAA Compliant &middot; FedRAMP Ready &middot; HUD Certified
+            Veteran-Owned (SDVOSB in progress) &middot; Built for HUD &amp; ORR Compliance Standards &middot; AES-256 Encryption
           </span>
         </div>
       </div>
