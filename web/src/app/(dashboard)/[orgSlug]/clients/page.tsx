@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -134,7 +135,12 @@ export default function ClientsPage() {
               filtered.map((client) => (
                 <TableRow key={client.id}>
                   <TableCell className="font-medium">
-                    {client.first_name} {client.last_name}
+                    <Link
+                      href={`/${orgSlug}/clients/${client.id}`}
+                      className="hover:underline text-primary"
+                    >
+                      {client.first_name} {client.last_name}
+                    </Link>
                   </TableCell>
                   <TableCell>
                     <Badge
