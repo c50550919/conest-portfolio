@@ -15,6 +15,8 @@ interface ReportData {
   activeClients: number;
   monthlyPlacements: { month: string; count: number }[];
   outcomeBreakdown: { outcome: string; count: number }[];
+  stageCounts: Record<string, number>;
+  clientCounts: Record<string, number>;
 }
 
 export default function ReportsPage() {
@@ -28,9 +30,14 @@ export default function ReportsPage() {
       try {
         const { data } = await api.get(`/orgs/${orgSlug}/reports/summary`);
         setReport({
-          ...data.data,
+          totalPlacements: data.data.totalPlacements,
+          avgDaysToPlacement: data.data.avgDaysToPlacement,
+          successRate: data.data.successRate,
+          activeClients: data.data.activeClients,
           monthlyPlacements: data.data.monthlyPlacements ?? [],
           outcomeBreakdown: data.data.outcomeBreakdown ?? [],
+          stageCounts: data.data.stageCounts ?? {},
+          clientCounts: data.data.clientCounts ?? {},
         });
       } catch {
         // Fallback demo data
@@ -52,6 +59,8 @@ export default function ReportsPage() {
             { outcome: 'Unsuccessful', count: 6 },
             { outcome: 'Withdrawn', count: 3 },
           ],
+          stageCounts: { intake: 5, matching: 4, proposed: 3, accepted: 2, placed: 8, closed: 25 },
+          clientCounts: { intake: 10, ready: 15, placed: 8, archived: 12 },
         });
       } finally {
         setLoading(false);
@@ -98,27 +107,33 @@ export default function ReportsPage() {
             <CardTitle className="text-base">Monthly Placements</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {report.monthlyPlacements.map((m) => (
-                <div key={m.month} className="flex items-center gap-3">
-                  <span className="w-8 text-sm text-muted-foreground">
-                    {m.month}
-                  </span>
-                  <div className="flex-1 h-6 bg-gray-100 rounded">
-                    <div
-                      className="h-6 bg-primary rounded flex items-center justify-end pr-2"
-                      style={{
-                        width: `${(m.count / Math.max(...report.monthlyPlacements.map((x) => x.count))) * 100}%`,
-                      }}
-                    >
-                      <span className="text-xs font-medium text-primary-foreground">
-                        {m.count}
-                      </span>
+            {report.monthlyPlacements.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                Monthly data populates after the first full month of usage.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {report.monthlyPlacements.map((m) => (
+                  <div key={m.month} className="flex items-center gap-3">
+                    <span className="w-8 text-sm text-muted-foreground">
+                      {m.month}
+                    </span>
+                    <div className="flex-1 h-6 bg-gray-100 rounded">
+                      <div
+                        className="h-6 bg-primary rounded flex items-center justify-end pr-2"
+                        style={{
+                          width: `${(m.count / Math.max(...report.monthlyPlacements.map((x) => x.count))) * 100}%`,
+                        }}
+                      >
+                        <span className="text-xs font-medium text-primary-foreground">
+                          {m.count}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -128,33 +143,72 @@ export default function ReportsPage() {
             <CardTitle className="text-base">Outcomes</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {report.outcomeBreakdown.map((o) => {
-                const total = report.outcomeBreakdown.reduce(
-                  (sum, x) => sum + x.count,
-                  0,
-                );
-                const pct = Math.round((o.count / total) * 100);
-                const color =
-                  o.outcome === 'Successful'
-                    ? 'bg-green-500'
-                    : o.outcome === 'Unsuccessful'
-                      ? 'bg-red-400'
-                      : 'bg-yellow-400';
+            {report.outcomeBreakdown.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                Outcome data appears when placements are closed.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {report.outcomeBreakdown.map((o) => {
+                  const total = report.outcomeBreakdown.reduce(
+                    (sum, x) => sum + x.count,
+                    0,
+                  );
+                  const pct = Math.round((o.count / total) * 100);
+                  const color =
+                    o.outcome === 'Successful'
+                      ? 'bg-green-500'
+                      : o.outcome === 'Unsuccessful'
+                        ? 'bg-red-400'
+                        : 'bg-yellow-400';
+                  return (
+                    <div key={o.outcome} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span>{o.outcome}</span>
+                        <span className="font-medium">
+                          {o.count} ({pct}%)
+                        </span>
+                      </div>
+                      <div className="h-2 rounded-full bg-gray-100">
+                        <div
+                          className={`h-2 rounded-full ${color}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Pipeline Distribution */}
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base">Pipeline Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-3 h-40">
+              {['intake', 'matching', 'proposed', 'accepted', 'placed', 'closed'].map((stage) => {
+                const count = report.stageCounts[stage] ?? 0;
+                const max = Math.max(...Object.values(report.stageCounts), 1);
+                const colors: Record<string, string> = {
+                  intake: 'bg-yellow-400',
+                  matching: 'bg-orange-400',
+                  proposed: 'bg-blue-400',
+                  accepted: 'bg-indigo-400',
+                  placed: 'bg-green-400',
+                  closed: 'bg-gray-400',
+                };
                 return (
-                  <div key={o.outcome} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>{o.outcome}</span>
-                      <span className="font-medium">
-                        {o.count} ({pct}%)
-                      </span>
-                    </div>
-                    <div className="h-2 rounded-full bg-gray-100">
-                      <div
-                        className={`h-2 rounded-full ${color}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
+                  <div key={stage} className="flex-1 flex flex-col items-center gap-1">
+                    <span className="text-xs font-medium">{count}</span>
+                    <div
+                      className={`w-full rounded-t ${colors[stage]}`}
+                      style={{ height: `${(count / max) * 100}%`, minHeight: '4px' }}
+                    />
+                    <span className="text-[10px] text-muted-foreground capitalize">{stage}</span>
                   </div>
                 );
               })}
