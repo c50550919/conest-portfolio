@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { db } from '../../config/database';
 import ClientModel from '../../models/Client';
 import HousingUnitModel from '../../models/HousingUnit';
 import PlacementModel from '../../models/Placement';
@@ -167,6 +168,38 @@ const PlacementController = {
       const activeClients =
         (clientCounts.intake || 0) + (clientCounts.ready || 0);
 
+      // Monthly placements (last 6 months)
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const monthlyRaw = await db('placements')
+        .select(db.raw("to_char(created_at, 'Mon') as month"))
+        .select(db.raw("date_trunc('month', created_at) as month_start"))
+        .count('id as count')
+        .where('org_id', orgId)
+        .where('created_at', '>=', sixMonthsAgo)
+        .groupByRaw("date_trunc('month', created_at), to_char(created_at, 'Mon')")
+        .orderBy('month_start', 'asc');
+
+      const monthlyPlacements = monthlyRaw.map((r: any) => ({
+        month: r.month,
+        count: parseInt(r.count, 10),
+      }));
+
+      // Outcome breakdown (closed placements only)
+      const outcomeRaw = await db('placements')
+        .select('outcome')
+        .count('id as count')
+        .where('org_id', orgId)
+        .where('stage', 'closed')
+        .whereNotNull('outcome')
+        .groupBy('outcome');
+
+      const outcomeBreakdown = outcomeRaw.map((r: any) => ({
+        outcome: r.outcome.charAt(0).toUpperCase() + r.outcome.slice(1),
+        count: parseInt(r.count, 10),
+      }));
+
       return res.json({
         success: true,
         data: {
@@ -176,6 +209,8 @@ const PlacementController = {
           activeClients,
           stageCounts,
           clientCounts,
+          monthlyPlacements,
+          outcomeBreakdown,
         },
       });
     } catch (err) {
