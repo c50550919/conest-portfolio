@@ -11,9 +11,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import api from '@/lib/api';
 
 interface Client {
@@ -43,6 +54,39 @@ export default function ClientsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+  const [newClient, setNewClient] = useState({
+    first_name: '',
+    last_name: '',
+    household_size: 1,
+    language_primary: 'English',
+    budget_max: '',
+    preferred_area: '',
+    phone: '',
+    email: '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function handleAddClient(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await api.post(`/orgs/${orgSlug}/clients`, {
+        ...newClient,
+        budget_max: newClient.budget_max ? parseInt(newClient.budget_max, 10) : null,
+        status: 'intake',
+        intake_date: new Date().toISOString().slice(0, 10),
+      });
+      setShowAdd(false);
+      setNewClient({ first_name: '', last_name: '', household_size: 1, language_primary: 'English', budget_max: '', preferred_area: '', phone: '', email: '' });
+      const { data } = await api.get(`/orgs/${orgSlug}/clients`);
+      setClients(data.data);
+    } catch {
+      alert('Failed to create client.');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   useEffect(() => {
     async function fetchClients() {
@@ -74,9 +118,70 @@ export default function ClientsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Client Roster</h2>
-        <span className="text-sm text-muted-foreground">
-          {filtered.length} clients
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground">
+            {filtered.length} clients
+          </span>
+          <Dialog open={showAdd} onOpenChange={setShowAdd}>
+            <DialogTrigger render={<Button />}>
+              <Plus className="mr-2 h-4 w-4" /> Add Client
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader>
+                <DialogTitle>New Client Intake</DialogTitle>
+                <DialogDescription>
+                  Enter the client&apos;s basic information to start the placement process.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleAddClient} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="first_name">First Name</Label>
+                    <Input id="first_name" required value={newClient.first_name} onChange={(e) => setNewClient((p) => ({ ...p, first_name: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="last_name">Last Name</Label>
+                    <Input id="last_name" required value={newClient.last_name} onChange={(e) => setNewClient((p) => ({ ...p, last_name: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="household_size">Household Size</Label>
+                    <Input id="household_size" type="number" min={1} required value={newClient.household_size} onChange={(e) => setNewClient((p) => ({ ...p, household_size: parseInt(e.target.value, 10) }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="language">Primary Language</Label>
+                    <Input id="language" value={newClient.language_primary} onChange={(e) => setNewClient((p) => ({ ...p, language_primary: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="budget">Monthly Budget ($)</Label>
+                    <Input id="budget" type="number" min={0} placeholder="1200" value={newClient.budget_max} onChange={(e) => setNewClient((p) => ({ ...p, budget_max: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="area">Preferred Area</Label>
+                    <Input id="area" placeholder="e.g., NoDa, Plaza Midwood" value={newClient.preferred_area} onChange={(e) => setNewClient((p) => ({ ...p, preferred_area: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input id="phone" type="tel" value={newClient.phone} onChange={(e) => setNewClient((p) => ({ ...p, phone: e.target.value }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" value={newClient.email} onChange={(e) => setNewClient((p) => ({ ...p, email: e.target.value }))} />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>
+                  <Button type="submit" disabled={saving}>{saving ? 'Creating...' : 'Create Client'}</Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">
