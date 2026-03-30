@@ -85,23 +85,24 @@ export default function LandingPage() {
             <div className="flex items-center gap-3 mb-8">
               <div className="h-px w-12 bg-gradient-to-r from-blue-500 to-teal-400" />
               <span className="text-[13px] tracking-[0.2em] uppercase text-slate-400 font-medium">
-                AI-Powered Placement
+                Housing Placement Platform
               </span>
             </div>
 
             <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] font-bold tracking-[-0.03em] text-white leading-[0.95] mb-8">
-              Place families
+              From intake
               <br />
-              faster with
+              to placed &mdash;
               <br />
               <span className="bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">
-                intelligent matching.
+                in days, not weeks.
               </span>
             </h1>
 
             <p className="text-lg text-slate-400 max-w-lg mb-12 leading-relaxed">
-              Six-factor scoring connects families to the right housing unit in
-              minutes — not weeks. Compliance reporting built in from day one.
+              Placd replaces spreadsheets with a purpose-built placement
+              pipeline. Your team sees every case, AI surfaces the best-fit
+              unit, and funder reports generate in one click.
             </p>
 
             <div className="flex items-center gap-5">
@@ -112,13 +113,13 @@ export default function LandingPage() {
                 Request a Demo
                 <ArrowRight className="w-4 h-4" />
               </a>
-              <Link
-                href="/login"
+              <a
+                href="#how-it-works"
                 className="inline-flex items-center gap-2 text-slate-400 hover:text-white font-medium text-[15px] transition-colors duration-200"
               >
-                Sign In
+                See How It Works
                 <ChevronRight className="w-4 h-4" />
-              </Link>
+              </a>
             </div>
           </div>
         </div>
