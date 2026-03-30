@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { PlacementCard } from './placement-card';
 import Link from 'next/link';
 
@@ -37,7 +38,11 @@ function daysSince(dateStr: string): number {
 export function PipelineBoard({
   placements,
   orgSlug,
+  onStageChange,
 }: PipelineBoardProps) {
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState<string | null>(null);
+
   return (
     <div className="flex gap-4 overflow-x-auto pb-4">
       {STAGES.map((stage) => {
@@ -47,7 +52,20 @@ export function PipelineBoard({
         return (
           <div
             key={stage.key}
-            className={`flex-shrink-0 w-64 rounded-lg border-t-4 ${stage.color} bg-gray-50`}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(stage.key); }}
+            onDragLeave={() => setDragOver(null)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(null);
+              const placementId = e.dataTransfer.getData('text/plain');
+              if (placementId && onStageChange) {
+                onStageChange(placementId, stage.key);
+              }
+              setDragId(null);
+            }}
+            className={`flex-shrink-0 w-64 rounded-lg border-t-4 ${stage.color} bg-gray-50 transition-all ${
+              dragOver === stage.key ? 'ring-2 ring-primary/50 bg-primary/5' : ''
+            }`}
           >
             <div className="flex items-center justify-between p-3 border-b">
               <h3 className="font-medium text-sm">{stage.label}</h3>
@@ -55,20 +73,28 @@ export function PipelineBoard({
                 {stagePlacements.length}
               </span>
             </div>
-            <div className="p-2 min-h-[200px]">
+            <div className="p-2 min-h-[200px] space-y-2">
               {stagePlacements.map((placement) => (
-                <Link
+                <div
                   key={placement.id}
-                  href={`/${orgSlug}/placements/${placement.id}`}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/plain', placement.id);
+                    setDragId(placement.id);
+                  }}
+                  onDragEnd={() => setDragId(null)}
+                  className={`cursor-grab active:cursor-grabbing ${dragId === placement.id ? 'opacity-50' : ''}`}
                 >
-                  <PlacementCard
-                    clientName={`${placement.client_first_name} ${placement.client_last_name}`}
-                    unitAddress={placement.unit_address}
-                    score={placement.compatibility_score}
-                    caseManager={placement.case_manager_name}
-                    daysInStage={daysSince(placement.updated_at)}
-                  />
-                </Link>
+                  <Link href={`/${orgSlug}/placements/${placement.id}`}>
+                    <PlacementCard
+                      clientName={`${placement.client_first_name} ${placement.client_last_name}`}
+                      unitAddress={placement.unit_address}
+                      score={placement.compatibility_score}
+                      caseManager={placement.case_manager_name}
+                      daysInStage={daysSince(placement.updated_at)}
+                    />
+                  </Link>
+                </div>
               ))}
             </div>
           </div>
