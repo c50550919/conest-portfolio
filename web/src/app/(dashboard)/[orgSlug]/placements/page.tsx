@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import { PipelineBoard } from '@/components/pipeline-board';
 import api from '@/lib/api';
 
@@ -21,6 +22,7 @@ export default function PlacementsPage() {
   const orgSlug = params.orgSlug as string;
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterCM, setFilterCM] = useState<string>('all');
 
   useEffect(() => {
     async function fetchPlacements() {
@@ -61,16 +63,46 @@ export default function PlacementsPage() {
     );
   }
 
+  const caseManagers = [...new Set(
+    placements.filter((p) => p.case_manager_name).map((p) => p.case_manager_name!)
+  )];
+
+  const filtered = filterCM === 'all'
+    ? placements
+    : placements.filter((p) => p.case_manager_name === filterCM);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Placement Pipeline</h2>
         <span className="text-sm text-muted-foreground">
-          {placements.length} active placements
+          {filtered.length} active placements
         </span>
       </div>
+      {caseManagers.length > 1 && (
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Filter:</span>
+          <Button
+            variant={filterCM === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilterCM('all')}
+          >
+            All
+          </Button>
+          {caseManagers.map((cm) => (
+            <Button
+              key={cm}
+              variant={filterCM === cm ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilterCM(cm)}
+            >
+              {cm}
+            </Button>
+          ))}
+        </div>
+      )}
       <PipelineBoard
-        placements={placements}
+        placements={filtered}
         orgSlug={orgSlug}
         onStageChange={handleStageChange}
       />
