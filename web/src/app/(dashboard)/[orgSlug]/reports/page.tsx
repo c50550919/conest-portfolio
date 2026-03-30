@@ -25,13 +25,19 @@ export default function ReportsPage() {
   const params = useParams();
   const orgSlug = params.orgSlug as string;
   const [report, setReport] = useState<ReportData | null>(null);
+  const [placements, setPlacements] = useState<Array<{ case_manager_name: string | null; stage: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState<'30d' | '90d' | '6mo' | '12mo' | 'all'>('all');
 
   useEffect(() => {
     async function fetchReport() {
       try {
-        const { data } = await api.get(`/orgs/${orgSlug}/reports/summary?range=${range}`);
+        const [reportRes, placementsRes] = await Promise.all([
+          api.get(`/orgs/${orgSlug}/reports/summary?range=${range}`),
+          api.get(`/orgs/${orgSlug}/placements`),
+        ]);
+        const data = reportRes.data;
+        setPlacements(placementsRes.data.data ?? []);
         setReport({
           totalPlacements: data.data.totalPlacements,
           avgDaysToPlacement: data.data.avgDaysToPlacement,
@@ -288,6 +294,38 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Staff Workload */}
+      {placements.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Staff Workload</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {Object.entries(
+                placements.reduce<Record<string, { active: number; placed: number }>>((acc, p) => {
+                  const name = p.case_manager_name ?? 'Unassigned';
+                  if (!acc[name]) acc[name] = { active: 0, placed: 0 };
+                  if (p.stage === 'placed' || p.stage === 'closed') acc[name].placed++;
+                  else acc[name].active++;
+                  return acc;
+                }, {})
+              )
+                .sort((a, b) => b[1].active - a[1].active)
+                .map(([name, counts]) => (
+                  <div key={name} className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{name}</span>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="outline">{counts.active} active</Badge>
+                      <Badge variant="secondary">{counts.placed} placed</Badge>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
