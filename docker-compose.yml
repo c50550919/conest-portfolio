@@ -1,3 +1,26 @@
+# Development Docker Compose Configuration
+#
+# For local development only — do not deploy.
+#
+# This file uses TWO separate env files:
+#
+#   1. Root `.env` (compose-interpolation plane)
+#      Resolves ${VAR} references in this YAML. Required for Compose to parse
+#      the file via `docker compose config`, `build`, `up`, or any command
+#      that evaluates the compose spec.
+#      Copy .env.example → .env and set: DB_USER, DB_PASSWORD, DB_NAME, REDIS_PASSWORD.
+#
+#   2. backend/.env (container runtime plane)
+#      Loaded into the backend container via `env_file:`. Provides app secrets
+#      like JWT_SECRET, Stripe keys, Veriff/Certn/Telnyx credentials.
+#      Copy backend/.env.example → backend/.env and fill values.
+#
+# Precedence: `environment:` overrides `env_file:`. The compose-computed
+# DATABASE_URL and REDIS_URL declared here always win for the backend container.
+#
+# Usage:
+#   docker-compose up -d
+
 version: '3.8'
 
 services:
@@ -5,18 +28,18 @@ services:
     image: postgis/postgis:15-3.3-alpine
     container_name: conest-postgres
     environment:
-      POSTGRES_USER: safenest
-      POSTGRES_PASSWORD: 
-      POSTGRES_DB: safenest_db
+      POSTGRES_USER: ${DB_USER:?DB_USER is required (see .env)}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required (see .env)}
+      POSTGRES_DB: ${DB_NAME:?DB_NAME is required (see .env)}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./DATABASE.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     networks:
       - conest-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U safenest -d safenest_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,12 +47,13 @@ services:
   redis:
     image: redis:7-alpine
     container_name: conest-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required (see .env)}
     ports:
-      - "6380:6379"
+      - "127.0.0.1:6380:6379"
     networks:
       - conest-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -40,40 +64,17 @@ services:
       dockerfile: Dockerfile
       target: development
     container_name: conest-backend
+    env_file:
+      - ./backend/.env
     environment:
+      # Compose-specific overrides (always set regardless of backend/.env)
       NODE_ENV: development
-      DATABASE_URL: postgresql://safenest:@postgres:5432/safenest_db
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: safenest_db
-      DB_USER: safenest
-      DB_PASSWORD: 
-      REDIS_URL: redis://redis:6379
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      # JWT - Development secrets (DO NOT use in production)
-      JWT_SECRET: dev-secret-change-in-production-2024
-      JWT_REFRESH_SECRET: dev-refresh-secret-change-in-production-2024
-      # Stripe - Use test keys for development, live keys for production
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-sk_test_not_configured}
-      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY:-pk_test_not_configured}
-      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_not_configured}
-      # AWS
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-conest-dev}
-      AWS_REGION: ${AWS_REGION:-us-east-1}
-      # Phone Verification - Telnyx (uses mock in development if not configured)
-      TELNYX_API_KEY: ${TELNYX_API_KEY:-}
-      TELNYX_VERIFY_PROFILE_ID: ${TELNYX_VERIFY_PROFILE_ID:-}
-      # ID Verification - Veriff (uses mock in development if not configured)
-      ID_PROVIDER: ${ID_PROVIDER:-mock}
-      VERIFF_API_KEY: ${VERIFF_API_KEY:-}
-      VERIFF_API_SECRET: ${VERIFF_API_SECRET:-}
-      # Background Check - Certn (uses mock in development if not configured)
-      BG_CHECK_PROVIDER: ${BG_CHECK_PROVIDER:-mock}
-      CERTN_API_KEY: ${CERTN_API_KEY:-}
-      CERTN_WEBHOOK_SECRET: ${CERTN_WEBHOOK_SECRET:-}
-      # Security mode - development allows mocks and relaxed validation
-      SECURITY_MODE: ${SECURITY_MODE:-development}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
     volumes:
       - ./backend:/app
       - /app/node_modules

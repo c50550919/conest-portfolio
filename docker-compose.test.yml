@@ -1,5 +1,9 @@
 version: '3.8'
 
+# Test-only configuration. All literal values here run on an isolated
+# `test-network` bridge, never exposed to the internet, never deployed.
+# Credentials are ephemeral to test runs and rotate with each CI pipeline.
+
 services:
   # PostgreSQL test database
   postgres-test:
