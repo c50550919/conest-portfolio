@@ -53,9 +53,11 @@ function getStore(prefix: string) {
 }
 
 /**
- * Skip rate limiting in test environment
+ * Skip rate limiting in test and development environments
  */
 const isTestEnv = process.env.NODE_ENV === 'test';
+const isDevEnv = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
+const skipRateLimit = isTestEnv || isDevEnv;
 
 /**
  * General API rate limiter
@@ -77,8 +79,8 @@ export const generalRateLimit = rateLimit({
   skipSuccessfulRequests: false,
   // Skip failed requests (optional)
   skipFailedRequests: false,
-  // Skip all requests in test environment
-  skip: () => isTestEnv,
+  // Skip in dev/test environments
+  skip: () => skipRateLimit,
   // Custom key generator (uses IP by default)
   keyGenerator: (req) => req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown',
 });
@@ -102,7 +104,7 @@ export const authRateLimit = rateLimit({
   // Only count failed authentication attempts
   skipSuccessfulRequests: true,
   // Skip all requests in test environment
-  skip: () => isTestEnv,
+  skip: () => skipRateLimit,
   keyGenerator: (req) => req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown',
 });
 
@@ -212,7 +214,7 @@ export const verificationLimiter = rateLimit({
   legacyHeaders: false,
   store: getStore('rl:verification:'),
   keyGenerator: (req: any) => req.userId || req.ip || 'unknown',
-  skip: () => isTestEnv,
+  skip: () => skipRateLimit,
 });
 
 /**
@@ -232,7 +234,7 @@ export const phoneVerificationRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   store: getStore('rl:phone-verify:'),
-  skip: () => isTestEnv,
+  skip: () => skipRateLimit,
   keyGenerator: (req) => req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown',
 });
 
@@ -253,7 +255,7 @@ export const phoneNumberRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   store: getStore('rl:phone-number:'),
-  skip: () => isTestEnv,
+  skip: () => skipRateLimit,
   // Key by phone number from request body
   keyGenerator: (req: any) => {
     const phone = req.body?.phone_number || req.body?.phoneNumber || req.body?.phone || 'unknown';
@@ -281,7 +283,7 @@ export const otpAttemptRateLimit = rateLimit({
   store: getStore('rl:otp-attempt:'),
   // Only count failed attempts (successful verifications don't count)
   skipSuccessfulRequests: true,
-  skip: () => isTestEnv,
+  skip: () => skipRateLimit,
   keyGenerator: (req: any) => {
     const phone = req.body?.phone_number || req.body?.phoneNumber || req.body?.phone || 'unknown';
     return phone.replace(/[^\d+]/g, '');

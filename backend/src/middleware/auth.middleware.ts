@@ -32,14 +32,7 @@ export interface AuthRequest extends Request {
   user?: any;
   email?: string;
   jwtPayload?: JWTPayload;
-  file?: {
-    fieldname: string;
-    originalname: string;
-    mimetype: string;
-    size: number;
-    buffer: Buffer;
-    path?: string;
-  };
+  // Note: req.file is provided by @types/multer augmenting Express.Request
 }
 
 /**

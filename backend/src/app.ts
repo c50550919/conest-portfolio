@@ -178,6 +178,7 @@ app.use('/api/uploads', (req: Request, res: Response, _next: NextFunction) => {
   // Set security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Content-Security-Policy', "default-src 'none'");
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   res.setHeader('Cache-Control', 'private, max-age=3600');
 
   // Send the file using the resolved safe path
