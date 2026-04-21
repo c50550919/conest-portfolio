@@ -38,10 +38,10 @@ interface TeamMember {
 }
 
 const roleColors: Record<string, string> = {
-  org_admin: 'bg-purple-100 text-purple-800',
-  program_director: 'bg-blue-100 text-blue-800',
-  case_manager: 'bg-green-100 text-green-800',
-  super_admin: 'bg-red-100 text-red-800',
+  org_admin: 'bg-purple-100 dark:bg-purple-500/20 text-purple-800 dark:text-purple-300',
+  program_director: 'bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300',
+  case_manager: 'bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-300',
+  super_admin: 'bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-300',
 };
 
 const DEFAULT_WEIGHTS = {

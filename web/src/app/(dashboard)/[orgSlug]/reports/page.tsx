@@ -160,7 +160,7 @@ export default function ReportsPage() {
                     <span className="w-8 text-sm text-muted-foreground">
                       {m.month}
                     </span>
-                    <div className="flex-1 h-6 bg-gray-100 rounded">
+                    <div className="flex-1 h-6 bg-gray-100 dark:bg-gray-700 rounded">
                       <div
                         className="h-6 bg-primary rounded flex items-center justify-end pr-2"
                         style={{
@@ -211,7 +211,7 @@ export default function ReportsPage() {
                           {o.count} ({pct}%)
                         </span>
                       </div>
-                      <div className="h-2 rounded-full bg-gray-100">
+                      <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-700">
                         <div
                           className={`h-2 rounded-full ${color}`}
                           style={{ width: `${pct}%` }}
@@ -259,11 +259,11 @@ export default function ReportsPage() {
         </Card>
 
         {/* HUD APR Summary */}
-        <Card className="md:col-span-2 border-blue-200 bg-blue-50/50">
+        <Card className="md:col-span-2 border-blue-200 dark:border-blue-500/30 bg-blue-50/50 dark:bg-blue-500/10">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">HUD APR Summary Preview</CardTitle>
-              <Badge variant="outline" className="text-blue-700 border-blue-300">
+              <Badge variant="outline" className="text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-500/40">
                 Pre-Submission
               </Badge>
             </div>

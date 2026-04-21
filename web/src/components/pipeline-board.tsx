@@ -63,13 +63,13 @@ export function PipelineBoard({
               }
               setDragId(null);
             }}
-            className={`flex-shrink-0 w-64 rounded-lg border-t-4 ${stage.color} bg-gray-50 transition-all ${
+            className={`flex-shrink-0 w-64 rounded-lg border-t-4 ${stage.color} bg-muted/50 transition-all ${
               dragOver === stage.key ? 'ring-2 ring-primary/50 bg-primary/5' : ''
             }`}
           >
             <div className="flex items-center justify-between p-3 border-b">
               <h3 className="font-medium text-sm">{stage.label}</h3>
-              <span className="text-xs text-muted-foreground bg-white rounded-full px-2 py-0.5">
+              <span className="text-xs text-muted-foreground bg-card rounded-full px-2 py-0.5">
                 {stagePlacements.length}
               </span>
             </div>
@@ -92,6 +92,7 @@ export function PipelineBoard({
                       score={placement.compatibility_score}
                       caseManager={placement.case_manager_name}
                       daysInStage={daysSince(placement.updated_at)}
+                      stage={stage.key}
                     />
                   </Link>
                 </div>

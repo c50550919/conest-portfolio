@@ -17,7 +17,7 @@ export default async function DashboardLayout({
       <DemoBanner />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar orgSlug={orgSlug} orgName={orgName} />
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-6">
+        <main className="flex-1 overflow-y-auto bg-background p-8">
           {children}
         </main>
       </div>

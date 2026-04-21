@@ -10,11 +10,14 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MatchComparison } from '@/components/match-comparison';
+import { ClientAvatar } from '@/components/client-avatar';
 import api from '@/lib/api';
 
 interface ClientDetail {
+  id: string;
   first_name: string;
   last_name: string;
+  photo_url: string | null;
   household_size: number;
   language_primary: string | null;
   budget_max: number | null;
@@ -92,11 +95,21 @@ export default function PlacementDetailPage() {
           <CardContent className="space-y-3">
             {client ? (
               <>
-                <div>
-                  <p className="font-medium text-lg">
-                    {client.first_name} {client.last_name}
-                  </p>
-                  <Badge variant="secondary">{client.status}</Badge>
+                <div className="flex items-center gap-4">
+                  <ClientAvatar
+                    clientId={client.id}
+                    orgSlug={orgSlug}
+                    firstName={client.first_name}
+                    lastName={client.last_name}
+                    photoUrl={client.photo_url}
+                    size="xl"
+                  />
+                  <div>
+                    <p className="font-medium text-lg">
+                      {client.first_name} {client.last_name}
+                    </p>
+                    <Badge variant="secondary">{client.status}</Badge>
+                  </div>
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
