@@ -132,3 +132,11 @@ snyk_report*.json
 mobile/demo-recordings/
 pitch-deck/
 workspace/
+
+# ============================================================================
+# Test & Debug Artifacts
+# ============================================================================
+.playwright-mcp/
+web/screenshots/
+# Ad-hoc dev screenshots at repo root (brand assets live under web/public/)
+/*.png
