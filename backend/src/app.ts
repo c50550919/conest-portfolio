@@ -78,8 +78,10 @@ app.use('/api/stripe', express.raw({ type: 'application/json' }), stripeWebhookR
 app.use('/api/webhooks', verificationWebhookRoutes);
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// 100kb is generous for JSON API bodies; file uploads go through multer
+// (see middleware/upload.ts) and are not gated by these limits.
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
 // Rate limiting
 app.use(generalLimiter);
