@@ -1,4 +1,5 @@
 import type { Knex } from 'knex';
+import fs from 'fs';
 
 // Only load .env if DB_NAME isn't already set (allows dotenv-cli to override)
 if (!process.env.DB_NAME) {
@@ -20,6 +21,22 @@ function requireEnv(name: string): string {
     );
   }
   return value;
+}
+
+/**
+ * Build SSL config for staging / production database connections.
+ * Always requires rejectUnauthorized: true. If DB_SSL_CA is set (non-empty,
+ * non-whitespace), treat it as either a filesystem path or inline PEM and
+ * attach it to the trust chain for the connection.
+ */
+function buildSSLConfig(): Knex.PgConnectionConfig['ssl'] {
+  const raw = process.env.DB_SSL_CA;
+  const ca = raw?.trim();
+  if (ca) {
+    const caContent = fs.existsSync(ca) ? fs.readFileSync(ca, 'utf8') : ca;
+    return { rejectUnauthorized: true, ca: caContent };
+  }
+  return { rejectUnauthorized: true };
 }
 
 const config: { [key: string]: Knex.Config } = {
@@ -75,7 +92,7 @@ const config: { [key: string]: Knex.Config } = {
       database: process.env.DB_NAME,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      ssl: { rejectUnauthorized: false },
+      ssl: buildSSLConfig(),
     },
     pool: {
       min: 2,
@@ -96,7 +113,7 @@ const config: { [key: string]: Knex.Config } = {
       database: process.env.DB_NAME,
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      ssl: { rejectUnauthorized: false },
+      ssl: buildSSLConfig(),
     },
     pool: {
       min: 5,
