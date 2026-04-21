@@ -20,6 +20,7 @@ export interface Client {
   notes_encrypted: string | null;
   phone: string | null;
   email: string | null;
+  photo_url: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -55,6 +56,15 @@ const ClientModel = {
       .update({ ...data, updated_at: db.fn.now() })
       .returning('*');
     return client;
+  },
+
+  async delete(orgId: string, id: string): Promise<boolean> {
+    const count = await db('clients').where({ id, org_id: orgId }).del();
+    return count > 0;
+  },
+
+  async deleteBulk(orgId: string, ids: string[]): Promise<number> {
+    return db('clients').where({ org_id: orgId }).whereIn('id', ids).del();
   },
 
   async countByOrg(orgId: string): Promise<Record<string, number>> {

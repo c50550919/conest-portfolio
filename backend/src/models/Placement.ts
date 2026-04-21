@@ -1,5 +1,18 @@
 import { db } from '../config/database';
 
+export interface DocumentChecklistItem {
+  type: string;
+  label: string;
+  status: 'missing' | 'collected' | 'expired';
+  updated_at: string | null;
+  activity_event_id: string | null;
+}
+
+export interface DocumentChecklist {
+  version: number;
+  items: DocumentChecklistItem[];
+}
+
 export interface Placement {
   id: string;
   org_id: string;
@@ -15,6 +28,7 @@ export interface Placement {
   closed_at: Date | null;
   outcome: 'successful' | 'unsuccessful' | 'withdrawn' | null;
   notes_encrypted: string | null;
+  document_checklist: DocumentChecklist;
   created_at: Date;
   updated_at: Date;
 }
@@ -77,6 +91,18 @@ const PlacementModel = {
     const [placement] = await db('placements')
       .where({ id, org_id: orgId })
       .update(update)
+      .returning('*');
+    return placement;
+  },
+
+  async updateDocumentChecklist(
+    orgId: string,
+    id: string,
+    checklist: DocumentChecklist,
+  ): Promise<Placement> {
+    const [placement] = await db('placements')
+      .where({ id, org_id: orgId })
+      .update({ document_checklist: JSON.stringify(checklist), updated_at: db.fn.now() })
       .returning('*');
     return placement;
   },

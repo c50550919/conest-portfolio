@@ -204,6 +204,9 @@ async function main() {
             zip_code: '28202',
             verified: true,
             verification_level: 'full',
+            budget_min: 0,
+            budget_max: 0,
+            schedule_type: 'flexible',
           });
         }
       }
@@ -251,6 +254,7 @@ async function main() {
           income_range: randomIncomeRange(),
           phone: `+1704${Math.floor(1000000 + Math.random() * 9000000)}`,
           email: `${clientData.first_name.toLowerCase()}.${clientData.last_name.toLowerCase()}@example.com`,
+          photo_url: (clientData as any).photo_url || `https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop&crop=face`,
         })
         .returning('*');
       clientIds.push(client.id);
@@ -379,6 +383,121 @@ async function main() {
     console.log(
       `   📊 Stages: 3 intake, 3 matching, 3 proposed, 2 accepted, 3 placed, 1 closed`,
     );
+
+    // 6. Seed activity events
+    console.log('\n6. Creating activity events...');
+    const hasActivityTable = await db.schema.hasTable('activity_events');
+    if (hasActivityTable) {
+      await db('activity_events').where({ org_id: org.id }).del();
+
+      const eventTemplates = [
+        { event_type: 'note', note_type: 'intake_note', title: 'Initial intake completed', body: 'Client is a single parent with 2 children, currently in temporary housing. Needs a 2BR unit in a safe neighborhood near schools.' },
+        { event_type: 'note', note_type: 'phone_call', title: 'Phone follow-up', body: 'Called to confirm budget range and preferred move-in date. Client prefers first of the month.' },
+        { event_type: 'stage_change', title: null, body: null, note_type: null },
+        { event_type: 'note', note_type: 'site_visit', title: 'Unit tour completed', body: 'Client toured unit and liked the layout. Concerned about parking availability.' },
+        { event_type: 'document', title: 'Income verification received', body: null, note_type: null },
+        { event_type: 'note', note_type: 'general', title: 'Case note', body: 'Client expressed interest in units near CATS Blue Line for commute.' },
+        { event_type: 'task', title: 'Task completed: Complete intake assessment', body: null, note_type: null },
+        { event_type: 'note', note_type: 'lease_update', title: 'Lease review in progress', body: 'Landlord agreed to deposit installment plan. Lease under review by legal team.' },
+      ];
+
+      let eventCount = 0;
+      // Create 3-6 events per placement
+      const placementRows = await db('placements').where({ org_id: org.id }).select('id', 'client_id', 'stage');
+      for (const pl of placementRows) {
+        const numEvents = 3 + Math.floor(Math.random() * 4);
+        for (let i = 0; i < numEvents; i++) {
+          const template = eventTemplates[Math.floor(Math.random() * eventTemplates.length)];
+          const daysBack = Math.floor(Math.random() * 45) + 1;
+          const createdAt = new Date(Date.now() - daysBack * 86400000);
+
+          const metadata: Record<string, unknown> = {};
+          if (template.event_type === 'stage_change') {
+            const stages = ['intake', 'matching', 'proposed', 'accepted', 'placed'];
+            const fromIdx = Math.max(0, stages.indexOf(pl.stage) - 1);
+            metadata.from = stages[fromIdx];
+            metadata.to = stages[fromIdx + 1] || pl.stage;
+          }
+          if (template.event_type === 'document') {
+            metadata.doc_type = ['government_id', 'income_proof', 'background_check', 'references'][Math.floor(Math.random() * 4)];
+            metadata.action = 'checked_off';
+          }
+          if (template.event_type === 'task') {
+            metadata.action = 'completed';
+            metadata.title = template.title;
+          }
+
+          await db('activity_events').insert({
+            org_id: org.id,
+            client_id: pl.client_id,
+            placement_id: pl.id,
+            actor_id: caseManagerMemberId,
+            event_type: template.event_type,
+            origin: template.event_type === 'task' ? 'system' : 'user',
+            title: template.title,
+            body: template.body,
+            note_type: template.note_type,
+            metadata: JSON.stringify(metadata),
+            created_at: createdAt,
+          });
+          eventCount++;
+        }
+      }
+      console.log(`   ✅ Created ${eventCount} activity events`);
+    } else {
+      console.log('   ⏭  Skipped (activity_events table not found — run migrations first)');
+    }
+
+    // 7. Seed tasks
+    console.log('\n7. Creating tasks...');
+    const hasTasksTable = await db.schema.hasTable('tasks');
+    if (hasTasksTable) {
+      await db('tasks').where({ org_id: org.id }).del();
+
+      const taskTemplates = [
+        { title: 'Complete client intake assessment', priority: 'high', dueDays: -2, status: 'completed' },
+        { title: 'Review top 3 unit matches', priority: 'high', dueDays: 1, status: 'pending' },
+        { title: 'Contact client about housing preferences', priority: 'medium', dueDays: 3, status: 'pending' },
+        { title: 'Schedule client tour of proposed unit', priority: 'high', dueDays: -1, status: 'pending' },
+        { title: 'Verify all documents collected', priority: 'high', dueDays: 5, status: 'in_progress' },
+        { title: 'Initiate lease review', priority: 'high', dueDays: 2, status: 'pending' },
+        { title: 'Schedule 7-day check-in', priority: 'medium', dueDays: 7, status: 'pending' },
+        { title: 'Schedule 30-day stability check', priority: 'medium', dueDays: 30, status: 'pending' },
+        { title: 'Send unit details to client', priority: 'medium', dueDays: -3, status: 'completed' },
+        { title: 'Complete outcome assessment', priority: 'medium', dueDays: 10, status: 'pending' },
+      ];
+
+      let taskCount = 0;
+      const placementRowsForTasks = await db('placements').where({ org_id: org.id }).select('id', 'client_id', 'stage');
+      for (const pl of placementRowsForTasks) {
+        const numTasks = 2 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < numTasks; i++) {
+          const template = taskTemplates[Math.floor(Math.random() * taskTemplates.length)];
+          const dueDate = new Date();
+          dueDate.setDate(dueDate.getDate() + template.dueDays);
+
+          await db('tasks').insert({
+            org_id: org.id,
+            client_id: pl.client_id,
+            placement_id: pl.id,
+            assigned_to: caseManagerMemberId,
+            created_by: caseManagerMemberId,
+            created_by_name: 'ana.rivera@chp-demo.org',
+            title: template.title,
+            due_date: dueDate.toISOString().slice(0, 10),
+            priority: template.priority,
+            status: template.status,
+            auto_generated: true,
+            source_event: `stage:${pl.stage}`,
+            completed_at: template.status === 'completed' ? new Date().toISOString() : null,
+          });
+          taskCount++;
+        }
+      }
+      console.log(`   ✅ Created ${taskCount} tasks`);
+    } else {
+      console.log('   ⏭  Skipped (tasks table not found — run migrations first)');
+    }
 
     console.log('\n=== Seed Complete ===');
     console.log(`\nLogin at http://localhost:3002/login`);
