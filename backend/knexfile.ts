@@ -6,15 +6,31 @@ if (!process.env.DB_NAME) {
   require('dotenv').config();
 }
 
+/**
+ * Require an environment variable or fail fast with a helpful error.
+ * Credentials must never fall back to hardcoded values — that reintroduces
+ * known strings into the codebase.
+ */
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(
+      `Required environment variable ${name} is not set. ` +
+      `Set it in .env (see .env.example) or your shell environment.`,
+    );
+  }
+  return value;
+}
+
 const config: { [key: string]: Knex.Config } = {
   development: {
     client: 'postgresql',
     connection: {
       host: process.env.DB_HOST || 'localhost',
       port: Number(process.env.DB_PORT) || 5432,
-      database: process.env.DB_NAME || 'safenest_db',
-      user: process.env.DB_USER || 'safenest',
-      password: process.env.DB_PASSWORD || '',
+      database: requireEnv('DB_NAME'),
+      user: requireEnv('DB_USER'),
+      password: requireEnv('DB_PASSWORD'),
     },
     pool: {
       min: 2,
@@ -36,9 +52,9 @@ const config: { [key: string]: Knex.Config } = {
     connection: {
       host: process.env.DB_HOST || 'localhost',
       port: Number(process.env.DB_PORT) || 5432,
-      database: process.env.DB_NAME || 'safenest_db',
-      user: process.env.DB_USER || 'safenest',
-      password: process.env.DB_PASSWORD || '',
+      database: requireEnv('DB_NAME'),
+      user: requireEnv('DB_USER'),
+      password: requireEnv('DB_PASSWORD'),
     },
     pool: {
       min: 0,
