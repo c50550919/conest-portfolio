@@ -10,6 +10,36 @@ import helmet from 'helmet';
 import cors from 'cors';
 import { Express } from 'express';
 
+/**
+ * Parse CORS_ORIGIN env var into the `origin` option cors() expects.
+ *
+ * Supports a comma-delimited explicit allowlist (e.g.,
+ * "https://app.placd.io,https://admin.placd.io") so multi-origin setups
+ * work without code changes. Exact-match only; no regex. Empty entries
+ * after trimming are filtered out.
+ *
+ * In development, falls back to http://localhost:19006 when CORS_ORIGIN is
+ * unset so native mobile dev workflow keeps working out of the box.
+ * In any non-development environment, throws if CORS_ORIGIN is unset.
+ */
+function parseCorsOrigin(): string | string[] {
+  const raw = process.env.CORS_ORIGIN?.trim();
+  if (raw) {
+    const origins = raw
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    return origins.length === 1 ? origins[0] : origins;
+  }
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:19006';
+  }
+  throw new Error(
+    'CORS_ORIGIN environment variable is required outside development. ' +
+      'Set to a single origin or comma-delimited explicit allowlist.',
+  );
+}
+
 export const setupSecurity = (app: Express): void => {
   // Helmet for security headers
   app.use(
@@ -32,7 +62,7 @@ export const setupSecurity = (app: Express): void => {
 
   // CORS configuration
   const corsOptions = {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:19006',
+    origin: parseCorsOrigin(),
     credentials: true,
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
