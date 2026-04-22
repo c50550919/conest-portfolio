@@ -150,6 +150,14 @@ Request → Helmet (CSP/HSTS) → CORS → Rate Limit → Body Parser → CSRF �
 - **Schema drift detection** — migration files validated against running database
 - ESLint security rules with max cyclomatic complexity of 15
 
+### Security Remediation (April 2026)
+
+A full-branch review surfaced dev database credentials that had leaked into historical commits (docker-compose, test setup, fallback defaults in several files). Response:
+
+- 14 narrowly-scoped commits on `security/audit-response-2026-04-21` — fail-fast env-var requirements, mandatory TLS cert verification in staging/prod, CORS allowlist enforcement, removal of misleading regex "sanitizers" in favor of parameterized queries, reduced JSON body limits, typed `req.user`, stopped logging client IPs, scrubbed credential references from commit messages and docs.
+- `git filter-repo --replace-text --replace-message` against a mirror clone to scrub the literal from blob content and commit messages across 157 commits and 12 refs. Three-layer verification (pickaxe, patch grep, blob scan) plus independent fresh-clone verification before force-pushing.
+- Runbook: [`docs/plans/2026-04-21-c9-history-rewrite.md`](docs/plans/2026-04-21-c9-history-rewrite.md) on the security branch.
+
 ---
 
 ## Testing Strategy
