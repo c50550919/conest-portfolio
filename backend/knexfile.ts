@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import fs from 'fs';
+import * as fs from 'fs';
 
 // Only load .env if DB_NAME isn't already set (allows dotenv-cli to override)
 if (!process.env.DB_NAME) {

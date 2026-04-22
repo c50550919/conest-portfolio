@@ -22,14 +22,31 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken, verifyAccessToken, JWTPayload } from '../utils/jwt';
-import { UserModel } from '../models/User';
+import { UserModel, User } from '../models/User';
+
+/**
+ * Authenticated user attached to AuthRequest.user after a successful JWT
+ * check. Extends the base User model with verification/role/status fields
+ * that live on the DB row but are not yet declared on models/User.ts.
+ *
+ * All extras are optional so a plain User is still assignable. Aligning
+ * the base User interface with the real schema is a separate refactor
+ * outside this audit-response commit's scope.
+ */
+export interface AuthUser extends User {
+  id_verified?: boolean;
+  background_check_complete?: boolean;
+  role?: string;
+  // Legacy column alias — see accountStatus check in authenticateJWT below.
+  status?: string;
+}
 
 /**
  * Extended Request interface with user authentication data
  */
 export interface AuthRequest extends Request {
   userId?: string;
-  user?: any;
+  user?: AuthUser;
   email?: string;
   jwtPayload?: JWTPayload;
   // Note: req.file is provided by @types/multer augmenting Express.Request
@@ -88,8 +105,10 @@ export async function authenticateJWT(
       return;
     }
 
-    // Note: database column is 'status', not 'account_status'
-    const accountStatus = (user as any).status || (user as any).account_status;
+    // Note: database column is 'status', not 'account_status' in some
+    // environments. Check both until the User interface/schema are aligned.
+    const authUser = user as AuthUser;
+    const accountStatus = authUser.status || authUser.account_status;
     if (accountStatus !== 'active') {
       res.status(403).json({
         error: 'Account inactive',
@@ -160,9 +179,10 @@ export async function authenticateJWTOptional(
       const payload = verificationResult.payload;
       const user = await UserModel.findById(payload.userId);
 
-      // Note: database column is 'status', not 'account_status'
-      const userStatus = user ? (user as any).status || (user as any).account_status : null;
-      if (user && userStatus === 'active') {
+      // See comment on authenticateJWT above re: status vs account_status.
+      const authUser = user as AuthUser | null;
+      const userStatus = authUser ? authUser.status || authUser.account_status : null;
+      if (authUser && userStatus === 'active') {
         req.userId = payload.userId;
         req.user = user;
         req.email = payload.email;
