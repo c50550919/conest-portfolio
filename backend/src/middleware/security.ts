@@ -11,19 +11,22 @@ import cors from 'cors';
 import { Express } from 'express';
 
 /**
- * Parse CORS_ORIGIN env var into the `origin` option cors() expects.
+ * Parse a CORS-origin env var into the `origin` option cors() expects.
  *
  * Supports a comma-delimited explicit allowlist (e.g.,
  * "https://app.placd.io,https://admin.placd.io") so multi-origin setups
  * work without code changes. Exact-match only; no regex. Empty entries
  * after trimming are filtered out.
  *
- * In development, falls back to http://localhost:19006 when CORS_ORIGIN is
- * unset so native mobile dev workflow keeps working out of the box.
- * In any non-development environment, throws if CORS_ORIGIN is unset.
+ * In development, falls back to http://localhost:19006 when the named env
+ * var is unset so native mobile dev workflow keeps working out of the box.
+ * In any non-development environment, throws if the var is unset.
+ *
+ * @param envVarName Defaults to CORS_ORIGIN. Socket.io initializers that
+ *   read CLIENT_URL can pass that name to reuse the same behavior.
  */
-function parseCorsOrigin(): string | string[] {
-  const raw = process.env.CORS_ORIGIN?.trim();
+export function parseCorsOrigin(envVarName: string = 'CORS_ORIGIN'): string | string[] {
+  const raw = process.env[envVarName]?.trim();
   if (raw) {
     const origins = raw
       .split(',')
@@ -35,7 +38,7 @@ function parseCorsOrigin(): string | string[] {
     return 'http://localhost:19006';
   }
   throw new Error(
-    'CORS_ORIGIN environment variable is required outside development. ' +
+    `${envVarName} environment variable is required outside development. ` +
       'Set to a single origin or comma-delimited explicit allowlist.',
   );
 }

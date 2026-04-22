@@ -29,6 +29,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 import Redis from 'ioredis';
 import jwt from 'jsonwebtoken';
 import logger from './logger';
+import { parseCorsOrigin } from '../middleware/security';
 
 // Redis clients for Socket.io adapter (pub/sub pattern)
 const pubClient = new Redis({
@@ -78,7 +79,7 @@ export function getSocketIO(): Server {
 export function initializeSocketIO(httpServer: HTTPServer): Server {
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.CLIENT_URL || 'http://localhost:19006',
+      origin: parseCorsOrigin('CLIENT_URL'),
       credentials: true,
     },
     transports: ['websocket', 'polling'],

@@ -11,11 +11,12 @@ import { Server as HTTPServer } from 'http';
 import jwt from 'jsonwebtoken';
 import { MessagingService } from '../features/messages/messaging.service';
 import logger from '../config/logger';
+import { parseCorsOrigin } from '../middleware/security';
 
 export const initializeWebSocket = (server: HTTPServer): Server => {
   const io = new Server(server, {
     cors: {
-      origin: process.env.CORS_ORIGIN || 'http://localhost:19006',
+      origin: parseCorsOrigin(),
       credentials: true,
     },
   });

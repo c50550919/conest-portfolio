@@ -107,7 +107,10 @@ const envSchema = z.object({
   ADMIN_EMAILS: z.string().default(''),
 
   // CORS
-  CORS_ORIGIN: z.string().default('http://localhost:19006'),
+  // Runtime validation happens in middleware/security.ts (parseCorsOrigin)
+  // which requires a non-empty value outside development. Zod accepts an
+  // empty default here so boot validation does not duplicate that logic.
+  CORS_ORIGIN: z.string().default(''),
 
   // Logging
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
