@@ -146,17 +146,19 @@ Copy `backend/.env.example` to `backend/.env` and configure:
 
 ```bash
 # Essential for local development
+# Real values live in backend/.env (gitignored). Copy backend/.env.example
+# to backend/.env and fill in the placeholders.
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=safenest_db
-DB_USER=safenest
-DB_PASSWORD=
+DB_NAME=<your_db_name>
+DB_USER=<your_db_user>
+DB_PASSWORD=<your_db_password>
 
 REDIS_HOST=localhost
 REDIS_PORT=6380
 
-JWT_SECRET=dev-secret-change-in-production-2024
-JWT_REFRESH_SECRET=dev-refresh-secret-change-in-production-2024
+JWT_SECRET=<your_jwt_secret>
+JWT_REFRESH_SECRET=<your_jwt_refresh_secret>
 ```
 
 ---
@@ -184,11 +186,9 @@ services:
 
 ### Database Credentials
 
-```
-Database: safenest_db
-User: safenest
-Password: 
-```
+Credentials live in `backend/.env` (gitignored). Copy `backend/.env.example`
+to `backend/.env` and populate `DB_NAME`, `DB_USER`, and `DB_PASSWORD`.
+Docker Compose reads these via variable substitution at startup.
 
 ### Common Docker Commands
 
@@ -1020,7 +1020,7 @@ Health: curl http://localhost:3000/health
 Base: http://localhost:3000/api
 
 # Credentials (dev)
-DB: safenest / 
+DB: see backend/.env.example
 ```
 
 ---

@@ -41,11 +41,11 @@
 ### Database Credentials (Backward Compatibility)
 **Files**: docker-compose.yml, backend/.env.example, database scripts
 
-**Preserved**:
+**Preserved** (secrets now sourced from `.env` via Compose substitution):
 ```yaml
-POSTGRES_USER: safenest
-POSTGRES_PASSWORD: 
-POSTGRES_DB: safenest_db
+POSTGRES_USER: ${DB_USER:?DB_USER is required}
+POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+POSTGRES_DB: ${DB_NAME:?DB_NAME is required}
 ```
 
 **Rationale**:
