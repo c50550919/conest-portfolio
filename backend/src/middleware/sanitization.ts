@@ -7,27 +7,16 @@
  * See LICENSE file in the project root for full license terms.
  */
 /**
- * Advanced Input Sanitization Middleware
- * Prevents SQL injection, XSS, and other injection attacks
+ * Input Sanitization Middleware
+ *
+ * SQL injection defense: rely on Knex parameterized queries (bindings,
+ * .where({}), .insert({}), etc.), not string sanitization. Regex-based
+ * SQL sanitizers give false confidence and are trivially bypassable.
+ * This module intentionally does not expose a SQL sanitization helper.
  */
 
 import { Request, Response, NextFunction } from 'express';
 import validator from 'validator';
-
-/**
- * Sanitize string for SQL (used with parameterized queries)
- */
-export function sanitizeSQL(input: string): string {
-  // Remove SQL comment markers
-  let sanitized = input.replace(/--/g, '');
-  sanitized = sanitized.replace(/\/\*/g, '');
-  sanitized = sanitized.replace(/\*\//g, '');
-
-  // Remove semicolons at the end (prevent command chaining)
-  sanitized = sanitized.replace(/;\s*$/g, '');
-
-  return sanitized;
-}
 
 /**
  * Sanitize HTML to prevent XSS
@@ -183,22 +172,6 @@ export function validateUUID(uuid: string): boolean {
 }
 
 /**
- * Check for SQL injection patterns
- */
-export function hasSQLInjection(input: string): boolean {
-  const sqlPatterns = [
-    /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b)/i,
-    /(UNION.*SELECT)/i,
-    /(OR\s+1\s*=\s*1)/i,
-    /(;.*--)/,
-    /('.*OR.*'.*=.*')/i,
-    /(\/\*|\*\/|--)/,
-  ];
-
-  return sqlPatterns.some((pattern) => pattern.test(input));
-}
-
-/**
  * Check for XSS patterns
  */
 export function hasXSS(input: string): boolean {
@@ -214,30 +187,3 @@ export function hasXSS(input: string): boolean {
   return xssPatterns.some((pattern) => pattern.test(input));
 }
 
-/**
- * Middleware to detect and block malicious input
- */
-export function detectMaliciousInput(req: Request, res: Response, next: NextFunction): void {
-  const checkValue = (value: any): boolean => {
-    if (typeof value === 'string') {
-      if (hasSQLInjection(value) || hasXSS(value)) {
-        return true;
-      }
-    } else if (typeof value === 'object' && value !== null) {
-      return Object.values(value).some(checkValue);
-    }
-    return false;
-  };
-
-  const isMalicious = checkValue(req.body) || checkValue(req.query) || checkValue(req.params);
-
-  if (isMalicious) {
-    res.status(400).json({
-      error: 'Malicious input detected',
-      code: 'MALICIOUS_INPUT',
-    });
-    return;
-  }
-
-  next();
-}
