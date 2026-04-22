@@ -294,3 +294,9 @@ conest/
 - **Monorepo tooling**: Using npm workspaces. Turborepo or Nx would improve build caching and task orchestration as the repo scales.
 - **State management**: Redux Toolkit works but React Query handles most of the server state. Would reduce Redux surface area in a rewrite.
 - **Test isolation**: Integration tests share a database. Testcontainers per test suite would eliminate ordering dependencies.
+
+---
+
+## License
+
+Copyright 2026 Carlton Thomas. Licensed under the [Apache License, Version 2.0](LICENSE).
