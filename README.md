@@ -2,7 +2,7 @@
 
 A full-stack production-grade application that matches single parents with compatible, verified roommates for shared housing. Built with child safety compliance, real-time messaging, identity verification, payment processing, and a weighted matching algorithm — all designed around regulatory constraints (FHA, FCRA, COPPA, VAWA).
 
-**179,000+ lines of TypeScript** across backend API, React Native mobile app, and infrastructure. **179 test files** spanning unit, integration, contract, security, compliance, and performance tiers with an enforced **85% coverage threshold**.
+**~31,000 lines of TypeScript** across backend API and React Native mobile app. **50 test files** spanning unit, integration, contract, security, compliance, and performance tiers with an enforced **85% coverage threshold**.
 
 ---
 
@@ -27,28 +27,28 @@ A full-stack production-grade application that matches single parents with compa
                     ┌──────▼──┐   ┌────▼─────┐
                     │PostgreSQL│   │  Redis 7  │
                     │15+PostGIS│   │           │
-                    │30 tables │   │ Sessions  │
-                    │35 migr.  │   │ CSRF Tkns │
+                    │10 tables │   │ Sessions  │
+                    │ 9 migr.  │   │ CSRF Tkns │
                     └─────────┘   │ Socket.io │
                                   │ Rate Lmts │
                                   └───────────┘
 ```
 
 ### Backend (Node.js + Express + TypeScript)
-- **137 API endpoints** across 20 feature-based route files
-- **23 database models** using Knex query builder
+- **55 API endpoints** across 8 route files
+- **11 database models** using Knex query builder
 - **12 middleware layers** (auth, CSRF, rate limiting, sanitization, CORS, Helmet, permissions, etc.)
-- **35 database migrations** tracking schema evolution over 6 months
-- Feature-based directory structure: each domain has its own controller, service, routes, and validator
+- **9 database migrations** tracking schema evolution
+- Layered directory structure: routes, controllers, services, validators, models, middleware
 
 ### Mobile (React Native + TypeScript)
-- **304 source files** with Redux Toolkit state management
+- **73 source files** with Redux Toolkit state management
 - React Navigation routing, custom hooks, theming system
 - iOS (CocoaPods) and Android build configurations
 
 ### Infrastructure
 - **Docker Compose** orchestration (PostgreSQL 15 + PostGIS, Redis 7)
-- **9 GitHub Actions workflows** (backend tests, mobile CI, schema drift detection, OWASP ZAP scanning, PR validation)
+- **GitHub Actions CI** (backend tests, schema drift detection, OWASP ZAP scanning, PR validation)
 - Separate Jest projects per test tier with isolated setup files
 
 ---
@@ -173,11 +173,11 @@ A full-branch review surfaced dev database credentials that had leaked into hist
               ╱─────────────────╲
              ╱    Compliance     ╲ 2 tests — child safety, FHA rules
             ╱─────────────────────╲
-           ╱    Contract (34)      ╲  API schema validation
+           ╱    Contract (13)      ╲  API schema validation
           ╱─────────────────────────╲
-         ╱    Integration (35)       ╲  real DB + Redis
+         ╱    Integration (12)       ╲  real DB + Redis
         ╱─────────────────────────────╲
-       ╱        Unit (14+)             ╲  mocked dependencies
+       ╱        Unit (2)               ╲  mocked dependencies
       ╱─────────────────────────────────╲
 ```
 
@@ -259,13 +259,13 @@ conest/
 │   ├── src/
 │   │   ├── config/          # Database, Redis, Stripe, Socket.io, security configs
 │   │   ├── features/        # Feature modules (matching, placement, verification, etc.)
-│   │   ├── models/          # 23 Knex models with typed interfaces
+│   │   ├── models/          # 11 Knex models with typed interfaces
 │   │   ├── middleware/       # 12 middleware layers (auth, CSRF, rate limit, etc.)
-│   │   ├── migrations/      # 35 migrations tracking 6 months of schema evolution
+│   │   ├── migrations/      # 9 migrations tracking schema evolution
 │   │   ├── utils/           # Encryption, JWT, validation helpers
 │   │   ├── lib/             # Shared libraries (org-scoped queries)
 │   │   └── app.ts           # Express app with Sentry, Swagger, webhook handlers
-│   └── tests/               # 179 test files across 7 tiers
+│   └── tests/               # 50 test files across 7 tiers
 │       ├── unit/            # Mocked dependency tests
 │       ├── integration/     # Real DB/Redis tests
 │       ├── contract/        # API schema validation
@@ -273,7 +273,7 @@ conest/
 │       ├── compliance/      # Child safety, FHA rules
 │       ├── e2e/             # Full user journey tests
 │       └── performance/     # Artillery load tests
-├── mobile/                  # React Native app (304 source files)
+├── mobile/                  # React Native app (73 source files)
 │   ├── src/
 │   │   ├── screens/         # App screens
 │   │   ├── components/      # Reusable UI components
@@ -281,7 +281,7 @@ conest/
 │   │   ├── navigation/      # React Navigation config
 │   │   ├── hooks/           # Custom hooks
 │   │   └── services/        # API integration
-├── .github/workflows/       # 9 CI/CD pipelines
+├── .github/workflows/       # GitHub Actions CI
 ├── docker-compose.yml       # PostgreSQL 15 + PostGIS, Redis 7
 └── SECURITY.md              # Security practices documentation
 ```
