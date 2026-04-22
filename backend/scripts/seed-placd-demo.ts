@@ -27,6 +27,17 @@ if (!process.env.DB_NAME) {
   dotenv.config({ path: path.resolve(__dirname, '../.env') });
 }
 
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(
+      `Required environment variable ${name} is not set. ` +
+      `Set it in backend/.env (see backend/.env.example) before running this script.`,
+    );
+  }
+  return value;
+}
+
 async function getDatabase(): Promise<Knex> {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const knex = require('knex');
@@ -35,8 +46,8 @@ async function getDatabase(): Promise<Knex> {
     connection: {
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '5432'),
-      user: process.env.DB_USER || 'safenest',
-      password: process.env.DB_PASSWORD || '',
+      user: requireEnv('DB_USER'),
+      password: requireEnv('DB_PASSWORD'),
       database: process.env.DB_NAME || 'conest_demo',
     },
   };
