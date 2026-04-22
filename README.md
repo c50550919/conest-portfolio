@@ -186,6 +186,9 @@ A full-branch review surfaced dev database credentials that had leaked into hist
 - **100% mandatory** for child safety validators — the build fails if any child-data-related code path is untested
 - Separate Jest configurations per tier with appropriate timeouts (unit: 10s, integration: 30s, security: 30s, E2E: 60s)
 
+### CI Scope
+The GitHub Actions workflow runs a **surface check** (lint + type-check, informational) on push. Integration, E2E, and compliance tests depend on a live Postgres + Redis stack and run locally via `docker-compose up && npm test` — they are deliberately not on the CI runner because the suite predates service-container wiring, and adding that now would be theater rather than engineering. Treat the workflow as an "is the code still valid TypeScript?" gate; treat `npm test` locally as the real test authority.
+
 ---
 
 ## Database Schema (Key Tables)
