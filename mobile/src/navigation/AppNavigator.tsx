@@ -1,5 +1,5 @@
 /**
- * CoNest/SafeNest App Navigator
+ * CoNest/CoNest App Navigator
  * Main navigation structure with authentication flow
  *
  * Navigation Flow:

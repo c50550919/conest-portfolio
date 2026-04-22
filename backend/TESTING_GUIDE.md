@@ -1,6 +1,6 @@
-# CoNest/SafeNest Testing Guide
+# CoNest/CoNest Testing Guide
 
-Comprehensive testing guide for the SafeNest platform backend API.
+Comprehensive testing guide for the CoNest platform backend API.
 
 ## Table of Contents
 
@@ -124,7 +124,7 @@ npx jest --verbose
 
 ```bash
 # Create test database
-createdb safenest_test
+createdb conest_test
 
 # Run migrations on test DB
 NODE_ENV=test npm run migrate
@@ -412,7 +412,7 @@ Tests must pass before deployment:
 pg_isready
 
 # Check connection string in .env.test
-DATABASE_URL=postgresql://user:password@localhost:5432/safenest_test
+DATABASE_URL=postgresql://user:password@localhost:5432/conest_test
 ```
 
 **Tests Timeout**
@@ -517,4 +517,4 @@ All files                |   85.2  |   78.4   |   82.1  |   85.8  |
 ---
 
 **Last Updated:** 2025-10-03
-**Maintained By:** SafeNest Engineering Team
+**Maintained By:** CoNest Engineering Team

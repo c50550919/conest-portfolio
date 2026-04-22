@@ -1,6 +1,6 @@
 # Code Complexity Management Guidelines
 
-This document defines code complexity standards and best practices for the SafeNest backend.
+This document defines code complexity standards and best practices for the CoNest backend.
 
 ## Complexity Metrics
 

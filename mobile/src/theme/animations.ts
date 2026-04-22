@@ -1,5 +1,5 @@
 /**
- * CoNest/SafeNest Animation System
+ * CoNest/CoNest Animation System
  * Based on UI_DESIGN.md specifications
  * Duration: 200-300ms for micro-interactions
  * Easing: EaseInOut for smooth feel

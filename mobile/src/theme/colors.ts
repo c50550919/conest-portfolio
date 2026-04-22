@@ -1,5 +1,5 @@
 /**
- * CoNest/SafeNest Color System
+ * CoNest/CoNest Color System
  * Based on UI_DESIGN.md specifications
  */
 

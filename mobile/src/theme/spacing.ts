@@ -1,5 +1,5 @@
 /**
- * CoNest/SafeNest Spacing System
+ * CoNest/CoNest Spacing System
  * Based on UI_DESIGN.md specifications
  */
 

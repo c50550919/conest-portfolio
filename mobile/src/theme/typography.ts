@@ -1,5 +1,5 @@
 /**
- * CoNest/SafeNest Typography System
+ * CoNest/CoNest Typography System
  * Based on UI_DESIGN.md specifications
  * Base size: 16px, Line height: 1.5
  */

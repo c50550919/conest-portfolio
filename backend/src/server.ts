@@ -39,7 +39,7 @@ const startServer = async () => {
       logger.info(`
 ╔════════════════════════════════════════════════════════════╗
 ║                                                            ║
-║   🏡 SafeNest API Server Running                          ║
+║   🏡 CoNest API Server Running                          ║
 ║                                                            ║
 ║   Environment: ${process.env.NODE_ENV || 'development'}                              ║
 ║   Port: ${PORT}                                             ║

@@ -1,5 +1,5 @@
 /**
- * CoNest/SafeNest Main Navigator
+ * CoNest/CoNest Main Navigator
  * Bottom tab navigation for authenticated users
  */
 

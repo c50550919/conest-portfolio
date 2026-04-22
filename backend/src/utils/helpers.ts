@@ -1,5 +1,5 @@
 /**
- * Utility helper functions for the SafeNest API
+ * Utility helper functions for the CoNest API
  */
 
 /**

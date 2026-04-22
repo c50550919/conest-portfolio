@@ -1,5 +1,5 @@
 /**
- * CoNest/SafeNest Mobile App
+ * CoNest/CoNest Mobile App
  * Main entry point with Redux, React Query, and Navigation
  */
 

@@ -1,6 +1,6 @@
 # CoNest Mobile App
 
-React Native mobile application for the CoNest/SafeNest platform - helping single parents find safe, verified, and compatible roommates for shared housing.
+React Native mobile application for the CoNest/CoNest platform - helping single parents find safe, verified, and compatible roommates for shared housing.
 
 ## Project Structure
 

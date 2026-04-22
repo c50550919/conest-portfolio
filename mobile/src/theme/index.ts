@@ -1,5 +1,5 @@
 /**
- * CoNest/SafeNest Theme System
+ * CoNest/CoNest Theme System
  * Centralized theme configuration
  */
 

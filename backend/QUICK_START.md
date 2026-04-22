@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get the SafeNest backend running in 5 minutes.
+Get the CoNest backend running in 5 minutes.
 
 ## Prerequisites Check
 
@@ -35,7 +35,7 @@ Edit `.env` and set minimum required values:
 ```env
 # Database
 DB_HOST=localhost
-DB_NAME=safenest
+DB_NAME=conest
 DB_USER=your_postgres_user
 DB_PASSWORD=your_postgres_password
 
@@ -54,11 +54,11 @@ STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_key
 ### 3. Create Database
 ```bash
 # Using psql
-createdb safenest
+createdb conest
 
 # Or using SQL
 psql -U postgres
-CREATE DATABASE safenest;
+CREATE DATABASE conest;
 \q
 ```
 
@@ -99,7 +99,7 @@ You should see:
 ```
 ╔════════════════════════════════════════════════════════════╗
 ║                                                            ║
-║   🏡 SafeNest API Server Running                          ║
+║   🏡 CoNest API Server Running                          ║
 ║                                                            ║
 ║   Environment: development                                ║
 ║   Port: 5000                                              ║

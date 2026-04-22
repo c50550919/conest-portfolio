@@ -1,6 +1,6 @@
-# SafeNest Backend API
+# CoNest Backend API
 
-Complete Node.js/TypeScript backend for the SafeNest single parent housing platform.
+Complete Node.js/TypeScript backend for the CoNest single parent housing platform.
 
 ## Features Implemented
 
@@ -83,7 +83,7 @@ backend/
 
 3. **Create PostgreSQL database**
    ```bash
-   createdb safenest
+   createdb conest
    ```
 
 4. **Run database migrations**

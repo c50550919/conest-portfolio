@@ -1,4 +1,4 @@
-# CoNest/SafeNest API Examples
+# CoNest/CoNest API Examples
 
 Complete cURL examples for all 47 API endpoints with expected responses and error cases.
 

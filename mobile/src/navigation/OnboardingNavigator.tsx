@@ -1,5 +1,5 @@
 /**
- * CoNest/SafeNest Onboarding Navigator
+ * CoNest/CoNest Onboarding Navigator
  * Handles new user registration and verification flow
  */
 

@@ -41,7 +41,7 @@ describe('Household Creation Flow - Integration Tests', () => {
         .post('/api/household')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          name: 'Test SafeNest Home',
+          name: 'Test CoNest Home',
           address: '123 Main Street',
           city: 'San Francisco',
           state: 'CA',
@@ -53,7 +53,7 @@ describe('Household Creation Flow - Integration Tests', () => {
         .expect(201);
 
       expect(createResponse.body).toHaveProperty('id');
-      expect(createResponse.body).toHaveProperty('name', 'Test SafeNest Home');
+      expect(createResponse.body).toHaveProperty('name', 'Test CoNest Home');
       expect(createResponse.body).toHaveProperty('status', 'active');
 
       householdId = createResponse.body.id;
@@ -102,7 +102,7 @@ describe('Household Creation Flow - Integration Tests', () => {
         .expect(200);
 
       expect(getHouseholdResponse.body).toHaveProperty('id', householdId);
-      expect(getHouseholdResponse.body).toHaveProperty('name', 'Test SafeNest Home');
+      expect(getHouseholdResponse.body).toHaveProperty('name', 'Test CoNest Home');
       expect(getHouseholdResponse.body).toHaveProperty('status', 'active');
       expect(getHouseholdResponse.body).toHaveProperty('monthlyRent', 300000);
     });
@@ -113,7 +113,7 @@ describe('Household Creation Flow - Integration Tests', () => {
         .post('/api/household')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          name: 'Test SafeNest Home 2',
+          name: 'Test CoNest Home 2',
           address: '456 Oak Avenue',
           city: 'Oakland',
           state: 'CA',

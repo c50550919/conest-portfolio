@@ -50,7 +50,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-10-28.acacia' as any,
   typescript: true,
   appInfo: {
-    name: 'CoNest/SafeNest',
+    name: 'CoNest/CoNest',
     version: '1.0.0',
     url: 'https://github.com/yourusername/conest',
   },

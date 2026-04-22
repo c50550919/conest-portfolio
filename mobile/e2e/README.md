@@ -2,7 +2,7 @@
 
 ## Overview
 
-Comprehensive E2E test suite for CoNest/SafeNest mobile application using Detox framework. Tests cover authentication, discovery, messaging, and household management with **critical child safety compliance verification**.
+Comprehensive E2E test suite for CoNest/CoNest mobile application using Detox framework. Tests cover authentication, discovery, messaging, and household management with **critical child safety compliance verification**.
 
 ## Test Files
 
