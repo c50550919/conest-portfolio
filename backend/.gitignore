@@ -9,6 +9,12 @@ dist/
 build/
 *.tsbuildinfo
 
+# Compiled output from knexfile.ts — source of truth is .ts
+knexfile.js
+knexfile.js.map
+knexfile.d.ts
+knexfile.d.ts.map
+
 # Environment variables
 .env
 .env.local
