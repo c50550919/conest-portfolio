@@ -18,9 +18,13 @@
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret-key-for-testing-only';
 process.env.STRIPE_SECRET_KEY = 'sk_test_mock_key_for_testing_only';
+// Unit tests use mocked DB; the values below just need to be non-empty
+// strings, not real credentials. Integration tests override these via
+// setup-integration.ts with real testcontainers values.
 process.env.DATABASE_URL =
-  process.env.DATABASE_URL || 'postgresql://safenest:@localhost:5432/safenest_db';
-process.env.DB_PASSWORD = process.env.DB_PASSWORD || '';
+  process.env.DATABASE_URL ||
+  'postgresql://test_user:test_password_unused@localhost:5432/test_db';
+process.env.DB_PASSWORD = process.env.DB_PASSWORD || 'test_password_unused';
 process.env.REDIS_HOST = process.env.REDIS_HOST || 'localhost';
 process.env.REDIS_PORT = process.env.REDIS_PORT || '6380';
 process.env.REDIS_PASSWORD = process.env.REDIS_PASSWORD || '';

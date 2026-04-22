@@ -9,6 +9,17 @@ import * as path from 'path';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(
+      `Required environment variable ${name} is not set. ` +
+      `Set it in backend/.env (see backend/.env.example) before running this script.`,
+    );
+  }
+  return value;
+}
+
 const knex = require('knex');
 
 const db = knex({
@@ -16,9 +27,9 @@ const db = knex({
   connection: {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432'),
-    user: process.env.DB_USER || 'safenest',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'safenest_db',
+    user: requireEnv('DB_USER'),
+    password: requireEnv('DB_PASSWORD'),
+    database: requireEnv('DB_NAME'),
   },
 });
 

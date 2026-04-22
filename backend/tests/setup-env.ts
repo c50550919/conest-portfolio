@@ -20,13 +20,14 @@ process.env.ENABLE_RATE_LIMITING = 'false';
 process.env.ENABLE_CSRF_PROTECTION = 'false';
 process.env.ENABLE_ACCOUNT_LOCKOUT = 'false';
 
-// Database configuration for unit tests (mocked, but needs valid-looking config)
-// Note: Integration tests override these in setup-integration.ts with real test container values
+// Database configuration for unit tests (mocked, but needs valid-looking config).
+// Values are non-secret placeholders used only for string-shape validation.
+// Integration tests override these in setup-integration.ts with real testcontainers values.
 process.env.DB_HOST = process.env.DB_HOST || '127.0.0.1'; // Use IPv4 to avoid IPv6 issues
 process.env.DB_PORT = process.env.DB_PORT || '5432';
-process.env.DB_NAME = process.env.DB_NAME || 'safenest_db';
-process.env.DB_USER = process.env.DB_USER || 'safenest';
-process.env.DB_PASSWORD = process.env.DB_PASSWORD || '';
+process.env.DB_NAME = process.env.DB_NAME || 'test_db';
+process.env.DB_USER = process.env.DB_USER || 'test_user';
+process.env.DB_PASSWORD = process.env.DB_PASSWORD || 'test_password_unused';
 
 // Redis configuration (matches docker container - external port 6380)
 process.env.REDIS_HOST = process.env.REDIS_HOST || '127.0.0.1';
