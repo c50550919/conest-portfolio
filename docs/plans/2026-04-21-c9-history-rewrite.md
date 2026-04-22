@@ -482,3 +482,44 @@ Remote force-push is fully reversible from the tarball.
 - Rewriting history in unrelated projects (jobsearch-bot, founder-cloud-*, etc.)
 - Historical author/email changes
 - Public-facing announcement of the rewrite (handled separately after C9 completes)
+
+---
+
+## Appendix: Second history-rewrite pass — AI tooling artifact purge (2026-04-22)
+
+After C9 completed, a separate credibility audit of the public `conest-portfolio` repo surfaced a second class of issues unrelated to the dev-credential leak: AI-assisted development artifacts (tooling configs, session completion reports, task-ID-named markdown files) committed across many historical commits. These were not security-sensitive but were reputational — the repo read as AI-generated scaffolding rather than a finished artifact.
+
+Addressed with a second `git filter-repo --invert-paths` pass against a fresh mirror clone, same tarball-backup → three-layer-verification → force-push discipline used above.
+
+**Severity classification — accurate labeling matters:**
+- **Not a credential leak.** `LOGIN_CREDENTIALS.md` (the most-alarming-named file purged) contained seeded test users (password `Test1234`) and a local network IP — dev fixture data only, no real secrets.
+- **No CVSS severity.** Everything purged was cosmetic/reputational.
+- **Runbook note:** overstating this pass as a second "security incident" would misrepresent it. Frame as a credibility/polish sweep that happened to use the same tool.
+
+**Paths purged** (full list recorded in `/tmp/scrub-paths.txt` at time of run, ~66 entries):
+
+Prefixes:
+- `.claude/` — Claude Code tooling (slash commands, custom agents, skills, settings)
+- `.specify/` — GitHub Spec Kit AI workflow templates
+- `docs/archive/sessions/` — explicit session-artifact archive (39 files)
+
+Individual files:
+- `.mcp.json`, `.mcp.json.fixed`, `CLAUDE.md`
+- `DARABASE.SQL` (0-byte typo file next to `DATABASE.sql`)
+- `LOGIN_CREDENTIALS.md` (dev fixtures, not real secrets)
+- 35+ root-level AI-session report `.md` files (`*_COMPLETE.md`, `*_COMPLETION_REPORT.md`, `*_IMPLEMENTATION*.md`, `*_STATUS*.md`, `*_SUMMARY.md`, `WAVE[0-9]+_*.md`, `TASKS_T*_*.md`, `FINAL_STATUS_REPORT.md`, `SPEC_KIT_GUIDE.md`, etc.)
+- `ARCHITECTURE.md` (Claude-style enumeration; the real architecture diagram lives in `README.md`)
+- `backend/T057-T059_IMPLEMENTATION_SUMMARY.md`, `backend/TASKS_T054-T056_COMPLETION_REPORT.md`, and sibling session reports under `backend/`
+
+**Explicitly protected (kept through the rewrite):**
+- `README.md`, `SECURITY.md`, `LICENSE`, `BRANDING_UPDATE_SUMMARY.md` (legitimate rename audit)
+- `backend/README.md` + backend technical reference docs (`API_EXAMPLES.md`, `STRIPE_WEBHOOKS.md`, `TESTING_GUIDE.md`, etc.)
+- Full `docs/` tree except `docs/archive/sessions/`
+- This runbook itself
+
+**Command:**
+```bash
+git filter-repo --paths-from-file /tmp/scrub-paths.txt --invert-paths --force
+```
+
+**Verification:** same three-layer discipline as the dev-credential pass — filename scan, patch grep, reachable-blob scan across all refs before force-pushing to origin then portfolio.
