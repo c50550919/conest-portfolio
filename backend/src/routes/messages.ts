@@ -13,7 +13,7 @@ import { Router } from 'express';
 import { messageController } from '../controllers/messageController';
 import { authenticateJWT } from '../middleware/auth.middleware';
 import { validate, schemas } from '../middleware/validation';
-import { messageLimiter } from '../middleware/rateLimiter';
+import { messageRateLimit } from '../middleware/rateLimit';
 
 const router = Router();
 
@@ -22,13 +22,13 @@ router.use(authenticateJWT);
 
 // New endpoints for Wave 4
 router.get('/:matchId/history', messageController.getMessageHistory);
-router.post('/', messageLimiter, messageController.sendMessage);
+router.post('/', messageRateLimit, messageController.sendMessage);
 
 // Legacy endpoints (keep for backward compatibility)
 router.get('/conversations', messageController.getConversations);
 router.get('/conversations/:userId', messageController.getConversation);
 router.get('/unread-count', messageController.getUnreadCount);
-router.post('/send', messageLimiter, validate(schemas.createMessage), messageController.sendMessage);
+router.post('/send', messageRateLimit, validate(schemas.createMessage), messageController.sendMessage);
 router.post('/:conversationId/mark-read', messageController.markAsRead);
 router.delete('/:messageId', messageController.deleteMessage);
 

@@ -1,7 +1,7 @@
 import express, { Express } from 'express';
 import dotenv from 'dotenv';
 import { setupSecurity } from './middleware/security';
-import { generalLimiter } from './middleware/rateLimiter';
+import { generalRateLimit } from './middleware/rateLimit';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 // Import routes
@@ -31,7 +31,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Rate limiting
-app.use(generalLimiter);
+app.use(generalRateLimit);
 
 // Health check endpoint
 app.get('/health', (_req, res) => {

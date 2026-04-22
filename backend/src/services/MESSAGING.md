@@ -147,7 +147,7 @@ Authorization: Bearer <jwt_token>
 
 **Endpoint**: `POST /api/messages`
 **Authentication**: JWT required
-**Rate Limit**: 30 req/min (messageLimiter)
+**Rate Limit**: 30 req/min (messageRateLimit)
 
 **Request**:
 ```http
@@ -496,12 +496,12 @@ if (match.status !== 'accepted') {
 
 ### Rate Limiting
 
-**Message Sending** (`messageLimiter`):
+**Message Sending** (`messageRateLimit`):
 - Window: 60 seconds
 - Max Requests: 30
 - Response: 429 Too Many Requests
 
-**General API** (`generalLimiter`):
+**General API** (`generalRateLimit`):
 - Window: 15 minutes
 - Max Requests: 100
 - Response: 429 Too Many Requests

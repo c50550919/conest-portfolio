@@ -34,7 +34,7 @@
 import { Router } from 'express';
 import { PaymentController, paymentController } from '../controllers/paymentController';
 import { authenticateToken } from '../middleware/auth';
-import { paymentLimiter } from '../middleware/rateLimiter';
+import { paymentRateLimit } from '../middleware/rateLimit';
 
 const router = Router();
 
@@ -71,7 +71,7 @@ stripeWebhookRouter.post('/webhook', PaymentController.handleWebhook);
 router.post(
   '/stripe/connect',
   authenticateToken,
-  paymentLimiter,
+  paymentRateLimit,
   PaymentController.createStripeAccount
 );
 
@@ -86,7 +86,7 @@ router.post(
 router.post(
   '/intents',
   authenticateToken,
-  paymentLimiter,
+  paymentRateLimit,
   PaymentController.createPaymentIntent
 );
 
@@ -101,7 +101,7 @@ router.post(
 router.post(
   '/split-rent',
   authenticateToken,
-  paymentLimiter,
+  paymentRateLimit,
   PaymentController.splitRent
 );
 
@@ -116,7 +116,7 @@ router.post(
 router.post(
   '/refund',
   authenticateToken,
-  paymentLimiter,
+  paymentRateLimit,
   PaymentController.processRefund
 );
 
@@ -141,7 +141,7 @@ router.get(
  * POST /api/payments/create
  * Legacy payment creation endpoint
  */
-router.post('/create', authenticateToken, paymentLimiter, paymentController.createPayment);
+router.post('/create', authenticateToken, paymentRateLimit, paymentController.createPayment);
 
 /**
  * GET /api/payments/my-payments
@@ -165,19 +165,19 @@ router.get('/overdue', authenticateToken, paymentController.getOverduePayments);
  * POST /api/payments/:paymentId/refund
  * Legacy refund endpoint
  */
-router.post('/:paymentId/refund', authenticateToken, paymentLimiter, paymentController.refundPaymentLegacy);
+router.post('/:paymentId/refund', authenticateToken, paymentRateLimit, paymentController.refundPaymentLegacy);
 
 /**
  * POST /api/payments/household/:householdId/split-rent
  * Legacy split rent endpoint
  */
-router.post('/household/:householdId/split-rent', authenticateToken, paymentLimiter, paymentController.splitRentLegacy);
+router.post('/household/:householdId/split-rent', authenticateToken, paymentRateLimit, paymentController.splitRentLegacy);
 
 /**
  * POST /api/payments/stripe/create-account
  * Legacy Stripe account creation endpoint
  */
-router.post('/stripe/create-account', authenticateToken, paymentLimiter, paymentController.createHouseholdStripeAccountLegacy);
+router.post('/stripe/create-account', authenticateToken, paymentRateLimit, paymentController.createHouseholdStripeAccountLegacy);
 
 /**
  * GET /api/payments/stripe/onboarding/:householdId

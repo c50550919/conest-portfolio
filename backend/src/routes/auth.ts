@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
-import { authLimiter, verificationLimiter } from '../middleware/rateLimiter';
+import { authRateLimit, verificationRateLimit } from '../middleware/rateLimit';
 import {
   RegisterRequestSchema,
   LoginRequestSchema,
@@ -90,7 +90,7 @@ import { AuthController } from '../controllers/authController';
  */
 router.post(
   '/register',
-  authLimiter,
+  authRateLimit,
   validateBody(RegisterRequestSchema),
   AuthController.register
 );
@@ -111,7 +111,7 @@ router.post(
  */
 router.post(
   '/login',
-  authLimiter,
+  authRateLimit,
   validateBody(LoginRequestSchema),
   AuthController.login
 );
@@ -151,7 +151,7 @@ router.post(
  */
 router.post(
   '/verify-phone',
-  verificationLimiter,
+  verificationRateLimit,
   validateBody(VerifyPhoneSchema),
   AuthController.verifyPhone
 );
