@@ -39,13 +39,16 @@ export const errorHandler = (
   }
 
   // Log error
+  // Note: client IP intentionally omitted. IPs may constitute personal data
+  // depending on jurisdiction and linkage, so we avoid logging them on every
+  // error. If per-request correlation is needed, prefer a server-generated
+  // request ID (e.g., X-Request-Id) over raw req.ip.
   logger.error({
     message: err.message,
     stack: err.stack,
     statusCode,
     method: req.method,
     path: req.path,
-    ip: req.ip,
   });
 
   // Don't leak error details in production
