@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines security best practices, vulnerability management, and incident response procedures for the SafeNest/CoNest platform.
+This document outlines security best practices, vulnerability management, and incident response procedures for the CoNest platform.
 
 ## Table of Contents
 
@@ -305,7 +305,7 @@ npm outdated
 ### Incident Contacts
 
 ```
-Security Team: security@safenest.com
+Security Team: security@conest.com
 Emergency Hotline: +1-XXX-XXX-XXXX (24/7)
 PGP Key: [PGP Public Key Fingerprint]
 ```
@@ -356,7 +356,7 @@ If data breach affects user PII:
 
 ## Reporting Security Issues
 
-If you discover a security vulnerability, please email security@safenest.com with:
+If you discover a security vulnerability, please email security@conest.com with:
 
 1. Description of the vulnerability
 2. Steps to reproduce
