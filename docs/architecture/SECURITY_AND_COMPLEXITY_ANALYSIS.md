@@ -444,10 +444,10 @@ helmet({
 - ✅ `X-XSS-Protection: 1; mode=block`
 - ✅ `X-Powered-By` header disabled (line 37)
 
-**CORS Configuration** ([security.ts:26-33](backend/src/middleware/security.ts#L26-33)):
+**CORS Configuration** ([security.ts](backend/src/middleware/security.ts)):
 ```typescript
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:19006',
+  origin: parseCorsOrigin(),          // fails fast if CORS_ORIGIN unset outside development
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
