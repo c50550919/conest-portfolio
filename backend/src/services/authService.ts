@@ -18,6 +18,7 @@ import { VerificationModel } from '../models/Verification';
 import { generateAccessToken, generateRefreshToken, verifyRefreshToken, JWTPayload } from '../utils/jwt';
 import { hashPassword, comparePassword } from '../utils/password';
 import redis, { REDIS_TTL } from '../config/redis';
+import logger from '../config/logger';
 
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS) || 12;
 
@@ -223,8 +224,21 @@ export const AuthService = {
     // Store in Redis with 10 minute expiration
     await redis.setex(`phone_verification:${userId}`, 600, code);
 
-    // TODO: Send SMS via Twilio
-    console.log(`Phone verification code for ${phoneNumber}: ${code}`);
+    // SMS delivery is gated behind SMS_PROVIDER. In development or when
+    // SMS_PROVIDER=stub, the code is logged via the structured logger so
+    // local flows can complete without a real SMS vendor. In production
+    // with no provider configured, fail fast rather than silently no-op.
+    if (process.env.NODE_ENV === 'development' || process.env.SMS_PROVIDER === 'stub') {
+      logger.debug('SMS stub - phone verification code generated', {
+        userId,
+        phoneNumber,
+        code,
+      });
+      // Twilio integration point: replace with client.messages.create(...)
+      // Requires TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER
+    } else {
+      throw new Error('SMS provider not configured. Set SMS_PROVIDER env var (stub|twilio).');
+    }
   },
 
   /**

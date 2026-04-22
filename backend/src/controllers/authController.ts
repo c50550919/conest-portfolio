@@ -132,18 +132,39 @@ export const AuthController = {
   /**
    * T048: POST /api/auth/verify-phone
    * Verify phone number with SMS code
+   *
+   * Requires authentication: userId is pulled from the JWT, not the request
+   * body, to prevent unauthenticated callers from verifying arbitrary phone
+   * numbers. The `phone` field in the body is accepted for schema
+   * compatibility but ignored; the authoritative source is req.userId.
    */
-  verifyPhone: asyncHandler(async (req: Request, res: Response) => {
+  verifyPhone: asyncHandler(async (req: AuthRequest, res: Response) => {
     try {
-      const { phone, code } = req.body;
+      if (!req.userId) {
+        res.status(401).json({
+          success: false,
+          error: 'Authentication required',
+        });
+        return;
+      }
 
-      // TODO: Find user by phone number (for now, this is a simplified implementation)
-      // In production, you would need to pass userId from authenticated session
-      // For now, we'll just validate the code format and return success
+      const { code } = req.body;
+      if (!code || typeof code !== 'string') {
+        res.status(400).json({
+          success: false,
+          error: 'Verification code required',
+        });
+        return;
+      }
 
-      // Placeholder: Should find user by phone and verify code
-      // const userId = await findUserIdByPhone(phone);
-      // const isValid = await AuthService.verifyPhone(userId, code);
+      const isValid = await AuthService.verifyPhone(req.userId, code);
+      if (!isValid) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid or expired verification code',
+        });
+        return;
+      }
 
       res.status(200).json({
         success: true,
@@ -155,22 +176,6 @@ export const AuthController = {
           res.status(404).json({
             success: false,
             error: 'User not found',
-          });
-          return;
-        }
-
-        if (error.message.includes('Invalid verification code')) {
-          res.status(400).json({
-            success: false,
-            error: 'Invalid verification code',
-          });
-          return;
-        }
-
-        if (error.message.includes('expired')) {
-          res.status(400).json({
-            success: false,
-            error: 'Invalid or expired verification code',
           });
           return;
         }

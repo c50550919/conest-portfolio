@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import { authRateLimit, verificationRateLimit } from '../middleware/rateLimit';
+import { authenticateToken } from '../middleware/auth';
 import {
   RegisterRequestSchema,
   LoginRequestSchema,
@@ -14,7 +15,9 @@ import {
  * Purpose: Route definitions for authentication endpoints
  * Constitution: Principle I (Child Safety), Principle III (Security)
  *
- * ALL routes are PUBLIC (no authentication required)
+ * Most routes are PUBLIC (register, login, refresh); /verify-phone
+ * requires an authenticated user (userId is pulled from the JWT to
+ * prevent anonymous callers from verifying arbitrary phone numbers).
  * Rate limiting applied to prevent abuse
  * Input validation with Zod schemas
  *
@@ -139,8 +142,10 @@ router.post(
  * POST /api/auth/verify-phone
  * Verify phone number with SMS code
  *
+ * Requires: Bearer access token (userId is pulled from JWT, not body)
+ *
  * Body:
- * - phone: E.164 format phone number
+ * - phone: E.164 format phone number (schema compatibility only; ignored)
  * - code: 6-digit verification code
  *
  * Response:
@@ -151,6 +156,7 @@ router.post(
  */
 router.post(
   '/verify-phone',
+  authenticateToken,
   verificationRateLimit,
   validateBody(VerifyPhoneSchema),
   AuthController.verifyPhone
