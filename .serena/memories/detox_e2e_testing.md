@@ -240,8 +240,8 @@ Tests use seeded users from `backend/scripts/seed-test-users-api.ts`:
 # Verify backend health
 curl http://localhost:3000/health
 
-# Check test user exists
-PGPASSWORD= psql -h localhost -p 5433 -U safenest -d safenest_db \
+# Check test user exists (expects DB_PASSWORD and DB_USER set in your shell or .env)
+PGPASSWORD="${DB_PASSWORD}" psql -h localhost -p 5433 -U "${DB_USER}" -d "${DB_NAME}" \
   -c "SELECT email, is_verified FROM users WHERE email = 'sarah.verified@test.com';"
 ```
 
