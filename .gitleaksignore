@@ -11,6 +11,12 @@
 # The April 2026 C9 history rewrite (docs/plans/2026-04-21-c9-history-rewrite.md)
 # purged the known dev DB credential from all commits; this scan confirms none of
 # the 109 hits point to that credential or any other live secret.
+#
+# WARNING: fingerprints pin to specific commit SHAs. If conest history is
+# rewritten (rebase, filter-repo, squash), these SHAs become stale and
+# gitleaks will re-flag all findings. To regenerate:
+#   gitleaks detect --source . --report-format json --report-path tmp.json
+#   # then re-run the 2026-04-22 triage workflow
 
 # --- .github/workflows/zap-scan.yml (1 finding) ---
 # FP-FIXTURE: literal string `sk_test_ZapScanCITestKeyOnly12345678` in CI env block
