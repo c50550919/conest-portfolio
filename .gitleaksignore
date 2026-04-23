@@ -1,0 +1,172 @@
+# Generated: 2026-04-22 post-triage of 109 gitleaks findings
+# Triage result: FP-DOC 57 (documentation placeholders), FP-FIXTURE 46 (test fixtures),
+#                FP-ENTROPY 6 (minified/compiled false positives), REAL=0
+#
+# Fingerprint format: <commit-sha>:<file>:<rule-id>:<start-line>
+# Fingerprints are precise — adding a NEW real secret to any of these files
+# on a new line or new commit will still surface in future gitleaks runs.
+#
+# See Portfolio-Prep/_tool-output/gitleaks-triage.md for per-finding classification.
+# See Portfolio-Prep/_tool-output/gitleaks-summary.md for interview-facing framing.
+# The April 2026 C9 history rewrite (docs/plans/2026-04-21-c9-history-rewrite.md)
+# purged the known dev DB credential from all commits; this scan confirms none of
+# the 109 hits point to that credential or any other live secret.
+
+# --- .github/workflows/zap-scan.yml (1 finding) ---
+# FP-FIXTURE: literal string `sk_test_ZapScanCITestKeyOnly12345678` in CI env block
+02eb7eacbf4ad18d28059221b40607df891f8c46:.github/workflows/zap-scan.yml:stripe-access-token:82
+
+# --- OWASP_ZAP_SETUP.md (2 findings) ---
+# FP-DOC: `Authorization: Bearer YOUR_TOKEN` curl example
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:OWASP_ZAP_SETUP.md:curl-auth-header:90
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:OWASP_ZAP_SETUP.md:curl-auth-header:100
+
+# --- SECURITY_TESTING_GUIDE.md (1 finding) ---
+# FP-DOC: `Authorization: Bearer invalid_token` auth-failure test demo
+9bad200644b05696663bb122a6cdddde6bdfcd9f:SECURITY_TESTING_GUIDE.md:curl-auth-header:491
+
+# --- backend/API_EXAMPLES.md (41 findings) ---
+# FP-DOC: curl examples using `Bearer ACCESS_TOKEN` / `ADMIN_ACCESS_TOKEN` and a
+# truncated JWT with literal trailing `...` — all documentation placeholders
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:generic-api-key:28
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:generic-api-key:29
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:generic-api-key:57
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:64
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:136
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:176
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:183
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:195
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:202
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:211
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:220
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:250
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:261
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:268
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:277
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:288
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:295
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:304
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:313
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:324
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:331
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:342
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:349
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:356
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:365
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:389
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:396
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:407
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:420
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:431
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:438
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:447
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:462
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:469
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:476
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:489
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:502
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:513
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:520
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:529
+e25990f5dd566942a40f6697f241656744c288b5:backend/API_EXAMPLES.md:curl-auth-header:536
+
+# --- backend/QUICK_START.md (4 findings) ---
+# FP-DOC: `Authorization: Bearer YOUR_ACCESS_TOKEN` curl examples
+e25990f5dd566942a40f6697f241656744c288b5:backend/QUICK_START.md:curl-auth-header:234
+e25990f5dd566942a40f6697f241656744c288b5:backend/QUICK_START.md:curl-auth-header:238
+e25990f5dd566942a40f6697f241656744c288b5:backend/QUICK_START.md:curl-auth-header:246
+e25990f5dd566942a40f6697f241656744c288b5:backend/QUICK_START.md:curl-auth-header:250
+
+# --- backend/STRIPE_SETUP.md (5 findings) ---
+# FP-DOC: `Authorization: Bearer YOUR_JWT_TOKEN` curl examples
+aa94ec4545ac7565d9feeed1e05fe50cb9f02df2:backend/STRIPE_SETUP.md:curl-auth-header:231
+aa94ec4545ac7565d9feeed1e05fe50cb9f02df2:backend/STRIPE_SETUP.md:curl-auth-header:239
+aa94ec4545ac7565d9feeed1e05fe50cb9f02df2:backend/STRIPE_SETUP.md:curl-auth-header:252
+aa94ec4545ac7565d9feeed1e05fe50cb9f02df2:backend/STRIPE_SETUP.md:curl-auth-header:264
+aa94ec4545ac7565d9feeed1e05fe50cb9f02df2:backend/STRIPE_SETUP.md:curl-auth-header:276
+
+# --- backend/src/config/env.ts (1 finding) ---
+# FP-FIXTURE: literal `sk_test_placeholder` default in config schema
+65907441d4a99bbf3414e9b7d12d22e06f84d1d1:backend/src/config/env.ts:stripe-access-token:47
+
+# --- backend/src/tests/oauth-apple.contract.test.ts (1 finding) ---
+# FP-FIXTURE: Apple OAuth sub-claim format `000123.returning789.1234` (test value)
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:backend/src/tests/oauth-apple.contract.test.ts:generic-api-key:151
+
+# --- backend/src/tests/oauth-google.contract.test.ts (4 findings) ---
+# FP-FIXTURE: JWT test payload with literal `.signature` suffix + synthetic sub IDs
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:backend/src/tests/oauth-google.contract.test.ts:generic-api-key:59
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:backend/src/tests/oauth-google.contract.test.ts:generic-api-key:70
+c3c6fad483b4d86e7c244c9cf6a024dc8e182633:backend/src/tests/oauth-google.contract.test.ts:generic-api-key:72
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:backend/src/tests/oauth-google.contract.test.ts:generic-api-key:243
+
+# --- backend/tests/integration/stripe-live-mode.test.ts (38 findings) ---
+# FP-FIXTURE: Stripe test-harness literals — pk_test_abc123, sk_live_abc123,
+# whsec_abc123def456, sk_test_51abc123xyz, etc. All obvious synthetic values.
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:52
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:69
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:70
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:71
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:91
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:100
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:109
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:150
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:151
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:161
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:162
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:163
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:173
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:174
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:187
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:188
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:201
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:202
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:203
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:214
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:264
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:265
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:277
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:278
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:279
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:291
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:292
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:305
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:306
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:307
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:318
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:335
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:352
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:353
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:stripe-access-token:386
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:stripe-access-token:387
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:398
+783f56e5931917df5761d9b9af175aefd6033ddb:backend/tests/integration/stripe-live-mode.test.ts:generic-api-key:399
+
+# --- docker-compose.yml (1 finding) ---
+# FP-DOC: comment line referencing "Veriff/Certn/Telnyx credentials" — prose, not a value
+3538dbdd691e9f45e3c2975ab8388c87b4984fe6:docker-compose.yml:generic-api-key:15
+
+# --- docs/GOOGLE_PLAY_BILLING_SETUP.md (1 finding) ---
+# FP-DOC: `Authorization: Bearer YOUR_JWT_TOKEN` curl example
+aa94ec4545ac7565d9feeed1e05fe50cb9f02df2:docs/GOOGLE_PLAY_BILLING_SETUP.md:curl-auth-header:358
+
+# --- mobile/SIGNUP_ENDPOINT_GUIDE.md (2 findings) ---
+# FP-DOC: truncated JWT with literal trailing `...` in response-body example
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:mobile/SIGNUP_ENDPOINT_GUIDE.md:generic-api-key:115
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:mobile/SIGNUP_ENDPOINT_GUIDE.md:generic-api-key:116
+
+# --- mobile/android/app/src/main/assets/index.android.bundle (2 findings, 1 fingerprint) ---
+# FP-ENTROPY: minified RN bundle — matches are `a=s.replacingRouteKeys` and
+# `c=u.closingRouteKeys` (React Navigation internals, not credentials)
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:mobile/android/app/src/main/assets/index.android.bundle:generic-api-key:966
+
+# --- mobile/ios/Podfile.lock (4 findings) ---
+# FP-ENTROPY: CocoaPods SHA-1 checksums (spec_checksums entries), not credentials
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:mobile/ios/Podfile.lock:generic-api-key:1669
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:mobile/ios/Podfile.lock:generic-api-key:1679
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:mobile/ios/Podfile.lock:generic-api-key:1740
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:mobile/ios/Podfile.lock:generic-api-key:1747
+
+# --- mobile/src/utils/__tests__/secureStorage.test.ts (1 finding) ---
+# FP-FIXTURE: literal `sk_live_1234567890abcdef` test value in storage-round-trip test
+4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:mobile/src/utils/__tests__/secureStorage.test.ts:stripe-access-token:645
