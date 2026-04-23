@@ -176,3 +176,13 @@ aa94ec4545ac7565d9feeed1e05fe50cb9f02df2:docs/GOOGLE_PLAY_BILLING_SETUP.md:curl-
 # --- mobile/src/utils/__tests__/secureStorage.test.ts (1 finding) ---
 # FP-FIXTURE: literal `sk_live_1234567890abcdef` test value in storage-round-trip test
 4cf6f00ed7eca679697f3d2c34ce2b98482a8e3d:mobile/src/utils/__tests__/secureStorage.test.ts:stripe-access-token:645
+
+# --- .gitleaksignore self-reference (3 findings) ---
+# FP-FIXTURE (self-reference): this file's comment rationale contains the literal
+# placeholder strings it documents (sk_test_ZapScanCITestKeyOnly..., sk_test_placeholder,
+# sk_live_1234567890abcdef). Gitleaks correctly flags these at the commit where they
+# were introduced (07ae0cd). Recursive-ignore pattern — expected for any fingerprint-
+# based ignore file that cites its exclusions inline.
+07ae0cd2ef5bfe27ffabfeabe4aacd4a98ef68cd:.gitleaksignore:stripe-access-token:16
+07ae0cd2ef5bfe27ffabfeabe4aacd4a98ef68cd:.gitleaksignore:stripe-access-token:89
+07ae0cd2ef5bfe27ffabfeabe4aacd4a98ef68cd:.gitleaksignore:stripe-access-token:171
